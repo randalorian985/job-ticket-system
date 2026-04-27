@@ -52,6 +52,7 @@ public interface IPartCategoriesService
 public interface IPartsService
 {
     Task<IReadOnlyList<PartDto>> ListAsync(PagedQuery query, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<PartLookupDto>> ListLookupAsync(PagedQuery query, CancellationToken cancellationToken = default);
     Task<PartDto?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<PartDto> CreateAsync(CreatePartDto request, CancellationToken cancellationToken = default);
     Task<PartDto?> UpdateAsync(Guid id, UpdatePartDto request, CancellationToken cancellationToken = default);
@@ -360,6 +361,11 @@ public sealed class PartsService(ApplicationDbContext dbContext) : IPartsService
             .Select(x => new PartDto(x.Id, x.PartCategoryId, x.VendorId, x.PartNumber, x.Name, x.Description, x.UnitCost, x.UnitPrice, x.QuantityOnHand, x.ReorderThreshold))
             .ToListAsync(cancellationToken).ContinueWith(t => (IReadOnlyList<PartDto>)t.Result, cancellationToken);
 
+    public Task<IReadOnlyList<PartLookupDto>> ListLookupAsync(PagedQuery query, CancellationToken cancellationToken = default) =>
+        dbContext.Parts.OrderBy(x => x.Name).Skip(query.NormalizedOffset).Take(query.NormalizedLimit)
+            .Select(x => new PartLookupDto(x.Id, x.PartNumber, x.Name, x.Description))
+            .ToListAsync(cancellationToken).ContinueWith(t => (IReadOnlyList<PartLookupDto>)t.Result, cancellationToken);
+
     public Task<PartDto?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         dbContext.Parts.Where(x => x.Id == id)
             .Select(x => new PartDto(x.Id, x.PartCategoryId, x.VendorId, x.PartNumber, x.Name, x.Description, x.UnitCost, x.UnitPrice, x.QuantityOnHand, x.ReorderThreshold))
@@ -448,6 +454,7 @@ public sealed record CreatePartCategoryDto(string Name, string? Description);
 public sealed record UpdatePartCategoryDto(string Name, string? Description);
 
 public sealed record PartDto(Guid Id, Guid PartCategoryId, Guid? VendorId, string PartNumber, string Name, string? Description, decimal UnitCost, decimal UnitPrice, decimal QuantityOnHand, decimal ReorderThreshold);
+public sealed record PartLookupDto(Guid Id, string PartNumber, string Name, string? Description);
 public sealed record CreatePartDto(Guid PartCategoryId, Guid? VendorId, string PartNumber, string Name, string? Description, decimal UnitCost, decimal UnitPrice, decimal QuantityOnHand, decimal ReorderThreshold);
 public sealed record UpdatePartDto(Guid PartCategoryId, Guid? VendorId, string PartNumber, string Name, string? Description, decimal UnitCost, decimal UnitPrice, decimal QuantityOnHand, decimal ReorderThreshold);
 

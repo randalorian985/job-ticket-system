@@ -19,6 +19,9 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 ## Current Phase
 Foundation/scaffolding only. No full domain workflows are implemented yet.
 
+## Frontend Workflow Status
+- React Employee Mobile Workflow is now **in progress** with implemented login, auth state, assigned-job list/detail, clock in/out with GPS, work-note submission, part-used submission, and file/photo upload screens.
+
 ## Current Job Ticket Workflow (API-First Foundation)
 - Create job tickets with required requesting account (`CustomerId`), service location (`ServiceLocationId`), and billing party (`BillingPartyCustomerId`).
 - Optional equipment linkage with validation to ensure equipment belongs to the selected service location.

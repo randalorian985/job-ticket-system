@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.Security;
@@ -140,6 +141,41 @@ public sealed class AuthIntegrationTests
         Assert.Equal(HttpStatusCode.OK, approve.StatusCode);
         var reject = await managerClient.PostAsJsonAsync($"/api/time-entries/{entryId}/reject", new RejectTimeEntryRequestDto(Guid.Empty, "Needs edits"));
         Assert.Equal(HttpStatusCode.OK, reject.StatusCode);
+    }
+
+    [Fact]
+    public async Task Employee_can_use_parts_lookup_without_manager_cost_fields()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync(async (db, auth) =>
+        {
+            await SeedDataAsync(db, auth);
+            var category = new PartCategory { Name = "General" };
+            db.PartCategories.Add(category);
+            await db.SaveChangesAsync();
+            db.Parts.Add(new Part
+            {
+                PartCategoryId = category.Id,
+                PartNumber = "P-100",
+                Name = "Filter",
+                UnitCost = 9.50m,
+                UnitPrice = 19.99m
+            });
+            await db.SaveChangesAsync();
+        });
+
+        var client = factory.CreateClient();
+        await client.SetBearerTokenAsync("employee", "EmployeePass!123");
+
+        var response = await client.GetAsync("/api/parts/lookup?offset=0&limit=10");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var first = body.RootElement[0];
+        Assert.True(first.TryGetProperty("id", out _));
+        Assert.True(first.TryGetProperty("partNumber", out _));
+        Assert.True(first.TryGetProperty("name", out _));
+        Assert.False(first.TryGetProperty("unitCost", out _));
     }
 
     private static async Task SeedUsersAsync(ApplicationDbContext db, IAuthService auth)

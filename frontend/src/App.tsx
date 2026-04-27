@@ -1,17 +1,14 @@
-const App = () => {
-  return (
-    <main style={{ fontFamily: 'Arial, sans-serif', padding: '2rem' }}>
-      <h1>Job Ticket Management System</h1>
-      <p>Frontend scaffold is ready.</p>
-      <ul>
-        <li>src/api</li>
-        <li>src/components</li>
-        <li>src/pages</li>
-        <li>src/routes</li>
-        <li>src/features</li>
-      </ul>
-    </main>
-  )
-}
+import { BrowserRouter } from 'react-router-dom'
+import { AppRouter } from './routes/AppRouter'
+import { AuthProvider } from './features/auth/AuthContext'
+import './styles.css'
+
+const App = () => (
+  <AuthProvider>
+    <BrowserRouter>
+      <AppRouter />
+    </BrowserRouter>
+  </AuthProvider>
+)
 
 export default App
