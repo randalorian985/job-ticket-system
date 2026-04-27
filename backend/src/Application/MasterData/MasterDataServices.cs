@@ -211,7 +211,13 @@ public sealed class EquipmentService(ApplicationDbContext dbContext) : IEquipmen
             OwnerCustomerId = request.OwnerCustomerId,
             ResponsibleBillingCustomerId = request.ResponsibleBillingCustomerId,
             Name = request.Name.Trim(),
-            EquipmentNumber = ValidationHelpers.NullIfWhitespace(request.EquipmentNumber)
+            EquipmentNumber = ValidationHelpers.NullIfWhitespace(request.EquipmentNumber),
+            UnitNumber = ValidationHelpers.NullIfWhitespace(request.UnitNumber),
+            Manufacturer = ValidationHelpers.NullIfWhitespace(request.Manufacturer),
+            ModelNumber = ValidationHelpers.NullIfWhitespace(request.ModelNumber),
+            SerialNumber = ValidationHelpers.NullIfWhitespace(request.SerialNumber),
+            EquipmentType = ValidationHelpers.NullIfWhitespace(request.EquipmentType),
+            Year = request.Year
         };
 
         dbContext.Equipment.Add(entity);
@@ -233,6 +239,12 @@ public sealed class EquipmentService(ApplicationDbContext dbContext) : IEquipmen
         entity.ResponsibleBillingCustomerId = request.ResponsibleBillingCustomerId;
         entity.Name = request.Name.Trim();
         entity.EquipmentNumber = ValidationHelpers.NullIfWhitespace(request.EquipmentNumber);
+        entity.UnitNumber = ValidationHelpers.NullIfWhitespace(request.UnitNumber);
+        entity.Manufacturer = ValidationHelpers.NullIfWhitespace(request.Manufacturer);
+        entity.ModelNumber = ValidationHelpers.NullIfWhitespace(request.ModelNumber);
+        entity.SerialNumber = ValidationHelpers.NullIfWhitespace(request.SerialNumber);
+        entity.EquipmentType = ValidationHelpers.NullIfWhitespace(request.EquipmentType);
+        entity.Year = request.Year;
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return Map.Compile().Invoke(entity);
@@ -257,7 +269,7 @@ public sealed class EquipmentService(ApplicationDbContext dbContext) : IEquipmen
     }
 
     private static readonly System.Linq.Expressions.Expression<Func<Equipment, EquipmentDto>> Map = x => new EquipmentDto(
-        x.Id, x.CustomerId, x.ServiceLocationId, x.OwnerCustomerId, x.ResponsibleBillingCustomerId, x.Name, x.EquipmentNumber);
+        x.Id, x.CustomerId, x.ServiceLocationId, x.OwnerCustomerId, x.ResponsibleBillingCustomerId, x.Name, x.EquipmentNumber, x.UnitNumber, x.Manufacturer, x.ModelNumber, x.SerialNumber, x.EquipmentType, x.Year);
 }
 
 public sealed class VendorsService(ApplicationDbContext dbContext) : IVendorsService
@@ -423,9 +435,9 @@ public sealed record ServiceLocationDto(Guid Id, Guid? CustomerId, string Compan
 public sealed record CreateServiceLocationDto(Guid? CustomerId, string CompanyName, string LocationName, string AddressLine1, string City, string State, string PostalCode, string Country, bool IsActive = true);
 public sealed record UpdateServiceLocationDto(Guid? CustomerId, string CompanyName, string LocationName, string AddressLine1, string City, string State, string PostalCode, string Country, bool IsActive = true);
 
-public sealed record EquipmentDto(Guid Id, Guid CustomerId, Guid ServiceLocationId, Guid? OwnerCustomerId, Guid? ResponsibleBillingCustomerId, string Name, string? EquipmentNumber);
-public sealed record CreateEquipmentDto(Guid CustomerId, Guid ServiceLocationId, Guid? OwnerCustomerId, Guid? ResponsibleBillingCustomerId, string Name, string? EquipmentNumber);
-public sealed record UpdateEquipmentDto(Guid CustomerId, Guid ServiceLocationId, Guid? OwnerCustomerId, Guid? ResponsibleBillingCustomerId, string Name, string? EquipmentNumber);
+public sealed record EquipmentDto(Guid Id, Guid CustomerId, Guid ServiceLocationId, Guid? OwnerCustomerId, Guid? ResponsibleBillingCustomerId, string Name, string? EquipmentNumber, string? UnitNumber, string? Manufacturer, string? ModelNumber, string? SerialNumber, string? EquipmentType, int? Year);
+public sealed record CreateEquipmentDto(Guid CustomerId, Guid ServiceLocationId, Guid? OwnerCustomerId, Guid? ResponsibleBillingCustomerId, string Name, string? EquipmentNumber, string? UnitNumber = null, string? Manufacturer = null, string? ModelNumber = null, string? SerialNumber = null, string? EquipmentType = null, int? Year = null);
+public sealed record UpdateEquipmentDto(Guid CustomerId, Guid ServiceLocationId, Guid? OwnerCustomerId, Guid? ResponsibleBillingCustomerId, string Name, string? EquipmentNumber, string? UnitNumber = null, string? Manufacturer = null, string? ModelNumber = null, string? SerialNumber = null, string? EquipmentType = null, int? Year = null);
 
 public sealed record VendorDto(Guid Id, string Name, string? AccountNumber, string? ContactName, string? Email, string? Phone);
 public sealed record CreateVendorDto(string Name, string? AccountNumber, string? ContactName, string? Email, string? Phone);

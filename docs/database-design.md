@@ -51,3 +51,22 @@ Use a standard SQL Server connection string via:
   "DefaultConnection": "Server=localhost,1433;Database=JobTicketDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
 }
 ```
+
+## Future Parts Compatibility Engine Data Capture
+- Data model changes are focused on collecting historical compatibility signals, not generating recommendations.
+- `Equipment` includes optional structured attributes for `Manufacturer`, `ModelNumber`, `SerialNumber`, `EquipmentType`, `UnitNumber`, and `Year`.
+- `JobTicketPart` includes optional compatibility context fields:
+  - `EquipmentId` (nullable FK to `Equipment`)
+  - `ComponentCategory`
+  - `FailureDescription`
+  - `RepairDescription`
+  - `TechnicianNotes`
+  - `InstalledAtUtc`
+  - `WasSuccessful`
+  - `RemovedAtUtc`
+  - `ReplacedByJobTicketPartId` (nullable self-reference FK)
+  - `CompatibilityNotes`
+- Added indexes support future analytical/recommendation workloads:
+  - `Equipment`: `Manufacturer`, `ModelNumber`, `SerialNumber`
+  - `JobTicketPart`: `EquipmentId`, `ComponentCategory`, `WasSuccessful`, `InstalledAtUtc`
+- Recommendation logic, AI/ML inference, and suggestion APIs are intentionally out of scope in this phase.

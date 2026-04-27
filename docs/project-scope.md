@@ -50,3 +50,10 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Audit logs capture clock-in, clock-out, approval, rejection, and adjustment actions.
 - Authentication is intentionally deferred; temporary manager/employee identifiers are accepted through DTOs in this phase.
 - Job part workflow follows the same authentication deferment with temporary actor/employee identifiers in DTOs.
+
+## Future Parts Compatibility Engine Data Capture
+- This phase adds **structured compatibility data capture only** for equipment and job-ticket-part history.
+- Equipment records now support manufacturer, model number, serial number, equipment type, unit number, and year attributes.
+- Job ticket part records can optionally capture component category, failure/repair details, technician notes, installation/removal timestamps, success outcome, and compatibility notes.
+- Job ticket parts can optionally link to a specific equipment record and to another job ticket part record that replaced it.
+- This phase **does not** implement compatibility recommendations, AI/ML behavior, or automated part suggestions.

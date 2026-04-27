@@ -17,7 +17,9 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 2m, "Used in repair", true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(refs.Part.Id, 2m, null, null, null, null, null, null, null, null, null, null, "Used in repair", true, refs.Employee.Id, null));
 
         Assert.Equal(refs.JobTicket.Id, created.JobTicketId);
         Assert.Equal(refs.Part.Id, created.PartId);
@@ -31,7 +33,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(Guid.NewGuid(), new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, null, null)));
+        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(Guid.NewGuid(), new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, null, null)));
     }
 
     [Fact]
@@ -41,7 +43,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(Guid.NewGuid(), 1m, null, true, null, null)));
+        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(Guid.NewGuid(), 1m, null, null, null, null, null, null, null, null, null, null, null, true, null, null)));
     }
 
     [Theory]
@@ -53,7 +55,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, quantity, null, true, null, null)));
+        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, quantity, null, null, null, null, null, null, null, null, null, null, null, true, null, null)));
     }
 
     [Fact]
@@ -63,7 +65,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
         refs.Part.UnitCost = 999m;
         refs.Part.UnitPrice = 1111m;
         await context.SaveChangesAsync();
@@ -83,7 +85,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id));
 
         var listed = await service.ListPartsAsync(refs.JobTicket.Id);
@@ -97,7 +99,7 @@ public sealed class JobTicketPartsServiceTests
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
 
         var approved = await service.ApprovePartAsync(refs.JobTicket.Id, created.Id, new ApproveJobTicketPartDto(refs.Manager.Id));
 
@@ -112,7 +114,7 @@ public sealed class JobTicketPartsServiceTests
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
 
         await Assert.ThrowsAsync<ValidationException>(() => service.RejectPartAsync(refs.JobTicket.Id, created.Id, new RejectJobTicketPartDto(" ", refs.Manager.Id)));
 
@@ -130,7 +132,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, true, refs.Employee.Id, null, AdjustInventory: true));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null, AdjustInventory: true));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id, RestoreInventory: true));
 
         var refreshedPart = await context.Parts.SingleAsync(x => x.Id == refs.Part.Id);
@@ -144,8 +146,8 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
-        await service.UpdatePartAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketPartDto(2m, "Adjusted", true, null, null, refs.Manager.Id));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
+        await service.UpdatePartAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketPartDto(2m, null, null, null, null, null, null, null, null, null, null, "Adjusted", true, null, null, refs.Manager.Id));
         await service.ApprovePartAsync(refs.JobTicket.Id, created.Id, new ApproveJobTicketPartDto(refs.Manager.Id, true));
         await service.RejectPartAsync(refs.JobTicket.Id, created.Id, new RejectJobTicketPartDto("Need review", refs.Manager.Id, true));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id));
@@ -156,6 +158,77 @@ public sealed class JobTicketPartsServiceTests
         Assert.Contains(logs, x => x.ActionType == AuditActionType.Update);
         Assert.True(logs.Count(x => x.ActionType == AuditActionType.Approval) >= 2);
         Assert.Contains(logs, x => x.ActionType == AuditActionType.Delete);
+    }
+
+    [Fact]
+    public async Task Add_part_can_save_optional_compatibility_fields()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context);
+        var installedAtUtc = DateTime.UtcNow.AddHours(-2);
+        var removedAtUtc = DateTime.UtcNow.AddHours(-1);
+
+        var created = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(
+                refs.Part.Id,
+                1m,
+                null,
+                "Hydraulic",
+                "Leak under pressure",
+                "Replaced gasket",
+                "Torqued to spec",
+                installedAtUtc,
+                true,
+                removedAtUtc,
+                null,
+                "Observed stable pressure after repair",
+                "Tracked for compatibility",
+                true,
+                refs.Employee.Id,
+                null));
+
+        Assert.Equal("Hydraulic", created.ComponentCategory);
+        Assert.Equal("Leak under pressure", created.FailureDescription);
+        Assert.Equal("Replaced gasket", created.RepairDescription);
+        Assert.Equal("Torqued to spec", created.TechnicianNotes);
+        Assert.Equal(installedAtUtc, created.InstalledAtUtc);
+        Assert.True(created.WasSuccessful);
+        Assert.Equal(removedAtUtc, created.RemovedAtUtc);
+        Assert.Equal("Observed stable pressure after repair", created.CompatibilityNotes);
+    }
+
+    [Fact]
+    public async Task Add_part_can_reference_specific_equipment()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context);
+
+        var created = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(refs.Part.Id, 1m, refs.Equipment.Id, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
+
+        Assert.Equal(refs.Equipment.Id, created.EquipmentId);
+    }
+
+    [Fact]
+    public async Task Add_part_can_reference_replacement_job_ticket_part()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context);
+
+        var replacementPart = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, "replacement", true, refs.Employee.Id, null));
+
+        var created = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, replacementPart.Id, null, "legacy part", true, refs.Employee.Id, null));
+
+        Assert.Equal(replacementPart.Id, created.ReplacedByJobTicketPartId);
     }
 
     private static async Task<SeedRefs> SeedReferencesAsync(ApplicationDbContext context)
@@ -187,8 +260,14 @@ public sealed class JobTicketPartsServiceTests
             QuantityOnHand = 10m,
             ReorderThreshold = 2m
         };
+        var equipment = new Equipment
+        {
+            Customer = customer,
+            ServiceLocation = serviceLocation,
+            Name = "Pump A"
+        };
 
-        context.AddRange(customer, billingCustomer, serviceLocation, manager, employee, category, part);
+        context.AddRange(customer, billingCustomer, serviceLocation, manager, employee, category, part, equipment);
         await context.SaveChangesAsync();
 
         var ticket = new JobTicket
@@ -197,6 +276,7 @@ public sealed class JobTicketPartsServiceTests
             CustomerId = customer.Id,
             ServiceLocationId = serviceLocation.Id,
             BillingPartyCustomerId = billingCustomer.Id,
+            EquipmentId = equipment.Id,
             Title = "Replace filter",
             Status = JobTicketStatus.InProgress,
             Priority = JobTicketPriority.Normal
@@ -215,7 +295,7 @@ public sealed class JobTicketPartsServiceTests
         });
 
         await context.SaveChangesAsync();
-        return new SeedRefs(ticket, part, manager, employee);
+        return new SeedRefs(ticket, part, manager, employee, equipment);
     }
 
     private static ApplicationDbContext CreateContext()
@@ -227,5 +307,5 @@ public sealed class JobTicketPartsServiceTests
         return new ApplicationDbContext(options);
     }
 
-    private sealed record SeedRefs(JobTicket JobTicket, Part Part, Employee Manager, Employee Employee);
+    private sealed record SeedRefs(JobTicket JobTicket, Part Part, Employee Manager, Employee Employee, Equipment Equipment);
 }

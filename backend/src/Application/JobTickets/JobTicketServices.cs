@@ -338,13 +338,25 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
             await ValidateAddedByEmployeeAssignmentAsync(jobTicketId, request.AddedByEmployeeId.Value, request.AllowManagerOverride, cancellationToken);
         }
 
+        await ValidatePartCompatibilityReferencesAsync(request.EquipmentId, request.ReplacedByJobTicketPartId, jobTicketId, null, cancellationToken);
+
         var entry = new JobTicketPart
         {
             JobTicketId = jobTicketId,
             PartId = request.PartId,
+            EquipmentId = request.EquipmentId,
             Quantity = request.Quantity,
             UnitCostSnapshot = part.UnitCost,
             SalePriceSnapshot = part.UnitPrice,
+            ComponentCategory = ValidationHelpers.NullIfWhitespace(request.ComponentCategory),
+            FailureDescription = ValidationHelpers.NullIfWhitespace(request.FailureDescription),
+            RepairDescription = ValidationHelpers.NullIfWhitespace(request.RepairDescription),
+            TechnicianNotes = ValidationHelpers.NullIfWhitespace(request.TechnicianNotes),
+            InstalledAtUtc = request.InstalledAtUtc,
+            WasSuccessful = request.WasSuccessful,
+            RemovedAtUtc = request.RemovedAtUtc,
+            ReplacedByJobTicketPartId = request.ReplacedByJobTicketPartId,
+            CompatibilityNotes = ValidationHelpers.NullIfWhitespace(request.CompatibilityNotes),
             Notes = ValidationHelpers.NullIfWhitespace(request.Notes),
             IsBillable = request.IsBillable,
             ApprovalStatus = JobPartApprovalStatus.Pending,
@@ -373,9 +385,20 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
 
         EnsureEditable(entry, request.AllowManagerOverride);
         ValidatePositiveQuantity(request.Quantity);
+        await ValidatePartCompatibilityReferencesAsync(request.EquipmentId, request.ReplacedByJobTicketPartId, jobTicketId, entry.Id, cancellationToken);
 
         var oldValues = $"{{\"Quantity\":{entry.Quantity},\"IsBillable\":{entry.IsBillable.ToString().ToLowerInvariant()},\"ApprovalStatus\":\"{entry.ApprovalStatus}\"}}";
         entry.Quantity = request.Quantity;
+        entry.EquipmentId = request.EquipmentId;
+        entry.ComponentCategory = ValidationHelpers.NullIfWhitespace(request.ComponentCategory);
+        entry.FailureDescription = ValidationHelpers.NullIfWhitespace(request.FailureDescription);
+        entry.RepairDescription = ValidationHelpers.NullIfWhitespace(request.RepairDescription);
+        entry.TechnicianNotes = ValidationHelpers.NullIfWhitespace(request.TechnicianNotes);
+        entry.InstalledAtUtc = request.InstalledAtUtc;
+        entry.WasSuccessful = request.WasSuccessful;
+        entry.RemovedAtUtc = request.RemovedAtUtc;
+        entry.ReplacedByJobTicketPartId = request.ReplacedByJobTicketPartId;
+        entry.CompatibilityNotes = ValidationHelpers.NullIfWhitespace(request.CompatibilityNotes);
         entry.Notes = ValidationHelpers.NullIfWhitespace(request.Notes);
         entry.IsBillable = request.IsBillable;
 
@@ -512,6 +535,33 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
         }
     }
 
+    private async Task ValidatePartCompatibilityReferencesAsync(Guid? equipmentId, Guid? replacedByJobTicketPartId, Guid jobTicketId, Guid? currentJobTicketPartId, CancellationToken cancellationToken)
+    {
+        if (equipmentId.HasValue && !await dbContext.Equipment.AnyAsync(x => x.Id == equipmentId.Value, cancellationToken))
+        {
+            throw new ValidationException("EquipmentId does not reference an active equipment record.");
+        }
+
+        if (!replacedByJobTicketPartId.HasValue)
+        {
+            return;
+        }
+
+        if (currentJobTicketPartId.HasValue && replacedByJobTicketPartId.Value == currentJobTicketPartId.Value)
+        {
+            throw new ValidationException("ReplacedByJobTicketPartId cannot reference the same job ticket part.");
+        }
+
+        var replacementExists = await dbContext.JobTicketParts.AnyAsync(
+            x => x.JobTicketId == jobTicketId && x.Id == replacedByJobTicketPartId.Value,
+            cancellationToken);
+
+        if (!replacementExists)
+        {
+            throw new ValidationException("ReplacedByJobTicketPartId must reference a job ticket part on the same job ticket.");
+        }
+    }
+
     private static void EnsureEditable(JobTicketPart entry, bool allowManagerOverride)
     {
         if (!allowManagerOverride && (entry.ApprovalStatus is JobPartApprovalStatus.Approved or JobPartApprovalStatus.Invoiced))
@@ -629,9 +679,19 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
         x.Id,
         x.JobTicketId,
         x.PartId,
+        x.EquipmentId,
         x.Quantity,
         x.UnitCostSnapshot,
         x.SalePriceSnapshot,
+        x.ComponentCategory,
+        x.FailureDescription,
+        x.RepairDescription,
+        x.TechnicianNotes,
+        x.InstalledAtUtc,
+        x.WasSuccessful,
+        x.RemovedAtUtc,
+        x.ReplacedByJobTicketPartId,
+        x.CompatibilityNotes,
         x.IsBillable,
         x.Notes,
         x.ApprovalStatus,
@@ -748,6 +808,16 @@ public sealed record JobWorkEntryDto(Guid Id, Guid JobTicketId, Guid? EmployeeId
 public sealed record AddJobTicketPartDto(
     Guid PartId,
     decimal Quantity,
+    Guid? EquipmentId,
+    string? ComponentCategory,
+    string? FailureDescription,
+    string? RepairDescription,
+    string? TechnicianNotes,
+    DateTime? InstalledAtUtc,
+    bool? WasSuccessful,
+    DateTime? RemovedAtUtc,
+    Guid? ReplacedByJobTicketPartId,
+    string? CompatibilityNotes,
     string? Notes,
     bool IsBillable,
     Guid? AddedByEmployeeId,
@@ -757,6 +827,16 @@ public sealed record AddJobTicketPartDto(
 
 public sealed record UpdateJobTicketPartDto(
     decimal Quantity,
+    Guid? EquipmentId,
+    string? ComponentCategory,
+    string? FailureDescription,
+    string? RepairDescription,
+    string? TechnicianNotes,
+    DateTime? InstalledAtUtc,
+    bool? WasSuccessful,
+    DateTime? RemovedAtUtc,
+    Guid? ReplacedByJobTicketPartId,
+    string? CompatibilityNotes,
     string? Notes,
     bool IsBillable,
     JobPartApprovalStatus? ApprovalStatus,
@@ -772,9 +852,19 @@ public sealed record JobTicketPartDto(
     Guid Id,
     Guid JobTicketId,
     Guid PartId,
+    Guid? EquipmentId,
     decimal Quantity,
     decimal UnitCostSnapshot,
     decimal SalePriceSnapshot,
+    string? ComponentCategory,
+    string? FailureDescription,
+    string? RepairDescription,
+    string? TechnicianNotes,
+    DateTime? InstalledAtUtc,
+    bool? WasSuccessful,
+    DateTime? RemovedAtUtc,
+    Guid? ReplacedByJobTicketPartId,
+    string? CompatibilityNotes,
     bool IsBillable,
     string? Notes,
     JobPartApprovalStatus ApprovalStatus,
