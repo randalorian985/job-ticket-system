@@ -1,4 +1,5 @@
 using JobTicketSystem.Application.MasterData;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobTicketSystem.Api.Controllers.MasterData;
@@ -7,10 +8,12 @@ namespace JobTicketSystem.Api.Controllers.MasterData;
 public sealed class PartsController(IPartsService service) : MasterDataControllerBase
 {
     [HttpGet]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<IReadOnlyList<PartDto>>> ListAsync([FromQuery] int offset = 0, [FromQuery] int limit = 50, CancellationToken cancellationToken = default)
         => Ok(await service.ListAsync(new PagedQuery(offset, limit), cancellationToken));
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<PartDto>> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var item = await service.GetAsync(id, cancellationToken);
@@ -18,6 +21,7 @@ public sealed class PartsController(IPartsService service) : MasterDataControlle
     }
 
     [HttpPost]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<PartDto>> CreateAsync([FromBody] CreatePartDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -32,6 +36,7 @@ public sealed class PartsController(IPartsService service) : MasterDataControlle
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<PartDto>> UpdateAsync(Guid id, [FromBody] UpdatePartDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -46,6 +51,7 @@ public sealed class PartsController(IPartsService service) : MasterDataControlle
     }
 
     [HttpPost("{id:guid}/archive")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult> ArchiveAsync(Guid id, CancellationToken cancellationToken = default)
         => await service.ArchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
 }

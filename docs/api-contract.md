@@ -59,6 +59,7 @@ All list endpoints support simple pagination with optional query params:
 
 ### Parts
 - `GET /api/parts`
+- `GET /api/parts/lookup` (employee-safe lookup for part selection; returns `id`, `partNumber`, `name`, `description`)
 - `GET /api/parts/{id}`
 - `POST /api/parts`
 - `PUT /api/parts/{id}`
@@ -185,6 +186,19 @@ Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 - `ManagerOrAdmin`: reporting, archive/delete, assignment, approval/rejection flows.
 - `EmployeeOrAbove`: general authenticated access.
 - `AssignedEmployeeOrManager`: job-ticket file/work/parts actions requiring assignment for employees.
+
+### Employee Mobile Workflow API Notes
+
+- Employee mobile clients should use `POST /api/auth/login` and `GET /api/auth/me` for token/session state.
+- Employee job access is assignment-scoped. `GET /api/job-tickets` is automatically filtered to assigned jobs for non-manager users.
+- Employee work actions for assigned jobs:
+  - `GET/POST /api/job-tickets/{id}/work-entries`
+  - `GET/POST /api/job-tickets/{jobTicketId}/parts`
+  - `GET /api/parts/lookup` for part selection
+  - `POST /api/time-entries/clock-in`
+  - `POST /api/time-entries/clock-out`
+  - `GET /api/time-entries/open?employeeId={employeeId}`
+  - `GET/POST /api/job-tickets/{jobTicketId}/files`
 
 ## User Management
 

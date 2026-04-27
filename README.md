@@ -78,8 +78,15 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
   - Authentication integration
 
 ### Frontend Scope Status
-- Frontend remains a UI scaffold with React/Vite/TypeScript structure.
-- Production-grade feature flows are intentionally deferred while API and domain contracts stabilize.
+- Employee-focused mobile workflow is implemented with React/Vite/TypeScript:
+  - Login + JWT token session handling
+  - Authenticated route protection
+  - Assigned jobs list + job detail
+  - Clock in/out with required browser GPS
+  - Add work notes
+  - Add parts used on assigned jobs
+  - Upload photos/files (`jpg`, `jpeg`, `png`, `webp`, `pdf`)
+- Manager/Admin UI screens remain out of scope for the current frontend phase.
 
 ## Tech Stack
 - **Backend:** .NET 8 ASP.NET Core Web API
@@ -147,6 +154,18 @@ npm install
 npm run dev
 ```
 
+Optional API base URL configuration:
+
+```bash
+# defaults to same-origin if not set
+VITE_API_BASE_URL=http://localhost:5000
+```
+
+Employee workflow routes:
+- `/login`
+- `/jobs`
+- `/jobs/:jobTicketId`
+
 ## Build & Test Instructions
 
 ### Backend
@@ -165,4 +184,3 @@ dotnet test ../../tests
 cd frontend
 npm run build
 ```
-
