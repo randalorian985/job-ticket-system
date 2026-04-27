@@ -266,10 +266,19 @@ public sealed class JobTicketFileConfiguration : IEntityTypeConfiguration<JobTic
     {
         builder.ConfigureAuditableEntity();
         builder.ConfigureSoftDelete();
-        builder.Property(x => x.FileName).HasMaxLength(255).IsRequired();
+        builder.Property(x => x.OriginalFileName).HasMaxLength(255).IsRequired();
         builder.Property(x => x.ContentType).HasMaxLength(150).IsRequired();
-        builder.Property(x => x.StoragePath).HasMaxLength(1000).IsRequired();
+        builder.Property(x => x.StorageKey).HasMaxLength(1000).IsRequired();
+        builder.Property(x => x.FileExtension).HasMaxLength(20).IsRequired();
+        builder.Property(x => x.Caption).HasMaxLength(500);
+        builder.Property(x => x.IsInvoiceAttachment).HasDefaultValue(false).IsRequired();
         builder.HasOne(x => x.JobTicket).WithMany(x => x.Files).HasForeignKey(x => x.JobTicketId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.Equipment).WithMany().HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(x => x.WorkEntry).WithMany().HasForeignKey(x => x.WorkEntryId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(x => x.UploadedByEmployee).WithMany().HasForeignKey(x => x.UploadedByEmployeeId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(x => x.UploadedByEmployeeId);
+        builder.HasIndex(x => x.EquipmentId);
+        builder.HasIndex(x => x.WorkEntryId);
     }
 }
 

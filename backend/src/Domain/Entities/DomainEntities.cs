@@ -293,12 +293,20 @@ public sealed class JobTicketFile : SoftDeletableEntity
 {
     public Guid JobTicketId { get; set; }
     public JobTicket JobTicket { get; set; } = null!;
-    public string FileName { get; set; } = string.Empty;
+    public Guid? EquipmentId { get; set; }
+    public Equipment? Equipment { get; set; }
+    public Guid? WorkEntryId { get; set; }
+    public JobWorkEntry? WorkEntry { get; set; }
+    public Guid? UploadedByEmployeeId { get; set; }
+    public Employee? UploadedByEmployee { get; set; }
+    public string OriginalFileName { get; set; } = string.Empty;
+    public string StorageKey { get; set; } = string.Empty;
     public string ContentType { get; set; } = string.Empty;
-    public string StoragePath { get; set; } = string.Empty;
+    public string FileExtension { get; set; } = string.Empty;
     public long FileSizeBytes { get; set; }
+    public string? Caption { get; set; }
     public FileVisibility Visibility { get; set; } = FileVisibility.Internal;
-    public Guid UploadedByUserId { get; set; }
+    public bool IsInvoiceAttachment { get; set; }
     public DateTime UploadedAtUtc { get; set; }
 }
 
