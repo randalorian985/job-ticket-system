@@ -1,6 +1,7 @@
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Xunit;
 
 namespace JobTicketSystem.Infrastructure.Tests;
@@ -16,6 +17,7 @@ public sealed class ApplicationDbContextTests
         Assert.Contains(typeof(Customer), entityTypes);
         Assert.Contains(typeof(Employee), entityTypes);
         Assert.Contains(typeof(Equipment), entityTypes);
+        Assert.Contains(typeof(ServiceLocation), entityTypes);
         Assert.Contains(typeof(Vendor), entityTypes);
         Assert.Contains(typeof(PartCategory), entityTypes);
         Assert.Contains(typeof(Part), entityTypes);
@@ -40,8 +42,41 @@ public sealed class ApplicationDbContextTests
         AssertPrecision<Part>(model, nameof(Part.QuantityOnHand), 18, 4);
         AssertPrecision<TimeEntry>(model, nameof(TimeEntry.LaborHours), 18, 4);
         AssertPrecision<Equipment>(model, nameof(Equipment.Latitude), 9, 6);
+        AssertPrecision<ServiceLocation>(model, nameof(ServiceLocation.Latitude), 9, 6);
+        AssertPrecision<ServiceLocation>(model, nameof(ServiceLocation.Longitude), 9, 6);
         AssertPrecision<JobTicket>(model, nameof(JobTicket.SiteLongitude), 9, 6);
         AssertPrecision<InvoiceSummary>(model, nameof(InvoiceSummary.TotalAmount), 18, 2);
+    }
+
+    [Fact]
+    public void Model_configures_job_ticket_relationships()
+    {
+        using var context = CreateContext();
+        var entityType = GetEntityType<JobTicket>(context);
+
+        AssertRelationship(entityType, nameof(JobTicket.Customer), nameof(JobTicket.CustomerId));
+        AssertRelationship(entityType, nameof(JobTicket.ServiceLocation), nameof(JobTicket.ServiceLocationId));
+        AssertRelationship(entityType, nameof(JobTicket.BillingPartyCustomer), nameof(JobTicket.BillingPartyCustomerId));
+    }
+
+    [Fact]
+    public void Model_configures_equipment_relationships()
+    {
+        using var context = CreateContext();
+        var entityType = GetEntityType<Equipment>(context);
+
+        AssertRelationship(entityType, nameof(Equipment.ServiceLocation), nameof(Equipment.ServiceLocationId));
+        AssertRelationship(entityType, nameof(Equipment.OwnerCustomer), nameof(Equipment.OwnerCustomerId));
+        AssertRelationship(entityType, nameof(Equipment.ResponsibleBillingCustomer), nameof(Equipment.ResponsibleBillingCustomerId));
+    }
+
+    [Fact]
+    public void Model_applies_soft_delete_query_filter_to_service_location()
+    {
+        using var context = CreateContext();
+        var entityType = GetEntityType<ServiceLocation>(context);
+
+        Assert.NotNull(entityType.GetQueryFilter());
     }
 
     [Fact]
@@ -74,5 +109,23 @@ public sealed class ApplicationDbContextTests
         Assert.NotNull(property);
         Assert.Equal(precision, property.GetPrecision());
         Assert.Equal(scale, property.GetScale());
+    }
+
+    private static IEntityType GetEntityType<TEntity>(ApplicationDbContext context)
+    {
+        return context.Model.FindEntityType(typeof(TEntity))
+               ?? throw new InvalidOperationException($"Entity type {typeof(TEntity).Name} not found.");
+    }
+
+    private static void AssertRelationship(IEntityType entityType, string navigationName, string foreignKeyPropertyName)
+    {
+        var navigation = entityType.FindNavigation(navigationName);
+        Assert.NotNull(navigation);
+
+        var foreignKey = entityType
+            .GetForeignKeys()
+            .SingleOrDefault(fk => fk.Properties.Any(property => property.Name == foreignKeyPropertyName));
+
+        Assert.NotNull(foreignKey);
     }
 }
