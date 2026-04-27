@@ -123,5 +123,39 @@ All list endpoints support simple pagination with optional query params:
 - Approved or invoiced entries require explicit manager override before adjustment.
 - Clock-in, clock-out, approval, rejection, and adjustment actions write audit logs.
 
+
+## Reporting (Current)
+### Endpoints
+- `GET /api/reports/job-tickets/{jobTicketId}/invoice-ready`
+- `GET /api/reports/job-tickets/{jobTicketId}/cost-summary`
+- `GET /api/reports/jobs-ready-to-invoice`
+- `GET /api/reports/labor/by-job`
+- `GET /api/reports/labor/by-employee`
+- `GET /api/reports/parts/by-job`
+- `GET /api/reports/customers/{customerId}/service-history`
+- `GET /api/reports/equipment/{equipmentId}/service-history`
+
+### Shared Query Filters
+- `dateFromUtc`
+- `dateToUtc`
+- `customerId`
+- `billingPartyCustomerId`
+- `serviceLocationId`
+- `employeeId`
+- `jobStatus`
+- `invoiceStatus`
+- `offset`
+- `limit`
+
+### Calculation Rules
+- Invoice-ready and cost reports include only approved labor (`ApprovalStatus = Approved`) from closed time entries (`EndedAtUtc != null`).
+- Invoice-ready and cost reports include only approved job parts (`ApprovalStatus = Approved`).
+- Archived/deleted records are excluded by global query filters (`IsDeleted = true`).
+- Labor billable totals use `Employee.BillRate`, with fallback to `Employee.LaborRate` when bill rate is not present.
+- Labor cost totals use `Employee.CostRate` when available.
+- Parts totals always use `JobTicketPart.UnitCostSnapshot` and `JobTicketPart.SalePriceSnapshot`.
+- Grand total is computed as labor billable total + parts billable total + misc placeholder + tax placeholder.
+- Jobs-ready-to-invoice requires completed/reviewed jobs with approved labor and/or approved parts, and excludes invoiced/closed invoice states.
+
 ## Versioning
 Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.

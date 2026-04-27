@@ -3,7 +3,7 @@ namespace JobTicketSystem.Domain.Enums;
 public enum CustomerStatus { Active = 1, Inactive = 2, OnHold = 3 }
 public enum EmployeeStatus { Active = 1, Inactive = 2, Terminated = 3 }
 public enum EquipmentStatus { Active = 1, Inactive = 2, OutOfService = 3 }
-public enum JobTicketStatus { Draft = 1, Submitted = 2, Assigned = 3, InProgress = 4, WaitingOnParts = 5, WaitingOnCustomer = 6, Completed = 7, Cancelled = 8, Invoiced = 9 }
+public enum JobTicketStatus { Draft = 1, Submitted = 2, Assigned = 3, InProgress = 4, WaitingOnParts = 5, WaitingOnCustomer = 6, Completed = 7, Cancelled = 8, Invoiced = 9, Reviewed = 10 }
 public enum JobTicketPriority { Low = 1, Normal = 2, High = 3, Urgent = 4 }
 public enum TimeEntryApprovalStatus { Pending = 1, Approved = 2, Rejected = 3 }
 public enum AdjustmentType { Add = 1, Deduct = 2, Override = 3 }
