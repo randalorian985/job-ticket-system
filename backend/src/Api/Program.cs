@@ -1,4 +1,5 @@
 using JobTicketSystem.Infrastructure.Persistence;
+using JobTicketSystem.Application.MasterData;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,12 @@ builder.Services.AddHealthChecks();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<ICustomersService, CustomersService>();
+builder.Services.AddScoped<IServiceLocationsService, ServiceLocationsService>();
+builder.Services.AddScoped<IEquipmentService, EquipmentService>();
+builder.Services.AddScoped<IVendorsService, VendorsService>();
+builder.Services.AddScoped<IPartCategoriesService, PartCategoriesService>();
+builder.Services.AddScoped<IPartsService, PartsService>();
 
 var app = builder.Build();
 
