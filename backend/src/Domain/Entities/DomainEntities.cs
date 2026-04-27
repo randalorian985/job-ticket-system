@@ -144,16 +144,23 @@ public sealed class JobTicket : SoftDeletableEntity
     public Equipment? Equipment { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? JobType { get; set; }
     public JobTicketStatus Status { get; set; } = JobTicketStatus.Draft;
     public JobTicketPriority Priority { get; set; } = JobTicketPriority.Normal;
     public DateTime? RequestedAtUtc { get; set; }
     public DateTime? ScheduledStartAtUtc { get; set; }
     public DateTime? ScheduledEndAtUtc { get; set; }
+    public DateTime? DueAtUtc { get; set; }
     public DateTime? CompletedAtUtc { get; set; }
+    public Guid? AssignedManagerEmployeeId { get; set; }
+    public Employee? AssignedManagerEmployee { get; set; }
     public string? BillingContactName { get; set; }
     public string? BillingContactPhone { get; set; }
     public string? BillingContactEmail { get; set; }
     public string? PurchaseOrderNumber { get; set; }
+    public string? InternalNotes { get; set; }
+    public string? CustomerFacingNotes { get; set; }
+    public string? ArchiveReason { get; set; }
     public decimal? SiteLatitude { get; set; }
     public decimal? SiteLongitude { get; set; }
     public ICollection<JobTicketEmployee> AssignedEmployees { get; set; } = new List<JobTicketEmployee>();
