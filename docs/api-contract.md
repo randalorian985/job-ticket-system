@@ -83,6 +83,12 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/job-tickets/{jobTicketId}/parts/{jobTicketPartId}/approve`
 - `POST /api/job-tickets/{jobTicketId}/parts/{jobTicketPartId}/reject`
 - `POST /api/job-tickets/{jobTicketId}/parts/{jobTicketPartId}/archive`
+- `GET /api/job-tickets/{jobTicketId}/files`
+- `GET /api/job-tickets/{jobTicketId}/files/{fileId}`
+- `POST /api/job-tickets/{jobTicketId}/files` (multipart/form-data with `file`)
+- `GET /api/job-tickets/{jobTicketId}/files/{fileId}/download`
+- `PUT /api/job-tickets/{jobTicketId}/files/{fileId}`
+- `POST /api/job-tickets/{jobTicketId}/files/{fileId}/archive`
 
 ### Behavior Notes
 - Job tickets are soft archived (`IsDeleted = true`) and excluded by default query filters.
@@ -91,6 +97,12 @@ All list endpoints support simple pagination with optional query params:
 - Archive requests must provide `ArchiveReason`.
 - Assignment API enforces one active assignment per employee per ticket.
 - Work entries are note/description records only in this phase (no time tracking or file uploads).
+- Job ticket files are stored outside SQL Server through a storage provider abstraction (`IFileStorageProvider`).
+- Current provider writes to a configurable local root (`FileStorage:RootPath`) and stores only metadata in `JobTicketFiles`.
+- Supported upload types: `jpg`, `jpeg`, `png`, `webp`, and `pdf` (`image/jpeg`, `image/png`, `image/webp`, `application/pdf`).
+- File rows support optional `EquipmentId`, `WorkEntryId`, and `UploadedByEmployeeId` validation when provided.
+- File archive endpoint is soft-delete only (`IsDeleted = true`) and archived files are excluded from normal list/get calls.
+- File upload, metadata update, and archive actions are audit logged.
 - Job part usage stores immutable `UnitCostSnapshot` and `SalePriceSnapshot` from the Part master record at add time.
 - Job part quantity must be greater than zero; job ticket and part references must be active.
 - `AddedByEmployeeId` is optional but, when provided, must reference an active employee assigned to the ticket unless manager override is enabled.

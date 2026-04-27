@@ -4,6 +4,7 @@ using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.TimeEntries;
 using JobTicketSystem.Application.Reporting;
 using Microsoft.EntityFrameworkCore;
+using JobTicketSystem.Infrastructure.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,11 @@ builder.Services.AddScoped<IVendorsService, VendorsService>();
 builder.Services.AddScoped<IPartCategoriesService, PartCategoriesService>();
 builder.Services.AddScoped<IPartsService, PartsService>();
 builder.Services.AddScoped<IJobTicketsService, JobTicketsService>();
+var storageRoot = builder.Configuration.GetValue<string>("FileStorage:RootPath")
+    ?? Path.Combine(builder.Environment.ContentRootPath, "storage");
+builder.Services.AddSingleton(new LocalFileStorageOptions(storageRoot));
+builder.Services.AddScoped<IFileStorageProvider, LocalFileStorageProvider>();
+builder.Services.AddScoped<IJobTicketFilesService, JobTicketFilesService>();
 builder.Services.AddScoped<ITimeEntriesService, TimeEntriesService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 

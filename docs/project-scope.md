@@ -29,8 +29,10 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Add and list non-time-tracking work notes (work entries).
 - Track parts used on job tickets with immutable pricing snapshots and optional inventory decrement/restore behavior.
 - Approve, reject (with reason), update, and archive job part usage entries through dedicated workflow endpoints.
+- Upload and manage job ticket files/photos with soft-archive behavior and optional linkage to equipment/work entries.
+- Persist file metadata in SQL while storing file content through a pluggable storage provider abstraction (local provider in this phase).
 - Record audit logs for create, update, status changes, archive, assignment changes, and work entry additions.
-  - Includes job part add/update/archive/approve/reject actions.
+  - Includes job part add/update/archive/approve/reject and job file upload/update/archive actions.
 
 ## Core Account and Location Definitions
 - **Customer / Requesting Account**: The account that requests a job ticket to be created. This account is not always the same as the billing party.
@@ -50,6 +52,7 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Audit logs capture clock-in, clock-out, approval, rejection, and adjustment actions.
 - Authentication is intentionally deferred; temporary manager/employee identifiers are accepted through DTOs in this phase.
 - Job part workflow follows the same authentication deferment with temporary actor/employee identifiers in DTOs.
+- Job file upload workflow follows the same authentication deferment with optional employee identifiers in DTOs.
 
 ## Future Parts Compatibility Engine Data Capture
 - This phase adds **structured compatibility data capture only** for equipment and job-ticket-part history.
@@ -65,3 +68,4 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Labor totals support separate employee cost and bill rates when present.
 - Parts totals use immutable job-part snapshot pricing to preserve financial history.
 - This phase does not create invoices, process payments, or add authentication/UI flows.
+- File/photo upload currently supports local development storage and intentionally defers cloud storage providers (Azure Blob Storage/S3) to a later phase.
