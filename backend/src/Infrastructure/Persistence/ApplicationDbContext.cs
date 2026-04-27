@@ -1,6 +1,7 @@
 using JobTicketSystem.Domain.Common;
 using JobTicketSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace JobTicketSystem.Infrastructure.Persistence;
 
@@ -30,6 +31,7 @@ public sealed class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        ApplyUtcDateTimeConverters(modelBuilder);
     }
 
     public override int SaveChanges()
@@ -67,6 +69,34 @@ public sealed class ApplicationDbContext : DbContext
             if (entry.State == EntityState.Added && entry.Entity.CreatedAtUtc == default)
             {
                 entry.Entity.CreatedAtUtc = now;
+            }
+        }
+    }
+
+    private static void ApplyUtcDateTimeConverters(ModelBuilder modelBuilder)
+    {
+        var utcDateTimeConverter = new ValueConverter<DateTime, DateTime>(
+            value => value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime(),
+            value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+
+        var nullableUtcDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+            value => value.HasValue
+                ? (value.Value.Kind == DateTimeKind.Utc ? value : value.Value.ToUniversalTime())
+                : value,
+            value => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : value);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime))
+                {
+                    property.SetValueConverter(utcDateTimeConverter);
+                }
+                else if (property.ClrType == typeof(DateTime?))
+                {
+                    property.SetValueConverter(nullableUtcDateTimeConverter);
+                }
             }
         }
     }

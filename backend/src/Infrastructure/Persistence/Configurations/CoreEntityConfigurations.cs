@@ -132,6 +132,7 @@ public sealed class TimeEntryAdjustmentConfiguration : IEntityTypeConfiguration<
         builder.ConfigureAuditableEntity();
         builder.Property(x => x.Hours).HasPrecision(18, 4);
         builder.Property(x => x.Reason).HasMaxLength(1000).IsRequired();
+        builder.HasQueryFilter(x => !x.TimeEntry.IsDeleted);
         builder.HasOne(x => x.TimeEntry).WithMany(x => x.Adjustments).HasForeignKey(x => x.TimeEntryId).OnDelete(DeleteBehavior.Cascade);
     }
 }
