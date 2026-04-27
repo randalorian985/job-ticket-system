@@ -32,6 +32,7 @@ public sealed class Customer : SoftDeletableEntity
     public ICollection<Equipment> Equipment { get; set; } = new List<Equipment>();
     public ICollection<JobTicket> JobTickets { get; set; } = new List<JobTicket>();
     public ICollection<InvoiceSummary> InvoiceSummaries { get; set; } = new List<InvoiceSummary>();
+    public ICollection<ServiceLocation> ServiceLocations { get; set; } = new List<ServiceLocation>();
 }
 
 public sealed class Employee : SoftDeletableEntity
@@ -52,6 +53,12 @@ public sealed class Equipment : SoftDeletableEntity
 {
     public Guid CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
+    public Guid ServiceLocationId { get; set; }
+    public ServiceLocation ServiceLocation { get; set; } = null!;
+    public Guid? OwnerCustomerId { get; set; }
+    public Customer? OwnerCustomer { get; set; }
+    public Guid? ResponsibleBillingCustomerId { get; set; }
+    public Customer? ResponsibleBillingCustomer { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? EquipmentNumber { get; set; }
     public string? Make { get; set; }
@@ -62,6 +69,33 @@ public sealed class Equipment : SoftDeletableEntity
     public decimal? Longitude { get; set; }
     public EquipmentStatus Status { get; set; } = EquipmentStatus.Active;
     public ICollection<JobTicket> JobTickets { get; set; } = new List<JobTicket>();
+}
+
+public sealed class ServiceLocation : SoftDeletableEntity
+{
+    public Guid? CustomerId { get; set; }
+    public Customer? Customer { get; set; }
+    public string CompanyName { get; set; } = string.Empty;
+    public string LocationName { get; set; } = string.Empty;
+    public string? OnSiteContactName { get; set; }
+    public string? OnSiteContactPhone { get; set; }
+    public string? OnSiteContactEmail { get; set; }
+    public string AddressLine1 { get; set; } = string.Empty;
+    public string? AddressLine2 { get; set; }
+    public string City { get; set; } = string.Empty;
+    public string State { get; set; } = string.Empty;
+    public string PostalCode { get; set; } = string.Empty;
+    public string? ParishCounty { get; set; }
+    public string Country { get; set; } = string.Empty;
+    public string? GateCode { get; set; }
+    public string? AccessInstructions { get; set; }
+    public string? SafetyRequirements { get; set; }
+    public string? SiteNotes { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public bool IsActive { get; set; } = true;
+    public ICollection<JobTicket> JobTickets { get; set; } = new List<JobTicket>();
+    public ICollection<Equipment> Equipment { get; set; } = new List<Equipment>();
 }
 
 public sealed class Vendor : SoftDeletableEntity
@@ -102,6 +136,10 @@ public sealed class JobTicket : SoftDeletableEntity
     public string TicketNumber { get; set; } = string.Empty;
     public Guid CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
+    public Guid ServiceLocationId { get; set; }
+    public ServiceLocation ServiceLocation { get; set; } = null!;
+    public Guid BillingPartyCustomerId { get; set; }
+    public Customer BillingPartyCustomer { get; set; } = null!;
     public Guid? EquipmentId { get; set; }
     public Equipment? Equipment { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -112,6 +150,10 @@ public sealed class JobTicket : SoftDeletableEntity
     public DateTime? ScheduledStartAtUtc { get; set; }
     public DateTime? ScheduledEndAtUtc { get; set; }
     public DateTime? CompletedAtUtc { get; set; }
+    public string? BillingContactName { get; set; }
+    public string? BillingContactPhone { get; set; }
+    public string? BillingContactEmail { get; set; }
+    public string? PurchaseOrderNumber { get; set; }
     public decimal? SiteLatitude { get; set; }
     public decimal? SiteLongitude { get; set; }
     public ICollection<JobTicketEmployee> AssignedEmployees { get; set; } = new List<JobTicketEmployee>();

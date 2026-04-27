@@ -8,6 +8,7 @@ Entity Framework Core
 
 ## Core Entities (Scaffold Phase)
 - `Customer`
+- `ServiceLocation`
 - `Employee`
 - `Equipment`
 - `Vendor`
@@ -34,6 +35,13 @@ Entity Framework Core
   - Money: `decimal(18,2)`
   - Quantity and labor hours: `decimal(18,4)`
   - Latitude/longitude: `decimal(9,6)`
+- Relationship semantics:
+  - `Customer` represents the requesting account for a job ticket.
+  - `ServiceLocation` is the physical work site and includes company name, on-site contact data, address details, access instructions, and safety requirements.
+  - `Billing Party` controls invoice responsibility and may differ from the requesting customer.
+  - `Equipment Owner` may differ from the billing party.
+  - `Equipment Responsible Billing Party` may differ from the equipment owner.
+  - Service address and billing address are independent and must not be assumed equal.
 
 ## Connection Strategy
 Use a standard SQL Server connection string via:

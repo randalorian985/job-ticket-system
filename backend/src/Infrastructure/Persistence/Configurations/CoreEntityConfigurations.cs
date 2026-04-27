@@ -41,6 +41,42 @@ public sealed class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
         builder.Property(x => x.Latitude).HasPrecision(9, 6);
         builder.Property(x => x.Longitude).HasPrecision(9, 6);
         builder.HasOne(x => x.Customer).WithMany(x => x.Equipment).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.ServiceLocation).WithMany(x => x.Equipment).HasForeignKey(x => x.ServiceLocationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.OwnerCustomer).WithMany().HasForeignKey(x => x.OwnerCustomerId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(x => x.ResponsibleBillingCustomer).WithMany().HasForeignKey(x => x.ResponsibleBillingCustomerId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasIndex(x => x.ServiceLocationId);
+        builder.HasIndex(x => x.OwnerCustomerId);
+        builder.HasIndex(x => x.ResponsibleBillingCustomerId);
+    }
+}
+
+public sealed class ServiceLocationConfiguration : IEntityTypeConfiguration<ServiceLocation>
+{
+    public void Configure(EntityTypeBuilder<ServiceLocation> builder)
+    {
+        builder.ConfigureAuditableEntity();
+        builder.ConfigureSoftDelete();
+        builder.Property(x => x.CompanyName).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.LocationName).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.OnSiteContactName).HasMaxLength(200);
+        builder.Property(x => x.OnSiteContactPhone).HasMaxLength(50);
+        builder.Property(x => x.OnSiteContactEmail).HasMaxLength(320);
+        builder.Property(x => x.AddressLine1).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.AddressLine2).HasMaxLength(200);
+        builder.Property(x => x.City).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.State).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.PostalCode).HasMaxLength(20).IsRequired();
+        builder.Property(x => x.ParishCounty).HasMaxLength(100);
+        builder.Property(x => x.Country).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.GateCode).HasMaxLength(100);
+        builder.Property(x => x.AccessInstructions).HasMaxLength(2000);
+        builder.Property(x => x.SafetyRequirements).HasMaxLength(2000);
+        builder.Property(x => x.SiteNotes).HasMaxLength(4000);
+        builder.Property(x => x.Latitude).HasPrecision(9, 6);
+        builder.Property(x => x.Longitude).HasPrecision(9, 6);
+        builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
+        builder.HasOne(x => x.Customer).WithMany(x => x.ServiceLocations).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(x => x.CustomerId);
     }
 }
 
@@ -91,11 +127,19 @@ public sealed class JobTicketConfiguration : IEntityTypeConfiguration<JobTicket>
         builder.ConfigureSoftDelete();
         builder.Property(x => x.TicketNumber).HasMaxLength(50).IsRequired();
         builder.Property(x => x.Title).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.BillingContactName).HasMaxLength(200);
+        builder.Property(x => x.BillingContactPhone).HasMaxLength(50);
+        builder.Property(x => x.BillingContactEmail).HasMaxLength(320);
+        builder.Property(x => x.PurchaseOrderNumber).HasMaxLength(100);
         builder.Property(x => x.SiteLatitude).HasPrecision(9, 6);
         builder.Property(x => x.SiteLongitude).HasPrecision(9, 6);
         builder.HasOne(x => x.Customer).WithMany(x => x.JobTickets).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.ServiceLocation).WithMany(x => x.JobTickets).HasForeignKey(x => x.ServiceLocationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.BillingPartyCustomer).WithMany().HasForeignKey(x => x.BillingPartyCustomerId).OnDelete(DeleteBehavior.NoAction);
         builder.HasOne(x => x.Equipment).WithMany(x => x.JobTickets).HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.TicketNumber).IsUnique();
+        builder.HasIndex(x => x.ServiceLocationId);
+        builder.HasIndex(x => x.BillingPartyCustomerId);
     }
 }
 

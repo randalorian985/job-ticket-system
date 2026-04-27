@@ -18,3 +18,10 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 
 ## Current Phase
 Foundation/scaffolding only. No full domain workflows are implemented yet.
+
+## Core Account and Location Definitions
+- **Customer / Requesting Account**: The account that requests a job ticket to be created. This account is not always the same as the billing party.
+- **Service Location**: The physical work site where service occurs. A service location stores company and site naming, on-site contact details, address fields, access instructions, safety requirements, and additional site notes.
+- **Billing Party**: The customer/account that is financially responsible for invoice payment for a specific job ticket. Billing party can differ from the requesting account.
+- **Equipment Owner**: The customer/account that owns a piece of equipment. Equipment ownership can differ from the billing party.
+- **Equipment Responsible Billing Party**: The customer/account responsible for billing tied to equipment-level service responsibility. This party can differ from the equipment owner.
