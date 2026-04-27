@@ -178,6 +178,80 @@ public sealed class AuthIntegrationTests
         Assert.False(first.TryGetProperty("unitCost", out _));
     }
 
+    [Fact]
+    public async Task Employee_cannot_change_part_approval_status_through_update_endpoint()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync(async (db, auth) =>
+        {
+            var refs = await SeedDataAsync(db, auth);
+            var category = new PartCategory { Name = "Filters" };
+            db.PartCategories.Add(category);
+            await db.SaveChangesAsync();
+
+            var part = new Part
+            {
+                PartCategoryId = category.Id,
+                PartNumber = "F-100",
+                Name = "Air Filter",
+                UnitCost = 10m,
+                UnitPrice = 20m
+            };
+            db.Parts.Add(part);
+            await db.SaveChangesAsync();
+
+            db.JobTicketParts.Add(new JobTicketPart
+            {
+                JobTicketId = refs.AssignedJob.Id,
+                PartId = part.Id,
+                Quantity = 1m,
+                UnitCostSnapshot = part.UnitCost,
+                SalePriceSnapshot = part.UnitPrice,
+                IsBillable = true,
+                AddedAtUtc = DateTime.UtcNow,
+                AddedByEmployeeId = refs.Employee.Id
+            });
+            await db.SaveChangesAsync();
+        });
+
+        Guid jobTicketId;
+        Guid jobTicketPartId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            jobTicketId = await db.JobTickets.Where(x => x.Title == "Assigned").Select(x => x.Id).SingleAsync();
+            jobTicketPartId = await db.JobTicketParts.Where(x => x.JobTicketId == jobTicketId).Select(x => x.Id).SingleAsync();
+        }
+
+        var client = factory.CreateClient();
+        await client.SetBearerTokenAsync("employee", "EmployeePass!123");
+
+        var response = await client.PutAsJsonAsync($"/api/job-tickets/{jobTicketId}/parts/{jobTicketPartId}", new UpdateJobTicketPartDto(
+            1m,
+            "attempted approval",
+            true,
+            JobPartApprovalStatus.Approved,
+            null,
+            null,
+            false,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        await using var verifyScope = factory.Services.CreateAsyncScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var persisted = await verifyDb.JobTicketParts.SingleAsync(x => x.Id == jobTicketPartId);
+        Assert.Equal(JobPartApprovalStatus.Pending, persisted.ApprovalStatus);
+    }
+
     private static async Task SeedUsersAsync(ApplicationDbContext db, IAuthService auth)
     {
         db.Employees.AddRange(

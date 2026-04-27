@@ -17,10 +17,10 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Foundation/scaffolding only. No full domain workflows are implemented yet.
+Foundation/stabilization. Core workflows are implemented for backend APIs and employee mobile operations, with Manager/Admin UI intentionally deferred.
 
 ## Frontend Workflow Status
-- React Employee Mobile Workflow is now **in progress** with implemented login, auth state, assigned-job list/detail, clock in/out with GPS, work-note submission, part-used submission, and file/photo upload screens.
+- React Employee Mobile Workflow is implemented with login, auth state, assigned-job list/detail, clock in/out with GPS, work-note submission, part-used submission, and file/photo upload screens.
 
 ## Current Job Ticket Workflow (API-First Foundation)
 - Create job tickets with required requesting account (`CustomerId`), service location (`ServiceLocationId`), and billing party (`BillingPartyCustomerId`).
@@ -53,9 +53,9 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Managers can approve, reject (with required reason), and adjust time entries through dedicated workflow endpoints.
 - Adjustments preserve original values and new values in `TimeEntryAdjustment` records for auditability.
 - Audit logs capture clock-in, clock-out, approval, rejection, and adjustment actions.
-- Authentication is intentionally deferred; temporary manager/employee identifiers are accepted through DTOs in this phase.
-- Job part workflow follows the same authentication deferment with temporary actor/employee identifiers in DTOs.
-- Job file upload workflow follows the same authentication deferment with optional employee identifiers in DTOs.
+- Authentication and role-based authorization are active using JWT bearer tokens.
+- Employee access is assignment-scoped for job-specific workflows.
+- Manager/Admin approval and archive workflows are policy-protected for time and part approvals.
 
 ## Future Parts Compatibility Engine Data Capture
 - This phase adds **structured compatibility data capture only** for equipment and job-ticket-part history.

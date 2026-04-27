@@ -402,6 +402,18 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
     public async Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+
+        if (request.ApprovalStatus.HasValue)
+        {
+            EnsureManagerOrAdmin();
+        }
+
+        if (request.AllowManagerOverride && !currentUserContext.IsManager)
+        {
+            throw new ValidationException("Only managers or admins can apply manager override.");
+        }
+
         var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
         if (entry is null) return null;
 

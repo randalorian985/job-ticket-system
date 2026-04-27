@@ -108,6 +108,7 @@ All list endpoints support simple pagination with optional query params:
 - Job part quantity must be greater than zero; job ticket and part references must be active.
 - `AddedByEmployeeId` is optional but, when provided, must reference an active employee assigned to the ticket unless manager override is enabled.
 - Approved or invoiced part usage rows are locked from edits unless manager override is enabled.
+- Part approval state transitions are manager/admin-only (`approve`/`reject` endpoints). Employee updates cannot set approval status.
 - Rejection requires a non-empty reason.
 - Archiving is soft-delete only (`IsDeleted = true`) and excluded from normal lists via query filters.
 - Inventory decrement/restore is supported through add/archive DTO flags (`AdjustInventory`, `RestoreInventory`).
