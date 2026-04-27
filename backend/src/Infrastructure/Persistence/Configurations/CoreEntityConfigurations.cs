@@ -127,19 +127,25 @@ public sealed class JobTicketConfiguration : IEntityTypeConfiguration<JobTicket>
         builder.ConfigureSoftDelete();
         builder.Property(x => x.TicketNumber).HasMaxLength(50).IsRequired();
         builder.Property(x => x.Title).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.JobType).HasMaxLength(100);
         builder.Property(x => x.BillingContactName).HasMaxLength(200);
         builder.Property(x => x.BillingContactPhone).HasMaxLength(50);
         builder.Property(x => x.BillingContactEmail).HasMaxLength(320);
         builder.Property(x => x.PurchaseOrderNumber).HasMaxLength(100);
+        builder.Property(x => x.InternalNotes).HasMaxLength(4000);
+        builder.Property(x => x.CustomerFacingNotes).HasMaxLength(4000);
+        builder.Property(x => x.ArchiveReason).HasMaxLength(1000);
         builder.Property(x => x.SiteLatitude).HasPrecision(9, 6);
         builder.Property(x => x.SiteLongitude).HasPrecision(9, 6);
         builder.HasOne(x => x.Customer).WithMany(x => x.JobTickets).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.ServiceLocation).WithMany(x => x.JobTickets).HasForeignKey(x => x.ServiceLocationId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.BillingPartyCustomer).WithMany().HasForeignKey(x => x.BillingPartyCustomerId).OnDelete(DeleteBehavior.NoAction);
         builder.HasOne(x => x.Equipment).WithMany(x => x.JobTickets).HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(x => x.AssignedManagerEmployee).WithMany().HasForeignKey(x => x.AssignedManagerEmployeeId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.TicketNumber).IsUnique();
         builder.HasIndex(x => x.ServiceLocationId);
         builder.HasIndex(x => x.BillingPartyCustomerId);
+        builder.HasIndex(x => x.AssignedManagerEmployeeId);
     }
 }
 

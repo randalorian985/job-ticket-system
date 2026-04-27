@@ -19,6 +19,16 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 ## Current Phase
 Foundation/scaffolding only. No full domain workflows are implemented yet.
 
+## Current Job Ticket Workflow (API-First Foundation)
+- Create job tickets with required requesting account (`CustomerId`), service location (`ServiceLocationId`), and billing party (`BillingPartyCustomerId`).
+- Optional equipment linkage with validation to ensure equipment belongs to the selected service location.
+- Update core job metadata (title/description, priority, status, requested/scheduled/due/completed dates, billing contact, notes, manager, PO number).
+- Change status independently through a dedicated status endpoint with completed-date conventions.
+- Archive tickets using soft-delete semantics with a required archive reason.
+- Assign and unassign employees with duplicate-assignment prevention.
+- Add and list non-time-tracking work notes (work entries).
+- Record audit logs for create, update, status changes, archive, assignment changes, and work entry additions.
+
 ## Core Account and Location Definitions
 - **Customer / Requesting Account**: The account that requests a job ticket to be created. This account is not always the same as the billing party.
 - **Service Location**: The physical work site where service occurs. A service location stores company and site naming, on-site contact details, address fields, access instructions, safety requirements, and additional site notes.

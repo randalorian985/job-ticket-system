@@ -64,5 +64,27 @@ All list endpoints support simple pagination with optional query params:
 - `PUT /api/parts/{id}`
 - `POST /api/parts/{id}/archive`
 
+## Job Tickets (Current)
+### Endpoints
+- `GET /api/job-tickets`
+- `GET /api/job-tickets/{id}`
+- `POST /api/job-tickets`
+- `PUT /api/job-tickets/{id}`
+- `POST /api/job-tickets/{id}/status`
+- `POST /api/job-tickets/{id}/archive`
+- `GET /api/job-tickets/{id}/assignments`
+- `POST /api/job-tickets/{id}/assignments`
+- `DELETE /api/job-tickets/{id}/assignments/{employeeId}`
+- `GET /api/job-tickets/{id}/work-entries`
+- `POST /api/job-tickets/{id}/work-entries`
+
+### Behavior Notes
+- Job tickets are soft archived (`IsDeleted = true`) and excluded by default query filters.
+- `TicketNumber` is auto-generated as `JT-YYYY-000001` and incremented per year.
+- Status transition to `Completed` sets `CompletedAtUtc`; leaving `Completed` clears it.
+- Archive requests must provide `ArchiveReason`.
+- Assignment API enforces one active assignment per employee per ticket.
+- Work entries are note/description records only in this phase (no time tracking or file uploads).
+
 ## Versioning
 Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.

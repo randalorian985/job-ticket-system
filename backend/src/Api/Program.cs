@@ -1,5 +1,6 @@
 using JobTicketSystem.Infrastructure.Persistence;
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.JobTickets;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IVendorsService, VendorsService>();
 builder.Services.AddScoped<IPartCategoriesService, PartCategoriesService>();
 builder.Services.AddScoped<IPartsService, PartsService>();
+builder.Services.AddScoped<IJobTicketsService, JobTicketsService>();
 
 var app = builder.Build();
 
