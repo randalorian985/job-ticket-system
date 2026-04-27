@@ -1,4 +1,5 @@
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
 using JobTicketSystem.Infrastructure.Persistence;
@@ -17,7 +18,7 @@ public interface IJobTicketFilesService
     Task<JobTicketFileDto?> ArchiveAsync(Guid jobTicketId, Guid fileId, ArchiveJobTicketFileDto request, CancellationToken cancellationToken = default);
 }
 
-public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileStorageProvider storageProvider) : IJobTicketFilesService
+public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileStorageProvider storageProvider, ICurrentUserContext currentUserContext) : IJobTicketFilesService
 {
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -32,6 +33,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
     public async Task<IReadOnlyList<JobTicketFileDto>> ListAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
     {
         await EnsureActiveJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
 
         return await dbContext.JobTicketFiles
             .Where(x => x.JobTicketId == jobTicketId)
@@ -43,6 +45,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
     public async Task<JobTicketFileDto?> GetAsync(Guid jobTicketId, Guid fileId, CancellationToken cancellationToken = default)
     {
         await EnsureActiveJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
 
         return await dbContext.JobTicketFiles
             .Where(x => x.JobTicketId == jobTicketId && x.Id == fileId)
@@ -52,6 +55,8 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
 
     public async Task<JobTicketFileDto> UploadAsync(Guid jobTicketId, UploadJobTicketFileDto request, CancellationToken cancellationToken = default)
     {
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+
         var jobTicket = await dbContext.JobTickets
             .Where(x => x.Id == jobTicketId)
             .Select(x => new { x.Id, x.EquipmentId, x.ServiceLocationId })
@@ -163,6 +168,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
     public async Task<JobTicketFileDownloadDto?> GetDownloadAsync(Guid jobTicketId, Guid fileId, CancellationToken cancellationToken = default)
     {
         await EnsureActiveJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
 
         var file = await dbContext.JobTicketFiles
             .Where(x => x.JobTicketId == jobTicketId && x.Id == fileId)
@@ -180,6 +186,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
     public async Task<JobTicketFileDto?> UpdateAsync(Guid jobTicketId, Guid fileId, UpdateJobTicketFileDto request, CancellationToken cancellationToken = default)
     {
         await EnsureActiveJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
 
         var entity = await dbContext.JobTicketFiles
             .SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == fileId, cancellationToken);
@@ -205,6 +212,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
     public async Task<JobTicketFileDto?> ArchiveAsync(Guid jobTicketId, Guid fileId, ArchiveJobTicketFileDto request, CancellationToken cancellationToken = default)
     {
         await EnsureActiveJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
 
         var entity = await dbContext.JobTicketFiles
             .SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == fileId, cancellationToken);
@@ -222,6 +230,21 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return MapDto.Compile().Invoke(entity);
+    }
+
+
+    private async Task EnsureCurrentUserCanAccessJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken)
+    {
+        if (currentUserContext.IsManager)
+        {
+            return;
+        }
+
+        var isAssigned = await dbContext.JobTicketEmployees.AnyAsync(x => x.JobTicketId == jobTicketId && x.EmployeeId == currentUserContext.EmployeeId, cancellationToken);
+        if (!isAssigned)
+        {
+            throw new ValidationException("Current employee is not assigned to this job ticket.");
+        }
     }
 
     private async Task EnsureActiveJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken)

@@ -171,3 +171,26 @@ All list endpoints support simple pagination with optional query params:
 
 ## Versioning
 Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
+
+
+## Authentication
+
+- `POST /api/auth/login` accepts `AuthLoginRequestDto` (`usernameOrEmail`, `password`) and returns JWT token + current user payload.
+- `GET /api/auth/me` returns authenticated user profile for bearer token.
+- Protected endpoints require bearer token.
+
+## Authorization Policies
+
+- `AdminOnly`: system-level management endpoints (`/api/users/*`).
+- `ManagerOrAdmin`: reporting, archive/delete, assignment, approval/rejection flows.
+- `EmployeeOrAbove`: general authenticated access.
+- `AssignedEmployeeOrManager`: job-ticket file/work/parts actions requiring assignment for employees.
+
+## User Management
+
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `POST /api/users`
+- `PUT /api/users/{id}`
+- `POST /api/users/{id}/archive`
+- `POST /api/users/{id}/reset-password`

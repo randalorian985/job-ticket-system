@@ -1,13 +1,16 @@
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobTicketSystem.Api.Controllers;
 
 [ApiController]
 [Route("api/job-tickets/{jobTicketId:guid}/files")]
-public sealed class JobTicketFilesController(IJobTicketFilesService service) : ControllerBase
+[Authorize(Policy = "AssignedEmployeeOrManager")]
+public sealed class JobTicketFilesController(IJobTicketFilesService service, ICurrentUserContext currentUserContext) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<JobTicketFileDto>>> ListAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
@@ -58,7 +61,7 @@ public sealed class JobTicketFilesController(IJobTicketFilesService service) : C
                     request.Caption,
                     request.Visibility,
                     request.IsInvoiceAttachment,
-                    request.UploadedByEmployeeId,
+                    currentUserContext.IsManager ? request.UploadedByEmployeeId : currentUserContext.EmployeeId,
                     request.EquipmentId,
                     request.WorkEntryId),
                 cancellationToken);
@@ -109,7 +112,7 @@ public sealed class JobTicketFilesController(IJobTicketFilesService service) : C
     {
         try
         {
-            var archived = await service.ArchiveAsync(jobTicketId, fileId, request, cancellationToken);
+            var archived = await service.ArchiveAsync(jobTicketId, fileId, request with { ArchivedByEmployeeId = currentUserContext.EmployeeId }, cancellationToken);
             return archived is null ? NotFound() : Ok(archived);
         }
         catch (Exception exception)

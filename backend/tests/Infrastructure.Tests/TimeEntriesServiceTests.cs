@@ -15,7 +15,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: true);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var entry = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30.2672m, -97.7431m, 5.5m, "iOS", "Starting work"));
 
@@ -29,7 +29,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: false);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null)));
@@ -40,7 +40,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: true);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
 
@@ -53,7 +53,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: true);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
         var entry = await context.TimeEntries.SingleAsync(x => x.Id == created.Id);
@@ -75,7 +75,7 @@ public sealed class TimeEntriesServiceTests
         var secondEmployee = new Employee { FirstName = "Other", LastName = "Tech", Email = "other@example.com" };
         context.Employees.Add(secondEmployee);
         await context.SaveChangesAsync();
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
 
@@ -88,7 +88,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: true);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
 
@@ -101,7 +101,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: true);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var created = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
 
         var approved = await service.ApproveAsync(created.Id, new ApproveTimeEntryRequestDto(refs.Manager.Id));
@@ -116,7 +116,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: true);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var created = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
 
         var rejected = await service.RejectAsync(created.Id, new RejectTimeEntryRequestDto(refs.Manager.Id, "GPS mismatch"));
@@ -131,7 +131,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: true);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var created = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
         var entry = await context.TimeEntries.SingleAsync(x => x.Id == created.Id);
         entry.StartedAtUtc = DateTime.UtcNow.AddMinutes(-90);
@@ -155,7 +155,7 @@ public sealed class TimeEntriesServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedRefsAsync(context, assigned: true);
-        var service = new TimeEntriesService(context);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
         await service.ClockOutAsync(new ClockOutRequestDto(created.Id, refs.Employee.Id, 30.1m, -97.1m, null, "Done", null));

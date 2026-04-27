@@ -15,7 +15,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await service.CreateAsync(BuildCreateRequest(refs));
 
@@ -29,7 +29,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var request = BuildCreateRequest(refs) with { BillingPartyCustomerId = Guid.NewGuid() };
         await Assert.ThrowsAsync<ValidationException>(() => service.CreateAsync(request));
@@ -40,7 +40,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var request = BuildCreateRequest(refs) with { ServiceLocationId = Guid.NewGuid() };
         await Assert.ThrowsAsync<ValidationException>(() => service.CreateAsync(request));
@@ -51,7 +51,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await service.CreateAsync(BuildCreateRequest(refs));
 
@@ -63,7 +63,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var ticket = await service.CreateAsync(BuildCreateRequest(refs));
 
         var assignment = await service.AddAssignmentAsync(ticket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
@@ -76,7 +76,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var ticket = await service.CreateAsync(BuildCreateRequest(refs));
 
         await service.AddAssignmentAsync(ticket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
@@ -88,7 +88,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var ticket = await service.CreateAsync(BuildCreateRequest(refs));
 
         var archived = await service.ArchiveAsync(ticket.Id, new ArchiveJobTicketDto("Duplicate request"));
@@ -102,7 +102,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var ticket = await service.CreateAsync(BuildCreateRequest(refs));
 
         await Assert.ThrowsAsync<ValidationException>(() => service.ArchiveAsync(ticket.Id, new ArchiveJobTicketDto("   ")));
@@ -113,7 +113,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var ticket = await service.CreateAsync(BuildCreateRequest(refs));
 
         var updated = await service.ChangeStatusAsync(ticket.Id, new ChangeJobTicketStatusDto(JobTicketStatus.Completed));
@@ -127,7 +127,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var ticket = await service.CreateAsync(BuildCreateRequest(refs));
 
         await service.ArchiveAsync(ticket.Id, new ArchiveJobTicketDto("No longer needed"));
@@ -141,7 +141,7 @@ public sealed class JobTicketServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedCoreReferencesAsync(context);
-        var service = new JobTicketsService(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
         var ticket = await service.CreateAsync(BuildCreateRequest(refs));
 
         var entry = await service.AddWorkEntryAsync(ticket.Id, new AddJobWorkEntryDto(refs.Employee.Id, WorkEntryType.Note, "Initial inspection complete", null));

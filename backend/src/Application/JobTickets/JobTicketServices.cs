@@ -1,4 +1,5 @@
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
 using JobTicketSystem.Infrastructure.Persistence;
@@ -27,13 +28,18 @@ public interface IJobTicketsService
     Task<JobTicketPartDto?> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default);
 }
 
-public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTicketsService
+public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : IJobTicketsService
 {
     private static readonly Guid SystemUserId = Guid.Empty;
 
     public async Task<IReadOnlyList<JobTicketListItemDto>> ListAsync(JobTicketListQuery query, CancellationToken cancellationToken = default)
     {
         var jobTickets = dbContext.JobTickets.AsQueryable();
+
+        if (!currentUserContext.IsManager)
+        {
+            jobTickets = jobTickets.Where(x => x.AssignedEmployees.Any(a => a.EmployeeId == currentUserContext.EmployeeId));
+        }
 
         if (query.CustomerId.HasValue)
         {
@@ -69,8 +75,19 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
             .ToListAsync(cancellationToken);
     }
 
-    public Task<JobTicketDto?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
-        dbContext.JobTickets.Where(x => x.Id == id).Select(MapJobTicket).SingleOrDefaultAsync(cancellationToken);
+    public async Task<JobTicketDto?> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!currentUserContext.IsManager)
+        {
+            var assigned = await dbContext.JobTicketEmployees.AnyAsync(x => x.JobTicketId == id && x.EmployeeId == currentUserContext.EmployeeId, cancellationToken);
+            if (!assigned)
+            {
+                return null;
+            }
+        }
+
+        return await dbContext.JobTickets.Where(x => x.Id == id).Select(MapJobTicket).SingleOrDefaultAsync(cancellationToken);
+    }
 
     public async Task<JobTicketDto> CreateAsync(CreateJobTicketDto request, CancellationToken cancellationToken = default)
     {
@@ -189,6 +206,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
 
     public async Task<JobTicketDto?> ArchiveAsync(Guid id, ArchiveJobTicketDto request, CancellationToken cancellationToken = default)
     {
+        EnsureManagerOrAdmin();
         var archiveReason = ValidationHelpers.NullIfWhitespace(request.ArchiveReason);
         if (archiveReason is null)
         {
@@ -273,6 +291,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
     public async Task<IReadOnlyList<JobWorkEntryDto>> ListWorkEntriesAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
     {
         await EnsureJobTicketExists(jobTicketId, cancellationToken);
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
 
         return await dbContext.JobWorkEntries
             .Where(x => x.JobTicketId == jobTicketId)
@@ -284,6 +303,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
     public async Task<JobWorkEntryDto> AddWorkEntryAsync(Guid jobTicketId, AddJobWorkEntryDto request, CancellationToken cancellationToken = default)
     {
         await EnsureJobTicketExists(jobTicketId, cancellationToken);
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
         ValidationHelpers.ValidateRequired(request.Notes, nameof(request.Notes));
 
         if (request.EmployeeId.HasValue && !await dbContext.Employees.AnyAsync(x => x.Id == request.EmployeeId.Value, cancellationToken))
@@ -310,6 +330,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
     public async Task<IReadOnlyList<JobTicketPartDto>> ListPartsAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
     {
         await EnsureJobTicketExists(jobTicketId, cancellationToken);
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
 
         return await dbContext.JobTicketParts
             .Where(x => x.JobTicketId == jobTicketId)
@@ -320,6 +341,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
 
     public async Task<JobTicketPartDto> AddPartAsync(Guid jobTicketId, AddJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
         var jobTicket = await dbContext.JobTickets.SingleOrDefaultAsync(x => x.Id == jobTicketId, cancellationToken);
         if (jobTicket is null)
         {
@@ -436,6 +458,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
 
     public async Task<JobTicketPartDto?> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, ApproveJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
+        EnsureManagerOrAdmin();
         var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
         if (entry is null) return null;
 
@@ -454,6 +477,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
 
     public async Task<JobTicketPartDto?> RejectPartAsync(Guid jobTicketId, Guid jobTicketPartId, RejectJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
+        EnsureManagerOrAdmin();
         var reason = ValidationHelpers.NullIfWhitespace(request.RejectionReason);
         if (reason is null)
         {
@@ -478,6 +502,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
 
     public async Task<JobTicketPartDto?> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
+        EnsureManagerOrAdmin();
         var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
         if (entry is null) return null;
 
@@ -498,6 +523,29 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Delete, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"RestoreInventory\":{request.RestoreInventory.ToString().ToLowerInvariant()}}}");
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicketPart.Compile().Invoke(entry);
+    }
+
+
+    private async Task EnsureCurrentUserCanAccessJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken)
+    {
+        if (currentUserContext.IsManager)
+        {
+            return;
+        }
+
+        var isAssigned = await dbContext.JobTicketEmployees.AnyAsync(x => x.JobTicketId == jobTicketId && x.EmployeeId == currentUserContext.EmployeeId, cancellationToken);
+        if (!isAssigned)
+        {
+            throw new ValidationException("Current employee is not assigned to this job ticket.");
+        }
+    }
+
+    private void EnsureManagerOrAdmin()
+    {
+        if (!currentUserContext.IsManager)
+        {
+            throw new ValidationException("This operation requires manager or admin access.");
+        }
     }
 
     private async Task EnsureJobTicketExists(Guid jobTicketId, CancellationToken cancellationToken)
