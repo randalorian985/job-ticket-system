@@ -1,11 +1,13 @@
 using JobTicketSystem.Application.Reporting;
 using JobTicketSystem.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobTicketSystem.Api.Controllers;
 
 [ApiController]
 [Route("api/reports")]
+[Authorize(Policy = "ManagerOrAdmin")]
 public sealed class ReportsController(IReportingService reportingService) : ControllerBase
 {
     [HttpGet("job-tickets/{jobTicketId:guid}/invoice-ready")]

@@ -69,3 +69,15 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Parts totals use immutable job-part snapshot pricing to preserve financial history.
 - This phase does not create invoices, process payments, or add authentication/UI flows.
 - File/photo upload currently supports local development storage and intentionally defers cloud storage providers (Azure Blob Storage/S3) to a later phase.
+
+
+## Authentication & Role Enforcement Phase
+
+This phase adds foundational security controls without replacing existing workflows:
+
+- Local username/email + password auth with hashed passwords.
+- JWT bearer token issuance for API clients.
+- Role enforcement for `Admin`, `Manager`, `Employee`.
+- Assignment-aware authorization for employee access to job-specific actions (jobs, time tracking, files, and parts workflows).
+- Admin user management endpoints for CRUD/archive/reset-password.
+- No external SSO/OAuth, password reset workflow, or email verification in this phase.

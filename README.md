@@ -87,3 +87,12 @@ npm test
 ## Notes
 - This is a foundation-only scaffold.
 - Business domain logic, authentication, and ticket workflows are intentionally not implemented yet.
+
+
+## Authentication and Authorization
+
+- API authentication uses JWT bearer tokens (`/api/auth/login`).
+- Configure `Jwt:Issuer`, `Jwt:Audience`, `Jwt:SigningKey`, and `Jwt:ExpirationMinutes` in `backend/src/Api/appsettings.json` (or environment variables).
+- Roles: `Admin`, `Manager`, `Employee`.
+- First admin bootstrap: create an employee via `/api/users` as `Admin` (or seed directly in DB with `UserName`, `Role`, and hashed `PasswordHash`).
+- Current user endpoint: `GET /api/auth/me`.

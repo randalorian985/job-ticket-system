@@ -17,7 +17,7 @@ public sealed class JobTicketFileServicesTests
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
         var storage = CreateStorageProvider();
-        var service = new JobTicketFilesService(context, storage);
+        var service = new JobTicketFilesService(context, storage, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         await using var stream = new MemoryStream([1, 2, 3, 4]);
         var result = await service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
@@ -43,7 +43,7 @@ public sealed class JobTicketFileServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketFilesService(context, CreateStorageProvider());
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         await using var stream = new MemoryStream([1]);
         await Assert.ThrowsAsync<ValidationException>(() => service.UploadAsync(Guid.NewGuid(), new UploadJobTicketFileDto(
@@ -55,7 +55,7 @@ public sealed class JobTicketFileServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketFilesService(context, CreateStorageProvider());
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         await using var stream = new MemoryStream();
         await Assert.ThrowsAsync<ValidationException>(() => service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
@@ -67,7 +67,7 @@ public sealed class JobTicketFileServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketFilesService(context, CreateStorageProvider());
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         await using var stream = new MemoryStream([1]);
         await Assert.ThrowsAsync<ValidationException>(() => service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
@@ -79,7 +79,7 @@ public sealed class JobTicketFileServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketFilesService(context, CreateStorageProvider());
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var first = await UploadSimpleAsync(service, refs.JobTicket.Id, "one.jpg");
         await UploadSimpleAsync(service, refs.JobTicket.Id, "two.jpg");
@@ -96,7 +96,7 @@ public sealed class JobTicketFileServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketFilesService(context, CreateStorageProvider());
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await UploadSimpleAsync(service, refs.JobTicket.Id, "update.jpg");
         var updated = await service.UpdateAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketFileDto("Updated", FileVisibility.Customer, true));
@@ -112,7 +112,7 @@ public sealed class JobTicketFileServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketFilesService(context, CreateStorageProvider());
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await UploadSimpleAsync(service, refs.JobTicket.Id, "archive.jpg");
         await service.ArchiveAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketFileDto(refs.Employee.Id));
@@ -127,7 +127,7 @@ public sealed class JobTicketFileServicesTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketFilesService(context, CreateStorageProvider());
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
         var created = await UploadSimpleAsync(service, refs.JobTicket.Id, "audit.jpg");
         await service.UpdateAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketFileDto("Audit", FileVisibility.Internal, false));

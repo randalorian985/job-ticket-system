@@ -1,4 +1,5 @@
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
 using JobTicketSystem.Infrastructure.Persistence;
@@ -18,11 +19,12 @@ public interface ITimeEntriesService
     Task<TimeEntryDto?> AdjustAsync(Guid id, AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default);
 }
 
-public sealed class TimeEntriesService(ApplicationDbContext dbContext) : ITimeEntriesService
+public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : ITimeEntriesService
 {
     public async Task<TimeEntryDto> ClockInAsync(ClockInRequestDto request, CancellationToken cancellationToken = default)
     {
         ValidateClockIn(request);
+        EnsureEmployeeRequestMatchesCurrentUser(request.EmployeeId);
         await EnsureEmployeeExistsAsync(request.EmployeeId, cancellationToken);
         await EnsureJobTicketExistsAsync(request.JobTicketId, cancellationToken);
         await EnsureEmployeeAssignedAsync(request.JobTicketId, request.EmployeeId, cancellationToken);
@@ -58,6 +60,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext) : ITimeEn
     public async Task<TimeEntryDto> ClockOutAsync(ClockOutRequestDto request, CancellationToken cancellationToken = default)
     {
         ValidateClockOut(request);
+        EnsureEmployeeRequestMatchesCurrentUser(request.EmployeeId);
 
         var entry = await dbContext.TimeEntries
             .SingleOrDefaultAsync(x => x.Id == request.TimeEntryId, cancellationToken)
@@ -104,6 +107,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext) : ITimeEn
 
     public Task<TimeEntryDto?> GetOpenEntryAsync(Guid employeeId, CancellationToken cancellationToken = default)
     {
+        EnsureEmployeeRequestMatchesCurrentUser(employeeId);
         if (employeeId == Guid.Empty) throw new ValidationException("EmployeeId is required.");
 
         return dbContext.TimeEntries
@@ -116,6 +120,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext) : ITimeEn
     public async Task<IReadOnlyList<TimeEntryDto>> ListForJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
     {
         if (jobTicketId == Guid.Empty) throw new ValidationException("JobTicketId is required.");
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
 
         return await dbContext.TimeEntries
             .Where(x => x.JobTicketId == jobTicketId)
@@ -126,6 +131,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext) : ITimeEn
 
     public async Task<IReadOnlyList<TimeEntryDto>> ListForEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default)
     {
+        EnsureEmployeeRequestMatchesCurrentUser(employeeId);
         if (employeeId == Guid.Empty) throw new ValidationException("EmployeeId is required.");
 
         return await dbContext.TimeEntries
@@ -137,6 +143,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext) : ITimeEn
 
     public async Task<TimeEntryDto?> ApproveAsync(Guid id, ApproveTimeEntryRequestDto request, CancellationToken cancellationToken = default)
     {
+        EnsureManagerOrAdmin();
         if (request.ApprovedByUserId == Guid.Empty) throw new ValidationException("ApprovedByUserId is required.");
 
         var entry = await dbContext.TimeEntries.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -155,6 +162,8 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext) : ITimeEn
 
     public async Task<TimeEntryDto?> RejectAsync(Guid id, RejectTimeEntryRequestDto request, CancellationToken cancellationToken = default)
     {
+        EnsureManagerOrAdmin();
+        EnsureManagerOrAdmin();
         ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
         if (request.RejectedByUserId == Guid.Empty) throw new ValidationException("RejectedByUserId is required.");
 
@@ -272,6 +281,42 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext) : ITimeEn
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Map(entry);
+    }
+
+
+    private void EnsureEmployeeRequestMatchesCurrentUser(Guid employeeId)
+    {
+        if (currentUserContext.IsManager)
+        {
+            return;
+        }
+
+        if (currentUserContext.EmployeeId != employeeId)
+        {
+            throw new ValidationException("Employees can only perform time operations for their own account.");
+        }
+    }
+
+    private async Task EnsureCurrentUserCanAccessJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken)
+    {
+        if (currentUserContext.IsManager)
+        {
+            return;
+        }
+
+        var isAssigned = await dbContext.JobTicketEmployees.AnyAsync(x => x.JobTicketId == jobTicketId && x.EmployeeId == currentUserContext.EmployeeId, cancellationToken);
+        if (!isAssigned)
+        {
+            throw new ValidationException("Current employee is not assigned to this job ticket.");
+        }
+    }
+
+    private void EnsureManagerOrAdmin()
+    {
+        if (!currentUserContext.IsManager)
+        {
+            throw new ValidationException("This operation requires manager or admin access.");
+        }
     }
 
     private static readonly System.Linq.Expressions.Expression<Func<TimeEntry, TimeEntryDto>> MapProjection = x => new TimeEntryDto(

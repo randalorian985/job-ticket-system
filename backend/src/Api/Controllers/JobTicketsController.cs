@@ -1,13 +1,16 @@
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobTicketSystem.Api.Controllers;
 
 [ApiController]
 [Route("api/job-tickets")]
-public sealed class JobTicketsController(IJobTicketsService service) : ControllerBase
+[Authorize(Policy = "EmployeeOrAbove")]
+public sealed class JobTicketsController(IJobTicketsService service, ICurrentUserContext currentUserContext) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<JobTicketListItemDto>>> ListAsync(
@@ -32,6 +35,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketDto>> CreateAsync([FromBody] CreateJobTicketDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -46,6 +50,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketDto>> UpdateAsync(Guid id, [FromBody] UpdateJobTicketDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -60,6 +65,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost("{id:guid}/status")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketDto>> ChangeStatusAsync(Guid id, [FromBody] ChangeJobTicketStatusDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -74,6 +80,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost("{id:guid}/archive")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketDto>> ArchiveAsync(Guid id, [FromBody] ArchiveJobTicketDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -88,6 +95,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpGet("{id:guid}/assignments")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<IReadOnlyList<JobTicketAssignmentDto>>> ListAssignmentsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -101,6 +109,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost("{id:guid}/assignments")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketAssignmentDto>> AddAssignmentAsync(Guid id, [FromBody] AddJobTicketAssignmentDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -115,6 +124,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpDelete("{id:guid}/assignments/{employeeId:guid}")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult> RemoveAssignmentAsync(Guid id, Guid employeeId, CancellationToken cancellationToken = default)
     {
         try
@@ -128,6 +138,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpGet("{id:guid}/work-entries")]
+    [Authorize(Policy = "AssignedEmployeeOrManager")]
     public async Task<ActionResult<IReadOnlyList<JobWorkEntryDto>>> ListWorkEntriesAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -141,11 +152,13 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost("{id:guid}/work-entries")]
+    [Authorize(Policy = "AssignedEmployeeOrManager")]
     public async Task<ActionResult<JobWorkEntryDto>> AddWorkEntryAsync(Guid id, [FromBody] AddJobWorkEntryDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            return Ok(await service.AddWorkEntryAsync(id, request, cancellationToken));
+            var employeeId = currentUserContext.IsManager ? request.EmployeeId : currentUserContext.EmployeeId;
+            return Ok(await service.AddWorkEntryAsync(id, request with { EmployeeId = employeeId }, cancellationToken));
         }
         catch (Exception exception)
         {
@@ -154,6 +167,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpGet("{jobTicketId:guid}/parts")]
+    [Authorize(Policy = "AssignedEmployeeOrManager")]
     public async Task<ActionResult<IReadOnlyList<JobTicketPartDto>>> ListPartsAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
     {
         try
@@ -167,11 +181,13 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost("{jobTicketId:guid}/parts")]
+    [Authorize(Policy = "AssignedEmployeeOrManager")]
     public async Task<ActionResult<JobTicketPartDto>> AddPartAsync(Guid jobTicketId, [FromBody] AddJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            return Ok(await service.AddPartAsync(jobTicketId, request, cancellationToken));
+            var addedByEmployeeId = currentUserContext.IsManager ? request.AddedByEmployeeId : currentUserContext.EmployeeId;
+            return Ok(await service.AddPartAsync(jobTicketId, request with { AddedByEmployeeId = addedByEmployeeId }, cancellationToken));
         }
         catch (Exception exception)
         {
@@ -180,6 +196,7 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPut("{jobTicketId:guid}/parts/{jobTicketPartId:guid}")]
+    [Authorize(Policy = "AssignedEmployeeOrManager")]
     public async Task<ActionResult<JobTicketPartDto>> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -194,11 +211,12 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost("{jobTicketId:guid}/parts/{jobTicketPartId:guid}/approve")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketPartDto>> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] ApproveJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var approved = await service.ApprovePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+            var approved = await service.ApprovePartAsync(jobTicketId, jobTicketPartId, request with { ApprovedByUserId = currentUserContext.EmployeeId }, cancellationToken);
             return approved is null ? NotFound() : Ok(approved);
         }
         catch (Exception exception)
@@ -208,11 +226,12 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost("{jobTicketId:guid}/parts/{jobTicketPartId:guid}/reject")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketPartDto>> RejectPartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] RejectJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var rejected = await service.RejectPartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+            var rejected = await service.RejectPartAsync(jobTicketId, jobTicketPartId, request with { RejectedByUserId = currentUserContext.EmployeeId }, cancellationToken);
             return rejected is null ? NotFound() : Ok(rejected);
         }
         catch (Exception exception)
@@ -222,11 +241,12 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
     }
 
     [HttpPost("{jobTicketId:guid}/parts/{jobTicketPartId:guid}/archive")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketPartDto>> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var archived = await service.ArchivePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+            var archived = await service.ArchivePartAsync(jobTicketId, jobTicketPartId, request with { ArchivedByUserId = currentUserContext.EmployeeId }, cancellationToken);
             return archived is null ? NotFound() : Ok(archived);
         }
         catch (Exception exception)

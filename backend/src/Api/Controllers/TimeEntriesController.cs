@@ -1,12 +1,15 @@
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.TimeEntries;
+using JobTicketSystem.Application.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobTicketSystem.Api.Controllers;
 
 [ApiController]
 [Route("api/time-entries")]
-public sealed class TimeEntriesController(ITimeEntriesService service) : ControllerBase
+[Authorize(Policy = "EmployeeOrAbove")]
+public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentUserContext currentUserContext) : ControllerBase
 {
     [HttpPost("clock-in")]
     public async Task<ActionResult<TimeEntryDto>> ClockInAsync([FromBody] ClockInRequestDto request, CancellationToken cancellationToken = default)
@@ -75,11 +78,12 @@ public sealed class TimeEntriesController(ITimeEntriesService service) : Control
     }
 
     [HttpPost("{id:guid}/approve")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<TimeEntryDto>> ApproveAsync(Guid id, [FromBody] ApproveTimeEntryRequestDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var entry = await service.ApproveAsync(id, request, cancellationToken);
+            var entry = await service.ApproveAsync(id, new ApproveTimeEntryRequestDto(currentUserContext.EmployeeId), cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
         }
         catch (Exception exception)
@@ -89,11 +93,12 @@ public sealed class TimeEntriesController(ITimeEntriesService service) : Control
     }
 
     [HttpPost("{id:guid}/reject")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<TimeEntryDto>> RejectAsync(Guid id, [FromBody] RejectTimeEntryRequestDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var entry = await service.RejectAsync(id, request, cancellationToken);
+            var entry = await service.RejectAsync(id, new RejectTimeEntryRequestDto(currentUserContext.EmployeeId, request.Reason), cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
         }
         catch (Exception exception)
@@ -103,11 +108,12 @@ public sealed class TimeEntriesController(ITimeEntriesService service) : Control
     }
 
     [HttpPost("{id:guid}/adjust")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<TimeEntryDto>> AdjustAsync(Guid id, [FromBody] AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var entry = await service.AdjustAsync(id, request, cancellationToken);
+            var entry = await service.AdjustAsync(id, request with { AdjustedByUserId = currentUserContext.EmployeeId }, cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
         }
         catch (Exception exception)
