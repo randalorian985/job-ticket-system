@@ -33,6 +33,10 @@ Initial project scaffold for a Job Ticket Management System.
   api-contract.md
 ```
 
+## Development Environment
+
+For full local setup instructions (tooling, Docker SQL Server, backend/frontend build commands, and troubleshooting), see [docs/development-setup.md](docs/development-setup.md).
+
 ## Backend Setup
 
 ```bash
