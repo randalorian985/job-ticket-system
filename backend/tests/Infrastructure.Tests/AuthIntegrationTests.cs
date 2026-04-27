@@ -116,6 +116,47 @@ public sealed class AuthIntegrationTests
     }
 
     [Fact]
+    public async Task Assigned_employee_file_upload_returns_created_with_safe_location_header()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync(async (db, auth) =>
+        {
+            var refs = await SeedDataAsync(db, auth);
+            db.JobTicketEmployees.Add(new JobTicketEmployee
+            {
+                JobTicketId = refs.AssignedJob.Id,
+                EmployeeId = refs.Employee.Id,
+                AssignedAtUtc = DateTime.UtcNow
+            });
+            await db.SaveChangesAsync();
+        });
+
+        var client = factory.CreateClient();
+        await client.SetBearerTokenAsync("employee", "EmployeePass!123");
+        var assigned = await factory.GetAssignedJobIdAsync();
+
+        using var fileContent = new StreamContent(new MemoryStream([1, 2, 3, 4]));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+        using var form = new MultipartFormDataContent
+        {
+            { fileContent, "File", "photo.jpg" }
+        };
+
+        var response = await client.PostAsync($"/api/job-tickets/{assigned}/files", form);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.NotNull(response.Headers.Location);
+
+        var location = response.Headers.Location!.ToString();
+        Assert.StartsWith($"/api/job-tickets/{assigned}/files/", location, StringComparison.Ordinal);
+        Assert.DoesNotContain("\\", location, StringComparison.Ordinal);
+        Assert.DoesNotContain("uploads", location, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("storage", location, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("blob", location, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("key=", location, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Manager_or_admin_can_view_reports_but_employee_cannot_and_manager_can_approve_reject_time()
     {
         await using var factory = new TestApiFactory();

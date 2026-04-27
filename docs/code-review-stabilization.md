@@ -17,17 +17,29 @@
    - Coverage added: integration test ensuring employee cannot approve part through update endpoint.
 
 ## Important (should fix before next phase)
-1. **Frontend job status/priority labels were misaligned with backend enum numeric values.**
+1. **File upload response used route-generation-based Created response.**
+   - Risk: upload could persist successfully but return an unstable response if route generation changes/fails.
+   - Fix applied: upload endpoint now returns deterministic `201 Created` with `Location: /api/job-tickets/{jobTicketId}/files/{fileId}`.
+   - Files: `backend/src/Api/Controllers/JobTicketFilesController.cs`.
+   - Coverage added: integration test validates `201`, non-empty location header, and safe API URL that does not expose storage internals.
+
+2. **Time-entry adjustment authorization was not enforced at service layer.**
+   - Risk: direct service invocation could bypass controller authorization attributes.
+   - Fix applied: `AdjustAsync` now enforces Manager/Admin authorization in the application service.
+   - Files: `backend/src/Application/TimeEntries/TimeEntryServices.cs`.
+   - Coverage added: service test validates an Employee-role caller cannot adjust entries through direct service invocation.
+
+3. **Frontend job status/priority labels were misaligned with backend enum numeric values.**
    - Risk: incorrect UI display and operator confusion.
    - Fix applied: updated employee job list label maps to match backend enum values.
    - File: `frontend/src/pages/employee/MyJobsPage.tsx`.
 
-2. **Project scope doc had stale statements saying authentication/workflows were deferred or in-progress.**
+4. **Project scope doc had stale statements saying authentication/workflows were deferred or in-progress.**
    - Risk: onboarding and planning confusion.
    - Fix applied: updated scope status to reflect current implemented auth and employee workflow state.
    - File: `docs/project-scope.md`.
 
-3. **API contract needed explicit note for part approval boundary.**
+5. **API contract needed explicit note for part approval boundary.**
    - Risk: client teams might incorrectly rely on part-update endpoint for approval transitions.
    - Fix applied: added explicit note that approval transitions are manager/admin-only.
    - File: `docs/api-contract.md`.

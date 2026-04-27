@@ -66,7 +66,8 @@ public sealed class JobTicketFilesController(IJobTicketFilesService service, ICu
                     request.WorkEntryId),
                 cancellationToken);
 
-            return CreatedAtAction(nameof(GetAsync), new { jobTicketId, fileId = created.Id }, created);
+            var location = $"/api/job-tickets/{jobTicketId}/files/{created.Id}";
+            return Created(location, created);
         }
         catch (Exception exception)
         {

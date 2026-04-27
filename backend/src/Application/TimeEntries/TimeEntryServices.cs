@@ -183,6 +183,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
 
     public async Task<TimeEntryDto?> AdjustAsync(Guid id, AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default)
     {
+        EnsureManagerOrAdmin();
         ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
         if (request.AdjustedByUserId == Guid.Empty) throw new ValidationException("AdjustedByUserId is required.");
 
