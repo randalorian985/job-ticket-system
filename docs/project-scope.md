@@ -27,7 +27,10 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Archive tickets using soft-delete semantics with a required archive reason.
 - Assign and unassign employees with duplicate-assignment prevention.
 - Add and list non-time-tracking work notes (work entries).
+- Track parts used on job tickets with immutable pricing snapshots and optional inventory decrement/restore behavior.
+- Approve, reject (with reason), update, and archive job part usage entries through dedicated workflow endpoints.
 - Record audit logs for create, update, status changes, archive, assignment changes, and work entry additions.
+  - Includes job part add/update/archive/approve/reject actions.
 
 ## Core Account and Location Definitions
 - **Customer / Requesting Account**: The account that requests a job ticket to be created. This account is not always the same as the billing party.
@@ -46,3 +49,4 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Adjustments preserve original values and new values in `TimeEntryAdjustment` records for auditability.
 - Audit logs capture clock-in, clock-out, approval, rejection, and adjustment actions.
 - Authentication is intentionally deferred; temporary manager/employee identifiers are accepted through DTOs in this phase.
+- Job part workflow follows the same authentication deferment with temporary actor/employee identifiers in DTOs.
