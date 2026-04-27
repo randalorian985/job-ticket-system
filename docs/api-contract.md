@@ -86,5 +86,28 @@ All list endpoints support simple pagination with optional query params:
 - Assignment API enforces one active assignment per employee per ticket.
 - Work entries are note/description records only in this phase (no time tracking or file uploads).
 
+## Time Entries (Current)
+### Endpoints
+- `POST /api/time-entries/clock-in`
+- `POST /api/time-entries/clock-out`
+- `GET /api/time-entries/open?employeeId={employeeId}`
+- `GET /api/time-entries/job/{jobTicketId}`
+- `GET /api/time-entries/employee/{employeeId}`
+- `POST /api/time-entries/{id}/approve`
+- `POST /api/time-entries/{id}/reject`
+- `POST /api/time-entries/{id}/adjust`
+
+### Behavior Notes
+- Clock-in requires `JobTicketId`, `EmployeeId`, GPS latitude/longitude, and device metadata.
+- Clock-out requires `TimeEntryId`, `EmployeeId`, GPS latitude/longitude, and `WorkSummary`.
+- Employee must be actively assigned to the target job ticket before clock-in.
+- Employees can only have one open time entry at once and can only clock out their own open entry.
+- Clock-out stores GPS coordinates and calculates `TotalMinutes`, `LaborHours`, and `BillableHours`.
+- Clock-out creates a job work entry note using `WorkSummary`.
+- Approve/reject endpoints support manager workflow (`ApprovedByUserId`, rejection reason).
+- Adjustment requires a reason and writes `TimeEntryAdjustment` rows with original and new values for auditability.
+- Approved or invoiced entries require explicit manager override before adjustment.
+- Clock-in, clock-out, approval, rejection, and adjustment actions write audit logs.
+
 ## Versioning
 Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.

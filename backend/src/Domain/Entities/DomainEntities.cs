@@ -193,9 +193,21 @@ public sealed class TimeEntry : SoftDeletableEntity
     public decimal LaborHours { get; set; }
     public decimal BillableHours { get; set; }
     public decimal HourlyRate { get; set; }
+    public int? TotalMinutes { get; set; }
     public TimeEntryApprovalStatus ApprovalStatus { get; set; } = TimeEntryApprovalStatus.Pending;
     public Guid? ApprovedByUserId { get; set; }
     public DateTime? ApprovedAtUtc { get; set; }
+    public string? RejectionReason { get; set; }
+    public decimal ClockInLatitude { get; set; }
+    public decimal ClockInLongitude { get; set; }
+    public decimal? ClockInAccuracy { get; set; }
+    public string? ClockInDeviceMetadata { get; set; }
+    public decimal? ClockOutLatitude { get; set; }
+    public decimal? ClockOutLongitude { get; set; }
+    public decimal? ClockOutAccuracy { get; set; }
+    public string? WorkSummary { get; set; }
+    public string? ClockInNote { get; set; }
+    public string? ClockOutNote { get; set; }
     public string? Notes { get; set; }
     public ICollection<TimeEntryAdjustment> Adjustments { get; set; } = new List<TimeEntryAdjustment>();
 }
@@ -208,6 +220,18 @@ public sealed class TimeEntryAdjustment : AuditableEntity
     public decimal Hours { get; set; }
     public string Reason { get; set; } = string.Empty;
     public Guid AdjustedByUserId { get; set; }
+    public DateTime OriginalStartedAtUtc { get; set; }
+    public DateTime? OriginalEndedAtUtc { get; set; }
+    public decimal OriginalLaborHours { get; set; }
+    public decimal OriginalBillableHours { get; set; }
+    public decimal OriginalHourlyRate { get; set; }
+    public string? OriginalNotes { get; set; }
+    public DateTime NewStartedAtUtc { get; set; }
+    public DateTime? NewEndedAtUtc { get; set; }
+    public decimal NewLaborHours { get; set; }
+    public decimal NewBillableHours { get; set; }
+    public decimal NewHourlyRate { get; set; }
+    public string? NewNotes { get; set; }
 }
 
 public sealed class JobWorkEntry : SoftDeletableEntity

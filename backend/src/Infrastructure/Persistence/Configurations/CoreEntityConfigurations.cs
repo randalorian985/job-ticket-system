@@ -170,6 +170,17 @@ public sealed class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntry>
         builder.Property(x => x.LaborHours).HasPrecision(18, 4);
         builder.Property(x => x.BillableHours).HasPrecision(18, 4);
         builder.Property(x => x.HourlyRate).HasPrecision(18, 2);
+        builder.Property(x => x.ClockInLatitude).HasPrecision(9, 6).IsRequired();
+        builder.Property(x => x.ClockInLongitude).HasPrecision(9, 6).IsRequired();
+        builder.Property(x => x.ClockOutLatitude).HasPrecision(9, 6);
+        builder.Property(x => x.ClockOutLongitude).HasPrecision(9, 6);
+        builder.Property(x => x.ClockInAccuracy).HasPrecision(9, 3);
+        builder.Property(x => x.ClockOutAccuracy).HasPrecision(9, 3);
+        builder.Property(x => x.ClockInDeviceMetadata).HasMaxLength(1024);
+        builder.Property(x => x.WorkSummary).HasMaxLength(4000);
+        builder.Property(x => x.ClockInNote).HasMaxLength(1000);
+        builder.Property(x => x.ClockOutNote).HasMaxLength(1000);
+        builder.Property(x => x.RejectionReason).HasMaxLength(1000);
         builder.HasOne(x => x.JobTicket).WithMany(x => x.TimeEntries).HasForeignKey(x => x.JobTicketId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Employee).WithMany(x => x.TimeEntries).HasForeignKey(x => x.EmployeeId).OnDelete(DeleteBehavior.Restrict);
     }
@@ -182,6 +193,14 @@ public sealed class TimeEntryAdjustmentConfiguration : IEntityTypeConfiguration<
         builder.ConfigureAuditableEntity();
         builder.Property(x => x.Hours).HasPrecision(18, 4);
         builder.Property(x => x.Reason).HasMaxLength(1000).IsRequired();
+        builder.Property(x => x.OriginalLaborHours).HasPrecision(18, 4);
+        builder.Property(x => x.OriginalBillableHours).HasPrecision(18, 4);
+        builder.Property(x => x.OriginalHourlyRate).HasPrecision(18, 2);
+        builder.Property(x => x.NewLaborHours).HasPrecision(18, 4);
+        builder.Property(x => x.NewBillableHours).HasPrecision(18, 4);
+        builder.Property(x => x.NewHourlyRate).HasPrecision(18, 2);
+        builder.Property(x => x.OriginalNotes).HasMaxLength(4000);
+        builder.Property(x => x.NewNotes).HasMaxLength(4000);
         builder.HasQueryFilter(x => !x.TimeEntry.IsDeleted);
         builder.HasOne(x => x.TimeEntry).WithMany(x => x.Adjustments).HasForeignKey(x => x.TimeEntryId).OnDelete(DeleteBehavior.Cascade);
     }

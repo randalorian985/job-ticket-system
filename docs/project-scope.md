@@ -35,3 +35,14 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - **Billing Party**: The customer/account that is financially responsible for invoice payment for a specific job ticket. Billing party can differ from the requesting account.
 - **Equipment Owner**: The customer/account that owns a piece of equipment. Equipment ownership can differ from the billing party.
 - **Equipment Responsible Billing Party**: The customer/account responsible for billing tied to equipment-level service responsibility. This party can differ from the equipment owner.
+
+
+## Time Tracking Workflow (Current API Foundation)
+- Employees clock in/out against job tickets with required GPS coordinates and optional location accuracy metadata.
+- Clock-in validation requires active employee records, active job tickets, and active assignment to the ticket.
+- Employees are prevented from having multiple open time entries and cannot close entries belonging to other employees.
+- Clock-out calculates tracked duration (`TotalMinutes`, `LaborHours`, `BillableHours`) and records work summary notes through job work entries.
+- Managers can approve, reject (with required reason), and adjust time entries through dedicated workflow endpoints.
+- Adjustments preserve original values and new values in `TimeEntryAdjustment` records for auditability.
+- Audit logs capture clock-in, clock-out, approval, rejection, and adjustment actions.
+- Authentication is intentionally deferred; temporary manager/employee identifiers are accepted through DTOs in this phase.
