@@ -43,6 +43,8 @@ public sealed class Employee : SoftDeletableEntity
     public string? Phone { get; set; }
     public string? Role { get; set; }
     public decimal? LaborRate { get; set; }
+    public decimal? CostRate { get; set; }
+    public decimal? BillRate { get; set; }
     public EmployeeStatus Status { get; set; } = EmployeeStatus.Active;
     public ICollection<JobTicketEmployee> JobTickets { get; set; } = new List<JobTicketEmployee>();
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();

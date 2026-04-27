@@ -11,7 +11,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - API-first backend with React frontend
 
 ## Out of Scope (for this scaffold)
-- Advanced reporting
+- Advanced analytics and forecasting reports
 - Notifications integrations
 - SSO/enterprise identity setup
 - Complex SLA engine
@@ -57,3 +57,11 @@ Foundation/scaffolding only. No full domain workflows are implemented yet.
 - Job ticket part records can optionally capture component category, failure/repair details, technician notes, installation/removal timestamps, success outcome, and compatibility notes.
 - Job ticket parts can optionally link to a specific equipment record and to another job ticket part record that replaced it.
 - This phase **does not** implement compatibility recommendations, AI/ML behavior, or automated part suggestions.
+
+
+## Reporting Foundation (Current API Foundation)
+- Added read-only reporting endpoints for invoice-ready summaries, job cost summaries, jobs ready to invoice, labor rollups, parts rollups, and customer/equipment service history.
+- Reporting calculations are constrained to approved labor and approved job parts by default.
+- Labor totals support separate employee cost and bill rates when present.
+- Parts totals use immutable job-part snapshot pricing to preserve financial history.
+- This phase does not create invoices, process payments, or add authentication/UI flows.

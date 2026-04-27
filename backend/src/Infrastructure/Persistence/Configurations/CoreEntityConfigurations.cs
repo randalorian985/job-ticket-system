@@ -27,6 +27,8 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(x => x.LastName).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Email).HasMaxLength(320);
         builder.Property(x => x.LaborRate).HasPrecision(18, 2);
+        builder.Property(x => x.CostRate).HasPrecision(18, 2);
+        builder.Property(x => x.BillRate).HasPrecision(18, 2);
         builder.HasIndex(x => x.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
     }
 }
