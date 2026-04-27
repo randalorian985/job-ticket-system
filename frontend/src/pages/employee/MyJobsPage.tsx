@@ -6,21 +6,23 @@ import { useAuth } from '../../features/auth/AuthContext'
 import type { JobTicketListItemDto } from '../../types'
 
 const statusLabels: Record<number, string> = {
-  0: 'New',
-  1: 'Assigned',
-  2: 'In Progress',
-  3: 'On Hold',
-  4: 'Completed',
-  5: 'Closed',
-  6: 'Invoiced',
-  7: 'Cancelled'
+  1: 'Draft',
+  2: 'Submitted',
+  3: 'Assigned',
+  4: 'In Progress',
+  5: 'Waiting on Parts',
+  6: 'Waiting on Customer',
+  7: 'Completed',
+  8: 'Cancelled',
+  9: 'Invoiced',
+  10: 'Reviewed'
 }
 
 const priorityLabels: Record<number, string> = {
-  0: 'Low',
-  1: 'Medium',
-  2: 'High',
-  3: 'Critical'
+  1: 'Low',
+  2: 'Normal',
+  3: 'High',
+  4: 'Urgent'
 }
 
 export function MyJobsPage() {
