@@ -1,0 +1,218 @@
+using JobTicketSystem.Domain.Common;
+using JobTicketSystem.Domain.Enums;
+
+namespace JobTicketSystem.Domain.Entities;
+
+public sealed class AuditLog
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAtUtc { get; set; }
+    public Guid? UserId { get; set; }
+    public string EntityName { get; set; } = string.Empty;
+    public Guid? EntityId { get; set; }
+    public AuditActionType ActionType { get; set; }
+    public string? OldValuesJson { get; set; }
+    public string? NewValuesJson { get; set; }
+    public string? IpAddress { get; set; }
+}
+
+public sealed class Customer : SoftDeletableEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public string? AccountNumber { get; set; }
+    public string? ContactName { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public string? BillingAddressLine1 { get; set; }
+    public string? BillingAddressLine2 { get; set; }
+    public string? BillingCity { get; set; }
+    public string? BillingState { get; set; }
+    public string? BillingPostalCode { get; set; }
+    public CustomerStatus Status { get; set; } = CustomerStatus.Active;
+    public ICollection<Equipment> Equipment { get; set; } = new List<Equipment>();
+    public ICollection<JobTicket> JobTickets { get; set; } = new List<JobTicket>();
+    public ICollection<InvoiceSummary> InvoiceSummaries { get; set; } = new List<InvoiceSummary>();
+}
+
+public sealed class Employee : SoftDeletableEntity
+{
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public string? Role { get; set; }
+    public decimal? LaborRate { get; set; }
+    public EmployeeStatus Status { get; set; } = EmployeeStatus.Active;
+    public ICollection<JobTicketEmployee> JobTickets { get; set; } = new List<JobTicketEmployee>();
+    public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
+    public ICollection<JobWorkEntry> WorkEntries { get; set; } = new List<JobWorkEntry>();
+}
+
+public sealed class Equipment : SoftDeletableEntity
+{
+    public Guid CustomerId { get; set; }
+    public Customer Customer { get; set; } = null!;
+    public string Name { get; set; } = string.Empty;
+    public string? EquipmentNumber { get; set; }
+    public string? Make { get; set; }
+    public string? Model { get; set; }
+    public string? SerialNumber { get; set; }
+    public string? LocationDescription { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public EquipmentStatus Status { get; set; } = EquipmentStatus.Active;
+    public ICollection<JobTicket> JobTickets { get; set; } = new List<JobTicket>();
+}
+
+public sealed class Vendor : SoftDeletableEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public string? AccountNumber { get; set; }
+    public string? ContactName { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public ICollection<Part> Parts { get; set; } = new List<Part>();
+}
+
+public sealed class PartCategory : SoftDeletableEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public ICollection<Part> Parts { get; set; } = new List<Part>();
+}
+
+public sealed class Part : SoftDeletableEntity
+{
+    public Guid PartCategoryId { get; set; }
+    public PartCategory PartCategory { get; set; } = null!;
+    public Guid? VendorId { get; set; }
+    public Vendor? Vendor { get; set; }
+    public string PartNumber { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public decimal UnitCost { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal QuantityOnHand { get; set; }
+    public decimal ReorderThreshold { get; set; }
+    public ICollection<JobTicketPart> JobTicketParts { get; set; } = new List<JobTicketPart>();
+}
+
+public sealed class JobTicket : SoftDeletableEntity
+{
+    public string TicketNumber { get; set; } = string.Empty;
+    public Guid CustomerId { get; set; }
+    public Customer Customer { get; set; } = null!;
+    public Guid? EquipmentId { get; set; }
+    public Equipment? Equipment { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public JobTicketStatus Status { get; set; } = JobTicketStatus.Draft;
+    public JobTicketPriority Priority { get; set; } = JobTicketPriority.Normal;
+    public DateTime? RequestedAtUtc { get; set; }
+    public DateTime? ScheduledStartAtUtc { get; set; }
+    public DateTime? ScheduledEndAtUtc { get; set; }
+    public DateTime? CompletedAtUtc { get; set; }
+    public decimal? SiteLatitude { get; set; }
+    public decimal? SiteLongitude { get; set; }
+    public ICollection<JobTicketEmployee> AssignedEmployees { get; set; } = new List<JobTicketEmployee>();
+    public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
+    public ICollection<JobWorkEntry> WorkEntries { get; set; } = new List<JobWorkEntry>();
+    public ICollection<JobTicketPart> Parts { get; set; } = new List<JobTicketPart>();
+    public ICollection<JobTicketFile> Files { get; set; } = new List<JobTicketFile>();
+    public InvoiceSummary? InvoiceSummary { get; set; }
+}
+
+public sealed class JobTicketEmployee : SoftDeletableEntity
+{
+    public Guid JobTicketId { get; set; }
+    public JobTicket JobTicket { get; set; } = null!;
+    public Guid EmployeeId { get; set; }
+    public Employee Employee { get; set; } = null!;
+    public DateTime AssignedAtUtc { get; set; }
+    public Guid? AssignedByUserId { get; set; }
+    public bool IsLead { get; set; }
+}
+
+public sealed class TimeEntry : SoftDeletableEntity
+{
+    public Guid JobTicketId { get; set; }
+    public JobTicket JobTicket { get; set; } = null!;
+    public Guid EmployeeId { get; set; }
+    public Employee Employee { get; set; } = null!;
+    public DateTime StartedAtUtc { get; set; }
+    public DateTime? EndedAtUtc { get; set; }
+    public decimal LaborHours { get; set; }
+    public decimal BillableHours { get; set; }
+    public decimal HourlyRate { get; set; }
+    public TimeEntryApprovalStatus ApprovalStatus { get; set; } = TimeEntryApprovalStatus.Pending;
+    public Guid? ApprovedByUserId { get; set; }
+    public DateTime? ApprovedAtUtc { get; set; }
+    public string? Notes { get; set; }
+    public ICollection<TimeEntryAdjustment> Adjustments { get; set; } = new List<TimeEntryAdjustment>();
+}
+
+public sealed class TimeEntryAdjustment : AuditableEntity
+{
+    public Guid TimeEntryId { get; set; }
+    public TimeEntry TimeEntry { get; set; } = null!;
+    public AdjustmentType AdjustmentType { get; set; }
+    public decimal Hours { get; set; }
+    public string Reason { get; set; } = string.Empty;
+    public Guid AdjustedByUserId { get; set; }
+}
+
+public sealed class JobWorkEntry : SoftDeletableEntity
+{
+    public Guid JobTicketId { get; set; }
+    public JobTicket JobTicket { get; set; } = null!;
+    public Guid? EmployeeId { get; set; }
+    public Employee? Employee { get; set; }
+    public WorkEntryType EntryType { get; set; } = WorkEntryType.Note;
+    public string Notes { get; set; } = string.Empty;
+    public DateTime PerformedAtUtc { get; set; }
+}
+
+public sealed class JobTicketPart : SoftDeletableEntity
+{
+    public Guid JobTicketId { get; set; }
+    public JobTicket JobTicket { get; set; } = null!;
+    public Guid PartId { get; set; }
+    public Part Part { get; set; } = null!;
+    public decimal Quantity { get; set; }
+    public decimal UnitCost { get; set; }
+    public decimal UnitPrice { get; set; }
+    public PartTransactionStatus Status { get; set; } = PartTransactionStatus.Reserved;
+    public DateTime AddedAtUtc { get; set; }
+    public Guid? AddedByUserId { get; set; }
+}
+
+public sealed class JobTicketFile : SoftDeletableEntity
+{
+    public Guid JobTicketId { get; set; }
+    public JobTicket JobTicket { get; set; } = null!;
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+    public string StoragePath { get; set; } = string.Empty;
+    public long FileSizeBytes { get; set; }
+    public FileVisibility Visibility { get; set; } = FileVisibility.Internal;
+    public Guid UploadedByUserId { get; set; }
+    public DateTime UploadedAtUtc { get; set; }
+}
+
+public sealed class InvoiceSummary : SoftDeletableEntity
+{
+    public Guid JobTicketId { get; set; }
+    public JobTicket JobTicket { get; set; } = null!;
+    public Guid CustomerId { get; set; }
+    public Customer Customer { get; set; } = null!;
+    public string? InvoiceNumber { get; set; }
+    public InvoiceStatus Status { get; set; } = InvoiceStatus.NotReady;
+    public decimal LaborSubtotal { get; set; }
+    public decimal PartsSubtotal { get; set; }
+    public decimal TaxAmount { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal TotalAmount { get; set; }
+    public DateTime? ReadyAtUtc { get; set; }
+    public DateTime? InvoicedAtUtc { get; set; }
+    public DateTime? PaidAtUtc { get; set; }
+}
