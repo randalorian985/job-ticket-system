@@ -252,11 +252,21 @@ public sealed class JobTicketPart : SoftDeletableEntity
     public Guid PartId { get; set; }
     public Part Part { get; set; } = null!;
     public decimal Quantity { get; set; }
-    public decimal UnitCost { get; set; }
-    public decimal UnitPrice { get; set; }
+    public decimal UnitCostSnapshot { get; set; }
+    public decimal SalePriceSnapshot { get; set; }
+    public string? Notes { get; set; }
+    public bool IsBillable { get; set; } = true;
     public PartTransactionStatus Status { get; set; } = PartTransactionStatus.Reserved;
+    public JobPartApprovalStatus ApprovalStatus { get; set; } = JobPartApprovalStatus.Pending;
     public DateTime AddedAtUtc { get; set; }
     public Guid? AddedByUserId { get; set; }
+    public Guid? AddedByEmployeeId { get; set; }
+    public Employee? AddedByEmployee { get; set; }
+    public Guid? ApprovedByUserId { get; set; }
+    public DateTime? ApprovedAtUtc { get; set; }
+    public Guid? RejectedByUserId { get; set; }
+    public DateTime? RejectedAtUtc { get; set; }
+    public string? RejectionReason { get; set; }
 }
 
 public sealed class JobTicketFile : SoftDeletableEntity

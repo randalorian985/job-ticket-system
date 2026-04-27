@@ -19,6 +19,12 @@ public interface IJobTicketsService
     Task<bool> RemoveAssignmentAsync(Guid jobTicketId, Guid employeeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<JobWorkEntryDto>> ListWorkEntriesAsync(Guid jobTicketId, CancellationToken cancellationToken = default);
     Task<JobWorkEntryDto> AddWorkEntryAsync(Guid jobTicketId, AddJobWorkEntryDto request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<JobTicketPartDto>> ListPartsAsync(Guid jobTicketId, CancellationToken cancellationToken = default);
+    Task<JobTicketPartDto> AddPartAsync(Guid jobTicketId, AddJobTicketPartDto request, CancellationToken cancellationToken = default);
+    Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default);
+    Task<JobTicketPartDto?> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, ApproveJobTicketPartDto request, CancellationToken cancellationToken = default);
+    Task<JobTicketPartDto?> RejectPartAsync(Guid jobTicketId, Guid jobTicketPartId, RejectJobTicketPartDto request, CancellationToken cancellationToken = default);
+    Task<JobTicketPartDto?> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default);
 }
 
 public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTicketsService
@@ -301,11 +307,216 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
         return new JobWorkEntryDto(entry.Id, entry.JobTicketId, entry.EmployeeId, entry.EntryType, entry.Notes, entry.PerformedAtUtc);
     }
 
+    public async Task<IReadOnlyList<JobTicketPartDto>> ListPartsAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
+    {
+        await EnsureJobTicketExists(jobTicketId, cancellationToken);
+
+        return await dbContext.JobTicketParts
+            .Where(x => x.JobTicketId == jobTicketId)
+            .OrderByDescending(x => x.AddedAtUtc)
+            .Select(MapJobTicketPart)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<JobTicketPartDto> AddPartAsync(Guid jobTicketId, AddJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        var jobTicket = await dbContext.JobTickets.SingleOrDefaultAsync(x => x.Id == jobTicketId, cancellationToken);
+        if (jobTicket is null)
+        {
+            throw new ValidationException("JobTicketId does not reference an active job ticket.");
+        }
+
+        ValidatePositiveQuantity(request.Quantity);
+        var part = await dbContext.Parts.SingleOrDefaultAsync(x => x.Id == request.PartId, cancellationToken);
+        if (part is null)
+        {
+            throw new ValidationException("PartId does not reference an active part.");
+        }
+
+        if (request.AddedByEmployeeId.HasValue)
+        {
+            await ValidateAddedByEmployeeAssignmentAsync(jobTicketId, request.AddedByEmployeeId.Value, request.AllowManagerOverride, cancellationToken);
+        }
+
+        var entry = new JobTicketPart
+        {
+            JobTicketId = jobTicketId,
+            PartId = request.PartId,
+            Quantity = request.Quantity,
+            UnitCostSnapshot = part.UnitCost,
+            SalePriceSnapshot = part.UnitPrice,
+            Notes = ValidationHelpers.NullIfWhitespace(request.Notes),
+            IsBillable = request.IsBillable,
+            ApprovalStatus = JobPartApprovalStatus.Pending,
+            AddedAtUtc = request.AddedAtUtc ?? DateTime.UtcNow,
+            AddedByEmployeeId = request.AddedByEmployeeId,
+            AddedByUserId = request.AddedByEmployeeId,
+            Status = PartTransactionStatus.Used
+        };
+
+        dbContext.JobTicketParts.Add(entry);
+
+        if (request.AdjustInventory)
+        {
+            part.QuantityOnHand -= request.Quantity;
+        }
+
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Create, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"PartId\":\"{request.PartId}\",\"Quantity\":{request.Quantity}}}");
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return MapJobTicketPart.Compile().Invoke(entry);
+    }
+
+    public async Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
+        if (entry is null) return null;
+
+        EnsureEditable(entry, request.AllowManagerOverride);
+        ValidatePositiveQuantity(request.Quantity);
+
+        var oldValues = $"{{\"Quantity\":{entry.Quantity},\"IsBillable\":{entry.IsBillable.ToString().ToLowerInvariant()},\"ApprovalStatus\":\"{entry.ApprovalStatus}\"}}";
+        entry.Quantity = request.Quantity;
+        entry.Notes = ValidationHelpers.NullIfWhitespace(request.Notes);
+        entry.IsBillable = request.IsBillable;
+
+        if (request.ApprovalStatus.HasValue)
+        {
+            entry.ApprovalStatus = request.ApprovalStatus.Value;
+            if (entry.ApprovalStatus == JobPartApprovalStatus.Rejected)
+            {
+                var reason = ValidationHelpers.NullIfWhitespace(request.RejectionReason);
+                if (reason is null)
+                {
+                    throw new ValidationException("RejectionReason is required when setting approval status to Rejected.");
+                }
+
+                entry.RejectionReason = reason;
+                entry.RejectedAtUtc = DateTime.UtcNow;
+                entry.RejectedByUserId = request.ActorUserId;
+                entry.ApprovedAtUtc = null;
+                entry.ApprovedByUserId = null;
+            }
+            else if (entry.ApprovalStatus == JobPartApprovalStatus.Approved)
+            {
+                entry.ApprovedAtUtc = DateTime.UtcNow;
+                entry.ApprovedByUserId = request.ActorUserId;
+                entry.RejectedAtUtc = null;
+                entry.RejectedByUserId = null;
+                entry.RejectionReason = null;
+            }
+        }
+
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Update, oldValues, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"Quantity\":{entry.Quantity},\"IsBillable\":{entry.IsBillable.ToString().ToLowerInvariant()},\"ApprovalStatus\":\"{entry.ApprovalStatus}\"}}");
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return MapJobTicketPart.Compile().Invoke(entry);
+    }
+
+    public async Task<JobTicketPartDto?> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, ApproveJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
+        if (entry is null) return null;
+
+        EnsureEditable(entry, request.AllowManagerOverride);
+        entry.ApprovalStatus = JobPartApprovalStatus.Approved;
+        entry.ApprovedByUserId = request.ApprovedByUserId;
+        entry.ApprovedAtUtc = DateTime.UtcNow;
+        entry.RejectionReason = null;
+        entry.RejectedByUserId = null;
+        entry.RejectedAtUtc = null;
+
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Approval, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"ApprovalStatus\":\"Approved\"}}");
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return MapJobTicketPart.Compile().Invoke(entry);
+    }
+
+    public async Task<JobTicketPartDto?> RejectPartAsync(Guid jobTicketId, Guid jobTicketPartId, RejectJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        var reason = ValidationHelpers.NullIfWhitespace(request.RejectionReason);
+        if (reason is null)
+        {
+            throw new ValidationException("RejectionReason is required.");
+        }
+
+        var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
+        if (entry is null) return null;
+
+        EnsureEditable(entry, request.AllowManagerOverride);
+        entry.ApprovalStatus = JobPartApprovalStatus.Rejected;
+        entry.RejectionReason = reason;
+        entry.RejectedByUserId = request.RejectedByUserId;
+        entry.RejectedAtUtc = DateTime.UtcNow;
+        entry.ApprovedByUserId = null;
+        entry.ApprovedAtUtc = null;
+
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Approval, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"ApprovalStatus\":\"Rejected\"}}");
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return MapJobTicketPart.Compile().Invoke(entry);
+    }
+
+    public async Task<JobTicketPartDto?> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
+        if (entry is null) return null;
+
+        var part = request.RestoreInventory
+            ? await dbContext.Parts.SingleOrDefaultAsync(x => x.Id == entry.PartId, cancellationToken)
+            : null;
+
+        entry.IsDeleted = true;
+        entry.DeletedAtUtc = DateTime.UtcNow;
+        entry.DeletedByUserId = request.ArchivedByUserId;
+        entry.Status = PartTransactionStatus.Cancelled;
+
+        if (request.RestoreInventory && part is not null)
+        {
+            part.QuantityOnHand += entry.Quantity;
+        }
+
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Delete, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"RestoreInventory\":{request.RestoreInventory.ToString().ToLowerInvariant()}}}");
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return MapJobTicketPart.Compile().Invoke(entry);
+    }
+
     private async Task EnsureJobTicketExists(Guid jobTicketId, CancellationToken cancellationToken)
     {
         if (!await dbContext.JobTickets.AnyAsync(x => x.Id == jobTicketId, cancellationToken))
         {
             throw new ValidationException("JobTicketId does not reference an active job ticket.");
+        }
+    }
+
+    private static void ValidatePositiveQuantity(decimal quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new ValidationException("Quantity must be greater than zero.");
+        }
+    }
+
+    private async Task ValidateAddedByEmployeeAssignmentAsync(Guid jobTicketId, Guid employeeId, bool allowManagerOverride, CancellationToken cancellationToken)
+    {
+        if (!await dbContext.Employees.AnyAsync(x => x.Id == employeeId, cancellationToken))
+        {
+            throw new ValidationException("AddedByEmployeeId does not reference an active employee.");
+        }
+
+        if (allowManagerOverride)
+        {
+            return;
+        }
+
+        var isAssigned = await dbContext.JobTicketEmployees.AnyAsync(x => x.JobTicketId == jobTicketId && x.EmployeeId == employeeId, cancellationToken);
+        if (!isAssigned)
+        {
+            throw new ValidationException("AddedByEmployeeId must be assigned to the job ticket unless manager override is enabled.");
+        }
+    }
+
+    private static void EnsureEditable(JobTicketPart entry, bool allowManagerOverride)
+    {
+        if (!allowManagerOverride && (entry.ApprovalStatus is JobPartApprovalStatus.Approved or JobPartApprovalStatus.Invoiced))
+        {
+            throw new ValidationException("Approved or invoiced job parts cannot be edited without manager override.");
         }
     }
 
@@ -413,6 +624,24 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext) : IJobTick
         x.InternalNotes,
         x.CustomerFacingNotes,
         x.ArchiveReason);
+
+    private static readonly System.Linq.Expressions.Expression<Func<JobTicketPart, JobTicketPartDto>> MapJobTicketPart = x => new JobTicketPartDto(
+        x.Id,
+        x.JobTicketId,
+        x.PartId,
+        x.Quantity,
+        x.UnitCostSnapshot,
+        x.SalePriceSnapshot,
+        x.IsBillable,
+        x.Notes,
+        x.ApprovalStatus,
+        x.AddedAtUtc,
+        x.AddedByEmployeeId,
+        x.ApprovedByUserId,
+        x.ApprovedAtUtc,
+        x.RejectedByUserId,
+        x.RejectedAtUtc,
+        x.RejectionReason);
 }
 
 public sealed record JobTicketListQuery(
@@ -515,3 +744,44 @@ public sealed record JobTicketAssignmentDto(Guid JobTicketId, Guid EmployeeId, D
 
 public sealed record AddJobWorkEntryDto(Guid? EmployeeId, WorkEntryType EntryType, string Notes, DateTime? PerformedAtUtc);
 public sealed record JobWorkEntryDto(Guid Id, Guid JobTicketId, Guid? EmployeeId, WorkEntryType EntryType, string Notes, DateTime PerformedAtUtc);
+
+public sealed record AddJobTicketPartDto(
+    Guid PartId,
+    decimal Quantity,
+    string? Notes,
+    bool IsBillable,
+    Guid? AddedByEmployeeId,
+    DateTime? AddedAtUtc,
+    bool AdjustInventory = true,
+    bool AllowManagerOverride = false);
+
+public sealed record UpdateJobTicketPartDto(
+    decimal Quantity,
+    string? Notes,
+    bool IsBillable,
+    JobPartApprovalStatus? ApprovalStatus,
+    string? RejectionReason,
+    Guid? ActorUserId,
+    bool AllowManagerOverride = false);
+
+public sealed record ApproveJobTicketPartDto(Guid? ApprovedByUserId, bool AllowManagerOverride = false);
+public sealed record RejectJobTicketPartDto(string RejectionReason, Guid? RejectedByUserId, bool AllowManagerOverride = false);
+public sealed record ArchiveJobTicketPartDto(Guid? ArchivedByUserId, bool RestoreInventory = true);
+
+public sealed record JobTicketPartDto(
+    Guid Id,
+    Guid JobTicketId,
+    Guid PartId,
+    decimal Quantity,
+    decimal UnitCostSnapshot,
+    decimal SalePriceSnapshot,
+    bool IsBillable,
+    string? Notes,
+    JobPartApprovalStatus ApprovalStatus,
+    DateTime AddedAtUtc,
+    Guid? AddedByEmployeeId,
+    Guid? ApprovedByUserId,
+    DateTime? ApprovedAtUtc,
+    Guid? RejectedByUserId,
+    DateTime? RejectedAtUtc,
+    string? RejectionReason);

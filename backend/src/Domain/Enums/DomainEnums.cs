@@ -9,6 +9,7 @@ public enum TimeEntryApprovalStatus { Pending = 1, Approved = 2, Rejected = 3 }
 public enum AdjustmentType { Add = 1, Deduct = 2, Override = 3 }
 public enum WorkEntryType { Note = 1, Diagnosis = 2, Repair = 3, Inspection = 4, Recommendation = 5 }
 public enum PartTransactionStatus { Reserved = 1, Used = 2, Returned = 3, Cancelled = 4 }
+public enum JobPartApprovalStatus { Pending = 1, Approved = 2, Rejected = 3, Invoiced = 4 }
 public enum FileVisibility { Internal = 1, Customer = 2, Vendor = 3 }
 public enum AuditActionType { Create = 1, Update = 2, Delete = 3, Restore = 4, StatusChange = 5, Assignment = 6, Approval = 7 }
 public enum InvoiceStatus { NotReady = 1, Ready = 2, Drafted = 3, Sent = 4, Paid = 5, Void = 6 }

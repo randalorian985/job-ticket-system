@@ -77,6 +77,12 @@ All list endpoints support simple pagination with optional query params:
 - `DELETE /api/job-tickets/{id}/assignments/{employeeId}`
 - `GET /api/job-tickets/{id}/work-entries`
 - `POST /api/job-tickets/{id}/work-entries`
+- `GET /api/job-tickets/{jobTicketId}/parts`
+- `POST /api/job-tickets/{jobTicketId}/parts`
+- `PUT /api/job-tickets/{jobTicketId}/parts/{jobTicketPartId}`
+- `POST /api/job-tickets/{jobTicketId}/parts/{jobTicketPartId}/approve`
+- `POST /api/job-tickets/{jobTicketId}/parts/{jobTicketPartId}/reject`
+- `POST /api/job-tickets/{jobTicketId}/parts/{jobTicketPartId}/archive`
 
 ### Behavior Notes
 - Job tickets are soft archived (`IsDeleted = true`) and excluded by default query filters.
@@ -85,6 +91,14 @@ All list endpoints support simple pagination with optional query params:
 - Archive requests must provide `ArchiveReason`.
 - Assignment API enforces one active assignment per employee per ticket.
 - Work entries are note/description records only in this phase (no time tracking or file uploads).
+- Job part usage stores immutable `UnitCostSnapshot` and `SalePriceSnapshot` from the Part master record at add time.
+- Job part quantity must be greater than zero; job ticket and part references must be active.
+- `AddedByEmployeeId` is optional but, when provided, must reference an active employee assigned to the ticket unless manager override is enabled.
+- Approved or invoiced part usage rows are locked from edits unless manager override is enabled.
+- Rejection requires a non-empty reason.
+- Archiving is soft-delete only (`IsDeleted = true`) and excluded from normal lists via query filters.
+- Inventory decrement/restore is supported through add/archive DTO flags (`AdjustInventory`, `RestoreInventory`).
+- Part add/update/archive/approve/reject actions are audit logged.
 
 ## Time Entries (Current)
 ### Endpoints

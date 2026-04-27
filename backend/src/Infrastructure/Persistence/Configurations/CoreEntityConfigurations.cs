@@ -225,10 +225,16 @@ public sealed class JobTicketPartConfiguration : IEntityTypeConfiguration<JobTic
         builder.ConfigureAuditableEntity();
         builder.ConfigureSoftDelete();
         builder.Property(x => x.Quantity).HasPrecision(18, 4);
-        builder.Property(x => x.UnitCost).HasPrecision(18, 2);
-        builder.Property(x => x.UnitPrice).HasPrecision(18, 2);
+        builder.Property(x => x.UnitCostSnapshot).HasPrecision(18, 2);
+        builder.Property(x => x.SalePriceSnapshot).HasPrecision(18, 2);
+        builder.Property(x => x.IsBillable).HasDefaultValue(true).IsRequired();
+        builder.Property(x => x.ApprovalStatus).HasDefaultValue(JobTicketSystem.Domain.Enums.JobPartApprovalStatus.Pending).IsRequired();
+        builder.Property(x => x.Notes).HasMaxLength(2000);
+        builder.Property(x => x.RejectionReason).HasMaxLength(1000);
         builder.HasOne(x => x.JobTicket).WithMany(x => x.Parts).HasForeignKey(x => x.JobTicketId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Part).WithMany(x => x.JobTicketParts).HasForeignKey(x => x.PartId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.AddedByEmployee).WithMany().HasForeignKey(x => x.AddedByEmployeeId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(x => x.AddedByEmployeeId);
     }
 }
 

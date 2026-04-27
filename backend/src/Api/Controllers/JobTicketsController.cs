@@ -153,6 +153,88 @@ public sealed class JobTicketsController(IJobTicketsService service) : Controlle
         }
     }
 
+    [HttpGet("{jobTicketId:guid}/parts")]
+    public async Task<ActionResult<IReadOnlyList<JobTicketPartDto>>> ListPartsAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Ok(await service.ListPartsAsync(jobTicketId, cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpPost("{jobTicketId:guid}/parts")]
+    public async Task<ActionResult<JobTicketPartDto>> AddPartAsync(Guid jobTicketId, [FromBody] AddJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Ok(await service.AddPartAsync(jobTicketId, request, cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpPut("{jobTicketId:guid}/parts/{jobTicketPartId:guid}")]
+    public async Task<ActionResult<JobTicketPartDto>> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var updated = await service.UpdatePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+            return updated is null ? NotFound() : Ok(updated);
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpPost("{jobTicketId:guid}/parts/{jobTicketPartId:guid}/approve")]
+    public async Task<ActionResult<JobTicketPartDto>> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] ApproveJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var approved = await service.ApprovePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+            return approved is null ? NotFound() : Ok(approved);
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpPost("{jobTicketId:guid}/parts/{jobTicketPartId:guid}/reject")]
+    public async Task<ActionResult<JobTicketPartDto>> RejectPartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] RejectJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var rejected = await service.RejectPartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+            return rejected is null ? NotFound() : Ok(rejected);
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpPost("{jobTicketId:guid}/parts/{jobTicketPartId:guid}/archive")]
+    public async Task<ActionResult<JobTicketPartDto>> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var archived = await service.ArchivePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+            return archived is null ? NotFound() : Ok(archived);
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
     private ActionResult HandleValidation(Exception exception)
     {
         return exception switch
