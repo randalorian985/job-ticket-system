@@ -19,7 +19,7 @@ public sealed class JobTicketPartsServiceTests
 
         var created = await service.AddPartAsync(
             refs.JobTicket.Id,
-            new AddJobTicketPartDto(refs.Part.Id, 2m, null, null, null, null, null, null, null, null, null, null, "Used in repair", true, refs.Employee.Id, null));
+            new AddJobTicketPartDto(refs.Part.Id, 2m, "Used in repair", true, refs.Employee.Id, null));
 
         Assert.Equal(refs.JobTicket.Id, created.JobTicketId);
         Assert.Equal(refs.Part.Id, created.PartId);
@@ -33,7 +33,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(Guid.NewGuid(), new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, null, null)));
+        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(Guid.NewGuid(), new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, null, null)));
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(Guid.NewGuid(), 1m, null, null, null, null, null, null, null, null, null, null, null, true, null, null)));
+        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(Guid.NewGuid(), 1m, null, true, null, null)));
     }
 
     [Theory]
@@ -55,7 +55,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, quantity, null, null, null, null, null, null, null, null, null, null, null, true, null, null)));
+        await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, quantity, null, true, null, null)));
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
         refs.Part.UnitCost = 999m;
         refs.Part.UnitPrice = 1111m;
         await context.SaveChangesAsync();
@@ -85,7 +85,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id));
 
         var listed = await service.ListPartsAsync(refs.JobTicket.Id);
@@ -99,7 +99,7 @@ public sealed class JobTicketPartsServiceTests
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
 
         var approved = await service.ApprovePartAsync(refs.JobTicket.Id, created.Id, new ApproveJobTicketPartDto(refs.Manager.Id));
 
@@ -114,7 +114,7 @@ public sealed class JobTicketPartsServiceTests
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
 
         await Assert.ThrowsAsync<ValidationException>(() => service.RejectPartAsync(refs.JobTicket.Id, created.Id, new RejectJobTicketPartDto(" ", refs.Manager.Id)));
 
@@ -132,7 +132,7 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null, AdjustInventory: true));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, true, refs.Employee.Id, null, AdjustInventory: true));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id, RestoreInventory: true));
 
         var refreshedPart = await context.Parts.SingleAsync(x => x.Id == refs.Part.Id);
@@ -146,8 +146,8 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
-        await service.UpdatePartAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketPartDto(2m, null, null, null, null, null, null, null, null, null, null, "Adjusted", true, null, null, refs.Manager.Id));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
+        await service.UpdatePartAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketPartDto(2m, "Adjusted", true, null, null, refs.Manager.Id));
         await service.ApprovePartAsync(refs.JobTicket.Id, created.Id, new ApproveJobTicketPartDto(refs.Manager.Id, true));
         await service.RejectPartAsync(refs.JobTicket.Id, created.Id, new RejectJobTicketPartDto("Need review", refs.Manager.Id, true));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id));
@@ -174,20 +174,18 @@ public sealed class JobTicketPartsServiceTests
             new AddJobTicketPartDto(
                 refs.Part.Id,
                 1m,
-                null,
-                "Hydraulic",
-                "Leak under pressure",
-                "Replaced gasket",
-                "Torqued to spec",
-                installedAtUtc,
-                true,
-                removedAtUtc,
-                null,
-                "Observed stable pressure after repair",
                 "Tracked for compatibility",
                 true,
                 refs.Employee.Id,
-                null));
+                null,
+                ComponentCategory: "Hydraulic",
+                FailureDescription: "Leak under pressure",
+                RepairDescription: "Replaced gasket",
+                TechnicianNotes: "Torqued to spec",
+                InstalledAtUtc: installedAtUtc,
+                WasSuccessful: true,
+                RemovedAtUtc: removedAtUtc,
+                CompatibilityNotes: "Observed stable pressure after repair"));
 
         Assert.Equal("Hydraulic", created.ComponentCategory);
         Assert.Equal("Leak under pressure", created.FailureDescription);
@@ -208,7 +206,7 @@ public sealed class JobTicketPartsServiceTests
 
         var created = await service.AddPartAsync(
             refs.JobTicket.Id,
-            new AddJobTicketPartDto(refs.Part.Id, 1m, refs.Equipment.Id, null, null, null, null, null, null, null, null, null, null, true, refs.Employee.Id, null));
+            new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null, EquipmentId: refs.Equipment.Id));
 
         Assert.Equal(refs.Equipment.Id, created.EquipmentId);
     }
@@ -222,11 +220,11 @@ public sealed class JobTicketPartsServiceTests
 
         var replacementPart = await service.AddPartAsync(
             refs.JobTicket.Id,
-            new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, null, null, "replacement", true, refs.Employee.Id, null));
+            new AddJobTicketPartDto(refs.Part.Id, 1m, "replacement", true, refs.Employee.Id, null));
 
         var created = await service.AddPartAsync(
             refs.JobTicket.Id,
-            new AddJobTicketPartDto(refs.Part.Id, 1m, null, null, null, null, null, null, null, null, replacementPart.Id, null, "legacy part", true, refs.Employee.Id, null));
+            new AddJobTicketPartDto(refs.Part.Id, 1m, "legacy part", true, refs.Employee.Id, null, ReplacedByJobTicketPartId: replacementPart.Id));
 
         Assert.Equal(replacementPart.Id, created.ReplacedByJobTicketPartId);
     }
