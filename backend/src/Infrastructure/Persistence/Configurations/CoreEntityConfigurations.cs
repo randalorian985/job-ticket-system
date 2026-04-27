@@ -38,6 +38,12 @@ public sealed class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
         builder.ConfigureAuditableEntity();
         builder.ConfigureSoftDelete();
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.UnitNumber).HasMaxLength(100);
+        builder.Property(x => x.Manufacturer).HasMaxLength(200);
+        builder.Property(x => x.ModelNumber).HasMaxLength(200);
+        builder.Property(x => x.EquipmentType).HasMaxLength(100);
+        builder.Property(x => x.Year);
+        builder.Property(x => x.SerialNumber).HasMaxLength(200);
         builder.Property(x => x.Latitude).HasPrecision(9, 6);
         builder.Property(x => x.Longitude).HasPrecision(9, 6);
         builder.HasOne(x => x.Customer).WithMany(x => x.Equipment).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
@@ -47,6 +53,9 @@ public sealed class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
         builder.HasIndex(x => x.ServiceLocationId);
         builder.HasIndex(x => x.OwnerCustomerId);
         builder.HasIndex(x => x.ResponsibleBillingCustomerId);
+        builder.HasIndex(x => x.Manufacturer);
+        builder.HasIndex(x => x.ModelNumber);
+        builder.HasIndex(x => x.SerialNumber);
     }
 }
 
@@ -230,11 +239,22 @@ public sealed class JobTicketPartConfiguration : IEntityTypeConfiguration<JobTic
         builder.Property(x => x.IsBillable).HasDefaultValue(true).IsRequired();
         builder.Property(x => x.ApprovalStatus).HasDefaultValue(JobTicketSystem.Domain.Enums.JobPartApprovalStatus.Pending).IsRequired();
         builder.Property(x => x.Notes).HasMaxLength(2000);
+        builder.Property(x => x.ComponentCategory).HasMaxLength(150);
+        builder.Property(x => x.FailureDescription).HasMaxLength(4000);
+        builder.Property(x => x.RepairDescription).HasMaxLength(4000);
+        builder.Property(x => x.TechnicianNotes).HasMaxLength(4000);
+        builder.Property(x => x.CompatibilityNotes).HasMaxLength(4000);
         builder.Property(x => x.RejectionReason).HasMaxLength(1000);
         builder.HasOne(x => x.JobTicket).WithMany(x => x.Parts).HasForeignKey(x => x.JobTicketId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Part).WithMany(x => x.JobTicketParts).HasForeignKey(x => x.PartId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Equipment).WithMany().HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(x => x.ReplacedByJobTicketPart).WithMany(x => x.ReplacedJobTicketParts).HasForeignKey(x => x.ReplacedByJobTicketPartId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(x => x.AddedByEmployee).WithMany().HasForeignKey(x => x.AddedByEmployeeId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.AddedByEmployeeId);
+        builder.HasIndex(x => x.EquipmentId);
+        builder.HasIndex(x => x.ComponentCategory);
+        builder.HasIndex(x => x.WasSuccessful);
+        builder.HasIndex(x => x.InstalledAtUtc);
     }
 }
 

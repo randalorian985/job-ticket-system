@@ -61,6 +61,11 @@ public sealed class Equipment : SoftDeletableEntity
     public Customer? ResponsibleBillingCustomer { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? EquipmentNumber { get; set; }
+    public string? UnitNumber { get; set; }
+    public string? Manufacturer { get; set; }
+    public string? ModelNumber { get; set; }
+    public string? EquipmentType { get; set; }
+    public int? Year { get; set; }
     public string? Make { get; set; }
     public string? Model { get; set; }
     public string? SerialNumber { get; set; }
@@ -251,9 +256,22 @@ public sealed class JobTicketPart : SoftDeletableEntity
     public JobTicket JobTicket { get; set; } = null!;
     public Guid PartId { get; set; }
     public Part Part { get; set; } = null!;
+    public Guid? EquipmentId { get; set; }
+    public Equipment? Equipment { get; set; }
     public decimal Quantity { get; set; }
     public decimal UnitCostSnapshot { get; set; }
     public decimal SalePriceSnapshot { get; set; }
+    public string? ComponentCategory { get; set; }
+    public string? FailureDescription { get; set; }
+    public string? RepairDescription { get; set; }
+    public string? TechnicianNotes { get; set; }
+    public DateTime? InstalledAtUtc { get; set; }
+    public bool? WasSuccessful { get; set; }
+    public DateTime? RemovedAtUtc { get; set; }
+    public Guid? ReplacedByJobTicketPartId { get; set; }
+    public JobTicketPart? ReplacedByJobTicketPart { get; set; }
+    public ICollection<JobTicketPart> ReplacedJobTicketParts { get; set; } = new List<JobTicketPart>();
+    public string? CompatibilityNotes { get; set; }
     public string? Notes { get; set; }
     public bool IsBillable { get; set; } = true;
     public PartTransactionStatus Status { get; set; } = PartTransactionStatus.Reserved;

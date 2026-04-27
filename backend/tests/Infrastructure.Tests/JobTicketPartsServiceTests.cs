@@ -17,7 +17,9 @@ public sealed class JobTicketPartsServiceTests
         var refs = await SeedReferencesAsync(context);
         var service = new JobTicketsService(context);
 
-        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 2m, "Used in repair", true, refs.Employee.Id, null));
+        var created = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(refs.Part.Id, 2m, "Used in repair", true, refs.Employee.Id, null));
 
         Assert.Equal(refs.JobTicket.Id, created.JobTicketId);
         Assert.Equal(refs.Part.Id, created.PartId);
@@ -158,6 +160,75 @@ public sealed class JobTicketPartsServiceTests
         Assert.Contains(logs, x => x.ActionType == AuditActionType.Delete);
     }
 
+    [Fact]
+    public async Task Add_part_can_save_optional_compatibility_fields()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context);
+        var installedAtUtc = DateTime.UtcNow.AddHours(-2);
+        var removedAtUtc = DateTime.UtcNow.AddHours(-1);
+
+        var created = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(
+                refs.Part.Id,
+                1m,
+                "Tracked for compatibility",
+                true,
+                refs.Employee.Id,
+                null,
+                ComponentCategory: "Hydraulic",
+                FailureDescription: "Leak under pressure",
+                RepairDescription: "Replaced gasket",
+                TechnicianNotes: "Torqued to spec",
+                InstalledAtUtc: installedAtUtc,
+                WasSuccessful: true,
+                RemovedAtUtc: removedAtUtc,
+                CompatibilityNotes: "Observed stable pressure after repair"));
+
+        Assert.Equal("Hydraulic", created.ComponentCategory);
+        Assert.Equal("Leak under pressure", created.FailureDescription);
+        Assert.Equal("Replaced gasket", created.RepairDescription);
+        Assert.Equal("Torqued to spec", created.TechnicianNotes);
+        Assert.Equal(installedAtUtc, created.InstalledAtUtc);
+        Assert.True(created.WasSuccessful);
+        Assert.Equal(removedAtUtc, created.RemovedAtUtc);
+        Assert.Equal("Observed stable pressure after repair", created.CompatibilityNotes);
+    }
+
+    [Fact]
+    public async Task Add_part_can_reference_specific_equipment()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context);
+
+        var created = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null, EquipmentId: refs.Equipment.Id));
+
+        Assert.Equal(refs.Equipment.Id, created.EquipmentId);
+    }
+
+    [Fact]
+    public async Task Add_part_can_reference_replacement_job_ticket_part()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context);
+
+        var replacementPart = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(refs.Part.Id, 1m, "replacement", true, refs.Employee.Id, null));
+
+        var created = await service.AddPartAsync(
+            refs.JobTicket.Id,
+            new AddJobTicketPartDto(refs.Part.Id, 1m, "legacy part", true, refs.Employee.Id, null, ReplacedByJobTicketPartId: replacementPart.Id));
+
+        Assert.Equal(replacementPart.Id, created.ReplacedByJobTicketPartId);
+    }
+
     private static async Task<SeedRefs> SeedReferencesAsync(ApplicationDbContext context)
     {
         var customer = new Customer { Name = "Customer A" };
@@ -187,8 +258,14 @@ public sealed class JobTicketPartsServiceTests
             QuantityOnHand = 10m,
             ReorderThreshold = 2m
         };
+        var equipment = new Equipment
+        {
+            Customer = customer,
+            ServiceLocation = serviceLocation,
+            Name = "Pump A"
+        };
 
-        context.AddRange(customer, billingCustomer, serviceLocation, manager, employee, category, part);
+        context.AddRange(customer, billingCustomer, serviceLocation, manager, employee, category, part, equipment);
         await context.SaveChangesAsync();
 
         var ticket = new JobTicket
@@ -197,6 +274,7 @@ public sealed class JobTicketPartsServiceTests
             CustomerId = customer.Id,
             ServiceLocationId = serviceLocation.Id,
             BillingPartyCustomerId = billingCustomer.Id,
+            EquipmentId = equipment.Id,
             Title = "Replace filter",
             Status = JobTicketStatus.InProgress,
             Priority = JobTicketPriority.Normal
@@ -215,7 +293,7 @@ public sealed class JobTicketPartsServiceTests
         });
 
         await context.SaveChangesAsync();
-        return new SeedRefs(ticket, part, manager, employee);
+        return new SeedRefs(ticket, part, manager, employee, equipment);
     }
 
     private static ApplicationDbContext CreateContext()
@@ -227,5 +305,5 @@ public sealed class JobTicketPartsServiceTests
         return new ApplicationDbContext(options);
     }
 
-    private sealed record SeedRefs(JobTicket JobTicket, Part Part, Employee Manager, Employee Employee);
+    private sealed record SeedRefs(JobTicket JobTicket, Part Part, Employee Manager, Employee Employee, Equipment Equipment);
 }
