@@ -27,6 +27,8 @@ export function JobTicketDetailPage() {
   const [employees, setEmployees] = useState<UserDto[]>([])
   const [statusValue, setStatusValue] = useState('1')
   const [archiveReason, setArchiveReason] = useState('')
+  const [archiveConfirmationOpen, setArchiveConfirmationOpen] = useState(false)
+  const [isArchiving, setIsArchiving] = useState(false)
   const [assignmentEmployeeId, setAssignmentEmployeeId] = useState('')
   const [isLeadAssignment, setIsLeadAssignment] = useState(false)
   const [editMode, setEditMode] = useState(false)
@@ -86,22 +88,42 @@ export function JobTicketDetailPage() {
     if (!jobTicketId || !window.confirm('Confirm status update?')) return
     try {
       await jobTicketsApi.changeStatus(jobTicketId, { status: Number(statusValue) })
+      setError(null)
       setMessage('Status updated.')
       await load()
     } catch {
       setError('Unable to update status.')
+      setMessage(null)
     }
   }
 
-  const onArchive = async (event: FormEvent) => {
+  const onArchiveRequest = (event: FormEvent) => {
     event.preventDefault()
-    if (!jobTicketId || !archiveReason.trim() || !window.confirm('Archive this job ticket?')) return
+    if (!jobTicketId) return
+    if (!archiveReason.trim()) {
+      setError('Archive reason is required before confirmation.')
+      setMessage(null)
+      return
+    }
+    setArchiveConfirmationOpen(true)
+    setError(null)
+  }
+
+  const onArchiveConfirm = async () => {
+    if (!jobTicketId || !archiveReason.trim() || isArchiving) return
+    setIsArchiving(true)
     try {
       await jobTicketsApi.archive(jobTicketId, { archiveReason: archiveReason.trim() })
+      setError(null)
       setMessage('Ticket archived.')
+      setArchiveConfirmationOpen(false)
+      setArchiveReason('')
       await load()
     } catch {
       setError('Unable to archive ticket.')
+      setMessage(null)
+    } finally {
+      setIsArchiving(false)
     }
   }
 
@@ -114,12 +136,14 @@ export function JobTicketDetailPage() {
     }
     try {
       await jobTicketsApi.addAssignment(jobTicketId, { employeeId: assignmentEmployeeId, isLead: isLeadAssignment })
+      setError(null)
       setMessage('Employee assigned.')
       setAssignmentEmployeeId('')
       setIsLeadAssignment(false)
       await load()
     } catch (requestError) {
       setError(requestError instanceof ApiError ? requestError.message : 'Unable to add assignment.')
+      setMessage(null)
     }
   }
 
@@ -127,10 +151,12 @@ export function JobTicketDetailPage() {
     if (!jobTicketId || !window.confirm('Remove this assignment?')) return
     try {
       await jobTicketsApi.removeAssignment(jobTicketId, employeeId)
+      setError(null)
       setMessage('Assignment removed.')
       await load()
     } catch {
       setError('Unable to remove assignment.')
+      setMessage(null)
     }
   }
 
@@ -198,10 +224,22 @@ export function JobTicketDetailPage() {
             </select>
             <button type="submit">Update Status</button>
           </form>
-          <form onSubmit={onArchive} className="stack">
+          <form onSubmit={onArchiveRequest} className="stack">
             <input value={archiveReason} onChange={(e) => setArchiveReason(e.target.value)} placeholder="Archive reason" />
             <button type="submit">Archive Ticket</button>
           </form>
+          {archiveConfirmationOpen ? (
+            <section className="card stack" aria-label="archive confirmation">
+              <p>Confirm archive for this job ticket?</p>
+              <p className="muted">Reason: {archiveReason.trim()}</p>
+              <div className="row">
+                <button type="button" onClick={onArchiveConfirm} disabled={isArchiving}>
+                  {isArchiving ? 'Archiving...' : 'Confirm Archive'}
+                </button>
+                <button type="button" onClick={() => setArchiveConfirmationOpen(false)} disabled={isArchiving}>Cancel</button>
+              </div>
+            </section>
+          ) : null}
         </article>
       ) : null}
 

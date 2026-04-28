@@ -108,3 +108,8 @@ This phase adds foundational security controls without replacing existing workfl
 - Admin-only users page now includes targeted create/edit/archive/reset-password operations via existing `/api/users` endpoints.
 - Employee route tree (`/jobs`, `/jobs/:jobTicketId`) remains unchanged.
 - Deferred domains remain unchanged and unimplemented: parts purchase/vendor cost tracking, advanced inventory, compatibility recommendation engine.
+
+## Manager/Admin UI Phase 3A (Implemented Slice)
+- Manager/admin job-ticket archive action now uses an explicit in-page confirmation flow before executing the archive API request.
+- Archive outcomes now provide focused user-facing success and failure messaging tied to the confirmation result.
+- Existing `/manage` role boundaries, route structure, and API usage patterns remain unchanged in this slice.
