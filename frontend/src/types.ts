@@ -63,6 +63,21 @@ export type JobTicketDto = {
   archiveReason?: string | null
 }
 
+export type ChangeJobTicketStatusDto = {
+  status: number
+}
+
+export type ArchiveJobTicketDto = {
+  archiveReason: string
+}
+
+export type JobTicketAssignmentDto = {
+  jobTicketId: string
+  employeeId: string
+  assignedAtUtc: string
+  isLead: boolean
+}
+
 export type JobWorkEntryDto = {
   id: string
   jobTicketId: string
@@ -85,11 +100,27 @@ export type JobTicketPartDto = {
   partId: string
   equipmentId?: string | null
   quantity: number
+  unitCostSnapshot?: number
+  salePriceSnapshot?: number
+  componentCategory?: string | null
+  failureDescription?: string | null
+  repairDescription?: string | null
+  technicianNotes?: string | null
+  installedAtUtc?: string | null
+  wasSuccessful?: boolean | null
+  removedAtUtc?: string | null
+  replacedByJobTicketPartId?: string | null
+  compatibilityNotes?: string | null
   notes?: string | null
   isBillable: boolean
   approvalStatus: number
   addedAtUtc: string
   addedByEmployeeId?: string | null
+  approvedByUserId?: string | null
+  approvedAtUtc?: string | null
+  rejectedByUserId?: string | null
+  rejectedAtUtc?: string | null
+  rejectionReason?: string | null
 }
 
 export type AddJobTicketPartDto = {
@@ -113,6 +144,12 @@ export type AddJobTicketPartDto = {
   compatibilityNotes?: string | null
 }
 
+export type RejectJobTicketPartDto = {
+  rejectionReason: string
+  rejectedByUserId?: string | null
+  allowManagerOverride?: boolean
+}
+
 export type TimeEntryDto = {
   id: string
   jobTicketId: string
@@ -123,6 +160,9 @@ export type TimeEntryDto = {
   laborHours: number
   billableHours: number
   approvalStatus: number
+  approvedByUserId?: string | null
+  approvedAtUtc?: string | null
+  rejectionReason?: string | null
   clockInLatitude: number
   clockInLongitude: number
   clockInAccuracy?: number | null
@@ -130,6 +170,9 @@ export type TimeEntryDto = {
   clockOutLongitude?: number | null
   clockOutAccuracy?: number | null
   workSummary?: string | null
+  clockInNote?: string | null
+  clockOutNote?: string | null
+  clockInDeviceMetadata?: string | null
 }
 
 export type ClockInRequestDto = {
@@ -150,6 +193,27 @@ export type ClockOutRequestDto = {
   clockOutAccuracy?: number
   workSummary: string
   note?: string | null
+}
+
+export type ApproveTimeEntryRequestDto = {
+  approvedByUserId: string
+}
+
+export type RejectTimeEntryRequestDto = {
+  rejectedByUserId: string
+  reason: string
+}
+
+export type AdjustTimeEntryRequestDto = {
+  adjustedByUserId: string
+  reason: string
+  managerOverride: boolean
+  startedAtUtc?: string | null
+  endedAtUtc?: string | null
+  laborHours?: number | null
+  billableHours?: number | null
+  hourlyRate?: number | null
+  notes?: string | null
 }
 
 export type PartDto = {
@@ -175,6 +239,8 @@ export type PartLookupDto = {
 export type JobTicketFileDto = {
   id: string
   jobTicketId: string
+  equipmentId?: string | null
+  workEntryId?: string | null
   uploadedByEmployeeId?: string | null
   originalFileName: string
   contentType: string
@@ -184,4 +250,138 @@ export type JobTicketFileDto = {
   visibility: number
   isInvoiceAttachment: boolean
   uploadedAtUtc: string
+}
+
+export type UpdateJobTicketFileDto = {
+  caption?: string | null
+  visibility: number
+  isInvoiceAttachment: boolean
+}
+
+export type CustomerDto = {
+  id: string
+  name: string
+  accountNumber?: string | null
+  contactName?: string | null
+  email?: string | null
+  phone?: string | null
+}
+
+export type ServiceLocationDto = {
+  id: string
+  customerId?: string | null
+  companyName: string
+  locationName: string
+  addressLine1: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  isActive: boolean
+}
+
+export type EquipmentDto = {
+  id: string
+  customerId: string
+  serviceLocationId: string
+  ownerCustomerId?: string | null
+  responsibleBillingCustomerId?: string | null
+  name: string
+  equipmentNumber?: string | null
+  unitNumber?: string | null
+  manufacturer?: string | null
+  modelNumber?: string | null
+  serialNumber?: string | null
+  equipmentType?: string | null
+  year?: number | null
+}
+
+export type VendorDto = {
+  id: string
+  name: string
+  accountNumber?: string | null
+  contactName?: string | null
+  email?: string | null
+  phone?: string | null
+}
+
+export type PartCategoryDto = {
+  id: string
+  name: string
+  description?: string | null
+}
+
+export type UserDto = {
+  id: string
+  userName?: string | null
+  email?: string | null
+  firstName: string
+  lastName: string
+  role: string
+  status: number
+  isArchived: boolean
+}
+
+export type JobsReadyToInvoiceItemDto = {
+  jobTicketId: string
+  jobTicketNumber: string
+  customer: string
+  billingPartyCustomer: string
+  jobStatus: number
+  invoiceStatus: number
+  approvedLaborHours: number
+  approvedPartsCount: number
+  estimatedBillableTotal: number
+  completedAtUtc?: string | null
+}
+
+export type LaborByJobDto = {
+  jobTicketId: string
+  jobTicketNumber: string
+  customer: string
+  approvedLaborHours: number
+  laborCostTotal: number
+  laborBillableTotal: number
+}
+
+export type LaborByEmployeeDto = {
+  employeeId: string
+  employeeName: string
+  approvedLaborHours: number
+  laborCostTotal: number
+  laborBillableTotal: number
+  jobCount: number
+}
+
+export type PartsByJobDto = {
+  jobTicketId: string
+  jobTicketNumber: string
+  customer: string
+  approvedPartQuantity: number
+  partsCostTotal: number
+  partsBillableTotal: number
+}
+
+export type ReportServiceHistoryItemDto = {
+  jobTicketId: string
+  jobTicketNumber: string
+  customerId: string
+  customer: string
+  equipmentId?: string | null
+  equipment?: string | null
+  title: string
+  jobStatus: number
+  createdAtUtc: string
+  completedAtUtc?: string | null
+}
+
+export type JobCostSummaryDto = {
+  jobTicketId: string
+  jobTicketNumber: string
+  laborHours: number
+  laborCostTotal: number
+  laborBillableTotal: number
+  partsCostTotal: number
+  partsBillableTotal: number
+  grandTotal: number
 }

@@ -88,7 +88,8 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
   - Add work notes
   - Add parts used on assigned jobs
   - Upload photos/files (`jpg`, `jpeg`, `png`, `webp`, `pdf`)
-- Manager/Admin UI screens remain out of scope for the current frontend phase.
+- Manager/Admin UI Phase 1 is implemented with a protected `/manage` shell, dashboard navigation, read-first operational lists/details, approval screens, reports index, and admin-only users screen.
+- Employee mobile workflow remains active and unchanged for core actions.
 
 ## Tech Stack
 - **Backend:** .NET 8 ASP.NET Core Web API
@@ -188,3 +189,21 @@ dotnet test ../../tests
 cd frontend
 npm run build
 ```
+
+
+Manager/Admin routes:
+- `/manage` dashboard
+- `/manage/job-tickets` and `/manage/job-tickets/:jobTicketId`
+- `/manage/customers`
+- `/manage/service-locations`
+- `/manage/equipment`
+- `/manage/parts`
+- `/manage/time-approval`
+- `/manage/parts-approval`
+- `/manage/reports`
+- `/manage/users` (Admin only)
+
+Deferred/not implemented in this phase:
+- Parts purchase/vendor cost tracking
+- Advanced inventory workflows
+- Parts compatibility recommendation engine

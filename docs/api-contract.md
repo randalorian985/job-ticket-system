@@ -31,8 +31,9 @@
 - Time entries (`/api/time-entries/*`)
 - Reporting (`/api/reports/*`)
 
-### Implemented Backend, Frontend Pending (Manager/Admin UI phase)
-- Manager/Admin operational list/report experiences that consume existing management/reporting endpoints.
+### Implemented Backend + Frontend (Manager/Admin UI Phase 1)
+- Manager/Admin React routes now consume existing management/reporting endpoints for read-first lists/details, approvals, and report views.
+- Admin-only frontend route for `/api/users` is now available (`/manage/users`).
 
 ### Deferred Future Features (Not Implemented)
 - Parts purchase/vendor cost tracking workflows.
@@ -232,3 +233,10 @@ Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 - `PUT /api/users/{id}`
 - `POST /api/users/{id}/archive`
 - `POST /api/users/{id}/reset-password`
+
+
+## Frontend Route Notes (Current)
+- Employee routes: `/login`, `/jobs`, `/jobs/:jobTicketId`.
+- Manager/Admin routes: `/manage`, `/manage/job-tickets`, `/manage/customers`, `/manage/service-locations`, `/manage/equipment`, `/manage/parts`, `/manage/time-approval`, `/manage/parts-approval`, `/manage/reports`.
+- Admin-only route: `/manage/users` (consumes `/api/users`).
+- Unauthorized route: `/unauthorized` for authenticated users lacking required role claims.
