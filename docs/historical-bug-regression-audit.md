@@ -25,16 +25,16 @@ Repository note:
 | 3 | Time-entry adjustment service-layer authorization | Fixed | `AdjustAsync` enforces manager/admin in service layer and has service test coverage. |
 | 4 | Job part approval bypass through generic update | Fixed | Update path blocks employee approval/status mutation; integration test confirms pending remains. |
 | 5 | Employee job status/priority enum label bug | Fixed | Explicit numeric maps present; unknown values fallback safely; frontend coverage present. |
-| 6 | React Router redirect loop / role routing behavior | Fixed but missing tests | Core role routing works and unauthorized path exists; logout/loop-specific regression tests could be expanded. |
+| 6 | React Router redirect loop / role routing behavior | Fixed | Core role routing works and regression tests cover logout and authenticated unknown-route redirect behavior. |
 | 7 | Node/test dependency runtime mismatch | Fixed | jsdom/vitest pinned to Node 20.0.0+-compatible versions; docs align. |
-| 8 | `/health` API contract mismatch | Fixed but missing tests | JSON contract implemented and tested; tests can further assert `totalDuration` and `entries` explicitly. |
+| 8 | `/health` API contract mismatch | Fixed | JSON contract implemented and tested, including `status`, `totalDuration`, and `entries` shape assertions. |
 | 9 | Malformed password hash fail-closed behavior | Fixed | Malformed hash login fails closed; integration test present. |
 | 10 | Inactive/archived employee login block | Fixed | Login blocked for inactive users and `/api/auth/me` resolves only active users. |
 | 11 | Token revalidation for inactive/archived/deleted users | Fixed | Central JWT event revalidates active employee status; integration coverage present. |
 | 12 | Labor-rate snapshot reporting | Fixed | Time-entry snapshots captured on clock-in; reporting prefers snapshots with legacy fallback; tests/docs present. |
 | 13 | Manager/Admin workload index hardening | Fixed | `AddPreManagerAdminHardening` migration contains focused index set; snapshot/configs are consistent. |
 | 14 | Employee-safe part lookup | Fixed | Employee-accessible lookup returns safe subset without cost fields; manager/admin CRUD remains protected. |
-| 15 | Manager/Admin route protection | Fixed (partial test gap) | `/manage` manager/admin-only and `/manage/users` admin-only in router; manager denial covered, admin-allow test can be expanded. |
+| 15 | Manager/Admin route protection | Fixed | `/manage` manager/admin-only and `/manage/users` admin-only in router; manager denial and admin allow coverage are both present. |
 | 16 | Manager/Admin UI deferred domains guardrail | Fixed | Deferred domains remain unimplemented and documented as deferred. |
 | 17 | README/docs update discipline | Fixed | README + API contract + project scope broadly aligned with current implemented/deferred state. |
 
@@ -101,7 +101,7 @@ Repository note:
 - **Follow-up needed:** No.
 
 ### 6) React Router redirect loop / role routing behavior
-- **Current status:** Fixed but missing tests.
+- **Current status:** Fixed.
 - **Implementation verified:**
   - Home routing sends Employee to `/jobs` and Manager/Admin to `/manage`.
   - Role-protected route wrappers and `/unauthorized` route exist.
@@ -113,10 +113,10 @@ Repository note:
   - `frontend/src/features/auth/AuthContext.tsx`
 - **Tests found:**
   - Unauthenticated redirect, employee access, employee denied `/manage`, manager denied `/manage/users`.
-- **Gap noted:**
-  - No explicit regression test for logout-state clearing redirect behavior and redirect-loop prevention sequence.
-- **Action taken:** Documented gap only.
-- **Follow-up needed:** Optional small frontend auth routing test expansion.
+  - Logout-state clearing from manager route to unauthenticated login.
+  - Authenticated manager unknown-route fallback lands on manager shell/dashboard (no login loop).
+- **Action taken:** Added targeted frontend auth regression tests.
+- **Follow-up needed:** No.
 
 ### 7) Node/test dependency runtime mismatch
 - **Current status:** Fixed.
@@ -134,7 +134,7 @@ Repository note:
 - **Follow-up needed:** No.
 
 ### 8) `/health` API contract mismatch
-- **Current status:** Fixed but missing tests.
+- **Current status:** Fixed.
 - **Implementation verified:**
   - Health endpoint returns JSON payload via custom `ResponseWriter`.
   - Content type is `application/json; charset=utf-8`.
@@ -145,11 +145,9 @@ Repository note:
   - `backend/tests/Infrastructure.Tests/HealthIntegrationTests.cs`
   - `docs/api-contract.md`
 - **Tests found:**
-  - Health integration test asserts 200 + JSON content type + `status` field.
-- **Gap noted:**
-  - Test does not currently assert `totalDuration` and `entries` explicitly.
-- **Action taken:** Documented small test-gap only.
-- **Follow-up needed:** Optional enhancement in health integration test assertions.
+  - Health integration test asserts 200, unauthenticated access, JSON content type, valid JSON body, `status`, `totalDuration`, and object-shaped `entries`.
+- **Action taken:** Expanded health integration regression assertions.
+- **Follow-up needed:** No.
 
 ### 9) Malformed password hash fail-closed
 - **Current status:** Fixed.
@@ -245,7 +243,7 @@ Repository note:
 - **Follow-up needed:** No.
 
 ### 15) Manager/Admin route protection
-- **Current status:** Fixed (partial test gap).
+- **Current status:** Fixed.
 - **Implementation verified:**
   - `/manage` wrapped in Manager/Admin protection.
   - Nested `/manage/users` wrapped with Admin-only protection.
@@ -256,10 +254,9 @@ Repository note:
 - **Tests found:**
   - Employee denied manager route.
   - Manager denied admin users route.
-- **Gap noted:**
-  - Admin-positive test for `/manage/users` route could be added for symmetric coverage.
-- **Action taken:** Documented test coverage gap.
-- **Follow-up needed:** Optional.
+  - Admin allowed `/manage/users`.
+- **Action taken:** Added admin-positive `/manage/users` route regression test.
+- **Follow-up needed:** No.
 
 ### 16) Deferred Manager/Admin domains remain deferred
 - **Current status:** Fixed.

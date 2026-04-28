@@ -7,7 +7,7 @@ namespace JobTicketSystem.Infrastructure.Tests;
 public sealed class HealthIntegrationTests
 {
     [Fact]
-    public async Task Health_endpoint_returns_json_payload_with_status()
+    public async Task Health_endpoint_returns_healthy_json_payload_without_authentication()
     {
         await using var factory = new TestApiFactory();
         var client = factory.CreateClient();
@@ -19,7 +19,16 @@ public sealed class HealthIntegrationTests
 
         var body = await response.Content.ReadAsStringAsync();
         using var json = JsonDocument.Parse(body);
+        Assert.Equal(JsonValueKind.Object, json.RootElement.ValueKind);
+
         Assert.True(json.RootElement.TryGetProperty("status", out var statusProperty));
+        Assert.Equal(JsonValueKind.String, statusProperty.ValueKind);
         Assert.False(string.IsNullOrWhiteSpace(statusProperty.GetString()));
+
+        Assert.True(json.RootElement.TryGetProperty("totalDuration", out var totalDurationProperty));
+        Assert.True(totalDurationProperty.ValueKind is JsonValueKind.String or JsonValueKind.Number);
+
+        Assert.True(json.RootElement.TryGetProperty("entries", out var entriesProperty));
+        Assert.Equal(JsonValueKind.Object, entriesProperty.ValueKind);
     }
 }
