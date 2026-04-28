@@ -1,7 +1,8 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
+import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import { AppRouter } from '../AppRouter'
 
@@ -16,10 +17,48 @@ vi.mock('../../api/jobTicketsApi', () => ({
   }
 }))
 
+vi.mock('../../api/usersApi', () => ({
+  usersApi: {
+    list: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    archive: vi.fn(),
+    resetPassword: vi.fn()
+  }
+}))
+
+const employeeUser = {
+  employeeId: 'employee-1',
+  username: 'employee',
+  firstName: 'Casey',
+  lastName: 'Tech',
+  role: 'Employee' as const,
+  email: 'employee@example.com'
+}
+
+const managerUser = {
+  employeeId: 'manager-1',
+  username: 'manager',
+  firstName: 'Mina',
+  lastName: 'Supervisor',
+  role: 'Manager' as const,
+  email: 'manager@example.com'
+}
+
+const adminUser = {
+  employeeId: 'admin-1',
+  username: 'admin',
+  firstName: 'Alex',
+  lastName: 'Admin',
+  role: 'Admin' as const,
+  email: 'admin@example.com'
+}
+
 describe('AppRouter authentication rendering', () => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
+    vi.mocked(usersApi.list).mockResolvedValue([])
   })
 
   it('redirects unauthenticated users from protected routes to login', async () => {
@@ -36,7 +75,7 @@ describe('AppRouter authentication rendering', () => {
 
   it('renders protected jobs route for authenticated employee role', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { employeeId: 'employee-1', username: 'employee', firstName: 'Casey', lastName: 'Tech', role: 'Employee', email: 'employee@example.com' },
+      user: employeeUser,
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn()
@@ -54,7 +93,7 @@ describe('AppRouter authentication rendering', () => {
 
   it('employee users cannot access manager routes', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { employeeId: 'employee-1', username: 'employee', firstName: 'Casey', lastName: 'Tech', role: 'Employee', email: 'employee@example.com' },
+      user: employeeUser,
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn()
@@ -71,7 +110,7 @@ describe('AppRouter authentication rendering', () => {
 
   it('manager dashboard renders and manager cannot access admin user route', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { employeeId: 'manager-1', username: 'manager', firstName: 'Mina', lastName: 'Supervisor', role: 'Manager', email: 'manager@example.com' },
+      user: managerUser,
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn()
@@ -93,5 +132,73 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Access Denied' })).toBeInTheDocument()
+  })
+
+  it('logout clears auth state and returns manager users to login', async () => {
+    let currentUser: typeof managerUser | null = managerUser
+    const logout = vi.fn(() => {
+      currentUser = null
+    })
+
+    vi.mocked(useAuth).mockImplementation(() => ({
+      user: currentUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout
+    }))
+
+    const view = render(
+      <MemoryRouter initialEntries={['/manage']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Logout' }))
+    expect(logout).toHaveBeenCalledTimes(1)
+
+    view.rerender(
+      <MemoryRouter initialEntries={['/manage']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Employee Login' })).toBeInTheDocument()
+  })
+
+  it('authenticated managers are routed to manager shell instead of login when hitting unknown routes', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: managerUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/unknown-route']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Operations Dashboard' })).toBeInTheDocument()
+  })
+
+  it('admin users can access /manage/users', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: adminUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/manage/users']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Users (Admin only)' })).toBeInTheDocument()
   })
 })
