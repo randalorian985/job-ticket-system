@@ -44,6 +44,12 @@
    - Fix applied: added explicit note that approval transitions are manager/admin-only.
    - File: `docs/api-contract.md`.
 
+## Important follow-up stabilization (2026-04-28)
+1. **Node/test dependency runtime mismatch from frontend lockfile.**
+   - Risk: install/test failures on Node 20 patch releases below 20.19.0 due to transitive engine requirements from newer jsdom/vitest trees.
+   - Stabilization action: pin frontend test dependencies (`vitest`, `jsdom`) to Node 20.0.0+ compatible versions and declare frontend `engines.node` minimum.
+   - Files: `frontend/package.json`, `frontend/package-lock.json`, `README.md`, `docs/development-setup.md`.
+
 ## Nice-to-have (can defer)
 1. Tighten integration-test logging noise from expected request failures to reduce false alarms in test output triage.
 2. Expand frontend automated test coverage (currently no configured frontend unit/integration tests).

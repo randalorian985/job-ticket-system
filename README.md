@@ -148,6 +148,8 @@ API health endpoint:
 
 ## Frontend Setup
 
+Node.js requirement for frontend install/build/test: **Node.js 20.0.0+**.
+
 ```bash
 cd frontend
 npm install

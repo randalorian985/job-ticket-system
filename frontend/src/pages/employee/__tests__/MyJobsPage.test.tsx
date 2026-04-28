@@ -16,7 +16,7 @@ vi.mock('../../../features/auth/AuthContext', () => ({
 }))
 
 describe('MyJobsPage', () => {
-  it('maps known status and priority values and falls back to raw numbers for unknown values', async () => {
+  it('maps known status and priority values and falls back to safe labels for unknown values', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: {
         employeeId: 'employee-1',
@@ -60,7 +60,7 @@ describe('MyJobsPage', () => {
 
     expect(await screen.findByText('JT-2026-000101')).toBeInTheDocument()
     expect(screen.getByText('Status: In Progress | Priority: High')).toBeInTheDocument()
-    expect(screen.getByText('Status: 99 | Priority: 77')).toBeInTheDocument()
+    expect(screen.getByText('Status: Unknown status | Priority: Unknown priority')).toBeInTheDocument()
 
     await waitFor(() => {
       expect(jobTicketsApi.listMine).toHaveBeenCalledTimes(1)

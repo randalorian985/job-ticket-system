@@ -19,9 +19,9 @@ const jobTicketPriorityLabels: Record<number, string> = {
 }
 
 export function getJobTicketStatusLabel(status: number) {
-  return jobTicketStatusLabels[status] ?? String(status)
+  return jobTicketStatusLabels[status] ?? 'Unknown status'
 }
 
 export function getJobTicketPriorityLabel(priority: number) {
-  return jobTicketPriorityLabels[priority] ?? String(priority)
+  return jobTicketPriorityLabels[priority] ?? 'Unknown priority'
 }
