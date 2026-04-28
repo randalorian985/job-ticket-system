@@ -89,6 +89,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
   - Add parts used on assigned jobs
   - Upload photos/files (`jpg`, `jpeg`, `png`, `webp`, `pdf`)
 - Manager/Admin UI Phases 1-2 are implemented with a protected `/manage` shell, dashboard navigation, read-first operational lists/details, assignment/status/archive job-ticket actions, targeted create/edit flows, report filtering + CSV export, and admin-only users management workflows.
+- Manager/Admin UI Phase 3A slice is implemented for job-ticket archive UX: archive now uses an explicit in-page confirmation step with clear success/error messaging before and after action execution.
 - Employee mobile workflow remains active and unchanged for core actions.
 
 ## Tech Stack
@@ -214,3 +215,8 @@ Manager/Admin Phase 2 notes:
 - Job-ticket create/edit/status/archive flows are manager/admin-only.
 - Reports support filter query parameters and client-side CSV export from loaded result sets.
 - Deferred scope remains unchanged: parts purchase/vendor cost tracking, advanced inventory workflows, and compatibility recommendation engine are not implemented.
+
+Manager/Admin Phase 3A notes:
+- Job-ticket archive action on manager/admin detail now requires explicit in-page confirmation before API execution.
+- Manager/admin archive flow now surfaces focused success/failure feedback after confirmation.
+- No backend/API contract changes were required for this UX slice.
