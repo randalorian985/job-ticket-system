@@ -341,6 +341,11 @@ internal sealed class TestApiFactory : WebApplicationFactory<Program>
             services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(_dbName));
         });
 
+        builder.UseSetting("Logging:LogLevel:Default", "Warning");
+        builder.UseSetting("Logging:LogLevel:Microsoft", "Warning");
+        builder.UseSetting("Logging:LogLevel:Microsoft.AspNetCore", "Error");
+        builder.UseSetting("Logging:LogLevel:Microsoft.AspNetCore.DataProtection", "Error");
+        builder.UseSetting("Logging:LogLevel:Microsoft.EntityFrameworkCore", "Error");
         builder.UseSetting("Jwt:Issuer", "JobTicketSystem");
         builder.UseSetting("Jwt:Audience", "JobTicketSystem.Api");
         builder.UseSetting("Jwt:SigningKey", "PLEASE_CHANGE_THIS_DEVELOPMENT_KEY_1234567890");
