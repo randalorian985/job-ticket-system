@@ -18,3 +18,12 @@ This repository is currently in scaffold phase. Keep contributions focused on fo
 - Backend should build successfully.
 - Frontend should build successfully.
 - Health endpoint must remain available at `/health`.
+
+## Tooling Notes
+- Use the .NET SDK via the `dotnet` CLI.
+- Common commands:
+  - `dotnet --info`
+  - `dotnet restore <solution-or-project>`
+  - `dotnet build <solution-or-project>`
+  - `dotnet test <solution-or-project>`
+  - `dotnet run --project <path>`
