@@ -108,8 +108,8 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
                 x.Employee.FirstName + " " + x.Employee.LastName,
                 x.LaborHours,
                 x.BillableHours,
-                x.Employee.CostRate,
-                x.Employee.BillRate ?? x.Employee.LaborRate))
+                x.CostRateSnapshot ?? x.Employee.CostRate,
+                x.BillRateSnapshot ?? x.Employee.BillRate ?? x.Employee.LaborRate))
             .ToListAsync(cancellationToken);
 
         var approvedParts = await dbContext.JobTicketParts
@@ -196,7 +196,7 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
                 x.InvoiceSummary != null ? x.InvoiceSummary.Status : InvoiceStatus.NotReady,
                 x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.LaborHours),
                 x.Parts.Where(p => p.ApprovalStatus == JobPartApprovalStatus.Approved).Sum(p => p.Quantity),
-                x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.BillableHours * (t.Employee.BillRate ?? t.Employee.LaborRate ?? 0m))
+                x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.BillableHours * (t.BillRateSnapshot ?? t.Employee.BillRate ?? t.Employee.LaborRate ?? 0m))
                     + x.Parts.Where(p => p.ApprovalStatus == JobPartApprovalStatus.Approved).Sum(p => p.Quantity * p.SalePriceSnapshot),
                 x.CompletedAtUtc))
             .ToListAsync(cancellationToken);
@@ -216,8 +216,8 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
                 x.TicketNumber,
                 x.Customer.Name,
                 x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.LaborHours),
-                x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.LaborHours * (t.Employee.CostRate ?? 0m)),
-                x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.BillableHours * (t.Employee.BillRate ?? t.Employee.LaborRate ?? 0m))))
+                x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.LaborHours * (t.CostRateSnapshot ?? t.Employee.CostRate ?? 0m)),
+                x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.BillableHours * (t.BillRateSnapshot ?? t.Employee.BillRate ?? t.Employee.LaborRate ?? 0m))))
             .ToListAsync(cancellationToken);
     }
 
@@ -268,8 +268,8 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
                 group.Key.EmployeeId,
                 group.Key.FirstName + " " + group.Key.LastName,
                 group.Sum(x => x.LaborHours),
-                group.Sum(x => x.LaborHours * (x.Employee.CostRate ?? 0m)),
-                group.Sum(x => x.BillableHours * (x.Employee.BillRate ?? x.Employee.LaborRate ?? 0m)),
+                group.Sum(x => x.LaborHours * (x.CostRateSnapshot ?? x.Employee.CostRate ?? 0m)),
+                group.Sum(x => x.BillableHours * (x.BillRateSnapshot ?? x.Employee.BillRate ?? x.Employee.LaborRate ?? 0m)),
                 group.Select(x => x.JobTicketId).Distinct().Count()))
             .ToListAsync(cancellationToken);
     }

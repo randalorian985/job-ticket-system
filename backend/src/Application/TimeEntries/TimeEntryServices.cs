@@ -25,7 +25,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
     {
         ValidateClockIn(request);
         EnsureEmployeeRequestMatchesCurrentUser(request.EmployeeId);
-        await EnsureEmployeeExistsAsync(request.EmployeeId, cancellationToken);
+        var employee = await EnsureEmployeeExistsAsync(request.EmployeeId, cancellationToken);
         await EnsureJobTicketExistsAsync(request.JobTicketId, cancellationToken);
         await EnsureEmployeeAssignedAsync(request.JobTicketId, request.EmployeeId, cancellationToken);
 
@@ -43,6 +43,8 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             EmployeeId = request.EmployeeId,
             StartedAtUtc = DateTime.UtcNow,
             HourlyRate = 0,
+            CostRateSnapshot = employee.CostRate,
+            BillRateSnapshot = employee.BillRate ?? employee.LaborRate,
             ClockInLatitude = request.ClockInLatitude!.Value,
             ClockInLongitude = request.ClockInLongitude!.Value,
             ClockInAccuracy = request.ClockInAccuracy,
@@ -368,13 +370,18 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         entry.ClockOutNote,
         entry.ClockInDeviceMetadata);
 
-    private async Task EnsureEmployeeExistsAsync(Guid employeeId, CancellationToken cancellationToken)
+    private async Task<Employee> EnsureEmployeeExistsAsync(Guid employeeId, CancellationToken cancellationToken)
     {
         if (employeeId == Guid.Empty) throw new ValidationException("EmployeeId is required.");
-        if (!await dbContext.Employees.AnyAsync(x => x.Id == employeeId, cancellationToken))
+        var employee = await dbContext.Employees
+            .SingleOrDefaultAsync(x => x.Id == employeeId, cancellationToken);
+
+        if (employee is null)
         {
             throw new ValidationException("EmployeeId does not reference an active employee.");
         }
+
+        return employee;
     }
 
     private async Task EnsureJobTicketExistsAsync(Guid jobTicketId, CancellationToken cancellationToken)

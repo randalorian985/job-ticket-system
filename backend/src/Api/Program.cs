@@ -42,6 +42,7 @@ builder.Services
             ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SigningKey))
         };
+        options.EventsType = typeof(ActiveEmployeeTokenValidationEvents);
     });
 
 builder.Services.AddAuthorization(options =>
@@ -58,6 +59,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserContext, HttpCurrentUserContext>();
+builder.Services.AddScoped<ActiveEmployeeTokenValidationEvents>();
 builder.Services.AddScoped<IAuthorizationHandler, AssignedEmployeeOrManagerHandler>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 

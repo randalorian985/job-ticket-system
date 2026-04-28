@@ -50,6 +50,7 @@ Foundation/stabilization. Core workflows are implemented for backend APIs and em
 - Clock-in validation requires active employee records, active job tickets, and active assignment to the ticket.
 - Employees are prevented from having multiple open time entries and cannot close entries belonging to other employees.
 - Clock-out calculates tracked duration (`TotalMinutes`, `LaborHours`, `BillableHours`) and records work summary notes through job work entries.
+- Clock-in now captures immutable labor-rate snapshots (`CostRateSnapshot`, `BillRateSnapshot`) used by reporting to keep historical totals stable; legacy rows without snapshots fall back to current employee rates.
 - Managers can approve, reject (with required reason), and adjust time entries through dedicated workflow endpoints.
 - Adjustments preserve original values and new values in `TimeEntryAdjustment` records for auditability.
 - Audit logs capture clock-in, clock-out, approval, rejection, and adjustment actions.
@@ -78,6 +79,7 @@ Foundation/stabilization. Core workflows are implemented for backend APIs and em
 
 This phase adds foundational security controls without replacing existing workflows:
 
+- JWT bearer token validation now re-checks the token subject against active employee status to block archived/inactive accounts immediately on protected requests.
 - Local username/email + password auth with hashed passwords.
 - JWT bearer token issuance for API clients.
 - Role enforcement for `Admin`, `Manager`, `Employee`.

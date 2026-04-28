@@ -14,6 +14,8 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(x => x.AccountNumber).HasMaxLength(50);
         builder.Property(x => x.Email).HasMaxLength(320);
         builder.HasIndex(x => x.AccountNumber).IsUnique().HasFilter("[AccountNumber] IS NOT NULL");
+        builder.HasIndex(x => x.Name);
+        builder.HasIndex(x => x.Status);
     }
 }
 
@@ -91,6 +93,9 @@ public sealed class ServiceLocationConfiguration : IEntityTypeConfiguration<Serv
         builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
         builder.HasOne(x => x.Customer).WithMany(x => x.ServiceLocations).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.CustomerId);
+        builder.HasIndex(x => x.CompanyName);
+        builder.HasIndex(x => x.LocationName);
+        builder.HasIndex(x => x.IsActive);
     }
 }
 
@@ -101,6 +106,7 @@ public sealed class VendorConfiguration : IEntityTypeConfiguration<Vendor>
         builder.ConfigureAuditableEntity();
         builder.ConfigureSoftDelete();
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        builder.HasIndex(x => x.Name);
     }
 }
 
@@ -130,6 +136,8 @@ public sealed class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.HasOne(x => x.PartCategory).WithMany(x => x.Parts).HasForeignKey(x => x.PartCategoryId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Vendor).WithMany(x => x.Parts).HasForeignKey(x => x.VendorId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.PartNumber).IsUnique();
+        builder.HasIndex(x => x.Name);
+        builder.HasIndex(x => x.VendorId);
     }
 }
 
@@ -157,9 +165,16 @@ public sealed class JobTicketConfiguration : IEntityTypeConfiguration<JobTicket>
         builder.HasOne(x => x.Equipment).WithMany(x => x.JobTickets).HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(x => x.AssignedManagerEmployee).WithMany().HasForeignKey(x => x.AssignedManagerEmployeeId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.TicketNumber).IsUnique();
+        builder.HasIndex(x => x.CustomerId);
         builder.HasIndex(x => x.ServiceLocationId);
         builder.HasIndex(x => x.BillingPartyCustomerId);
+        builder.HasIndex(x => x.EquipmentId);
         builder.HasIndex(x => x.AssignedManagerEmployeeId);
+        builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => x.Priority);
+        builder.HasIndex(x => x.CreatedAtUtc);
+        builder.HasIndex(x => x.ScheduledStartAtUtc);
+        builder.HasIndex(x => x.CompletedAtUtc);
     }
 }
 
@@ -171,6 +186,7 @@ public sealed class JobTicketEmployeeConfiguration : IEntityTypeConfiguration<Jo
         builder.ConfigureSoftDelete();
         builder.HasOne(x => x.JobTicket).WithMany(x => x.AssignedEmployees).HasForeignKey(x => x.JobTicketId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Employee).WithMany(x => x.JobTickets).HasForeignKey(x => x.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => x.EmployeeId);
         builder.HasIndex(x => new { x.JobTicketId, x.EmployeeId }).IsUnique().HasFilter("[IsDeleted] = 0");
     }
 }
@@ -184,6 +200,8 @@ public sealed class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntry>
         builder.Property(x => x.LaborHours).HasPrecision(18, 4);
         builder.Property(x => x.BillableHours).HasPrecision(18, 4);
         builder.Property(x => x.HourlyRate).HasPrecision(18, 2);
+        builder.Property(x => x.CostRateSnapshot).HasPrecision(18, 2);
+        builder.Property(x => x.BillRateSnapshot).HasPrecision(18, 2);
         builder.Property(x => x.ClockInLatitude).HasPrecision(9, 6).IsRequired();
         builder.Property(x => x.ClockInLongitude).HasPrecision(9, 6).IsRequired();
         builder.Property(x => x.ClockOutLatitude).HasPrecision(9, 6);
@@ -197,6 +215,12 @@ public sealed class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntry>
         builder.Property(x => x.RejectionReason).HasMaxLength(1000);
         builder.HasOne(x => x.JobTicket).WithMany(x => x.TimeEntries).HasForeignKey(x => x.JobTicketId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Employee).WithMany(x => x.TimeEntries).HasForeignKey(x => x.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => x.EmployeeId);
+        builder.HasIndex(x => x.JobTicketId);
+        builder.HasIndex(x => x.ApprovalStatus);
+        builder.HasIndex(x => x.StartedAtUtc);
+        builder.HasIndex(x => x.EndedAtUtc);
+        builder.HasIndex(x => new { x.EmployeeId, x.EndedAtUtc });
     }
 }
 
@@ -255,6 +279,10 @@ public sealed class JobTicketPartConfiguration : IEntityTypeConfiguration<JobTic
         builder.HasOne(x => x.Equipment).WithMany().HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(x => x.ReplacedByJobTicketPart).WithMany(x => x.ReplacedJobTicketParts).HasForeignKey(x => x.ReplacedByJobTicketPartId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(x => x.AddedByEmployee).WithMany().HasForeignKey(x => x.AddedByEmployeeId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(x => x.JobTicketId);
+        builder.HasIndex(x => x.PartId);
+        builder.HasIndex(x => x.ApprovalStatus);
+        builder.HasIndex(x => new { x.JobTicketId, x.ApprovalStatus });
         builder.HasIndex(x => x.AddedByEmployeeId);
         builder.HasIndex(x => x.EquipmentId);
         builder.HasIndex(x => x.ComponentCategory);
@@ -279,9 +307,12 @@ public sealed class JobTicketFileConfiguration : IEntityTypeConfiguration<JobTic
         builder.HasOne(x => x.Equipment).WithMany().HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(x => x.WorkEntry).WithMany().HasForeignKey(x => x.WorkEntryId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(x => x.UploadedByEmployee).WithMany().HasForeignKey(x => x.UploadedByEmployeeId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(x => x.JobTicketId);
         builder.HasIndex(x => x.UploadedByEmployeeId);
         builder.HasIndex(x => x.EquipmentId);
         builder.HasIndex(x => x.WorkEntryId);
+        builder.HasIndex(x => x.IsInvoiceAttachment);
+        builder.HasIndex(x => x.CreatedAtUtc);
     }
 }
 

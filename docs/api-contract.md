@@ -1,4 +1,4 @@
-# API Contract (Initial)
+# API Contract (Current)
 
 ## Base URL
 `/api`
@@ -20,10 +20,24 @@
     }
     ```
 
-## Future API Groups
-- `/api/tickets`
-- `/api/users`
-- `/api/assignments`
+## API Group Status
+
+### Implemented and Active
+- Health (`/health`)
+- Authentication (`/api/auth/*`)
+- User management (`/api/users/*`)
+- Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)
+- Job tickets (`/api/job-tickets/*`)
+- Time entries (`/api/time-entries/*`)
+- Reporting (`/api/reports/*`)
+
+### Implemented Backend, Frontend Pending (Manager/Admin UI phase)
+- Manager/Admin operational list/report experiences that consume existing management/reporting endpoints.
+
+### Deferred Future Features (Not Implemented)
+- Parts purchase/vendor cost tracking workflows.
+- Advanced inventory management workflows.
+- Parts compatibility recommendation engine.
 
 ## Master Data (Current)
 All list endpoints support simple pagination with optional query params:
@@ -135,6 +149,7 @@ All list endpoints support simple pagination with optional query params:
 
 ### Behavior Notes
 - Clock-in requires `JobTicketId`, `EmployeeId`, GPS latitude/longitude, and device metadata.
+- Clock-in captures immutable labor-rate snapshots on the time entry (`CostRateSnapshot`, `BillRateSnapshot`) from the employee record at clock-in time.
 - Clock-out requires `TimeEntryId`, `EmployeeId`, GPS latitude/longitude, and `WorkSummary`.
 - Employee must be actively assigned to the target job ticket before clock-in.
 - Employees can only have one open time entry at once and can only clock out their own open entry.
@@ -173,8 +188,8 @@ All list endpoints support simple pagination with optional query params:
 - Invoice-ready and cost reports include only approved labor (`ApprovalStatus = Approved`) from closed time entries (`EndedAtUtc != null`).
 - Invoice-ready and cost reports include only approved job parts (`ApprovalStatus = Approved`).
 - Archived/deleted records are excluded by global query filters (`IsDeleted = true`).
-- Labor billable totals use `Employee.BillRate`, with fallback to `Employee.LaborRate` when bill rate is not present.
-- Labor cost totals use `Employee.CostRate` when available.
+- Labor billable totals use immutable `TimeEntry.BillRateSnapshot` when present; legacy rows fall back to `Employee.BillRate`, then `Employee.LaborRate`.
+- Labor cost totals use immutable `TimeEntry.CostRateSnapshot` when present; legacy rows fall back to `Employee.CostRate`.
 - Parts totals always use `JobTicketPart.UnitCostSnapshot` and `JobTicketPart.SalePriceSnapshot`.
 - Grand total is computed as labor billable total + parts billable total + misc placeholder + tax placeholder.
 - Jobs-ready-to-invoice requires completed/reviewed jobs with approved labor and/or approved parts, and excludes invoiced/closed invoice states.

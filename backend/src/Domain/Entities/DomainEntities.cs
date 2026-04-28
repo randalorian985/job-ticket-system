@@ -202,6 +202,8 @@ public sealed class TimeEntry : SoftDeletableEntity
     public decimal LaborHours { get; set; }
     public decimal BillableHours { get; set; }
     public decimal HourlyRate { get; set; }
+    public decimal? CostRateSnapshot { get; set; }
+    public decimal? BillRateSnapshot { get; set; }
     public int? TotalMinutes { get; set; }
     public TimeEntryApprovalStatus ApprovalStatus { get; set; } = TimeEntryApprovalStatus.Pending;
     public Guid? ApprovedByUserId { get; set; }

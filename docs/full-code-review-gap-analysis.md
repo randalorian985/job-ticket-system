@@ -36,22 +36,22 @@ Validation and inspection methods included:
 - None beyond the critical auth fixes above.
 
 ### Remaining / deferred
-1. **Existing JWT tokens for users later archived/deactivated are not explicitly revoked server-side before token expiration.**
-   - Current role policies validate claims; they do not centrally re-check active status for every request at token-validation time.
-   - This can allow short-lived continued access if account state changes after token issuance.
-   - **Recommendation:** add token-validation event (or centralized authorization handler) that enforces active/non-archived employee existence for protected requests.
+- **None for the pre-Manager/Admin hardening items listed above.**
 
-2. **Reporting labor pricing uses current employee rate fields rather than immutable per-entry pricing snapshot semantics.**
-   - Current invoice-ready/reporting totals derive labor rates from `Employee.BillRate`/`Employee.LaborRate` and `Employee.CostRate`.
-   - If rate cards change later, historic totals may shift.
-   - **Recommendation:** confirm intended labor pricing source of truth (e.g., `TimeEntry.HourlyRate` and/or dedicated snapshot fields) and align reporting + docs.
+### Resolved in follow-up hardening implementation
+1. **Token revalidation now enforces active/non-archived employee status on protected requests.**
+   - JWT bearer token validation performs centralized active-employee checks against current database state.
+   - Existing tokens are now denied immediately when accounts become inactive/archived.
 
-3. **Database indexing gaps for expected Manager/Admin reporting/list workloads.**
-   - Several common lookup predicates requested for next phase are only partially indexed (e.g., `JobTickets` by `CustomerId`/`Status`/`EquipmentId`, `TimeEntries` open-entry pattern, `JobTicketParts` by status/part/job combinations, `JobTicketFiles` by job + related foreign keys).
-   - **Recommendation:** add a dedicated index hardening migration before Manager/Admin UI implementation.
+2. **Labor reporting now aligns to immutable time-entry rate snapshots.**
+   - Time-entry clock-in captures `CostRateSnapshot` and `BillRateSnapshot`.
+   - Reporting uses snapshots first and falls back to current employee rates only for legacy rows with null snapshots.
 
-4. **`docs/api-contract.md` contains stale “Future API Groups” placeholders and still labels the document as “Initial.”**
-   - Not breaking, but can mislead upcoming Manager/Admin screen planning.
+3. **Database index coverage was hardened for upcoming Manager/Admin query patterns.**
+   - Added focused indexes across job tickets, assignments, time entries, parts usage, files, and common master-data list filters.
+
+4. **`docs/api-contract.md` stale “Initial/Future API Groups” framing was removed.**
+   - API contract now clearly separates implemented APIs, backend-implemented frontend-pending items, and deferred future features.
 
 ---
 
