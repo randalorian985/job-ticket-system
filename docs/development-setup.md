@@ -5,7 +5,7 @@ This guide explains how to prepare a local development environment for the Job T
 ## Required tools
 
 - **.NET SDK 8.x** (repository pins SDK via `backend/global.json`)
-- **Node.js 20.x LTS** (or newer compatible LTS)
+- **Node.js 20.0.0+ LTS** (or newer compatible LTS)
 - **npm** (bundled with Node.js)
 - **Docker Desktop** (or Docker Engine + Compose plugin)
 - Optional but recommended:
@@ -71,6 +71,8 @@ Health endpoint should remain available at:
 - `GET /health`
 
 ## Frontend commands (install/build)
+
+Node.js requirement for frontend install/build/test: **20.0.0+**.
 
 From repository root:
 

@@ -44,6 +44,12 @@
    - Fix applied: added explicit note that approval transitions are manager/admin-only.
    - File: `docs/api-contract.md`.
 
+## Important follow-up stabilization (2026-04-28)
+1. **Node/test dependency runtime mismatch from frontend lockfile.**
+   - Risk: install/test failures on Node 20 patch releases below 20.19.0 due to transitive engine requirements from newer jsdom/vitest trees.
+   - Stabilization action: pin frontend test dependencies (`vitest`, `jsdom`) to Node 20.0.0+ compatible versions and declare frontend `engines.node` minimum.
+   - Files: `frontend/package.json`, `frontend/package-lock.json`, `README.md`, `docs/development-setup.md`.
+
 ## Nice-to-have (can defer)
 1. Tighten integration-test logging noise from expected request failures to reduce false alarms in test output triage.
 2. Expand frontend automated test coverage (currently no configured frontend unit/integration tests).
@@ -60,7 +66,7 @@
 - Soft-delete query filters are active and used with archive semantics.
 - Decimal precision is configured for money, quantities, labor, and GPS coordinates.
 - Required backend and frontend build/test commands complete successfully in this environment.
-- Frontend test command is present but currently a placeholder indicating no tests configured yet.
+- Frontend unit/integration tests are configured and passing with Vitest + jsdom on the stabilized branch.
 
 ## Commands Executed
 1. `dotnet restore backend/JobTicketSystem.sln`
@@ -69,3 +75,26 @@
 4. `cd frontend && npm install`
 5. `cd frontend && npm run build`
 6. `cd frontend && npm test`
+
+
+## Post-merge full code review / gap analysis (2026-04-28)
+
+### Stabilization verification results
+1. **Frontend lockfile churn review (inline comment follow-up)**
+   - Reviewed the lockfile delta after pinning test dependencies.
+   - Confirmed root runtime dependencies are unchanged (`react`, `react-dom`, `react-router-dom`).
+   - Confirmed root devDependencies changed only where intended for stabilization (`vitest` and `jsdom`) plus transitive dependency graph re-resolution.
+   - Large lockfile diff is attributable to package tree changes from moving off newer Vitest/jsdom dependency paths; no unrelated app dependency removals were identified.
+
+2. **Employee status/priority label mapping**
+   - Verified frontend mappings remain explicit numeric maps keyed to backend enum values.
+   - Verified unknown values now render safe fallback labels (`Unknown status`, `Unknown priority`) with test coverage.
+
+3. **Health endpoint contract**
+   - Verified `/health` remains unauthenticated and returns JSON payload aligned to contract (`status`, `totalDuration`, `entries`).
+   - Existing integration test continues to validate JSON content-type and status-field presence.
+
+### Current gaps after stabilization
+- **Important:** React Router future-flag warnings appear during frontend tests; this does not fail tests today but should be cleaned up before upgrading to React Router v7.
+- **Planned/out-of-scope:** Manager/Admin frontend screens are still intentionally out of scope for this scaffold phase.
+- **Nice-to-have:** Expand frontend test coverage from current route/page flows toward more component and API error-path coverage.
