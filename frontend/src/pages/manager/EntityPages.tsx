@@ -8,6 +8,8 @@ import { usersApi } from '../../api/usersApi'
 import type { CustomerDto, EquipmentDto, JobTicketPartDto, PartCategoryDto, PartDto, ServiceLocationDto, TimeEntryDto, UserDto, VendorDto } from '../../types'
 import { formatDate, getApprovalLabel } from './managerDisplay'
 
+const EMPTY_GUID = '00000000-0000-0000-0000-000000000000'
+
 function Errorable({ error }: { error: string | null }) {
   return error ? <p className="error">{error}</p> : null
 }
@@ -62,8 +64,8 @@ export function TimeApprovalPage() {
   const [error, setError] = useState<string | null>(null)
   const load = () => jobId ? timeEntriesApi.listByJob(jobId).then(setEntries).catch(() => setError('Unable to load time entries for job.')) : Promise.resolve()
 
-  const approve = async (id: string) => { await timeEntriesApi.approve(id, { approvedByUserId: '' }); await load() }
-  const reject = async (id: string) => { await timeEntriesApi.reject(id, { rejectedByUserId: '', reason: 'Rejected in manager review' }); await load() }
+  const approve = async (id: string) => { await timeEntriesApi.approve(id, { approvedByUserId: EMPTY_GUID }); await load() }
+  const reject = async (id: string) => { await timeEntriesApi.reject(id, { rejectedByUserId: EMPTY_GUID, reason: 'Rejected in manager review' }); await load() }
 
   return (
     <section className="card stack">
