@@ -35,6 +35,11 @@ public sealed class AuthService(ApplicationDbContext dbContext, ICurrentUserCont
             return null;
         }
 
+        if (employee.Status != Domain.Enums.EmployeeStatus.Active)
+        {
+            return null;
+        }
+
         if (string.IsNullOrWhiteSpace(employee.Role) || !SystemRoles.All.Contains(employee.Role))
         {
             throw new ValidationException("Employee role is missing or invalid.");
@@ -51,7 +56,7 @@ public sealed class AuthService(ApplicationDbContext dbContext, ICurrentUserCont
         }
 
         return await dbContext.Employees
-            .Where(x => x.Id == currentUserContext.EmployeeId)
+            .Where(x => x.Id == currentUserContext.EmployeeId && x.Status == Domain.Enums.EmployeeStatus.Active)
             .Select(x => new AuthMeDto(x.Id, x.UserName ?? x.Email ?? string.Empty, x.Email, x.FirstName, x.LastName, x.Role ?? string.Empty))
             .SingleOrDefaultAsync(cancellationToken);
     }
@@ -64,7 +69,18 @@ public sealed class AuthService(ApplicationDbContext dbContext, ICurrentUserCont
 
     private static bool VerifyPassword(string password, string storedHash)
     {
-        return PasswordHasher.Verify(password, storedHash);
+        try
+        {
+            return PasswordHasher.Verify(password, storedHash);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 }
 

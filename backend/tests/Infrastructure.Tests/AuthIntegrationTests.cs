@@ -46,6 +46,51 @@ public sealed class AuthIntegrationTests
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+
+    [Fact]
+    public async Task Login_fails_for_inactive_user()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedUsersAsync(db, auth));
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var employee = await db.Employees.SingleAsync(x => x.UserName == "employee");
+            employee.Status = EmployeeStatus.Inactive;
+            await db.SaveChangesAsync();
+        }
+
+        var client = factory.CreateClient();
+        var response = await client.PostAsJsonAsync("/api/auth/login", new AuthLoginRequestDto("employee", "EmployeePass!123"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_with_malformed_password_hash_returns_unauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync(async (db, auth) =>
+        {
+            db.Employees.Add(new Employee
+            {
+                FirstName = "Broken",
+                LastName = "Hash",
+                UserName = "broken",
+                Email = "broken@example.com",
+                Role = SystemRoles.Employee,
+                PasswordHash = "not.a.valid.hash"
+            });
+            await db.SaveChangesAsync();
+        });
+
+        var client = factory.CreateClient();
+        var response = await client.PostAsJsonAsync("/api/auth/login", new AuthLoginRequestDto("broken", "anything"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     [Fact]
     public async Task Unauthenticated_requests_are_rejected_for_protected_endpoints()
     {
