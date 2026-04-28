@@ -8,7 +8,15 @@
   - **Response 200**
     ```json
     {
-      "status": "Healthy"
+      "status": "Healthy",
+      "totalDuration": "00:00:00.0000000",
+      "entries": {
+        "example-check": {
+          "status": "Healthy",
+          "duration": "00:00:00.0000000",
+          "description": "Optional check description"
+        }
+      }
     }
     ```
 
