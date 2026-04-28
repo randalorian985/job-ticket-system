@@ -97,3 +97,14 @@ This phase adds foundational security controls without replacing existing workfl
 - Admin-only user list route (`/manage/users`) isolated from manager users.
 - Employee mobile workflow routes remain active (`/login`, `/jobs`, `/jobs/:jobTicketId`).
 - Deferred domains remain unchanged: parts purchase/vendor cost tracking, advanced inventory, and parts compatibility recommendation engine are not implemented in this phase.
+
+
+## Manager/Admin UI Phase 2 (Implemented)
+- Job ticket detail now supports manager/admin assignment management (assign/unassign with duplicate prevention UX and refresh after mutation).
+- Manager/admin job ticket create route is available at `/manage/job-tickets/new` and edit workflows are available from the ticket detail screen.
+- Job ticket status/archive flows include explicit enum-value labels, confirmation prompts, and error/success messaging.
+- Reports view now supports query filters (date range, customer, employee, status), export-friendly table rendering, and client-side CSV export from loaded data.
+- Manager/admin master-data pages now include targeted create/edit/archive forms for customers, service locations, and parts.
+- Admin-only users page now includes targeted create/edit/archive/reset-password operations via existing `/api/users` endpoints.
+- Employee route tree (`/jobs`, `/jobs/:jobTicketId`) remains unchanged.
+- Deferred domains remain unchanged and unimplemented: parts purchase/vendor cost tracking, advanced inventory, compatibility recommendation engine.

@@ -32,7 +32,7 @@ export function JobTicketListPage() {
 
   return (
     <section className="card">
-      <h2>Job Tickets</h2>
+      <div className="row"><h2>Job Tickets</h2><Link to="/manage/job-tickets/new">Create Ticket</Link></div>
       {error ? <p className="error">{error}</p> : null}
       {!jobs.length && !error ? <p className="muted">No job tickets found.</p> : null}
       <ul>

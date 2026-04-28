@@ -15,6 +15,7 @@ import {
   UnauthorizedPage,
   UsersPage
 } from '../pages/manager/EntityPages'
+import { JobTicketCreatePage } from '../pages/manager/JobTicketCreatePage'
 import { JobTicketDetailPage } from '../pages/manager/JobTicketDetailPage'
 import { JobTicketListPage } from '../pages/manager/JobTicketListPage'
 import { ManagerDashboardPage } from '../pages/manager/ManagerDashboardPage'
@@ -48,6 +49,7 @@ export function AppRouter() {
         <Route path="/manage" element={<ManagerShell />}>
           <Route index element={<ManagerDashboardPage />} />
           <Route path="job-tickets" element={<JobTicketListPage />} />
+          <Route path="job-tickets/new" element={<JobTicketCreatePage />} />
           <Route path="job-tickets/:jobTicketId" element={<JobTicketDetailPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="service-locations" element={<ServiceLocationsPage />} />
