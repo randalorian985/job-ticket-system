@@ -4,26 +4,7 @@ import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { ApiError } from '../../api/httpClient'
 import { useAuth } from '../../features/auth/AuthContext'
 import type { JobTicketListItemDto } from '../../types'
-
-const statusLabels: Record<number, string> = {
-  1: 'Draft',
-  2: 'Submitted',
-  3: 'Assigned',
-  4: 'In Progress',
-  5: 'Waiting on Parts',
-  6: 'Waiting on Customer',
-  7: 'Completed',
-  8: 'Cancelled',
-  9: 'Invoiced',
-  10: 'Reviewed'
-}
-
-const priorityLabels: Record<number, string> = {
-  1: 'Low',
-  2: 'Normal',
-  3: 'High',
-  4: 'Urgent'
-}
+import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from './jobDisplay'
 
 export function MyJobsPage() {
   const { user, logout } = useAuth()
@@ -91,12 +72,12 @@ export function MyJobsPage() {
             <h2>{job.ticketNumber}</h2>
             <p>{job.title}</p>
             <p className="muted">
-              Status: {statusLabels[job.status] ?? String(job.status)} | Priority: {priorityLabels[job.priority] ?? String(job.priority)}
+              Status: {getJobTicketStatusLabel(job.status)} | Priority: {getJobTicketPriorityLabel(job.priority)}
             </p>
             <p className="muted">Customer ID: {job.customerId}</p>
             <p className="muted">Service Location ID: {job.serviceLocationId}</p>
             <p className="muted">Scheduled: {job.scheduledStartAtUtc ? new Date(job.scheduledStartAtUtc).toLocaleString() : 'Not set'}</p>
-            <p className="muted">Due: {job.dueAtUtc ? new Date(job.dueAtUtc).toLocaleString() : 'Not set'}</p>
+            <p className="muted">Equipment: Summary unavailable from assigned-jobs API</p>
             <Link to={`/jobs/${job.id}`}>Open Job</Link>
           </article>
         ))}

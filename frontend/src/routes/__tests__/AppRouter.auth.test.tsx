@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import { AppRouter } from '../AppRouter'
@@ -16,6 +16,10 @@ vi.mock('../../api/jobTicketsApi', () => ({
 }))
 
 describe('AppRouter authentication rendering', () => {
+  beforeEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
   it('redirects unauthenticated users from protected routes to login', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
@@ -58,5 +62,29 @@ describe('AppRouter authentication rendering', () => {
     expect(await screen.findByRole('heading', { name: 'My Jobs' })).toBeInTheDocument()
     expect(screen.getByText('Casey Tech')).toBeInTheDocument()
     expect(await screen.findByText('No assigned jobs found.')).toBeInTheDocument()
+  })
+
+  it('redirects manager role away from employee-only routes', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: {
+        employeeId: 'manager-1',
+        username: 'manager',
+        firstName: 'Mina',
+        lastName: 'Supervisor',
+        role: 'Manager',
+        email: 'manager@example.com'
+      },
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/jobs']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('This screen is for employees only. Please sign in with an employee account.')).toBeInTheDocument()
   })
 })

@@ -8,7 +8,7 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedRoute allowedRoles={['Employee']} />}>
         <Route path="/jobs" element={<MyJobsPage />} />
         <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
       </Route>
