@@ -203,7 +203,7 @@ public sealed class TimeEntriesServiceTests
             Country = "USA"
         };
         var manager = new Employee { FirstName = "Manager", LastName = "One", Email = "manager2@example.com" };
-        var employee = new Employee { FirstName = "Tech", LastName = "One", Email = "tech2@example.com" };
+        var employee = new Employee { FirstName = "Tech", LastName = "One", Email = "tech2@example.com", CostRate = 62.50m, BillRate = 115.25m };
         context.AddRange(customer, billingCustomer, location, manager, employee);
         await context.SaveChangesAsync();
 
@@ -244,4 +244,18 @@ public sealed class TimeEntriesServiceTests
     }
 
     private sealed record SeedRefs(JobTicket JobTicket, Employee Employee, Employee Manager);
+
+    [Fact]
+    public async Task Clock_in_captures_employee_rate_snapshots()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var created = await service.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
+        var entry = await context.TimeEntries.SingleAsync(x => x.Id == created.Id);
+
+        Assert.Equal(62.50m, entry.CostRateSnapshot);
+        Assert.Equal(115.25m, entry.BillRateSnapshot);
+    }
 }

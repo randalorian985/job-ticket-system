@@ -93,6 +93,60 @@ public sealed class ReportingServiceTests
     }
 
     [Fact]
+    public async Task Labor_reports_use_snapshots_and_ignore_later_employee_rate_changes()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedAsync(context);
+
+        refs.Employee.CostRate = 999m;
+        refs.Employee.BillRate = 1999m;
+        await context.SaveChangesAsync();
+
+        var service = new ReportingService(context);
+        var summary = await service.GetInvoiceReadySummaryAsync(refs.MainJob.Id);
+        var laborByJob = await service.GetLaborByJobAsync(new ReportQueryFiltersDto());
+
+        Assert.Equal(100m, summary!.LaborCostTotal);
+        Assert.Equal(240m, summary.LaborBillableTotal);
+
+        var job = Assert.Single(laborByJob.Where(x => x.JobTicketId == refs.MainJob.Id));
+        Assert.Equal(100m, job.LaborCostTotal);
+        Assert.Equal(240m, job.LaborBillableTotal);
+    }
+
+    [Fact]
+    public async Task Legacy_null_snapshot_entries_fallback_to_current_employee_rates()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedAsync(context);
+
+        context.TimeEntries.Add(new TimeEntry
+        {
+            JobTicketId = refs.MainJob.Id,
+            EmployeeId = refs.Employee.Id,
+            StartedAtUtc = DateTime.UtcNow.AddHours(-1),
+            EndedAtUtc = DateTime.UtcNow,
+            LaborHours = 1m,
+            BillableHours = 1m,
+            ApprovalStatus = TimeEntryApprovalStatus.Approved,
+            ClockInLatitude = 1,
+            ClockInLongitude = 1,
+            CostRateSnapshot = null,
+            BillRateSnapshot = null
+        });
+
+        refs.Employee.CostRate = 70m;
+        refs.Employee.BillRate = 130m;
+        await context.SaveChangesAsync();
+
+        var service = new ReportingService(context);
+        var summary = await service.GetInvoiceReadySummaryAsync(refs.MainJob.Id);
+
+        Assert.Equal(170m, summary!.LaborCostTotal);
+        Assert.Equal(370m, summary.LaborBillableTotal);
+    }
+
+    [Fact]
     public async Task Jobs_ready_to_invoice_excludes_invoiced_jobs()
     {
         await using var context = CreateContext();
@@ -229,10 +283,10 @@ public sealed class ReportingServiceTests
         });
 
         context.TimeEntries.AddRange(
-            new TimeEntry { JobTicketId = mainJob.Id, EmployeeId = employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-3), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 2m, BillableHours = 2m, ApprovalStatus = TimeEntryApprovalStatus.Approved, ClockInLatitude = 1, ClockInLongitude = 1 },
-            new TimeEntry { JobTicketId = mainJob.Id, EmployeeId = employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-2), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 1m, BillableHours = 1m, ApprovalStatus = TimeEntryApprovalStatus.Pending, ClockInLatitude = 1, ClockInLongitude = 1 },
-            new TimeEntry { JobTicketId = mainJob.Id, EmployeeId = employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-4), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 3m, BillableHours = 3m, ApprovalStatus = TimeEntryApprovalStatus.Rejected, ClockInLatitude = 1, ClockInLongitude = 1 },
-            new TimeEntry { JobTicketId = invoicedJob.Id, EmployeeId = employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-2), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 1m, BillableHours = 1m, ApprovalStatus = TimeEntryApprovalStatus.Approved, ClockInLatitude = 1, ClockInLongitude = 1 });
+            new TimeEntry { JobTicketId = mainJob.Id, EmployeeId = employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-3), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 2m, BillableHours = 2m, ApprovalStatus = TimeEntryApprovalStatus.Approved, ClockInLatitude = 1, ClockInLongitude = 1, CostRateSnapshot = 50m, BillRateSnapshot = 120m },
+            new TimeEntry { JobTicketId = mainJob.Id, EmployeeId = employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-2), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 1m, BillableHours = 1m, ApprovalStatus = TimeEntryApprovalStatus.Pending, ClockInLatitude = 1, ClockInLongitude = 1, CostRateSnapshot = 50m, BillRateSnapshot = 120m },
+            new TimeEntry { JobTicketId = mainJob.Id, EmployeeId = employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-4), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 3m, BillableHours = 3m, ApprovalStatus = TimeEntryApprovalStatus.Rejected, ClockInLatitude = 1, ClockInLongitude = 1, CostRateSnapshot = 50m, BillRateSnapshot = 120m },
+            new TimeEntry { JobTicketId = invoicedJob.Id, EmployeeId = employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-2), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 1m, BillableHours = 1m, ApprovalStatus = TimeEntryApprovalStatus.Approved, ClockInLatitude = 1, ClockInLongitude = 1, CostRateSnapshot = 50m, BillRateSnapshot = 120m });
 
         var approvedPart = new JobTicketPart { JobTicketId = mainJob.Id, PartId = part.Id, Quantity = 2m, UnitCostSnapshot = 10m, SalePriceSnapshot = 25m, ApprovalStatus = JobPartApprovalStatus.Approved, AddedAtUtc = DateTime.UtcNow, Status = PartTransactionStatus.Used };
         context.JobTicketParts.AddRange(
@@ -242,8 +296,8 @@ public sealed class ReportingServiceTests
             new JobTicketPart { JobTicketId = mainJob.Id, PartId = part.Id, Quantity = 1m, UnitCostSnapshot = 9m, SalePriceSnapshot = 20m, ApprovalStatus = JobPartApprovalStatus.Approved, AddedAtUtc = DateTime.UtcNow, Status = PartTransactionStatus.Used, IsDeleted = true, DeletedAtUtc = DateTime.UtcNow });
 
         await context.SaveChangesAsync();
-        return new SeedRefs(customer, equipment, mainJob, invoicedJob, part, approvedPart);
+        return new SeedRefs(customer, equipment, mainJob, invoicedJob, part, approvedPart, employee);
     }
 
-    private sealed record SeedRefs(Customer Customer, Equipment Equipment, JobTicket MainJob, JobTicket InvoicedJob, Part Part, JobTicketPart ApprovedPart);
+    private sealed record SeedRefs(Customer Customer, Equipment Equipment, JobTicket MainJob, JobTicket InvoicedJob, Part Part, JobTicketPart ApprovedPart, Employee Employee);
 }

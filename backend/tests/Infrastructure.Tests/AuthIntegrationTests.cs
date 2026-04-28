@@ -102,6 +102,44 @@ public sealed class AuthIntegrationTests
     }
 
     [Fact]
+    public async Task Active_user_with_valid_token_can_access_authorized_protected_endpoint()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedUsersAsync(db, auth));
+
+        var client = factory.CreateClient();
+        await client.SetBearerTokenAsync("employee", "EmployeePass!123");
+
+        var response = await client.GetAsync("/api/auth/me");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Inactive_user_with_previously_issued_token_is_rejected_for_protected_endpoints_and_me()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedDataAsync(db, auth));
+
+        var client = factory.CreateClient();
+        await client.SetBearerTokenAsync("employee", "EmployeePass!123");
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var employee = await db.Employees.SingleAsync(x => x.UserName == "employee");
+            employee.Status = EmployeeStatus.Inactive;
+            await db.SaveChangesAsync();
+        }
+
+        var protectedResponse = await client.GetAsync("/api/time-entries/employee/00000000-0000-0000-0000-000000000001");
+        var meResponse = await client.GetAsync("/api/auth/me");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, protectedResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, meResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Employee_cannot_archive_job_ticket_and_can_only_access_assigned_job()
     {
         await using var factory = new TestApiFactory();

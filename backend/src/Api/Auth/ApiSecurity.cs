@@ -3,8 +3,12 @@ using System.Security.Claims;
 using System.Text;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.Security;
+using JobTicketSystem.Domain.Enums;
+using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -71,6 +75,32 @@ public sealed class HttpCurrentUserContext(IHttpContextAccessor accessor) : ICur
     public bool IsAdmin => string.Equals(Role, SystemRoles.Admin, StringComparison.OrdinalIgnoreCase);
     public bool IsManager => IsAdmin || string.Equals(Role, SystemRoles.Manager, StringComparison.OrdinalIgnoreCase);
     public bool IsEmployee => IsManager || string.Equals(Role, SystemRoles.Employee, StringComparison.OrdinalIgnoreCase);
+}
+
+public sealed class ActiveEmployeeTokenValidationEvents(IServiceScopeFactory scopeFactory) : JwtBearerEvents
+{
+    public override async Task TokenValidated(TokenValidatedContext context)
+    {
+        var employeeIdClaim = context.Principal?.FindFirstValue("employee_id")
+            ?? context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+        if (!Guid.TryParse(employeeIdClaim, out var employeeId) || employeeId == Guid.Empty)
+        {
+            context.Fail("Invalid token subject.");
+            return;
+        }
+
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var isActiveEmployee = await dbContext.Employees
+            .AnyAsync(x => x.Id == employeeId && x.Status == EmployeeStatus.Active, context.HttpContext.RequestAborted);
+
+        if (!isActiveEmployee)
+        {
+            context.Fail("Token subject is inactive or archived.");
+        }
+    }
 }
 
 public sealed class AssignedEmployeeOrManagerRequirement : IAuthorizationRequirement;

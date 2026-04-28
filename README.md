@@ -48,11 +48,13 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
   - Labor rollups (by job/by employee)
   - Parts rollups
   - Customer/equipment service history
+  - Labor reporting now prefers immutable time-entry labor-rate snapshots, with legacy fallback to current employee rates when snapshots are null
 - Authentication and authorization foundation:
   - Username/email + password login
   - JWT bearer token issuance and `GET /api/auth/me`
   - Role enforcement (`Admin`, `Manager`, `Employee`)
   - Admin-oriented user management endpoints
+  - Protected-request token revalidation against active employee status (inactive/archived users are denied even with unexpired tokens)
 
 ### Implemented Data & Persistence Foundation
 - EF Core `ApplicationDbContext` + SQL Server integration.
