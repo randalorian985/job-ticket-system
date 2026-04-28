@@ -16,6 +16,10 @@ export function LoginPage() {
     return <Navigate to="/jobs" replace />
   }
 
+  if (user?.role === 'Manager' || user?.role === 'Admin') {
+    return <Navigate to="/manage" replace />
+  }
+
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setIsSubmitting(true)
@@ -24,7 +28,7 @@ export function LoginPage() {
     try {
       await login({ usernameOrEmail, password })
       const from = (location.state as { from?: { pathname?: string } })?.from?.pathname
-      navigate(from ?? '/jobs', { replace: true })
+      navigate(from ?? '/', { replace: true })
     } catch (submitError) {
       if (submitError instanceof ApiError) {
         setError(submitError.message)

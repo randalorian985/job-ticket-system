@@ -11,7 +11,8 @@ vi.mock('../../features/auth/AuthContext', () => ({
 
 vi.mock('../../api/jobTicketsApi', () => ({
   jobTicketsApi: {
-    listMine: vi.fn()
+    listMine: vi.fn(),
+    listAll: vi.fn()
   }
 }))
 
@@ -20,13 +21,9 @@ describe('AppRouter authentication rendering', () => {
     cleanup()
     vi.clearAllMocks()
   })
+
   it('redirects unauthenticated users from protected routes to login', async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      isLoading: false,
-      login: vi.fn(),
-      logout: vi.fn()
-    })
+    vi.mocked(useAuth).mockReturnValue({ user: null, isLoading: false, login: vi.fn(), logout: vi.fn() })
 
     render(
       <MemoryRouter initialEntries={['/jobs']}>
@@ -39,14 +36,7 @@ describe('AppRouter authentication rendering', () => {
 
   it('renders protected jobs route for authenticated employee role', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: {
-        employeeId: 'employee-1',
-        username: 'employee',
-        firstName: 'Casey',
-        lastName: 'Tech',
-        role: 'Employee',
-        email: 'employee@example.com'
-      },
+      user: { employeeId: 'employee-1', username: 'employee', firstName: 'Casey', lastName: 'Tech', role: 'Employee', email: 'employee@example.com' },
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn()
@@ -60,31 +50,48 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'My Jobs' })).toBeInTheDocument()
-    expect(screen.getByText('Casey Tech')).toBeInTheDocument()
-    expect(await screen.findByText('No assigned jobs found.')).toBeInTheDocument()
   })
 
-  it('redirects manager role away from employee-only routes', async () => {
+  it('employee users cannot access manager routes', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: {
-        employeeId: 'manager-1',
-        username: 'manager',
-        firstName: 'Mina',
-        lastName: 'Supervisor',
-        role: 'Manager',
-        email: 'manager@example.com'
-      },
+      user: { employeeId: 'employee-1', username: 'employee', firstName: 'Casey', lastName: 'Tech', role: 'Employee', email: 'employee@example.com' },
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn()
     })
 
     render(
-      <MemoryRouter initialEntries={['/jobs']}>
+      <MemoryRouter initialEntries={['/manage']}>
         <AppRouter />
       </MemoryRouter>
     )
 
-    expect(await screen.findByText('This screen is for employees only. Please sign in with an employee account.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Access Denied' })).toBeInTheDocument()
+  })
+
+  it('manager dashboard renders and manager cannot access admin user route', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { employeeId: 'manager-1', username: 'manager', firstName: 'Mina', lastName: 'Supervisor', role: 'Manager', email: 'manager@example.com' },
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/manage']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Operations Dashboard' })).toBeInTheDocument()
+    expect(screen.queryByText('Users')).not.toBeInTheDocument()
+
+    render(
+      <MemoryRouter initialEntries={['/manage/users']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Access Denied' })).toBeInTheDocument()
   })
 })

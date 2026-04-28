@@ -17,7 +17,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Foundation/stabilization. Core workflows are implemented for backend APIs and employee mobile operations, with Manager/Admin UI intentionally deferred.
+Foundation/stabilization. Core workflows are implemented for backend APIs, employee mobile operations, and Manager/Admin UI Phase 1 read-first operational screens.
 
 ## Frontend Workflow Status
 - React Employee Mobile Workflow is implemented with login, auth state, assigned-job list/detail, clock in/out with GPS, work-note submission, part-used submission, and file/photo upload screens.
@@ -86,3 +86,14 @@ This phase adds foundational security controls without replacing existing workfl
 - Assignment-aware authorization for employee access to job-specific actions (jobs, time tracking, files, and parts workflows).
 - Admin user management endpoints for CRUD/archive/reset-password.
 - No external SSO/OAuth, password reset workflow, or email verification in this phase.
+
+
+## Manager/Admin UI Phase 1 (Implemented)
+- Protected manager/admin shell route (`/manage`) with dashboard navigation for operational sections.
+- Read-first list/detail visibility for job tickets, including assignments, work entries, time entries, parts, and file/photo metadata.
+- Read-first operational lists for customers, service locations, equipment, parts, vendors, and part categories.
+- Manager/admin approval screens for time entries and job parts using existing approval endpoints.
+- Manager/admin reports index view with direct access to existing reporting endpoints and snapshot-first labor reporting note.
+- Admin-only user list route (`/manage/users`) isolated from manager users.
+- Employee mobile workflow routes remain active (`/login`, `/jobs`, `/jobs/:jobTicketId`).
+- Deferred domains remain unchanged: parts purchase/vendor cost tracking, advanced inventory, and parts compatibility recommendation engine are not implemented in this phase.
