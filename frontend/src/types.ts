@@ -63,6 +63,37 @@ export type JobTicketDto = {
   archiveReason?: string | null
 }
 
+
+
+export type CreateJobTicketDto = {
+  customerId: string
+  serviceLocationId: string
+  billingPartyCustomerId: string
+  equipmentId?: string | null
+  title: string
+  description?: string | null
+  jobType?: string | null
+  priority: number
+  status: number
+  requestedAtUtc?: string | null
+  scheduledStartAtUtc?: string | null
+  dueAtUtc?: string | null
+  assignedManagerEmployeeId?: string | null
+  purchaseOrderNumber?: string | null
+  billingContactName?: string | null
+  billingContactPhone?: string | null
+  billingContactEmail?: string | null
+  internalNotes?: string | null
+  customerFacingNotes?: string | null
+}
+
+export type UpdateJobTicketDto = CreateJobTicketDto
+
+export type AddJobTicketAssignmentDto = {
+  employeeId: string
+  isLead?: boolean
+}
+
 export type ChangeJobTicketStatusDto = {
   status: number
 }
@@ -267,6 +298,17 @@ export type CustomerDto = {
   phone?: string | null
 }
 
+
+export type CreateCustomerDto = {
+  name: string
+  accountNumber?: string | null
+  contactName?: string | null
+  email?: string | null
+  phone?: string | null
+}
+
+export type UpdateCustomerDto = CreateCustomerDto
+
 export type ServiceLocationDto = {
   id: string
   customerId?: string | null
@@ -311,6 +353,91 @@ export type PartCategoryDto = {
   description?: string | null
 }
 
+
+
+export type CreateServiceLocationDto = {
+  customerId?: string | null
+  companyName: string
+  locationName: string
+  addressLine1: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  isActive?: boolean
+}
+
+export type UpdateServiceLocationDto = CreateServiceLocationDto
+
+export type CreateEquipmentDto = {
+  customerId: string
+  serviceLocationId: string
+  ownerCustomerId?: string | null
+  responsibleBillingCustomerId?: string | null
+  name: string
+  equipmentNumber?: string | null
+  unitNumber?: string | null
+  manufacturer?: string | null
+  modelNumber?: string | null
+  serialNumber?: string | null
+  equipmentType?: string | null
+  year?: number | null
+}
+
+export type UpdateEquipmentDto = CreateEquipmentDto
+
+export type CreateVendorDto = {
+  name: string
+  accountNumber?: string | null
+  contactName?: string | null
+  email?: string | null
+  phone?: string | null
+}
+
+export type UpdateVendorDto = CreateVendorDto
+
+export type CreatePartCategoryDto = {
+  name: string
+  description?: string | null
+}
+
+export type UpdatePartCategoryDto = CreatePartCategoryDto
+
+export type CreatePartDto = {
+  partCategoryId: string
+  vendorId?: string | null
+  partNumber: string
+  name: string
+  description?: string | null
+  unitCost: number
+  unitPrice: number
+  quantityOnHand: number
+  reorderThreshold: number
+}
+
+export type UpdatePartDto = CreatePartDto
+
+export type CreateUserDto = {
+  userName: string
+  email?: string | null
+  firstName: string
+  lastName: string
+  role: string
+  password: string
+}
+
+export type UpdateUserDto = {
+  userName: string
+  email?: string | null
+  firstName: string
+  lastName: string
+  role: string
+}
+
+export type ResetPasswordDto = {
+  newPassword: string
+}
+
 export type UserDto = {
   id: string
   userName?: string | null
@@ -320,6 +447,20 @@ export type UserDto = {
   role: string
   status: number
   isArchived: boolean
+}
+
+
+export type ReportQueryFilters = {
+  dateFromUtc?: string
+  dateToUtc?: string
+  customerId?: string
+  billingPartyCustomerId?: string
+  serviceLocationId?: string
+  employeeId?: string
+  jobStatus?: number
+  invoiceStatus?: number
+  offset?: number
+  limit?: number
 }
 
 export type JobsReadyToInvoiceItemDto = {

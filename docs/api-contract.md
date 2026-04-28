@@ -31,9 +31,12 @@
 - Time entries (`/api/time-entries/*`)
 - Reporting (`/api/reports/*`)
 
-### Implemented Backend + Frontend (Manager/Admin UI Phase 1)
-- Manager/Admin React routes now consume existing management/reporting endpoints for read-first lists/details, approvals, and report views.
-- Admin-only frontend route for `/api/users` is now available (`/manage/users`).
+### Implemented Backend + Frontend (Manager/Admin UI Phases 1-2)
+- Manager/Admin React routes consume management/reporting endpoints for read-first pages plus targeted edit workflows.
+- Job ticket management now includes create (`/manage/job-tickets/new`), detail edit, assignment add/remove, status update confirmation, and archive reason capture.
+- Reports UI consumes existing report query filters (`dateFromUtc`, `dateToUtc`, `customerId`, `employeeId`, `jobStatus`, etc.) and supports client-side CSV export from loaded rows.
+- Master-data screens now include targeted create/edit/archive actions for supported APIs.
+- Admin-only frontend route for `/api/users` remains isolated and now includes create/edit/archive/reset-password actions.
 
 ### Deferred Future Features (Not Implemented)
 - Parts purchase/vendor cost tracking workflows.
@@ -237,6 +240,6 @@ Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 
 ## Frontend Route Notes (Current)
 - Employee routes: `/login`, `/jobs`, `/jobs/:jobTicketId`.
-- Manager/Admin routes: `/manage`, `/manage/job-tickets`, `/manage/customers`, `/manage/service-locations`, `/manage/equipment`, `/manage/parts`, `/manage/time-approval`, `/manage/parts-approval`, `/manage/reports`.
+- Manager/Admin routes: `/manage`, `/manage/job-tickets`, `/manage/job-tickets/new`, `/manage/job-tickets/:jobTicketId`, `/manage/customers`, `/manage/service-locations`, `/manage/equipment`, `/manage/parts`, `/manage/time-approval`, `/manage/parts-approval`, `/manage/reports`.
 - Admin-only route: `/manage/users` (consumes `/api/users`).
 - Unauthorized route: `/unauthorized` for authenticated users lacking required role claims.

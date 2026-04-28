@@ -88,7 +88,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
   - Add work notes
   - Add parts used on assigned jobs
   - Upload photos/files (`jpg`, `jpeg`, `png`, `webp`, `pdf`)
-- Manager/Admin UI Phase 1 is implemented with a protected `/manage` shell, dashboard navigation, read-first operational lists/details, approval screens, reports index, and admin-only users screen.
+- Manager/Admin UI Phases 1-2 are implemented with a protected `/manage` shell, dashboard navigation, read-first operational lists/details, assignment/status/archive job-ticket actions, targeted create/edit flows, report filtering + CSV export, and admin-only users management workflows.
 - Employee mobile workflow remains active and unchanged for core actions.
 
 ## Tech Stack
@@ -193,7 +193,7 @@ npm run build
 
 Manager/Admin routes:
 - `/manage` dashboard
-- `/manage/job-tickets` and `/manage/job-tickets/:jobTicketId`
+- `/manage/job-tickets`, `/manage/job-tickets/new`, and `/manage/job-tickets/:jobTicketId`
 - `/manage/customers`
 - `/manage/service-locations`
 - `/manage/equipment`
@@ -207,3 +207,10 @@ Deferred/not implemented in this phase:
 - Parts purchase/vendor cost tracking
 - Advanced inventory workflows
 - Parts compatibility recommendation engine
+
+
+Manager/Admin Phase 2 notes:
+- Assignment management is available on job-ticket detail.
+- Job-ticket create/edit/status/archive flows are manager/admin-only.
+- Reports support filter query parameters and client-side CSV export from loaded result sets.
+- Deferred scope remains unchanged: parts purchase/vendor cost tracking, advanced inventory workflows, and compatibility recommendation engine are not implemented.
