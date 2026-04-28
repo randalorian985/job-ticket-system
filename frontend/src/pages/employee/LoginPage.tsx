@@ -4,7 +4,7 @@ import { ApiError } from '../../api/httpClient'
 import { useAuth } from '../../features/auth/AuthContext'
 
 export function LoginPage() {
-  const { user, login } = useAuth()
+  const { user, login, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [usernameOrEmail, setUsernameOrEmail] = useState('')
@@ -12,7 +12,7 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (user) {
+  if (user?.role === 'Employee') {
     return <Navigate to="/jobs" replace />
   }
 
@@ -41,6 +41,13 @@ export function LoginPage() {
       <section className="card">
         <h1>Employee Login</h1>
         <p className="muted">Sign in to view your assigned jobs.</p>
+
+        {user ? (
+          <div className="stack">
+            <p className="error">This screen is for employees only. Please sign in with an employee account.</p>
+            <button onClick={logout}>Sign out current user</button>
+          </div>
+        ) : null}
 
         <form onSubmit={onSubmit} className="stack">
           <label>

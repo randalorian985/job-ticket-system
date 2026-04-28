@@ -7,6 +7,7 @@ import { partsApi } from '../../api/partsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import type { JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, PartLookupDto, TimeEntryDto } from '../../types'
+import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from './jobDisplay'
 
 const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
 
@@ -155,9 +156,7 @@ export function JobDetailPage() {
       setClockNote('')
       await refreshDetails()
     } catch (clockError) {
-      if (clockError instanceof GeolocationPositionError) {
-        setError('GPS permission denied or unavailable. Clock-in requires location access.')
-      } else if (clockError instanceof ApiError) {
+      if (clockError instanceof ApiError) {
         setError(clockError.message)
       } else {
         setError('Unable to clock in.')
@@ -195,9 +194,7 @@ export function JobDetailPage() {
       setClockNote('')
       await refreshDetails()
     } catch (clockError) {
-      if (clockError instanceof GeolocationPositionError) {
-        setError('GPS permission denied or unavailable. Clock-out requires location access.')
-      } else if (clockError instanceof ApiError) {
+      if (clockError instanceof ApiError) {
         setError(clockError.message)
       } else {
         setError('Unable to clock out.')
@@ -315,8 +312,8 @@ export function JobDetailPage() {
       <section className="card">
         <h1>{job.ticketNumber}</h1>
         <p>{job.title}</p>
-        <p className="muted">Status: {job.status}</p>
-        <p className="muted">Priority: {job.priority}</p>
+        <p className="muted">Status: {getJobTicketStatusLabel(job.status)}</p>
+        <p className="muted">Priority: {getJobTicketPriorityLabel(job.priority)}</p>
         <p className="muted">Customer ID: {job.customerId}</p>
         <p className="muted">Service Location ID: {job.serviceLocationId}</p>
         <p className="muted">Billing Party ID: {job.billingPartyCustomerId}</p>
