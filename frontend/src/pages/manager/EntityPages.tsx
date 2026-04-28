@@ -6,7 +6,23 @@ import { masterDataApi } from '../../api/masterDataApi'
 import { reportsApi } from '../../api/reportsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
-import type { CreateCustomerDto, CreatePartDto, CreateServiceLocationDto, CustomerDto, EquipmentDto, JobTicketPartDto, PartCategoryDto, PartDto, ReportQueryFilters, ServiceLocationDto, TimeEntryDto, UserDto, VendorDto } from '../../types'
+import type {
+  CreateCustomerDto,
+  CreatePartDto,
+  CreateServiceLocationDto,
+  CreateUserDto,
+  CustomerDto,
+  EquipmentDto,
+  JobTicketPartDto,
+  PartCategoryDto,
+  PartDto,
+  ReportQueryFilters,
+  ServiceLocationDto,
+  TimeEntryDto,
+  UpdateUserDto,
+  UserDto,
+  VendorDto
+} from '../../types'
 import { formatDate, getApprovalLabel } from './managerDisplay'
 
 function Errorable({ error }: { error: string | null }) { return error ? <p className="error">{error}</p> : null }
@@ -89,36 +105,57 @@ export function ReportsPage() {
   const [jobId, setJobId] = useState('')
   const [rows, setRows] = useState<Record<string, unknown>[]>([])
   const [title, setTitle] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const apply = async (mode: string) => {
-    const data = mode === 'jobsReady' ? await reportsApi.getJobsReadyToInvoice(filters)
-      : mode === 'laborJob' ? await reportsApi.getLaborByJob(filters)
-      : mode === 'laborEmployee' ? await reportsApi.getLaborByEmployee(filters)
-      : mode === 'partsJob' ? await reportsApi.getPartsByJob(filters)
-      : mode === 'jobCost' ? [await reportsApi.getCostSummary(jobId)]
-      : mode === 'customerHistory' ? await reportsApi.getCustomerHistory(customerId, filters)
-      : await reportsApi.getEquipmentHistory(equipmentId, filters)
-    setRows(data as Record<string, unknown>[])
-    setTitle(mode)
+    try {
+      setError(null)
+      const data = mode === 'jobsReady' ? await reportsApi.getJobsReadyToInvoice(filters)
+        : mode === 'laborJob' ? await reportsApi.getLaborByJob(filters)
+        : mode === 'laborEmployee' ? await reportsApi.getLaborByEmployee(filters)
+        : mode === 'partsJob' ? await reportsApi.getPartsByJob(filters)
+        : mode === 'jobCost' ? [await reportsApi.getCostSummary(jobId)]
+        : mode === 'customerHistory' ? await reportsApi.getCustomerHistory(customerId, filters)
+        : await reportsApi.getEquipmentHistory(equipmentId, filters)
+
+      setRows(data as Record<string, unknown>[])
+      setTitle(mode)
+    } catch (requestError) {
+      if (requestError instanceof ApiError && (requestError.status === 401 || requestError.status === 403)) {
+        setError('You do not have permission to run manager reports.')
+        return
+      }
+
+      setError('Unable to load report data.')
+    }
   }
 
   const csvHref = useMemo(() => `data:text/csv;charset=utf-8,${encodeURIComponent(toCsv(rows))}`, [rows])
 
-  return <section className="card stack"><h2>Reports</h2><p className="muted">Labor reporting uses time-entry labor-rate snapshots first, with legacy fallback when snapshot values are null.</p><div className="row"><input type="date" onChange={(e) => setFilters({ ...filters, dateFromUtc: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })} /><input type="date" onChange={(e) => setFilters({ ...filters, dateToUtc: e.target.value ? `${e.target.value}T23:59:59Z` : undefined })} /><input placeholder="Customer id" value={filters.customerId ?? ''} onChange={(e) => setFilters({ ...filters, customerId: e.target.value || undefined })} /><input placeholder="Employee id" value={filters.employeeId ?? ''} onChange={(e) => setFilters({ ...filters, employeeId: e.target.value || undefined })} /><input placeholder="Status #" value={filters.jobStatus ?? ''} onChange={(e) => setFilters({ ...filters, jobStatus: e.target.value ? Number(e.target.value) : undefined })} /></div><div className="inline-links"><button onClick={() => apply('jobsReady')}>Jobs Ready to Invoice</button><button onClick={() => apply('laborJob')}>Labor by Job</button><button onClick={() => apply('laborEmployee')}>Labor by Employee</button><button onClick={() => apply('partsJob')}>Parts by Job</button></div><input value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id for cost summary" /><button onClick={() => apply('jobCost')}>Job Cost Summary</button><input value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="Customer id for service history" /><button onClick={() => apply('customerHistory')}>Customer Service History</button><input value={equipmentId} onChange={(e) => setEquipmentId(e.target.value)} placeholder="Equipment id for service history" /><button onClick={() => apply('equipmentHistory')}>Equipment Service History</button><p>{title ? `Showing ${title} (${rows.length} rows)` : ''}</p>{rows.length ? <a href={csvHref} download={`report-${title}.csv`}>Export CSV</a> : null}<div style={{ overflowX: 'auto' }}><table><thead><tr>{rows.length ? Object.keys(rows[0]).map((key) => <th key={key}>{key}</th>) : null}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{Object.values(row).map((value, i) => <td key={i}>{String(value ?? '')}</td>)}</tr>)}</tbody></table></div></section>
+  return <section className="card stack"><h2>Reports</h2><p className="muted">Labor reporting uses time-entry labor-rate snapshots first, with legacy fallback when snapshot values are null.</p><Errorable error={error} /><div className="row"><input type="date" onChange={(e) => setFilters({ ...filters, dateFromUtc: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })} /><input type="date" onChange={(e) => setFilters({ ...filters, dateToUtc: e.target.value ? `${e.target.value}T23:59:59Z` : undefined })} /><input placeholder="Customer id" value={filters.customerId ?? ''} onChange={(e) => setFilters({ ...filters, customerId: e.target.value || undefined })} /><input placeholder="Employee id" value={filters.employeeId ?? ''} onChange={(e) => setFilters({ ...filters, employeeId: e.target.value || undefined })} /><input placeholder="Status #" value={filters.jobStatus ?? ''} onChange={(e) => setFilters({ ...filters, jobStatus: e.target.value ? Number(e.target.value) : undefined })} /></div><div className="inline-links"><button onClick={() => apply('jobsReady')}>Jobs Ready to Invoice</button><button onClick={() => apply('laborJob')}>Labor by Job</button><button onClick={() => apply('laborEmployee')}>Labor by Employee</button><button onClick={() => apply('partsJob')}>Parts by Job</button></div><input value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id for cost summary" /><button onClick={() => apply('jobCost')}>Job Cost Summary</button><input value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="Customer id for service history" /><button onClick={() => apply('customerHistory')}>Customer Service History</button><input value={equipmentId} onChange={(e) => setEquipmentId(e.target.value)} placeholder="Equipment id for service history" /><button onClick={() => apply('equipmentHistory')}>Equipment Service History</button><p>{title ? `Showing ${title} (${rows.length} rows)` : ''}</p>{rows.length ? <a href={csvHref} download={`report-${title}.csv`}>Export CSV</a> : null}<div style={{ overflowX: 'auto' }}><table><thead><tr>{rows.length ? Object.keys(rows[0]).map((key) => <th key={key}>{key}</th>) : null}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{Object.values(row).map((value, i) => <td key={i}>{String(value ?? '')}</td>)}</tr>)}</tbody></table></div></section>
 }
 
 export function UsersPage() {
   const [items, setItems] = useState<UserDto[]>([])
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<UserDto | null>(null)
-  const [password, setPassword] = useState('')
-  const [draft, setDraft] = useState({ userName: '', email: '', firstName: '', lastName: '', role: 'Employee', password: 'Temp123!' })
+  const [passwordByUserId, setPasswordByUserId] = useState<Record<string, string>>({})
+  const [draft, setDraft] = useState<CreateUserDto>({ userName: '', email: '', firstName: '', lastName: '', role: 'Employee', password: 'Temp123!' })
   const load = () => usersApi.list().then(setItems).catch(() => setError('Unable to load users.'))
   useEffect(() => { load() }, [])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     try {
-      if (editing) await usersApi.update(editing.id, { ...draft, password: undefined } as any)
+      if (editing) {
+        const updatePayload: UpdateUserDto = {
+          userName: draft.userName,
+          email: draft.email,
+          firstName: draft.firstName,
+          lastName: draft.lastName,
+          role: draft.role
+        }
+        await usersApi.update(editing.id, updatePayload)
+      }
       else await usersApi.create(draft)
       setEditing(null)
       setDraft({ userName: '', email: '', firstName: '', lastName: '', role: 'Employee', password: 'Temp123!' })
@@ -127,7 +164,7 @@ export function UsersPage() {
       setError(requestError instanceof ApiError ? requestError.message : 'Unable to save user.')
     }
   }
-  return <section className="card stack"><h2>Users (Admin only)</h2><Errorable error={error} /><form onSubmit={save} className="row"><input placeholder="Username" value={draft.userName} onChange={(e) => setDraft({ ...draft, userName: e.target.value })} /><input placeholder="First" value={draft.firstName} onChange={(e) => setDraft({ ...draft, firstName: e.target.value })} /><input placeholder="Last" value={draft.lastName} onChange={(e) => setDraft({ ...draft, lastName: e.target.value })} /><select value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })}><option>Employee</option><option>Manager</option><option>Admin</option></select>{editing ? null : <input placeholder="Password" value={draft.password} onChange={(e) => setDraft({ ...draft, password: e.target.value })} />}<button type="submit">{editing ? 'Save User' : 'Create User'}</button></form><ul>{items.map((x) => <li key={x.id}>{x.firstName} {x.lastName} · {x.userName} · {x.role} · {x.isArchived ? 'Archived' : 'Active'} <button onClick={() => { setEditing(x); setDraft({ ...draft, userName: x.userName ?? '', email: x.email ?? '', firstName: x.firstName, lastName: x.lastName, role: x.role }) }}>Edit</button> <button onClick={async () => { await usersApi.archive(x.id); await load() }}>Archive</button> <input placeholder="new password" value={password} onChange={(e) => setPassword(e.target.value)} /> <button onClick={async () => { await usersApi.resetPassword(x.id, { newPassword: password }); setPassword('') }}>Reset Password</button></li>)}</ul></section>
+  return <section className="card stack"><h2>Users (Admin only)</h2><Errorable error={error} /><form onSubmit={save} className="row"><input placeholder="Username" value={draft.userName} onChange={(e) => setDraft({ ...draft, userName: e.target.value })} /><input placeholder="First" value={draft.firstName} onChange={(e) => setDraft({ ...draft, firstName: e.target.value })} /><input placeholder="Last" value={draft.lastName} onChange={(e) => setDraft({ ...draft, lastName: e.target.value })} /><select value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })}><option>Employee</option><option>Manager</option><option>Admin</option></select>{editing ? null : <input placeholder="Password" value={draft.password} onChange={(e) => setDraft({ ...draft, password: e.target.value })} />}<button type="submit">{editing ? 'Save User' : 'Create User'}</button></form><ul>{items.map((x) => <li key={x.id}>{x.firstName} {x.lastName} · {x.userName} · {x.role} · {x.isArchived ? 'Archived' : 'Active'} <button onClick={() => { setEditing(x); setDraft({ userName: x.userName ?? '', email: x.email ?? '', firstName: x.firstName, lastName: x.lastName, role: x.role, password: '' }) }}>Edit</button> <button onClick={async () => { await usersApi.archive(x.id); await load() }}>Archive</button> <input placeholder="new password" value={passwordByUserId[x.id] ?? ''} onChange={(e) => setPasswordByUserId((prev) => ({ ...prev, [x.id]: e.target.value }))} /> <button onClick={async () => { const password = passwordByUserId[x.id]?.trim(); if (!password) { setError('New password is required.'); return } await usersApi.resetPassword(x.id, { newPassword: password }); setPasswordByUserId((prev) => ({ ...prev, [x.id]: '' })) }}>Reset Password</button></li>)}</ul></section>
 }
 
 export function UnauthorizedPage() {
