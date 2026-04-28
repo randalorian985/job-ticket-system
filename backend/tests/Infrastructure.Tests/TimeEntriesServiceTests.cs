@@ -151,6 +151,19 @@ public sealed class TimeEntriesServiceTests
     }
 
     [Fact]
+    public async Task Employee_role_cannot_adjust_time_entry_via_service_layer()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var managerService = new TimeEntriesService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var created = await managerService.ClockInAsync(new ClockInRequestDto(refs.JobTicket.Id, refs.Employee.Id, 30m, -97m, null, "Android", null));
+
+        var employeeService = new TimeEntriesService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            employeeService.AdjustAsync(created.Id, new AdjustTimeEntryRequestDto(refs.Employee.Id, "Unauthorized change", false, null, null, 1m, 1m, null, null)));
+    }
+
+    [Fact]
     public async Task Audit_logs_created_for_time_tracking_actions()
     {
         await using var context = CreateContext();

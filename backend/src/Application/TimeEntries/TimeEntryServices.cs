@@ -163,7 +163,6 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
     public async Task<TimeEntryDto?> RejectAsync(Guid id, RejectTimeEntryRequestDto request, CancellationToken cancellationToken = default)
     {
         EnsureManagerOrAdmin();
-        EnsureManagerOrAdmin();
         ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
         if (request.RejectedByUserId == Guid.Empty) throw new ValidationException("RejectedByUserId is required.");
 
@@ -183,6 +182,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
 
     public async Task<TimeEntryDto?> AdjustAsync(Guid id, AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default)
     {
+        EnsureManagerOrAdmin();
         ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
         if (request.AdjustedByUserId == Guid.Empty) throw new ValidationException("AdjustedByUserId is required.");
 

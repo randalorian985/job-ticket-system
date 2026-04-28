@@ -116,6 +116,36 @@ public sealed class AuthIntegrationTests
     }
 
     [Fact]
+    public async Task Assigned_employee_upload_returns_created_with_safe_location_header()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedDataAsync(db, auth));
+
+        var client = factory.CreateClient();
+        await client.SetBearerTokenAsync("employee", "EmployeePass!123");
+        var assigned = await factory.GetAssignedJobIdAsync();
+
+        var fileContent = new StreamContent(new MemoryStream([1, 2, 3, 4]));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+        using var form = new MultipartFormDataContent
+        {
+            { fileContent, "File", "field-photo.jpg" }
+        };
+
+        var response = await client.PostAsync($"/api/job-tickets/{assigned}/files", form);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.NotNull(response.Headers.Location);
+        var location = response.Headers.Location!.ToString();
+        Assert.False(string.IsNullOrWhiteSpace(location));
+        Assert.StartsWith($"/api/job-tickets/{assigned}/files/", location, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("uploads", location, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("storage", location, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\\", location, StringComparison.Ordinal);
+        Assert.DoesNotContain(":", location, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Manager_or_admin_can_view_reports_but_employee_cannot_and_manager_can_approve_reject_time()
     {
         await using var factory = new TestApiFactory();
