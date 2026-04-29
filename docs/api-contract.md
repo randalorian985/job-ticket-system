@@ -42,6 +42,7 @@
 - Parts purchase/vendor cost tracking workflows.
 - Advanced inventory management workflows.
 - Parts compatibility recommendation engine.
+- AI/scoring-based part recommendations.
 
 ## Master Data (Current)
 All list endpoints support simple pagination with optional query params:

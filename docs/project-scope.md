@@ -97,6 +97,7 @@ This phase adds foundational security controls without replacing existing workfl
 - Admin-only user list route (`/manage/users`) isolated from manager users.
 - Employee mobile workflow routes remain active (`/login`, `/jobs`, `/jobs/:jobTicketId`).
 - Deferred domains remain unchanged: parts purchase/vendor cost tracking, advanced inventory, and parts compatibility recommendation engine are not implemented in this phase.
+- Deferred domains also include AI/scoring-based part recommendations.
 
 
 ## Manager/Admin UI Phase 2 (Implemented)
@@ -108,6 +109,7 @@ This phase adds foundational security controls without replacing existing workfl
 - Admin-only users page now includes targeted create/edit/archive/reset-password operations via existing `/api/users` endpoints.
 - Employee route tree (`/jobs`, `/jobs/:jobTicketId`) remains unchanged.
 - Deferred domains remain unchanged and unimplemented: parts purchase/vendor cost tracking, advanced inventory, compatibility recommendation engine.
+- Deferred domains also include AI/scoring-based part recommendations.
 
 ## Manager/Admin UI Phase 3A (Implemented Slice)
 - Manager/admin job-ticket archive action now uses an explicit in-page confirmation flow before executing the archive API request.
