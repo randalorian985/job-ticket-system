@@ -47,8 +47,8 @@ From the reviewed baseline:
 1. **React Router v7 future-flag cleanup** remains an open hygiene item (warning-level, not a confirmed blocker).
 2. **Main-branch verifiability metadata** should continue to include explicit merge-base/SHA notes when main checkout is constrained.
 
-## Pre-Phase-3A Hygiene Note (Recorded)
-Recorded from stabilization review: before entering Phase 3A expansion, complete one explicit hygiene action:
+## Pre-Phase-3A/Immediate Hygiene Item
+Before broadening Manager/Admin Phase 3 work, complete one explicit hygiene action:
 - **React Router future-flag cleanup** (or equivalent migration plan) to reduce warning noise and future upgrade friction.
 
 > Note: Phase 3A feature slice is already implemented; this hygiene item should be treated as pre-3B gate work or first sub-task in the next phase ticket.
@@ -98,11 +98,12 @@ Merge-readiness requires:
 - `/health` endpoint contract retained
 - No unauthorized scope expansion into deferred domains
 
-## Readiness to Start Manager/Admin Phase 3A (Concise Historical Check)
-- Baseline review recorded no critical blockers for Phase 3A entry.
-- React Router future-flag cleanup was tracked as a pre-Phase-3A hygiene item (and remains a useful early follow-up item if still pending).
-- Current state now reflects Phase 3A complete and ready to proceed into bounded Phase 3B planning.
-- Continue enforcing no-migration/no-deferred-domain constraints for 3B/3C/3D unless separately approved.
+## Readiness to Start Manager/Admin Phase 3A Workstream
+Concise readiness statement:
+- The system is stable for continued Manager/Admin Phase 3 execution.
+- Phase 3A slice is complete.
+- Proceed next with router future-flag hygiene, then Phase 3B bounded work.
+- Continue to enforce no-migration/no-deferred-domain constraints for Phase 3B/3C/3D tickets unless separately approved.
 
 ## Cross-Linking
 - Baseline review: [docs/current-state-code-review.md](./current-state-code-review.md)
