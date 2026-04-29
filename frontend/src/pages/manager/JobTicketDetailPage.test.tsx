@@ -40,7 +40,7 @@ describe('JobTicketDetailPage', () => {
   })
 
   const renderPage = () => {
-    render(<MemoryRouter initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
+    render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
   }
 
   it('renders assignment and status/archive actions', async () => {

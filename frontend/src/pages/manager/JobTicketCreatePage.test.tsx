@@ -12,7 +12,7 @@ describe('JobTicketCreatePage', () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
-    render(<MemoryRouter><JobTicketCreatePage /></MemoryRouter>)
+    render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><JobTicketCreatePage /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Create Job Ticket' })).toBeInTheDocument()
     expect(screen.getByText('Create Ticket')).toBeInTheDocument()
   })
