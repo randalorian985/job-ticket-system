@@ -54,3 +54,5 @@ cd frontend && npm install
 cd frontend && npm run build
 cd frontend && npm test
 ```
+
+- Phase 3B update: Manager/Admin master-data workflows now support create/edit/archive flows for customers, service locations, equipment, vendors, part categories, and parts in the UI and API.

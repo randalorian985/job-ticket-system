@@ -244,3 +244,6 @@ Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 - Manager/Admin routes: `/manage`, `/manage/job-tickets`, `/manage/job-tickets/new`, `/manage/job-tickets/:jobTicketId`, `/manage/customers`, `/manage/service-locations`, `/manage/equipment`, `/manage/parts`, `/manage/time-approval`, `/manage/parts-approval`, `/manage/reports`.
 - Admin-only route: `/manage/users` (consumes `/api/users`).
 - Unauthorized route: `/unauthorized` for authenticated users lacking required role claims.
+
+## Phase 3B Master Data
+- Manager/Admin endpoints for customers, service locations, equipment, vendors, part categories, and parts are used for list/detail/create/update/archive workflows via DTO contracts.

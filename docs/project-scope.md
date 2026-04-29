@@ -125,3 +125,5 @@ The following remain deferred and are not implemented as active business domains
 - Advanced inventory workflows
 - Parts compatibility recommendation engine
 - AI/scoring-based part recommendations
+
+- Phase 3B delivered: complete Manager/Admin master-data maintenance workflows (customers, locations, equipment, vendors, part categories, parts), excluding purchasing/inventory intelligence domains.
