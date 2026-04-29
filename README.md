@@ -1,96 +1,16 @@
 # Job Ticket Management System
 
-Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets. This repository is still in a **foundation/scaffold phase**, but it now includes substantial backend capabilities and architecture contracts.
+Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-## Completed Scope (Current State)
+This repository is in a **foundation/stabilization phase** with core backend, employee workflow, and Manager/Admin phases 1-3A implemented.
 
-### Architecture and Repository Foundation
-- Clean architecture backend separation is in place:
-  - `Domain`: entities, enums, shared base types.
-  - `Application`: service-layer use cases, DTO-oriented workflows.
-  - `Infrastructure`: EF Core persistence, migrations, file storage provider abstraction.
-  - `Api`: HTTP controllers, auth wiring, policy enforcement.
-- React + TypeScript frontend scaffold is in place with modular folders for `api`, `components`, `features`, `pages`, and `routes`.
-- Core project documentation exists for scope, API contracts, DB design, and developer setup.
-
-### Implemented Backend Capabilities
-- Health endpoint available at `GET /health`.
-- Master data CRUD + archive flows for:
-  - Customers
-  - Service Locations
-  - Equipment
-  - Vendors
-  - Part Categories
-  - Parts
-- Job ticket foundation workflows:
-  - Create/list/get/update tickets
-  - Status updates with completed-date conventions
-  - Soft archive with required reason
-  - Assignment add/remove/list with duplicate protections
-  - Work entries (notes)
-- Job ticket parts workflows:
-  - Add/list/update parts used
-  - Approve/reject/archive with audit-oriented behavior
-  - Inventory adjustment flags and immutable pricing snapshots
-- Time tracking workflows:
-  - Clock-in/clock-out with GPS metadata
-  - Open/by-job/by-employee queries
-  - Manager approval/rejection/adjustment workflow
-  - Adjustment history preservation for auditability
-- Job ticket file workflows:
-  - Upload/list/get/update/archive/download
-  - SQL metadata persistence + pluggable storage provider abstraction
-  - Local file storage provider implemented for current phase
-- Reporting foundation endpoints:
-  - Invoice-ready summary
-  - Job cost summary
-  - Jobs ready to invoice
-  - Labor rollups (by job/by employee)
-  - Parts rollups
-  - Customer/equipment service history
-  - Labor reporting now prefers immutable time-entry labor-rate snapshots, with legacy fallback to current employee rates when snapshots are null
-- Authentication and authorization foundation:
-  - Username/email + password login
-  - JWT bearer token issuance and `GET /api/auth/me`
-  - Role enforcement (`Admin`, `Manager`, `Employee`)
-  - Admin-oriented user management endpoints
-  - Protected-request token revalidation against active employee status (inactive/archived users are denied even with unexpired tokens)
-
-### Implemented Data & Persistence Foundation
-- EF Core `ApplicationDbContext` + SQL Server integration.
-- Initial and incremental migrations for:
-  - Core model
-  - Job workflow fields
-  - Time tracking fields
-  - Parts workflow fields
-  - Service location/billing-party/equipment ownership fields
-  - File upload fields
-  - Reporting fields
-  - Authentication and role enforcement fields
-- Global soft-delete filtering behavior and auditing-oriented entities in place.
-
-### Testing Foundation (Backend)
-- Infrastructure test project includes coverage for:
-  - DbContext and persistence behavior
-  - Job tickets + job parts workflows
-  - Job ticket file services
-  - Time entry services
-  - Master data services
-  - Reporting services
-  - Authentication integration
-
-### Frontend Scope Status
-- Employee-focused mobile workflow is implemented with React/Vite/TypeScript:
-  - Login + JWT token session handling
-  - Authenticated route protection
-  - Assigned jobs list + job detail
-  - Clock in/out with required browser GPS
-  - Add work notes
-  - Add parts used on assigned jobs
-  - Upload photos/files (`jpg`, `jpeg`, `png`, `webp`, `pdf`)
-- Manager/Admin UI Phases 1-2 are implemented with a protected `/manage` shell, dashboard navigation, read-first operational lists/details, assignment/status/archive job-ticket actions, targeted create/edit flows, report filtering + CSV export, and admin-only users management workflows.
-- Manager/Admin UI Phase 3A slice is implemented for job-ticket archive UX: archive now uses an explicit in-page confirmation step with clear success/error messaging before and after action execution.
-- Employee mobile workflow remains active and unchanged for core actions.
+## Project Navigation
+- **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)
+- **Reviewed current state baseline:** [docs/current-state-code-review.md](docs/current-state-code-review.md)
+- **Scope contract:** [docs/project-scope.md](docs/project-scope.md)
+- **API contract:** [docs/api-contract.md](docs/api-contract.md)
+- **Database design:** [docs/database-design.md](docs/database-design.md)
+- **Development setup and validation commands:** [docs/development-setup.md](docs/development-setup.md)
 
 ## Tech Stack
 - **Backend:** .NET 8 ASP.NET Core Web API
@@ -118,106 +38,19 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
     /features
 
 /docs
-  project-scope.md
-  database-design.md
-  api-contract.md
-  development-setup.md
 ```
 
-## Documentation Index
-- Project scope: [docs/project-scope.md](docs/project-scope.md)
-- API contract: [docs/api-contract.md](docs/api-contract.md)
-- Database design: [docs/database-design.md](docs/database-design.md)
-- Development setup: [docs/development-setup.md](docs/development-setup.md)
-- Build roadmap (project control center): [docs/build-roadmap.md](docs/build-roadmap.md)
-
-## Development Environment
-For full local setup instructions (tooling, Docker SQL Server, backend/frontend build commands, and troubleshooting), see [docs/development-setup.md](docs/development-setup.md).
-
-## Backend Setup
-
-```bash
-cd backend/src/Api
-cp appsettings.Example.json appsettings.Development.json
-# update ConnectionStrings:DefaultConnection
-
-# from backend/
-dotnet restore
-cd src/Api
-dotnet build
-dotnet run
-```
-
-API health endpoint:
+## Health Endpoint
 - `GET /health`
 
-## Frontend Setup
-
-Node.js requirement for frontend install/build/test: **Node.js 20.0.0+**.
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Optional API base URL configuration:
+## Validation Quick Run
+From repository root:
 
 ```bash
-# defaults to same-origin if not set
-VITE_API_BASE_URL=http://localhost:5000
+dotnet restore backend/JobTicketSystem.sln
+dotnet build backend/JobTicketSystem.sln
+dotnet test backend/JobTicketSystem.sln
+cd frontend && npm install
+cd frontend && npm run build
+cd frontend && npm test
 ```
-
-Employee workflow routes:
-- `/login`
-- `/jobs`
-- `/jobs/:jobTicketId`
-
-## Build & Test Instructions
-
-### Backend
-```bash
-cd backend/src/Api
-dotnet build
-```
-
-```bash
-cd backend/src/Api
-dotnet test ../../tests
-```
-
-### Frontend
-```bash
-cd frontend
-npm run build
-```
-
-
-Manager/Admin routes:
-- `/manage` dashboard
-- `/manage/job-tickets`, `/manage/job-tickets/new`, and `/manage/job-tickets/:jobTicketId`
-- `/manage/customers`
-- `/manage/service-locations`
-- `/manage/equipment`
-- `/manage/parts`
-- `/manage/time-approval`
-- `/manage/parts-approval`
-- `/manage/reports`
-- `/manage/users` (Admin only)
-
-Deferred/not implemented in this phase:
-- Parts purchase/vendor cost tracking
-- Advanced inventory workflows
-- Parts compatibility recommendation engine
-
-
-Manager/Admin Phase 2 notes:
-- Assignment management is available on job-ticket detail.
-- Job-ticket create/edit/status/archive flows are manager/admin-only.
-- Reports support filter query parameters and client-side CSV export from loaded result sets.
-- Deferred scope remains unchanged: parts purchase/vendor cost tracking, advanced inventory workflows, and compatibility recommendation engine are not implemented.
-
-Manager/Admin Phase 3A notes:
-- Job-ticket archive action on manager/admin detail now requires explicit in-page confirmation before API execution.
-- Manager/admin archive flow now surfaces focused success/failure feedback after confirmation.
-- No backend/API contract changes were required for this UX slice.
