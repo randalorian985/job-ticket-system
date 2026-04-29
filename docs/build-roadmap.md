@@ -38,8 +38,14 @@ Focus this cycle on hardening and alignment, not feature expansion:
 3. Contract integrity checks (no unplanned endpoint/authorization behavior drift).
 4. UX/operational polish only where it does not alter scope or architecture contracts.
 
+## Manager/Admin Sequence (3A/3B/3C/3D)
+- **3A (Completed):** archive confirmation safety flow.
+- **3B (Current/Next):** UI consolidation for existing manager/admin pages and feedback patterns.
+- **3C (Planned):** reporting and approvals UX standardization using current APIs only.
+- **3D (Planned):** final pass for role-consistency, accessibility polish, and readiness hardening without scope expansion.
+
 ## Next Planned Bounded Phase (Recommended)
-## Phase: Manager/Admin UI Phase 3B (Bounded)
+### Phase: Manager/Admin UI Phase 3B (Bounded)
 Recommended narrow next phase is a documentation-backed UI consolidation slice limited to existing APIs:
 - Improve manager/admin workflow coherence for existing pages and actions only.
 - Tighten consistency of status, archive, and approval user feedback patterns.
@@ -51,6 +57,11 @@ Exit criteria for 3B:
 - No database migration required.
 - Employee workflow remains stable.
 - Backend and frontend standard validations pass.
+
+## Next Planned Phases (After 3B)
+- **Phase 3C:** manager/admin reporting/approval UX consistency pass (no API or schema expansion).
+- **Phase 3D:** manager/admin readiness and QA hardening pass (routing/accessibility/role checks only).
+- Any post-3D phase requires explicit scope approval before implementation.
 
 ## Deferred Phases / Domains (Explicitly Not In Scope)
 The following remain deferred unless explicitly selected in a future approved scope decision:
@@ -86,3 +97,22 @@ Documentation-first governance rules:
 - Keep completed scope and deferred scope explicitly separated.
 - Do not represent deferred domains as partially active.
 - Keep roadmap detail in this file; avoid duplicating full roadmap narrative in `README.md`.
+
+## PR Checklist Expectations
+Each PR should include:
+- Scope statement tied to current roadmap phase.
+- Validation command results (or explicit re-run notes if environment-limited).
+- Documentation impact statement (`README`, `project-scope`, `api-contract`, `development-setup`, or none).
+- Risk and rollback note for any user-facing change.
+
+## Historical Bug Watchlist
+Track recurring regressions in `docs/bug-watchlist.md`.
+If a fix addresses a repeated bug class, add/update an entry before merge.
+
+## Safe PR Automation Expectations
+- Automation must not auto-merge failing validation.
+- Automation must not bypass branch protections or required reviews.
+- Auto-generated PR descriptions must include roadmap phase, validation evidence, and doc-impact notes.
+
+## React Router Future-Flag Cleanup Note
+When upgrading React Router in a future approved phase, remove legacy future-flag shims and document the cleanup in release notes and `docs/development-setup.md`.
