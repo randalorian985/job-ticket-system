@@ -129,6 +129,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - API contract: [docs/api-contract.md](docs/api-contract.md)
 - Database design: [docs/database-design.md](docs/database-design.md)
 - Development setup: [docs/development-setup.md](docs/development-setup.md)
+- Build roadmap (project control center): [docs/build-roadmap.md](docs/build-roadmap.md)
 
 ## Development Environment
 For full local setup instructions (tooling, Docker SQL Server, backend/frontend build commands, and troubleshooting), see [docs/development-setup.md](docs/development-setup.md).
