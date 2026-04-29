@@ -121,7 +121,7 @@ describe('JobDetailPage', () => {
     })
 
     render(
-      <MemoryRouter initialEntries={['/jobs/job-1']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/jobs/job-1']}>
         <Routes>
           <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
         </Routes>
@@ -180,7 +180,7 @@ describe('JobDetailPage', () => {
     }))
 
     render(
-      <MemoryRouter initialEntries={['/jobs/job-1']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/jobs/job-1']}>
         <Routes>
           <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
         </Routes>

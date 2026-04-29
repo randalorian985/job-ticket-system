@@ -27,7 +27,7 @@ describe('Manager list pages', () => {
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's-1', locationName: 'HQ' }] as any)
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <JobTicketListPage />
       </MemoryRouter>
     )
