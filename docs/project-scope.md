@@ -17,7 +17,9 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Foundation/stabilization. Core workflows are implemented for backend APIs, employee mobile operations, and Manager/Admin UI Phase 1 read-first operational screens.
+Foundation/stabilization with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-2, and Manager/Admin Phase 3A archive-confirmation slice.
+
+Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
 
 ## Frontend Workflow Status
 - React Employee Mobile Workflow is implemented with login, auth state, assigned-job list/detail, clock in/out with GPS, work-note submission, part-used submission, and file/photo upload screens.
@@ -115,3 +117,11 @@ This phase adds foundational security controls without replacing existing workfl
 - Manager/admin job-ticket archive action now uses an explicit in-page confirmation flow before executing the archive API request.
 - Archive outcomes now provide focused user-facing success and failure messaging tied to the confirmation result.
 - Existing `/manage` role boundaries, route structure, and API usage patterns remain unchanged in this slice.
+
+
+## Deferred Scope Confirmation (Current)
+The following remain deferred and are not implemented as active business domains in this phase:
+- Parts purchase/vendor cost tracking
+- Advanced inventory workflows
+- Parts compatibility recommendation engine
+- AI/scoring-based part recommendations
