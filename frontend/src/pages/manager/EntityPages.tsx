@@ -120,8 +120,18 @@ const toCsv = (rows: Record<string, unknown>[]) => {
   return [headers.join(','), ...rows.map((row) => headers.map((h) => JSON.stringify(row[h] ?? '')).join(','))].join('\n')
 }
 
+const reportTitleMap: Record<string, string> = {
+  jobsReady: 'Jobs Ready to Invoice',
+  laborJob: 'Labor by Job',
+  laborEmployee: 'Labor by Employee',
+  partsJob: 'Parts by Job',
+  jobCost: 'Job Cost Summary',
+  customerHistory: 'Customer Service History',
+  equipmentHistory: 'Equipment Service History'
+}
+
 export function ReportsPage() {
-  const [filters, setFilters] = useState<ReportQueryFilters>({ offset: 0, limit: 50 })
+  const [filters, setFilters] = useState<ReportQueryFilters>({ offset: 0, limit: 50, invoiceStatus: 0 })
   const [customerId, setCustomerId] = useState('')
   const [equipmentId, setEquipmentId] = useState('')
   const [jobId, setJobId] = useState('')
@@ -141,7 +151,7 @@ export function ReportsPage() {
         : await reportsApi.getEquipmentHistory(equipmentId, filters)
 
       setRows(data as Record<string, unknown>[])
-      setTitle(mode)
+      setTitle(reportTitleMap[mode] ?? mode)
     } catch (requestError) {
       if (requestError instanceof ApiError && (requestError.status === 401 || requestError.status === 403)) {
         setError('You do not have permission to run manager reports.')
@@ -154,7 +164,7 @@ export function ReportsPage() {
 
   const csvHref = useMemo(() => `data:text/csv;charset=utf-8,${encodeURIComponent(toCsv(rows))}`, [rows])
 
-  return <section className="card stack"><h2>Reports</h2><p className="muted">Labor reporting uses time-entry labor-rate snapshots first, with legacy fallback when snapshot values are null.</p><Errorable error={error} /><div className="row"><input type="date" onChange={(e) => setFilters({ ...filters, dateFromUtc: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })} /><input type="date" onChange={(e) => setFilters({ ...filters, dateToUtc: e.target.value ? `${e.target.value}T23:59:59Z` : undefined })} /><input placeholder="Customer id" value={filters.customerId ?? ''} onChange={(e) => setFilters({ ...filters, customerId: e.target.value || undefined })} /><input placeholder="Employee id" value={filters.employeeId ?? ''} onChange={(e) => setFilters({ ...filters, employeeId: e.target.value || undefined })} /><input placeholder="Status #" value={filters.jobStatus ?? ''} onChange={(e) => setFilters({ ...filters, jobStatus: e.target.value ? Number(e.target.value) : undefined })} /></div><div className="inline-links"><button onClick={() => apply('jobsReady')}>Jobs Ready to Invoice</button><button onClick={() => apply('laborJob')}>Labor by Job</button><button onClick={() => apply('laborEmployee')}>Labor by Employee</button><button onClick={() => apply('partsJob')}>Parts by Job</button></div><input value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id for cost summary" /><button onClick={() => apply('jobCost')}>Job Cost Summary</button><input value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="Customer id for service history" /><button onClick={() => apply('customerHistory')}>Customer Service History</button><input value={equipmentId} onChange={(e) => setEquipmentId(e.target.value)} placeholder="Equipment id for service history" /><button onClick={() => apply('equipmentHistory')}>Equipment Service History</button><p>{title ? `Showing ${title} (${rows.length} rows)` : ''}</p>{rows.length ? <a href={csvHref} download={`report-${title}.csv`}>Export CSV</a> : null}<div style={{ overflowX: 'auto' }}><table><thead><tr>{rows.length ? Object.keys(rows[0]).map((key) => <th key={key}>{key}</th>) : null}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{Object.values(row).map((value, i) => <td key={i}>{String(value ?? '')}</td>)}</tr>)}</tbody></table></div></section>
+  return <section className="card stack"><h2>Reports</h2><p className="muted">Labor totals use time-entry labor-rate snapshots when available. When snapshot values are null, reports fall back to the assigned employee labor rate for legacy entries.</p><Errorable error={error} /><div className="row"><input type="date" onChange={(e) => setFilters({ ...filters, dateFromUtc: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })} /><input type="date" onChange={(e) => setFilters({ ...filters, dateToUtc: e.target.value ? `${e.target.value}T23:59:59Z` : undefined })} /><input placeholder="Customer id" value={filters.customerId ?? ''} onChange={(e) => setFilters({ ...filters, customerId: e.target.value || undefined })} /><input placeholder="Billing customer id" value={filters.billingPartyCustomerId ?? ''} onChange={(e) => setFilters({ ...filters, billingPartyCustomerId: e.target.value || undefined })} /><input placeholder="Service location id" value={filters.serviceLocationId ?? ''} onChange={(e) => setFilters({ ...filters, serviceLocationId: e.target.value || undefined })} /><input placeholder="Employee id" value={filters.employeeId ?? ''} onChange={(e) => setFilters({ ...filters, employeeId: e.target.value || undefined })} /><input placeholder="Job status #" value={filters.jobStatus ?? ''} onChange={(e) => setFilters({ ...filters, jobStatus: e.target.value ? Number(e.target.value) : undefined })} /><input placeholder="Invoice status #" value={filters.invoiceStatus ?? ''} onChange={(e) => setFilters({ ...filters, invoiceStatus: e.target.value ? Number(e.target.value) : undefined })} /></div><div className="row"><input type="number" min={0} placeholder="Offset" value={filters.offset ?? 0} onChange={(e) => setFilters({ ...filters, offset: Number(e.target.value) || 0 })} /><input type="number" min={1} placeholder="Limit" value={filters.limit ?? 50} onChange={(e) => setFilters({ ...filters, limit: Number(e.target.value) || 50 })} /></div><div className="inline-links"><button onClick={() => apply('jobsReady')}>Jobs Ready to Invoice</button><button onClick={() => apply('laborJob')}>Labor by Job</button><button onClick={() => apply('laborEmployee')}>Labor by Employee</button><button onClick={() => apply('partsJob')}>Parts by Job</button></div><input value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id for cost summary" /><button onClick={() => apply('jobCost')}>Job Cost Summary</button><input value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="Customer id for service history" /><button onClick={() => apply('customerHistory')}>Customer Service History</button><input value={equipmentId} onChange={(e) => setEquipmentId(e.target.value)} placeholder="Equipment id for service history" /><button onClick={() => apply('equipmentHistory')}>Equipment Service History</button><p>{title ? `Showing ${title} (${rows.length} rows)` : ''}</p>{rows.length ? <a href={csvHref} download={`report-${title.toLowerCase().replace(/\s+/g, '-')}.csv`}>Export CSV</a> : null}<div style={{ overflowX: 'auto' }}><table><thead><tr>{rows.length ? Object.keys(rows[0]).map((key) => <th key={key}>{key}</th>) : null}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{Object.entries(row).map(([key, value]) => <td key={key}>{typeof value === 'number' ? value.toFixed(2) : String(value ?? '')}</td>)}</tr>)}</tbody></table></div></section>
 }
 
 export function UsersPage() {

@@ -127,3 +127,10 @@ The following remain deferred and are not implemented as active business domains
 - AI/scoring-based part recommendations
 
 - Phase 3B delivered: complete Manager/Admin master-data maintenance workflows (customers, locations, equipment, vendors, part categories, parts), excluding purchasing/inventory intelligence domains.
+
+
+## Manager/Admin UI Phase 3C (Implemented)
+- Scope bounded to manager/admin reporting polish and export ergonomics only.
+- Added expanded report filter coverage and clearer labor-rate snapshot labeling in reports UI.
+- Added export-friendly table formatting and client-side CSV export from loaded report data.
+- No deferred domain implementation and no auth or route model change in this slice.

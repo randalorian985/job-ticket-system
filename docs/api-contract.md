@@ -199,6 +199,13 @@ All list endpoints support simple pagination with optional query params:
 - Grand total is computed as labor billable total + parts billable total + misc placeholder + tax placeholder.
 - Jobs-ready-to-invoice requires completed/reviewed jobs with approved labor and/or approved parts, and excludes invoiced/closed invoice states.
 
+
+### Manager/Admin Reports UI Contract Notes (Phase 3C)
+- Existing reporting endpoints and auth policies are unchanged; Phase 3C is a UI/operator polish slice only.
+- Manager/Admin reports UI now exposes all shared report filters (`billingPartyCustomerId`, `serviceLocationId`, `invoiceStatus`, `offset`, `limit`) alongside existing date/customer/employee/status filters.
+- Reports CSV export is client-side and generated from already loaded data only (no new export API endpoint).
+- Labor reporting UI text explicitly labels snapshot-first behavior with fallback for legacy null snapshot values.
+
 ## Versioning
 Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 

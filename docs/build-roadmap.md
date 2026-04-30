@@ -70,9 +70,10 @@ Before broadening Manager/Admin Phase 3 work, complete one explicit hygiene acti
 - Keep endpoint usage unchanged.
 - No migrations.
 
-### Phase 3C
-- Improve consistency and operator ergonomics for existing manager/admin create/edit/detail flows.
-- Keep role boundaries and routing model unchanged.
+### Phase 3C (Completed)
+- Completed reports polish/export workflow for manager/admin operations.
+- Added/refined report filters, export-friendly table rendering, and client-side CSV export from loaded report data.
+- Added explicit labor snapshot/fallback labeling in reports UI; role boundaries and routing model unchanged.
 - No new business domain introduction.
 
 ### Phase 3D
