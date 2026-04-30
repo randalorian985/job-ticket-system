@@ -56,3 +56,5 @@ cd frontend && npm test
 ```
 
 - Phase 3B update: Manager/Admin master-data workflows now support create/edit/archive flows for customers, service locations, equipment, vendors, part categories, and parts in the UI and API.
+
+- Phase 3C update: Manager/Admin reports workflow now includes expanded shared filters (billing party, service location, invoice status, offset/limit), clearer labor snapshot/fallback labeling, export-friendly numeric table formatting, and CSV export from loaded report datasets.
