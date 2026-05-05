@@ -72,64 +72,58 @@ describe('PartsPage', () => {
 
 
 
-describe('master-data archive and unarchive interactions', () => {
-  it('archives and unarchives customers with refresh and error handling', async () => {
-    vi.mocked(masterDataApi.listCustomers).mockResolvedValueOnce([{ id: 'c1', name: 'Acme', isArchived: false }] as any).mockResolvedValueOnce([{ id: 'c1', name: 'Acme', isArchived: true }] as any).mockResolvedValueOnce([{ id: 'c1', name: 'Acme', isArchived: false }] as any)
+describe('master-data archive interactions', () => {
+  it('archives customers with refresh and error handling', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValueOnce([{ id: 'c1', name: 'Acme' }] as any).mockResolvedValueOnce([] as any)
     vi.mocked(masterDataApi.archiveCustomer).mockResolvedValue(undefined as any)
-    vi.mocked(masterDataApi.unarchiveCustomer).mockResolvedValue(undefined as any)
     render(<CustomersPage />)
     fireEvent.click((await screen.findAllByRole('button', { name: 'Archive' }))[0])
     await waitFor(() => expect(masterDataApi.archiveCustomer).toHaveBeenCalledWith('c1'))
-    expect(await screen.findByRole('button', { name: 'Unarchive' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Unarchive' }))
-    await waitFor(() => expect(masterDataApi.unarchiveCustomer).toHaveBeenCalledWith('c1'))
 
-    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c2', name: 'Beta', isArchived: false }] as any)
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c2', name: 'Beta' }] as any)
     vi.mocked(masterDataApi.archiveCustomer).mockRejectedValueOnce(new Error('failed'))
     render(<CustomersPage />)
     fireEvent.click((await screen.findAllByRole('button', { name: 'Archive' }))[0])
-    expect(await screen.findByText('Unable to update customer archive state.')).toBeInTheDocument()
+    expect(await screen.findByText('Unable to archive customer.')).toBeInTheDocument()
   })
 
-  it('archives and unarchives service locations with refresh', async () => {
+  it('archives service locations with refresh', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
-    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValueOnce([{ id: 'l1', companyName: 'Acme', locationName: 'HQ', isActive: true, isArchived: false }] as any).mockResolvedValueOnce([{ id: 'l1', companyName: 'Acme', locationName: 'HQ', isActive: true, isArchived: true }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValueOnce([{ id: 'l1', companyName: 'Acme', locationName: 'HQ', isActive: true }] as any).mockResolvedValueOnce([] as any)
     vi.mocked(masterDataApi.archiveServiceLocation).mockResolvedValue(undefined as any)
     render(<ServiceLocationsPage />)
     fireEvent.click((await screen.findAllByRole('button', { name: 'Archive' }))[0])
     await waitFor(() => expect(masterDataApi.archiveServiceLocation).toHaveBeenCalledWith('l1'))
-    expect(await screen.findByRole('button', { name: 'Unarchive' })).toBeInTheDocument()
   })
 
-  it('archives and unarchives equipment with refresh', async () => {
+  it('archives equipment with refresh', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
-    vi.mocked(masterDataApi.listEquipment).mockResolvedValueOnce([{ id: 'e1', name: 'Pump', customerId: 'c1', serviceLocationId: 'l1', isArchived: false }] as any).mockResolvedValueOnce([{ id: 'e1', name: 'Pump', customerId: 'c1', serviceLocationId: 'l1', isArchived: true }] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValueOnce([{ id: 'e1', name: 'Pump', customerId: 'c1', serviceLocationId: 'l1' }] as any).mockResolvedValueOnce([] as any)
     vi.mocked(masterDataApi.archiveEquipment).mockResolvedValue(undefined as any)
     render(<EquipmentPage />)
     fireEvent.click((await screen.findAllByRole('button', { name: 'Archive' }))[0])
     await waitFor(() => expect(masterDataApi.archiveEquipment).toHaveBeenCalledWith('e1'))
-    expect(await screen.findByRole('button', { name: 'Unarchive' })).toBeInTheDocument()
   })
 
-  it('archives and unarchives parts, vendors, and categories with error handling', async () => {
-    vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'PN-1', name: 'Filter', unitCost: 1, unitPrice: 2, isArchived: true }] as any)
-    vi.mocked(masterDataApi.listVendors).mockResolvedValue([{ id: 'v1', name: 'Vendor A', isArchived: true }] as any)
-    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([{ id: 'pc1', name: 'Category A', isArchived: true }] as any)
-    vi.mocked(masterDataApi.unarchivePart).mockResolvedValue(undefined as any)
-    vi.mocked(masterDataApi.unarchiveVendor).mockResolvedValue(undefined as any)
-    vi.mocked(masterDataApi.unarchivePartCategory).mockRejectedValueOnce(new Error('nope'))
+  it('archives parts, vendors, and categories with error handling', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'PN-1', name: 'Filter', unitCost: 1, unitPrice: 2 }] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([{ id: 'v1', name: 'Vendor A' }] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([{ id: 'pc1', name: 'Category A' }] as any)
+    vi.mocked(masterDataApi.archivePart).mockResolvedValue(undefined as any)
+    vi.mocked(masterDataApi.archiveVendor).mockResolvedValue(undefined as any)
+    vi.mocked(masterDataApi.archivePartCategory).mockRejectedValueOnce(new Error('nope'))
     render(<PartsPage />)
 
-    const unarchiveButtons = await screen.findAllByRole('button', { name: 'Unarchive' })
-    fireEvent.click(unarchiveButtons[0])
-    await waitFor(() => expect(masterDataApi.unarchivePart).toHaveBeenCalledWith('p1'))
+    const archiveButtons = await screen.findAllByRole('button', { name: 'Archive' })
+    fireEvent.click(archiveButtons[0])
+    await waitFor(() => expect(masterDataApi.archivePart).toHaveBeenCalledWith('p1'))
 
-    fireEvent.click(unarchiveButtons[1])
-    await waitFor(() => expect(masterDataApi.unarchiveVendor).toHaveBeenCalledWith('v1'))
+    fireEvent.click(archiveButtons[1])
+    await waitFor(() => expect(masterDataApi.archiveVendor).toHaveBeenCalledWith('v1'))
 
-    fireEvent.click(unarchiveButtons[2])
-    expect(await screen.findByText('Unable to update archive state.')).toBeInTheDocument()
+    fireEvent.click(archiveButtons[2])
+    expect(await screen.findByText('Unable to archive part category.')).toBeInTheDocument()
   })
 })
 
