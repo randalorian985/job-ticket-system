@@ -98,6 +98,8 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/parts/{id}/archive`
 - `POST /api/parts/{id}/unarchive`
 
+Unarchive endpoints can return validation errors (`400`) when required linked records are archived/deleted/inactive, and `404` when the target record does not exist.
+
 ## Job Tickets (Current)
 ### Endpoints
 - `GET /api/job-tickets`

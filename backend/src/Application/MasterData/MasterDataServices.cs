@@ -292,6 +292,7 @@ public sealed class EquipmentService(ApplicationDbContext dbContext) : IEquipmen
     {
         var entity = await dbContext.Equipment.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return false;
+        await EnsureRelatedExists(entity.CustomerId, entity.ServiceLocationId, entity.OwnerCustomerId, entity.ResponsibleBillingCustomerId, cancellationToken);
         entity.IsDeleted = false;
         entity.DeletedAtUtc = null;
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -487,6 +488,7 @@ public sealed class PartsService(ApplicationDbContext dbContext) : IPartsService
     {
         var entity = await dbContext.Parts.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return false;
+        await EnsureRelationsExist(entity.PartCategoryId, entity.VendorId, cancellationToken);
         entity.IsDeleted = false;
         entity.DeletedAtUtc = null;
         await dbContext.SaveChangesAsync(cancellationToken);

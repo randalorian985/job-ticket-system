@@ -113,6 +113,86 @@ public sealed class MasterDataServicesTests
         Assert.Single(listed);
     }
 
+    [Fact]
+    public async Task Equipment_can_be_unarchived_when_related_records_are_active()
+    {
+        await using var context = CreateContext();
+        var customer = new Customer { Name = "Customer A" };
+        var owner = new Customer { Name = "Owner A" };
+        var billing = new Customer { Name = "Billing A" };
+        context.Customers.AddRange(customer, owner, billing);
+        await context.SaveChangesAsync();
+
+        var location = new ServiceLocation
+        {
+            CustomerId = customer.Id, CompanyName = "Acme", LocationName = "Shop", AddressLine1 = "123 Main", City = "Austin", State = "TX", PostalCode = "78701", Country = "USA"
+        };
+        context.ServiceLocations.Add(location);
+        await context.SaveChangesAsync();
+
+        var service = new EquipmentService(context);
+        var created = await service.CreateAsync(new CreateEquipmentDto(customer.Id, location.Id, owner.Id, billing.Id, "Lift", "E-1"));
+        await service.ArchiveAsync(created.Id);
+
+        var unarchived = await service.UnarchiveAsync(created.Id);
+        Assert.True(unarchived);
+        Assert.Single(await service.ListAsync(new PagedQuery()));
+    }
+
+    [Fact]
+    public async Task Equipment_unarchive_fails_when_customer_or_related_records_archived_and_remains_archived()
+    {
+        await using var context = CreateContext();
+        var customer = new Customer { Name = "Customer A" };
+        var owner = new Customer { Name = "Owner A" };
+        var billing = new Customer { Name = "Billing A" };
+        context.Customers.AddRange(customer, owner, billing);
+        await context.SaveChangesAsync();
+        var location = new ServiceLocation { CustomerId = customer.Id, CompanyName = "Acme", LocationName = "Shop", AddressLine1 = "123 Main", City = "Austin", State = "TX", PostalCode = "78701", Country = "USA" };
+        context.ServiceLocations.Add(location);
+        await context.SaveChangesAsync();
+
+        var service = new EquipmentService(context);
+        var created = await service.CreateAsync(new CreateEquipmentDto(customer.Id, location.Id, owner.Id, billing.Id, "Lift", "E-2"));
+        await service.ArchiveAsync(created.Id);
+
+        customer.IsDeleted = true;
+        owner.IsDeleted = true;
+        billing.IsDeleted = true;
+        location.IsDeleted = true;
+        location.IsActive = false;
+        await context.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<ValidationException>(() => service.UnarchiveAsync(created.Id));
+        var archivedEntity = await context.Equipment.IgnoreQueryFilters().SingleAsync(x => x.Id == created.Id);
+        Assert.True(archivedEntity.IsDeleted);
+        Assert.Null(await service.GetAsync(created.Id));
+    }
+
+    [Fact]
+    public async Task Part_unarchive_fails_when_category_or_vendor_archived_and_remains_archived()
+    {
+        await using var context = CreateContext();
+        var category = new PartCategory { Name = "Electrical" };
+        var vendor = new Vendor { Name = "Vendor A" };
+        context.PartCategories.Add(category);
+        context.Vendors.Add(vendor);
+        await context.SaveChangesAsync();
+
+        var service = new PartsService(context);
+        var created = await service.CreateAsync(new CreatePartDto(category.Id, vendor.Id, "P-3", "Motor", null, 5m, 6m, 7m, 1m));
+        await service.ArchiveAsync(created.Id);
+
+        category.IsDeleted = true;
+        vendor.IsDeleted = true;
+        await context.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<ValidationException>(() => service.UnarchiveAsync(created.Id));
+        var archivedEntity = await context.Parts.IgnoreQueryFilters().SingleAsync(x => x.Id == created.Id);
+        Assert.True(archivedEntity.IsDeleted);
+        Assert.Null(await service.GetAsync(created.Id));
+    }
+
     private static ApplicationDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
