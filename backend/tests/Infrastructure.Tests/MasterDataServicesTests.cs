@@ -26,6 +26,21 @@ public sealed class MasterDataServicesTests
     }
 
     [Fact]
+    public async Task Customers_can_be_unarchived()
+    {
+        await using var context = CreateContext();
+        var service = new CustomersService(context);
+        var created = await service.CreateAsync(new CreateCustomerDto("Reopen", null, null, null, null));
+        await service.ArchiveAsync(created.Id);
+
+        var unarchived = await service.UnarchiveAsync(created.Id);
+        var listed = await service.ListAsync(new PagedQuery());
+
+        Assert.True(unarchived);
+        Assert.Single(listed);
+    }
+
+    [Fact]
     public async Task Service_location_create_fails_when_customer_missing()
     {
         await using var context = CreateContext();
@@ -78,6 +93,24 @@ public sealed class MasterDataServicesTests
         Assert.Equal("Fuse 2", updated!.Name);
         Assert.True(archived);
         Assert.Empty(listed);
+    }
+
+    [Fact]
+    public async Task Parts_can_be_unarchived()
+    {
+        await using var context = CreateContext();
+        var category = new PartCategory { Name = "Hydraulic" };
+        context.PartCategories.Add(category);
+        await context.SaveChangesAsync();
+
+        var service = new PartsService(context);
+        var created = await service.CreateAsync(new CreatePartDto(category.Id, null, "P-2", "Seal", null, 2m, 3m, 5m, 1m));
+        await service.ArchiveAsync(created.Id);
+
+        var unarchived = await service.UnarchiveAsync(created.Id);
+        var listed = await service.ListAsync(new PagedQuery());
+        Assert.True(unarchived);
+        Assert.Single(listed);
     }
 
     private static ApplicationDbContext CreateContext()

@@ -55,6 +55,7 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/customers`
 - `PUT /api/customers/{id}`
 - `POST /api/customers/{id}/archive`
+- `POST /api/customers/{id}/unarchive`
 
 ### Service Locations
 - `GET /api/service-locations`
@@ -62,6 +63,7 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/service-locations`
 - `PUT /api/service-locations/{id}`
 - `POST /api/service-locations/{id}/archive`
+- `POST /api/service-locations/{id}/unarchive`
 
 ### Equipment
 - `GET /api/equipment`
@@ -69,6 +71,7 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/equipment`
 - `PUT /api/equipment/{id}`
 - `POST /api/equipment/{id}/archive`
+- `POST /api/equipment/{id}/unarchive`
 
 ### Vendors
 - `GET /api/vendors`
@@ -76,6 +79,7 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/vendors`
 - `PUT /api/vendors/{id}`
 - `POST /api/vendors/{id}/archive`
+- `POST /api/vendors/{id}/unarchive`
 
 ### Part Categories
 - `GET /api/part-categories`
@@ -83,6 +87,7 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/part-categories`
 - `PUT /api/part-categories/{id}`
 - `POST /api/part-categories/{id}/archive`
+- `POST /api/part-categories/{id}/unarchive`
 
 ### Parts
 - `GET /api/parts`
@@ -91,6 +96,7 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/parts`
 - `PUT /api/parts/{id}`
 - `POST /api/parts/{id}/archive`
+- `POST /api/parts/{id}/unarchive`
 
 ## Job Tickets (Current)
 ### Endpoints

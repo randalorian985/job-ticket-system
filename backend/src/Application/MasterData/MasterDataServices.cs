@@ -11,6 +11,7 @@ public interface ICustomersService
     Task<CustomerDto> CreateAsync(CreateCustomerDto request, CancellationToken cancellationToken = default);
     Task<CustomerDto?> UpdateAsync(Guid id, UpdateCustomerDto request, CancellationToken cancellationToken = default);
     Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IServiceLocationsService
@@ -20,6 +21,7 @@ public interface IServiceLocationsService
     Task<ServiceLocationDto> CreateAsync(CreateServiceLocationDto request, CancellationToken cancellationToken = default);
     Task<ServiceLocationDto?> UpdateAsync(Guid id, UpdateServiceLocationDto request, CancellationToken cancellationToken = default);
     Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IEquipmentService
@@ -29,6 +31,7 @@ public interface IEquipmentService
     Task<EquipmentDto> CreateAsync(CreateEquipmentDto request, CancellationToken cancellationToken = default);
     Task<EquipmentDto?> UpdateAsync(Guid id, UpdateEquipmentDto request, CancellationToken cancellationToken = default);
     Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IVendorsService
@@ -38,6 +41,7 @@ public interface IVendorsService
     Task<VendorDto> CreateAsync(CreateVendorDto request, CancellationToken cancellationToken = default);
     Task<VendorDto?> UpdateAsync(Guid id, UpdateVendorDto request, CancellationToken cancellationToken = default);
     Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IPartCategoriesService
@@ -47,6 +51,7 @@ public interface IPartCategoriesService
     Task<PartCategoryDto> CreateAsync(CreatePartCategoryDto request, CancellationToken cancellationToken = default);
     Task<PartCategoryDto?> UpdateAsync(Guid id, UpdatePartCategoryDto request, CancellationToken cancellationToken = default);
     Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IPartsService
@@ -57,6 +62,7 @@ public interface IPartsService
     Task<PartDto> CreateAsync(CreatePartDto request, CancellationToken cancellationToken = default);
     Task<PartDto?> UpdateAsync(Guid id, UpdatePartDto request, CancellationToken cancellationToken = default);
     Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomersService
@@ -108,6 +114,16 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
 
         entity.IsDeleted = true;
         entity.DeletedAtUtc = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Customers.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null) return false;
+        entity.IsDeleted = false;
+        entity.DeletedAtUtc = null;
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -176,6 +192,17 @@ public sealed class ServiceLocationsService(ApplicationDbContext dbContext) : IS
         entity.IsActive = false;
         entity.IsDeleted = true;
         entity.DeletedAtUtc = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.ServiceLocations.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null) return false;
+        entity.IsDeleted = false;
+        entity.DeletedAtUtc = null;
+        entity.IsActive = true;
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -261,6 +288,16 @@ public sealed class EquipmentService(ApplicationDbContext dbContext) : IEquipmen
         return true;
     }
 
+    public async Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Equipment.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null) return false;
+        entity.IsDeleted = false;
+        entity.DeletedAtUtc = null;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     private async Task EnsureRelatedExists(Guid customerId, Guid serviceLocationId, Guid? ownerCustomerId, Guid? responsibleBillingCustomerId, CancellationToken cancellationToken)
     {
         if (!await dbContext.Customers.AnyAsync(x => x.Id == customerId, cancellationToken)) throw new ValidationException("CustomerId does not reference an active customer.");
@@ -312,6 +349,16 @@ public sealed class VendorsService(ApplicationDbContext dbContext) : IVendorsSer
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    public async Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Vendors.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null) return false;
+        entity.IsDeleted = false;
+        entity.DeletedAtUtc = null;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }
 
 public sealed class PartCategoriesService(ApplicationDbContext dbContext) : IPartCategoriesService
@@ -349,6 +396,16 @@ public sealed class PartCategoriesService(ApplicationDbContext dbContext) : IPar
         if (entity is null) return false;
         entity.IsDeleted = true;
         entity.DeletedAtUtc = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.PartCategories.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null) return false;
+        entity.IsDeleted = false;
+        entity.DeletedAtUtc = null;
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -422,6 +479,16 @@ public sealed class PartsService(ApplicationDbContext dbContext) : IPartsService
         if (entity is null) return false;
         entity.IsDeleted = true;
         entity.DeletedAtUtc = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Parts.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null) return false;
+        entity.IsDeleted = false;
+        entity.DeletedAtUtc = null;
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
