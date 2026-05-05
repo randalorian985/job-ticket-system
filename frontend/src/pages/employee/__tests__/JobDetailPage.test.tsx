@@ -8,6 +8,7 @@ import { partsApi } from '../../../api/partsApi'
 import { timeEntriesApi } from '../../../api/timeEntriesApi'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { JobDetailPage } from '../JobDetailPage'
+import { routerFuture } from '../../../routes/routerFuture'
 
 vi.mock('../../../api/jobTicketsApi', () => ({
   jobTicketsApi: {
@@ -121,7 +122,7 @@ describe('JobDetailPage', () => {
     })
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/jobs/job-1']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/jobs/job-1']}>
         <Routes>
           <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
         </Routes>
@@ -180,7 +181,7 @@ describe('JobDetailPage', () => {
     }))
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/jobs/job-1']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/jobs/job-1']}>
         <Routes>
           <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
         </Routes>

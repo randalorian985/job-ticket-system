@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { MyJobsPage } from '../MyJobsPage'
+import { routerFuture } from '../../../routes/routerFuture'
 
 vi.mock('../../../api/jobTicketsApi', () => ({
   jobTicketsApi: {
@@ -53,7 +54,7 @@ describe('MyJobsPage', () => {
     ])
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter future={routerFuture}>
         <MyJobsPage />
       </MemoryRouter>
     )

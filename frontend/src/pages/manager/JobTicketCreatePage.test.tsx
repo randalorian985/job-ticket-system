@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../api/masterDataApi'
 import { JobTicketCreatePage } from './JobTicketCreatePage'
+import { routerFuture } from '../../routes/routerFuture'
 
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { create: vi.fn() } }))
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn() } }))
@@ -12,7 +13,7 @@ describe('JobTicketCreatePage', () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
-    render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><JobTicketCreatePage /></MemoryRouter>)
+    render(<MemoryRouter future={routerFuture}><JobTicketCreatePage /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Create Job Ticket' })).toBeInTheDocument()
     expect(screen.getByText('Create Ticket')).toBeInTheDocument()
   })

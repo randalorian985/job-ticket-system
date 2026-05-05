@@ -8,6 +8,7 @@ import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import { JobTicketDetailPage } from './JobTicketDetailPage'
+import { routerFuture } from '../../routes/routerFuture'
 
 vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn() } }))
@@ -40,7 +41,7 @@ describe('JobTicketDetailPage', () => {
   })
 
   const renderPage = () => {
-    render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
+    render(<MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
   }
 
   it('renders assignment and status/archive actions', async () => {
