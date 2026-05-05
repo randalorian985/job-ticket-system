@@ -13,7 +13,8 @@ Interpretation as of **April 29, 2026**:
 - Employee mobile workflow is implemented and validated.
 - Manager/Admin Phases 1 and 2 are implemented.
 - Manager/Admin **Phase 3A archive-confirmation slice is implemented**.
-- The next work should be bounded Manager/Admin phase slices (3B/3C/3D) without entering deferred domains.
+- Manager/Admin **Phase 3B master-data lifecycle coverage is implemented**.
+- The next work should be bounded Manager/Admin phase slices (3C/3D) without entering deferred domains.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -65,10 +66,10 @@ Before broadening Manager/Admin Phase 3 work, complete one explicit hygiene acti
 - Archive confirmation UX slice for manager/admin job ticket detail.
 - No API/auth/schema changes required.
 
-### Phase 3B (Next)
-- Normalize manager/admin feedback patterns (status/archive/approval/error states) across existing screens.
-- Keep endpoint usage unchanged.
-- No migrations.
+### Phase 3B (Completed)
+- Delivered end-to-end manager/admin master-data lifecycle coverage across existing APIs for list/detail/create/update/archive/unarchive flows.
+- Endpoint usage remained within existing contracts; no new API groups introduced.
+- No migrations were added.
 
 ### Phase 3C (Completed)
 - Completed reports polish/export workflow for manager/admin operations.
@@ -99,12 +100,12 @@ Merge-readiness requires:
 - `/health` endpoint contract retained
 - No unauthorized scope expansion into deferred domains
 
-## Readiness to Start Manager/Admin Phase 3A Workstream
+## Readiness for Remaining Manager/Admin Phase 3 Workstream
 Concise readiness statement:
 - The system is stable for continued Manager/Admin Phase 3 execution.
-- Phase 3A slice is complete.
-- Proceed next with router future-flag hygiene, then Phase 3B bounded work.
-- Continue to enforce no-migration/no-deferred-domain constraints for Phase 3B/3C/3D tickets unless separately approved.
+- Phase 3A and 3B slices are complete.
+- Proceed next with router future-flag hygiene (if still open), then Phase 3C/3D bounded work.
+- Continue to enforce no-migration/no-deferred-domain constraints for Phase 3C/3D tickets unless separately approved.
 
 ## Cross-Linking
 - Baseline review: [docs/current-state-code-review.md](./current-state-code-review.md)
@@ -113,4 +114,3 @@ Concise readiness statement:
 - Setup/validation commands: [docs/development-setup.md](./development-setup.md)
 - Top-level orientation: [README.md](../README.md)
 
-- Phase 3B complete in this PR: end-to-end Manager/Admin master-data workflows and validations with test coverage updates.
