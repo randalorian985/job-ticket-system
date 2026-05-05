@@ -258,6 +258,7 @@ export type PartDto = {
   unitPrice: number
   quantityOnHand: number
   reorderThreshold: number
+  isArchived?: boolean
 }
 
 export type PartLookupDto = {
@@ -296,6 +297,7 @@ export type CustomerDto = {
   contactName?: string | null
   email?: string | null
   phone?: string | null
+  isArchived?: boolean
 }
 
 
@@ -320,6 +322,7 @@ export type ServiceLocationDto = {
   postalCode: string
   country: string
   isActive: boolean
+  isArchived?: boolean
 }
 
 export type EquipmentDto = {
@@ -336,6 +339,7 @@ export type EquipmentDto = {
   serialNumber?: string | null
   equipmentType?: string | null
   year?: number | null
+  isArchived?: boolean
 }
 
 export type VendorDto = {
@@ -345,12 +349,14 @@ export type VendorDto = {
   contactName?: string | null
   email?: string | null
   phone?: string | null
+  isArchived?: boolean
 }
 
 export type PartCategoryDto = {
   id: string
   name: string
   description?: string | null
+  isArchived?: boolean
 }
 
 
