@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { JobTicketListPage } from './JobTicketListPage'
+import { routerFuture } from '../../routes/routerFuture'
 
 vi.mock('../../api/jobTicketsApi', () => ({
   jobTicketsApi: {
@@ -27,7 +28,7 @@ describe('Manager list pages', () => {
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's-1', locationName: 'HQ' }] as any)
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter future={routerFuture}>
         <JobTicketListPage />
       </MemoryRouter>
     )

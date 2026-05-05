@@ -5,6 +5,7 @@ import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import { AppRouter } from '../AppRouter'
+import { routerFuture } from '../routerFuture'
 
 vi.mock('../../features/auth/AuthContext', () => ({
   useAuth: vi.fn()
@@ -65,7 +66,7 @@ describe('AppRouter authentication rendering', () => {
     vi.mocked(useAuth).mockReturnValue({ user: null, isLoading: false, login: vi.fn(), logout: vi.fn() })
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/jobs']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/jobs']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -77,7 +78,7 @@ describe('AppRouter authentication rendering', () => {
     vi.mocked(useAuth).mockReturnValue({ user: null, isLoading: false, login: vi.fn(), logout: vi.fn() })
 
     const view = render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -85,7 +86,7 @@ describe('AppRouter authentication rendering', () => {
     expect(await screen.findByRole('heading', { name: 'Employee Login' })).toBeInTheDocument()
 
     view.rerender(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/missing']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/missing']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -103,7 +104,7 @@ describe('AppRouter authentication rendering', () => {
     vi.mocked(jobTicketsApi.listMine).mockResolvedValue([])
 
     const view = render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -111,7 +112,7 @@ describe('AppRouter authentication rendering', () => {
     expect(await screen.findByRole('heading', { name: 'My Jobs' })).toBeInTheDocument()
 
     view.rerender(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/random']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/random']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -129,7 +130,7 @@ describe('AppRouter authentication rendering', () => {
     vi.mocked(jobTicketsApi.listMine).mockResolvedValue([])
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/jobs']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/jobs']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -146,7 +147,7 @@ describe('AppRouter authentication rendering', () => {
     })
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/manage']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/manage']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -163,7 +164,7 @@ describe('AppRouter authentication rendering', () => {
     })
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/manage']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/manage']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -172,7 +173,7 @@ describe('AppRouter authentication rendering', () => {
     expect(screen.queryByText('Users')).not.toBeInTheDocument()
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/manage/users']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/manage/users']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -194,7 +195,7 @@ describe('AppRouter authentication rendering', () => {
     }))
 
     const view = render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/manage']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/manage']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -205,7 +206,7 @@ describe('AppRouter authentication rendering', () => {
     expect(logout).toHaveBeenCalledTimes(1)
 
     view.rerender(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/manage']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/manage']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -222,7 +223,7 @@ describe('AppRouter authentication rendering', () => {
     })
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/unknown-route']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/unknown-route']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -240,7 +241,7 @@ describe('AppRouter authentication rendering', () => {
     })
 
     const view = render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -256,7 +257,7 @@ describe('AppRouter authentication rendering', () => {
     })
 
     view.rerender(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -276,7 +277,7 @@ describe('AppRouter authentication rendering', () => {
     })
 
     const view = render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/jobs']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/jobs']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -291,7 +292,7 @@ describe('AppRouter authentication rendering', () => {
     })
 
     view.rerender(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/jobs']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/jobs']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -308,7 +309,7 @@ describe('AppRouter authentication rendering', () => {
     })
 
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/manage/users']}>
+      <MemoryRouter future={routerFuture} initialEntries={['/manage/users']}>
         <AppRouter />
       </MemoryRouter>
     )
