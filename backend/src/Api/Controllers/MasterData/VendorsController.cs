@@ -48,4 +48,8 @@ public sealed class VendorsController(IVendorsService service) : MasterDataContr
     [HttpPost("{id:guid}/archive")]
     public async Task<ActionResult> ArchiveAsync(Guid id, CancellationToken cancellationToken = default)
         => await service.ArchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
+
+    [HttpPost("{id:guid}/unarchive")]
+    public async Task<ActionResult> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
+        => await service.UnarchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
 }

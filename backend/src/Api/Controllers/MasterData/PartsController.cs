@@ -54,4 +54,9 @@ public sealed class PartsController(IPartsService service) : MasterDataControlle
     [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult> ArchiveAsync(Guid id, CancellationToken cancellationToken = default)
         => await service.ArchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
+
+    [HttpPost("{id:guid}/unarchive")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
+        => await service.UnarchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
 }
