@@ -31,3 +31,6 @@ TestResults/
 
 # Misc
 *.tmp
+
+# TypeScript
+*.tsbuildinfo
