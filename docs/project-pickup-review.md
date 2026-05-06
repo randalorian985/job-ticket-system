@@ -2,6 +2,58 @@
 
 Review date: **2026-05-06 (UTC)**
 
+
+## Fresh stabilization pickup audit (2026-05-06)
+
+Branch: `review/stabilization-pickup-audit`
+
+Starting local HEAD: `5c1fa89ddf8aaad42fe863bdfb36fcb9eec709c9`
+
+### Setup-script result
+
+The requested setup-script commands were attempted before this audit:
+
+```bash
+chmod +x scripts/setup-codex.sh
+./scripts/setup-codex.sh
+```
+
+They could not run in this local Codex workspace because `scripts/setup-codex.sh` is not present in the checked-out tree. This appears to be a workspace/provenance gap relative to the validated setup branch baseline (`chore/verify-codex-setup-validation`, commit `c70ebaf66c519328bf3409c7a8689388686e64b5`), which is not available locally and could not be fetched from `origin` in this environment. No replacement setup script was invented during this audit; the next stabilization pass should start from a workspace that contains the validated script or restore that exact validated script before relying on it.
+
+### Remote Git result
+
+A targeted fetch for the validated setup branch was attempted and failed with the same remote-access class of error seen in the prior pickup review:
+
+```text
+error: RPC failed; HTTP 403 curl 22 The requested URL returned error: 403
+fatal: expected flush after ref listing
+```
+
+Per pickup rules, remote Git access is not gating. This audit continued from the current local Codex workspace. Because the baseline commit is not present locally, this audit cannot prove ancestry to `c70ebaf66c519328bf3409c7a8689388686e64b5` or latest `origin/main`.
+
+### Current phase determination
+
+- Current completed implementation phase in the local snapshot: **Manager/Admin Phase 3C reports polish/export is implemented**. Evidence includes backend report filters for billing party, service location, employee, job status, invoice status, offset, and limit; frontend report query serialization for the same filters; a Manager/Admin reports page with CSV export from loaded rows; and frontend tests covering extended filters/export visibility and labor snapshot/fallback labeling.
+- Current active/pickup phase: **stabilization/verification before Manager/Admin Phase 3D**.
+- Phase 3D next?: **Yes, but only after stabilization gates are satisfied**. The next feature implementation phase should be Manager/Admin Phase 3D regression hardening; do not start it from a workspace that still lacks the validated setup script, latest-main/validated-baseline provenance, and backend validation.
+
+### Validation results from this fresh audit
+
+- `chmod +x scripts/setup-codex.sh && ./scripts/setup-codex.sh`: blocked because `scripts/setup-codex.sh` is missing from this local workspace.
+- `dotnet --info`: blocked because the .NET SDK is not installed (`dotnet: command not found`).
+- `dotnet restore backend/JobTicketSystem.sln`: blocked because the .NET SDK is not installed (`dotnet: command not found`).
+- `cd frontend && npm install`: passed; npm emitted the existing non-blocking `Unknown env config "http-proxy"` warning.
+- `cd frontend && npm run build`: passed; Vite built 59 modules successfully and emitted the existing non-blocking npm `http-proxy` warning.
+- `cd frontend && npm test`: passed; 8 test files and 28 tests passed, with the same non-blocking npm warning.
+
+### Remaining gaps and risks
+
+1. The validated setup script is absent from the current local tree, so this audit could not exercise the now-validated setup path.
+2. Remote Git fetch returns HTTP 403, so latest remote state and the stated setup-validation commit could not be verified.
+3. Backend validation remains blocked by the missing .NET SDK in this container.
+4. Frontend validation is green, but npm continues to emit a non-blocking `Unknown env config "http-proxy"` warning.
+5. Phase 3D remains the correct next implementation phase, but starting Phase 3D before resolving the setup/provenance/backend-validation gaps would weaken the stabilization chain.
+
 ## Branch and Git provenance
 
 - Repository root confirmed at `/workspace/job-ticket-system` by checking `backend/JobTicketSystem.sln`, `frontend/package.json`, `README.md`, and `docs/`.
