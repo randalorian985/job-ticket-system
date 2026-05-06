@@ -71,6 +71,6 @@ npm test
 
 - Phase 3B update: Manager/Admin master-data workflows now support create/edit/archive flows for customers, service locations, equipment, vendors, part categories, and parts in the UI and API.
 
-- Phase 3C update: Manager/Admin reports workflow now includes expanded shared filters (billing party, service location, invoice status, offset/limit), clearer labor snapshot/fallback labeling, export-friendly numeric table formatting, and CSV export from loaded report datasets. Frontend install/build/tests passed in the fresh pickup audit; backend validation is still pending because this container does not have the .NET SDK.
+- Phase 3C update: Manager/Admin reports workflow now provides a reports hub for invoice-ready summary, job cost summary, jobs ready to invoice, labor by job/employee, parts by job, customer service history, and equipment service history. The UI uses existing reporting endpoints, supported shared filters, export-friendly tables, concise labor snapshot/fallback labeling, Manager/Admin route protection, and client-side CSV export from loaded report data.
 
 - Foundation update: a public `GET /api/system/info` metadata endpoint now exposes service name, base API path, health endpoint path, environment name, and assembly version for deployment checks and frontend diagnostics.

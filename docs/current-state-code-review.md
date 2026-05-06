@@ -56,5 +56,11 @@ The following remain deferred and unimplemented in this pass:
 - Parts Compatibility Recommendation Engine
 - AI/scoring-based recommendations
 
+
+## Phase 3C Update (2026-05-06)
+- Manager/Admin Phase 3C reports polish/export is now implemented as a bounded UI workflow: reports hub, supported filters, loading/empty/error states, export-friendly tables, existing-route drill-in links, and client-side CSV export.
+- Backend report endpoints, labor snapshot semantics, invoice-ready approval rules, authorization policies, and migrations were not changed for this slice.
+- Deferred domains remain deferred: parts purchase/vendor cost tracking, advanced inventory, and parts compatibility recommendation engine.
+
 ## Recommended Next Task
-- Run the same stabilization audit from a branch with `origin/main` available, then prepare the next planned Manager/Admin roadmap phase task for Phase 3C/3D (documentation-first, scoped implementation second).
+- Run a narrow Phase 3D hardening pass from a verified remote baseline when GitHub fetch access is available; keep deferred domains out of scope.

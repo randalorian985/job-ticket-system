@@ -4,6 +4,7 @@ import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { reportsApi } from '../../api/reportsApi'
+import { csvDataUri, toCsv, type CsvColumn } from '../../utils/csv'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
 import type {
@@ -16,10 +17,17 @@ import type {
   CreateVendorDto,
   CustomerDto,
   EquipmentDto,
+  InvoiceReadySummaryDto,
+  JobCostSummaryDto,
   JobTicketPartDto,
+  JobsReadyToInvoiceItemDto,
+  LaborByEmployeeDto,
+  LaborByJobDto,
   PartCategoryDto,
+  PartsByJobDto,
   PartDto,
   ReportQueryFilters,
+  ReportServiceHistoryItemDto,
   ServiceLocationDto,
   TimeEntryDto,
   UpdateUserDto,
@@ -114,57 +122,214 @@ export function TimeApprovalPage() { const [jobId, setJobId] = useState(''); con
 
 export function PartsApprovalPage() { const [jobId, setJobId] = useState(''); const [parts, setParts] = useState<JobTicketPartDto[]>([]); const [error, setError] = useState<string | null>(null); const load = () => jobId ? jobTicketsApi.listParts(jobId).then(setParts).catch(() => setError('Unable to load job parts for approval.')) : Promise.resolve(); const approve = async (id: string) => { await jobTicketsApi.approvePart(jobId, id); await load() }; const reject = async (id: string) => { await jobTicketsApi.rejectPart(jobId, id, { rejectionReason: 'Rejected in manager review' }); await load() }; return <section className="card stack"><h2>Parts Approval</h2><input value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id" /><button onClick={() => load()}>Load Job Parts</button><Errorable error={error} /><ul>{parts.map((x) => <li key={x.id}>Part {x.partId} · Qty {x.quantity} · Added by {x.addedByEmployeeId ?? 'n/a'} · Cost {x.unitCostSnapshot} · Sale {x.salePriceSnapshot} · {getApprovalLabel(x.approvalStatus)} <button onClick={() => approve(x.id)}>Approve</button> <button onClick={() => reject(x.id)}>Reject</button></li>)}</ul></section> }
 
-const toCsv = (rows: Record<string, unknown>[]) => {
-  if (!rows.length) return ''
-  const headers = Object.keys(rows[0])
-  return [headers.join(','), ...rows.map((row) => headers.map((h) => JSON.stringify(row[h] ?? '')).join(','))].join('\n')
+type ReportMode = 'invoiceReady' | 'jobCost' | 'jobsReady' | 'laborJob' | 'laborEmployee' | 'partsJob' | 'customerHistory' | 'equipmentHistory'
+type ReportRow = InvoiceReadySummaryDto | JobCostSummaryDto | JobsReadyToInvoiceItemDto | LaborByJobDto | LaborByEmployeeDto | PartsByJobDto | ReportServiceHistoryItemDto
+
+type ReportColumn<T extends ReportRow> = CsvColumn<T> & {
+  render?: (row: T) => string | JSX.Element
 }
 
-const reportTitleMap: Record<string, string> = {
+const reportTitleMap: Record<ReportMode, string> = {
+  invoiceReady: 'Invoice-ready Summary',
+  jobCost: 'Job Cost Summary',
   jobsReady: 'Jobs Ready to Invoice',
   laborJob: 'Labor by Job',
   laborEmployee: 'Labor by Employee',
   partsJob: 'Parts by Job',
-  jobCost: 'Job Cost Summary',
   customerHistory: 'Customer Service History',
   equipmentHistory: 'Equipment Service History'
 }
 
+const reportDescriptions: Record<ReportMode, string> = {
+  invoiceReady: 'One invoice-ready job summary with approved labor and approved parts totals.',
+  jobCost: 'One job cost summary showing labor, parts, and grand total.',
+  jobsReady: 'Jobs that have approved billable activity and are ready for invoice review.',
+  laborJob: 'Approved labor totals grouped by job ticket.',
+  laborEmployee: 'Approved labor totals grouped by employee.',
+  partsJob: 'Approved job-part quantity and snapshot price totals grouped by job.',
+  customerHistory: 'Service history for a selected customer.',
+  equipmentHistory: 'Service history for selected equipment.'
+}
+
+const money = (value?: number | null) => typeof value === 'number' ? value.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : '—'
+const quantity = (value?: number | null) => typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'
+const hours = (value?: number | null) => typeof value === 'number' ? `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} h` : '—'
+const dateOnly = (value?: string | null) => value ? new Date(value).toLocaleDateString() : '—'
+
+const getJobStatusLabel = (value: number) => {
+  switch (value) {
+    case 1: return 'Draft'
+    case 2: return 'Submitted'
+    case 3: return 'Assigned'
+    case 4: return 'In Progress'
+    case 5: return 'Waiting on Parts'
+    case 6: return 'Waiting on Customer'
+    case 7: return 'Completed'
+    case 8: return 'Cancelled'
+    case 9: return 'Invoiced'
+    case 10: return 'Reviewed'
+    default: return `Status ${value}`
+  }
+}
+
+const getInvoiceStatusLabel = (value: number) => {
+  switch (value) {
+    case 0: return 'Not Ready'
+    case 1: return 'Ready'
+    case 2: return 'Invoiced'
+    case 3: return 'Paid'
+    default: return `Status ${value}`
+  }
+}
+
+const jobLink = (id: string, label: string) => <Link to={`/manage/job-tickets/${id}`}>{label}</Link>
+const managerListLink = (to: string, label?: string | null) => label ? <Link to={to}>{label}</Link> : '—'
+
+const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
+  invoiceReady: [
+    { header: 'Job Ticket', value: (row: InvoiceReadySummaryDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Customer', value: (row: InvoiceReadySummaryDto) => row.customer },
+    { header: 'Billing Party', value: (row: InvoiceReadySummaryDto) => row.billingPartyCustomer },
+    { header: 'Service Location', value: (row: InvoiceReadySummaryDto) => row.serviceLocation },
+    { header: 'Equipment', value: (row: InvoiceReadySummaryDto) => row.equipment ?? '' },
+    { header: 'Job Status', value: (row: InvoiceReadySummaryDto) => getJobStatusLabel(row.jobStatus) },
+    { header: 'Invoice Status', value: (row: InvoiceReadySummaryDto) => getInvoiceStatusLabel(row.invoiceStatus) },
+    { header: 'Labor Hours', value: (row: InvoiceReadySummaryDto) => hours(row.laborHours) },
+    { header: 'Labor Billable', value: (row: InvoiceReadySummaryDto) => money(row.laborBillableTotal) },
+    { header: 'Parts Billable', value: (row: InvoiceReadySummaryDto) => money(row.partsBillableTotal) },
+    { header: 'Tax', value: (row: InvoiceReadySummaryDto) => money(row.tax) },
+    { header: 'Grand Total', value: (row: InvoiceReadySummaryDto) => money(row.grandTotal) }
+  ],
+  jobCost: [
+    { header: 'Job Ticket', value: (row: JobCostSummaryDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Labor Hours', value: (row: JobCostSummaryDto) => hours(row.laborHours) },
+    { header: 'Labor Cost', value: (row: JobCostSummaryDto) => money(row.laborCostTotal) },
+    { header: 'Labor Billable', value: (row: JobCostSummaryDto) => money(row.laborBillableTotal) },
+    { header: 'Parts Cost', value: (row: JobCostSummaryDto) => money(row.partsCostTotal) },
+    { header: 'Parts Billable', value: (row: JobCostSummaryDto) => money(row.partsBillableTotal) },
+    { header: 'Grand Total', value: (row: JobCostSummaryDto) => money(row.grandTotal) }
+  ],
+  jobsReady: [
+    { header: 'Job Ticket', value: (row: JobsReadyToInvoiceItemDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Customer', value: (row: JobsReadyToInvoiceItemDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
+    { header: 'Billing Party', value: (row: JobsReadyToInvoiceItemDto) => row.billingPartyCustomer },
+    { header: 'Job Status', value: (row: JobsReadyToInvoiceItemDto) => getJobStatusLabel(row.jobStatus) },
+    { header: 'Invoice Status', value: (row: JobsReadyToInvoiceItemDto) => getInvoiceStatusLabel(row.invoiceStatus) },
+    { header: 'Approved Labor Hours', value: (row: JobsReadyToInvoiceItemDto) => hours(row.approvedLaborHours) },
+    { header: 'Approved Parts Qty', value: (row: JobsReadyToInvoiceItemDto) => quantity(row.approvedPartsCount) },
+    { header: 'Estimated Billable Total', value: (row: JobsReadyToInvoiceItemDto) => money(row.estimatedBillableTotal) },
+    { header: 'Completed', value: (row: JobsReadyToInvoiceItemDto) => dateOnly(row.completedAtUtc) }
+  ],
+  laborJob: [
+    { header: 'Job Ticket', value: (row: LaborByJobDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Customer', value: (row: LaborByJobDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
+    { header: 'Approved Labor Hours', value: (row: LaborByJobDto) => hours(row.approvedLaborHours) },
+    { header: 'Labor Cost', value: (row: LaborByJobDto) => money(row.laborCostTotal) },
+    { header: 'Labor Billable', value: (row: LaborByJobDto) => money(row.laborBillableTotal) }
+  ],
+  laborEmployee: [
+    { header: 'Employee', value: (row: LaborByEmployeeDto) => row.employeeName },
+    { header: 'Approved Labor Hours', value: (row: LaborByEmployeeDto) => hours(row.approvedLaborHours) },
+    { header: 'Labor Cost', value: (row: LaborByEmployeeDto) => money(row.laborCostTotal) },
+    { header: 'Labor Billable', value: (row: LaborByEmployeeDto) => money(row.laborBillableTotal) },
+    { header: 'Job Count', value: (row: LaborByEmployeeDto) => row.jobCount }
+  ],
+  partsJob: [
+    { header: 'Job Ticket', value: (row: PartsByJobDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Customer', value: (row: PartsByJobDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
+    { header: 'Approved Part Quantity', value: (row: PartsByJobDto) => quantity(row.approvedPartQuantity) },
+    { header: 'Parts Cost', value: (row: PartsByJobDto) => money(row.partsCostTotal) },
+    { header: 'Parts Billable', value: (row: PartsByJobDto) => money(row.partsBillableTotal) }
+  ],
+  customerHistory: [
+    { header: 'Job Ticket', value: (row: ReportServiceHistoryItemDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Customer', value: (row: ReportServiceHistoryItemDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
+    { header: 'Equipment', value: (row: ReportServiceHistoryItemDto) => row.equipment ?? '', render: (row) => managerListLink('/manage/equipment', row.equipment) },
+    { header: 'Title', value: (row: ReportServiceHistoryItemDto) => row.title },
+    { header: 'Job Status', value: (row: ReportServiceHistoryItemDto) => getJobStatusLabel(row.jobStatus) },
+    { header: 'Created', value: (row: ReportServiceHistoryItemDto) => dateOnly(row.createdAtUtc) },
+    { header: 'Completed', value: (row: ReportServiceHistoryItemDto) => dateOnly(row.completedAtUtc) }
+  ],
+  equipmentHistory: [
+    { header: 'Job Ticket', value: (row: ReportServiceHistoryItemDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Customer', value: (row: ReportServiceHistoryItemDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
+    { header: 'Equipment', value: (row: ReportServiceHistoryItemDto) => row.equipment ?? '', render: (row) => managerListLink('/manage/equipment', row.equipment) },
+    { header: 'Title', value: (row: ReportServiceHistoryItemDto) => row.title },
+    { header: 'Job Status', value: (row: ReportServiceHistoryItemDto) => getJobStatusLabel(row.jobStatus) },
+    { header: 'Created', value: (row: ReportServiceHistoryItemDto) => dateOnly(row.createdAtUtc) },
+    { header: 'Completed', value: (row: ReportServiceHistoryItemDto) => dateOnly(row.completedAtUtc) }
+  ]
+}
+
+const reportModes: ReportMode[] = ['invoiceReady', 'jobCost', 'jobsReady', 'laborJob', 'laborEmployee', 'partsJob', 'customerHistory', 'equipmentHistory']
+
+const userMessageForReportError = (requestError: unknown) => {
+  if (requestError instanceof ApiError) {
+    if (requestError.status === 400) return 'The report filters could not be applied. Check IDs, dates, and status values, then try again.'
+    if (requestError.status === 401 || requestError.status === 403) return 'You do not have permission to run manager reports.'
+    if (requestError.status === 404) return 'No report source was found for the selected ID.'
+    if (requestError.status >= 500) return 'The server could not generate this report right now. Please try again later.'
+  }
+
+  return 'Unable to load report data.'
+}
+
 export function ReportsPage() {
-  const [filters, setFilters] = useState<ReportQueryFilters>({ offset: 0, limit: 50, invoiceStatus: 0 })
+  const [filters, setFilters] = useState<ReportQueryFilters>({ offset: 0, limit: 50 })
   const [customerId, setCustomerId] = useState('')
   const [equipmentId, setEquipmentId] = useState('')
   const [jobId, setJobId] = useState('')
-  const [rows, setRows] = useState<Record<string, unknown>[]>([])
-  const [title, setTitle] = useState('')
+  const [rows, setRows] = useState<ReportRow[]>([])
+  const [mode, setMode] = useState<ReportMode | null>(null)
+  const [loadingMode, setLoadingMode] = useState<ReportMode | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const apply = async (mode: string) => {
+  const apply = async (nextMode: ReportMode) => {
+    if ((nextMode === 'invoiceReady' || nextMode === 'jobCost') && !jobId.trim()) {
+      setError('Enter a job ticket id before running this report.')
+      return
+    }
+
+    if (nextMode === 'customerHistory' && !customerId.trim()) {
+      setError('Enter a customer id before running customer service history.')
+      return
+    }
+
+    if (nextMode === 'equipmentHistory' && !equipmentId.trim()) {
+      setError('Enter an equipment id before running equipment service history.')
+      return
+    }
+
     try {
       setError(null)
-      const data = mode === 'jobsReady' ? await reportsApi.getJobsReadyToInvoice(filters)
-        : mode === 'laborJob' ? await reportsApi.getLaborByJob(filters)
-        : mode === 'laborEmployee' ? await reportsApi.getLaborByEmployee(filters)
-        : mode === 'partsJob' ? await reportsApi.getPartsByJob(filters)
-        : mode === 'jobCost' ? [await reportsApi.getCostSummary(jobId)]
-        : mode === 'customerHistory' ? await reportsApi.getCustomerHistory(customerId, filters)
-        : await reportsApi.getEquipmentHistory(equipmentId, filters)
+      setLoadingMode(nextMode)
+      setRows([])
+      setMode(nextMode)
 
-      setRows(data as Record<string, unknown>[])
-      setTitle(reportTitleMap[mode] ?? mode)
+      const data = nextMode === 'invoiceReady' ? [await reportsApi.getInvoiceReadySummary(jobId.trim())]
+        : nextMode === 'jobsReady' ? await reportsApi.getJobsReadyToInvoice(filters)
+        : nextMode === 'laborJob' ? await reportsApi.getLaborByJob(filters)
+        : nextMode === 'laborEmployee' ? await reportsApi.getLaborByEmployee(filters)
+        : nextMode === 'partsJob' ? await reportsApi.getPartsByJob(filters)
+        : nextMode === 'jobCost' ? [await reportsApi.getCostSummary(jobId.trim())]
+        : nextMode === 'customerHistory' ? await reportsApi.getCustomerHistory(customerId.trim(), filters)
+        : await reportsApi.getEquipmentHistory(equipmentId.trim(), filters)
+
+      setRows(data as ReportRow[])
     } catch (requestError) {
-      if (requestError instanceof ApiError && (requestError.status === 401 || requestError.status === 403)) {
-        setError('You do not have permission to run manager reports.')
-        return
-      }
-
-      setError('Unable to load report data.')
+      setError(userMessageForReportError(requestError))
+    } finally {
+      setLoadingMode(null)
     }
   }
 
-  const csvHref = useMemo(() => `data:text/csv;charset=utf-8,${encodeURIComponent(toCsv(rows))}`, [rows])
+  const columns = mode ? columnsByMode[mode] : []
+  const title = mode ? reportTitleMap[mode] : ''
+  const csv = useMemo(() => toCsv(rows, columns), [rows, columns])
+  const csvHref = useMemo(() => csvDataUri(csv), [csv])
+  const hasRows = rows.length > 0
 
-  return <section className="card stack"><h2>Reports</h2><p className="muted">Labor totals use time-entry labor-rate snapshots when available. When snapshot values are null, reports fall back to the assigned employee labor rate for legacy entries.</p><Errorable error={error} /><div className="row"><input type="date" onChange={(e) => setFilters({ ...filters, dateFromUtc: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })} /><input type="date" onChange={(e) => setFilters({ ...filters, dateToUtc: e.target.value ? `${e.target.value}T23:59:59Z` : undefined })} /><input placeholder="Customer id" value={filters.customerId ?? ''} onChange={(e) => setFilters({ ...filters, customerId: e.target.value || undefined })} /><input placeholder="Billing customer id" value={filters.billingPartyCustomerId ?? ''} onChange={(e) => setFilters({ ...filters, billingPartyCustomerId: e.target.value || undefined })} /><input placeholder="Service location id" value={filters.serviceLocationId ?? ''} onChange={(e) => setFilters({ ...filters, serviceLocationId: e.target.value || undefined })} /><input placeholder="Employee id" value={filters.employeeId ?? ''} onChange={(e) => setFilters({ ...filters, employeeId: e.target.value || undefined })} /><input placeholder="Job status #" value={filters.jobStatus ?? ''} onChange={(e) => setFilters({ ...filters, jobStatus: e.target.value ? Number(e.target.value) : undefined })} /><input placeholder="Invoice status #" value={filters.invoiceStatus ?? ''} onChange={(e) => setFilters({ ...filters, invoiceStatus: e.target.value ? Number(e.target.value) : undefined })} /></div><div className="row"><input type="number" min={0} placeholder="Offset" value={filters.offset ?? 0} onChange={(e) => setFilters({ ...filters, offset: Number(e.target.value) || 0 })} /><input type="number" min={1} placeholder="Limit" value={filters.limit ?? 50} onChange={(e) => setFilters({ ...filters, limit: Number(e.target.value) || 50 })} /></div><div className="inline-links"><button onClick={() => apply('jobsReady')}>Jobs Ready to Invoice</button><button onClick={() => apply('laborJob')}>Labor by Job</button><button onClick={() => apply('laborEmployee')}>Labor by Employee</button><button onClick={() => apply('partsJob')}>Parts by Job</button></div><input value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id for cost summary" /><button onClick={() => apply('jobCost')}>Job Cost Summary</button><input value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="Customer id for service history" /><button onClick={() => apply('customerHistory')}>Customer Service History</button><input value={equipmentId} onChange={(e) => setEquipmentId(e.target.value)} placeholder="Equipment id for service history" /><button onClick={() => apply('equipmentHistory')}>Equipment Service History</button><p>{title ? `Showing ${title} (${rows.length} rows)` : ''}</p>{rows.length ? <a href={csvHref} download={`report-${title.toLowerCase().replace(/\s+/g, '-')}.csv`}>Export CSV</a> : null}<div style={{ overflowX: 'auto' }}><table><thead><tr>{rows.length ? Object.keys(rows[0]).map((key) => <th key={key}>{key}</th>) : null}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{Object.entries(row).map(([key, value]) => <td key={key}>{typeof value === 'number' ? value.toFixed(2) : String(value ?? '')}</td>)}</tr>)}</tbody></table></div></section>
+  return <section className="card stack"><h2>Reports</h2><p className="muted">Manager/Admin report hub for invoice readiness, job costs, labor, parts, customer history, and equipment history.</p><p className="muted">Labor totals use time-entry labor-rate snapshots first. Legacy entries with null snapshots fall back to the documented employee-rate behavior.</p><Errorable error={error} /><div className="report-grid" aria-label="Available reports">{reportModes.map((reportMode) => <article className="report-card" key={reportMode}><h3>{reportTitleMap[reportMode]}</h3><p className="muted">{reportDescriptions[reportMode]}</p><button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>{loadingMode === reportMode ? 'Loading…' : `Run ${reportTitleMap[reportMode]}`}</button></article>)}</div><article className="card stack"><h3>Supported filters</h3><p className="muted">Shared report endpoints support date range, customer, billing party, service location, employee, job status, invoice status, offset, and limit. Invoice-ready and job cost summaries use the selected job ticket id. Customer and equipment history require their source IDs.</p><div className="report-filters"><label>From date<input aria-label="From date" type="date" value={filters.dateFromUtc?.slice(0, 10) ?? ''} onChange={(e) => setFilters({ ...filters, dateFromUtc: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })} /></label><label>To date<input aria-label="To date" type="date" value={filters.dateToUtc?.slice(0, 10) ?? ''} onChange={(e) => setFilters({ ...filters, dateToUtc: e.target.value ? `${e.target.value}T23:59:59Z` : undefined })} /></label><label>Customer id<input aria-label="Customer id" placeholder="Customer id" value={filters.customerId ?? ''} onChange={(e) => setFilters({ ...filters, customerId: e.target.value || undefined })} /></label><label>Billing customer id<input aria-label="Billing customer id" placeholder="Billing customer id" value={filters.billingPartyCustomerId ?? ''} onChange={(e) => setFilters({ ...filters, billingPartyCustomerId: e.target.value || undefined })} /></label><label>Service location id<input aria-label="Service location id" placeholder="Service location id" value={filters.serviceLocationId ?? ''} onChange={(e) => setFilters({ ...filters, serviceLocationId: e.target.value || undefined })} /></label><label>Employee id<input aria-label="Employee id" placeholder="Employee id" value={filters.employeeId ?? ''} onChange={(e) => setFilters({ ...filters, employeeId: e.target.value || undefined })} /></label><label>Job status<select aria-label="Job status" value={filters.jobStatus ?? ''} onChange={(e) => setFilters({ ...filters, jobStatus: e.target.value ? Number(e.target.value) : undefined })}><option value="">Any job status</option><option value="7">Completed</option><option value="9">Invoiced</option><option value="10">Reviewed</option></select></label><label>Invoice status<select aria-label="Invoice status" value={filters.invoiceStatus ?? ''} onChange={(e) => setFilters({ ...filters, invoiceStatus: e.target.value ? Number(e.target.value) : undefined })}><option value="">Any invoice status</option><option value="0">Not Ready</option><option value="1">Ready</option><option value="2">Invoiced</option><option value="3">Paid</option></select></label><label>Offset<input aria-label="Offset" type="number" min={0} value={filters.offset ?? 0} onChange={(e) => setFilters({ ...filters, offset: Number(e.target.value) || 0 })} /></label><label>Limit<input aria-label="Limit" type="number" min={1} value={filters.limit ?? 50} onChange={(e) => setFilters({ ...filters, limit: Number(e.target.value) || 50 })} /></label></div><div className="report-filters"><label>Job ticket id<input aria-label="Job ticket id" value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id" /></label><label>Customer history id<input aria-label="Customer history id" value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="Customer id for service history" /></label><label>Equipment history id<input aria-label="Equipment history id" value={equipmentId} onChange={(e) => setEquipmentId(e.target.value)} placeholder="Equipment id for service history" /></label></div></article><article className="card stack" aria-live="polite"><div className="report-results-heading"><div><h3>{title || 'Select a report'}</h3><p className="muted">{mode ? `${rows.length} visible row${rows.length === 1 ? '' : 's'}` : 'Run a report from the hub to load export-friendly rows.'}</p></div>{hasRows ? <a className="button-link" href={csvHref} download={`report-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`}>Export CSV</a> : null}</div>{loadingMode ? <p className="muted">Loading {reportTitleMap[loadingMode]}…</p> : null}{mode && !loadingMode && !hasRows && !error ? <p className="muted">No rows match the current report and filters.</p> : null}{hasRows ? <div className="table-scroll"><table><thead><tr>{columns.map((column) => <th key={column.header}>{column.header}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{columns.map((column) => <td key={column.header}>{column.render ? column.render(row as never) : column.value(row as never)}</td>)}</tr>)}</tbody></table></div> : null}</article></section>
 }
 
 export function UsersPage() {

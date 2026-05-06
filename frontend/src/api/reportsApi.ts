@@ -1,4 +1,5 @@
 import type {
+  InvoiceReadySummaryDto,
   JobCostSummaryDto,
   JobsReadyToInvoiceItemDto,
   LaborByEmployeeDto,
@@ -23,6 +24,7 @@ const toQuery = (filters?: ReportQueryFilters) => {
 }
 
 export const reportsApi = {
+  getInvoiceReadySummary: (jobTicketId: string) => apiRequest<InvoiceReadySummaryDto>(`/api/reports/job-tickets/${jobTicketId}/invoice-ready`),
   getCostSummary: (jobTicketId: string) => apiRequest<JobCostSummaryDto>(`/api/reports/job-tickets/${jobTicketId}/cost-summary`),
   getJobsReadyToInvoice: (filters?: ReportQueryFilters) => apiRequest<JobsReadyToInvoiceItemDto[]>(`/api/reports/jobs-ready-to-invoice?${toQuery(filters)}`),
   getLaborByJob: (filters?: ReportQueryFilters) => apiRequest<LaborByJobDto[]>(`/api/reports/labor/by-job?${toQuery(filters)}`),
