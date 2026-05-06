@@ -2,10 +2,11 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This repository is in a **foundation/stabilization phase** with core backend, employee workflow, and Manager/Admin phases 1-3D represented in the current local snapshot. Phase 3D adds Admin user-management polish, role-aware Manager/Admin UX hardening, and regression coverage without entering deferred domains.
+This repository is in a **post-Phase 3C/3D stabilization phase** with core backend, employee workflow, and Manager/Admin phases 1-3D validated on the current post-merge baseline. Phase 3C/3D work is complete; the next work should stay focused on stabilization, observability, documentation hygiene, or explicitly approved new scope without entering deferred domains.
 
 ## Project Navigation
 - **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)
+- **Post-merge roadmap reset:** [docs/post-merge-roadmap-reset.md](docs/post-merge-roadmap-reset.md)
 - **Reviewed current state baseline:** [docs/current-state-code-review.md](docs/current-state-code-review.md)
 - **Scope contract:** [docs/project-scope.md](docs/project-scope.md)
 - **API contract:** [docs/api-contract.md](docs/api-contract.md)
@@ -75,6 +76,8 @@ npm test
 
 - Phase 3D update: Admin user management now has a safer list/create/edit/deactivate/reset-password workflow with loading, empty, success, error, validation, and confirmation states. Manager/Admin route boundaries remain unchanged, with `/manage/users` Admin-only and employee workflow routing preserved.
 
-- Scope review update: [docs/scope-code-review.md](docs/scope-code-review.md) records the 2026-05-06 stabilization audit. Local validation passed, two small regressions were fixed, no migrations were added, no deferred domains were implemented, and remote `origin/main` freshness could not be verified because `git fetch origin` returned GitHub HTTP 403 in this environment.
+- Post-merge roadmap reset: [docs/post-merge-roadmap-reset.md](docs/post-merge-roadmap-reset.md) records the 2026-05-06 post-merge validation reset. Backend/frontend validation passed on local `HEAD` `adfcf80084d7865bf67922c008ea20ab223f7086`, GitHub REST confirmed remote `main` at the same SHA, and direct `git fetch origin` remains a non-blocking HTTP 403 environment warning.
+
+- Scope review update: [docs/scope-code-review.md](docs/scope-code-review.md) records the 2026-05-06 stabilization audit. Local validation passed, two small regressions were fixed, no migrations were added, and no deferred domains were implemented.
 
 - Foundation update: a public `GET /api/system/info` metadata endpoint now exposes service name, base API path, health endpoint path, environment name, and assembly version for deployment checks and frontend diagnostics.

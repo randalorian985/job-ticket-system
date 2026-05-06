@@ -5,8 +5,10 @@ This roadmap is the project control center for delivery sequencing and merge-rea
 
 Baseline reviewed state: [Scope Code Review and Stabilization Audit (2026-05-06)](./scope-code-review.md).
 
+Post-merge reset state: [Post-Merge Roadmap Reset After Phase 3C/3D Validation (2026-05-06)](./post-merge-roadmap-reset.md).
+
 ## Current Phase
-**Manager/Admin Phase 3D implemented; stabilization/merge validation checkpoint.**
+**Post-merge stabilization reset after validated Manager/Admin Phase 3C/3D.**
 
 Interpretation as of **May 6, 2026**:
 - Core backend/API workflows are implemented and validated.
@@ -17,7 +19,8 @@ Interpretation as of **May 6, 2026**:
 - Manager/Admin **Phase 3C reports polish/export is implemented** with a polished Manager/Admin reports hub, supported filters, export-friendly tables, and client-side CSV export.
 - Manager/Admin **Phase 3D user-management polish and UX hardening is implemented** with safer Admin create/edit/deactivate/reset-password flows, clearer states, role-change confirmation, and regression tests.
 - The 2026-05-06 scope-code-review checkpoint fixed two small regressions: frontend report invoice-status labels/filters now match backend enum values, and Admin user invalid payloads now return controlled `400 Bad Request` responses.
-- The next work should remain stabilization/verification first before any deferred-domain proposal.
+- The remote-provenance validation branch merged to `main` as `adfcf80084d7865bf67922c008ea20ab223f7086`, and the post-merge reset confirmed the local tree matches GitHub REST `main` metadata.
+- Phase 3C/3D is no longer active implementation work; the next work should remain stabilization/observability/documentation hygiene unless new scope is explicitly approved.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -50,17 +53,17 @@ The following are intentionally deferred and must not be partially introduced in
 - AI/scoring-based part recommendations
 
 ## Active Stabilization Concerns
-From the reviewed baseline:
-1. **Remote provenance transport warning:** direct `git fetch`/`git ls-remote` still return GitHub HTTP 403 from this workspace, but the 2026-05-06 remote-provenance validation confirmed GitHub REST `main` metadata matches local `HEAD` at `fc140b512320575233b53ba8382f4485a47a9689`.
+From the reviewed post-merge baseline:
+1. **Remote git transport warning:** direct `git fetch`/`git ls-remote` can still return GitHub HTTP 403 from this workspace, but the 2026-05-06 post-merge reset confirmed GitHub REST `main` metadata matches local `HEAD` at `adfcf80084d7865bf67922c008ea20ab223f7086`.
 2. **npm environment warning:** npm emits `Unknown env config "http-proxy"`; it is warning-level because frontend install/build/test still pass.
 3. **React Router future-flag warnings:** frontend tests pass, while React Router v7 future-flag warnings remain visible and non-blocking.
 
 ## Immediate Hygiene Item
-Before broadening Manager/Admin work, keep stabilization changes narrow and preserve the validated Phase 3C/3D snapshot. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md).
+Keep post-merge work narrow and preserve the validated Phase 3C/3D baseline. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md), and the follow-up roadmap reset is documented in [Post-Merge Roadmap Reset After Phase 3C/3D Validation](./post-merge-roadmap-reset.md).
 
 ## Recommended Feature Order
-1. Keep the Phase 3C/3D snapshot merge-ready on the validated baseline, with remote freshness confirmed by GitHub REST metadata when git smart-HTTP remains blocked.
-2. Re-assess deferred-domain entry only through explicit scope approval after standard validation remains green on the target merge baseline.
+1. Complete stabilization/observability/documentation hygiene on the validated post-merge baseline.
+2. Re-assess deferred-domain or next-business-capability entry only through explicit scope approval after standard validation remains green.
 
 ## Planned Sequence: Manager/Admin Phase 3A → 3D
 ### Phase 3A (Completed)
@@ -105,15 +108,15 @@ Merge-readiness requires:
 - `/health` endpoint contract retained
 - No unauthorized scope expansion into deferred domains
 
-## Readiness for Remaining Manager/Admin Phase 3 Workstream
+## Readiness for Next Workstream
 Concise readiness statement:
-- The local snapshot is ready for a stabilization/verification checkpoint, not new feature expansion.
-- Phase 3A and 3B slices are complete.
-- Phase 3C is implemented; latest remote fetch may still need environment/auth verification when GitHub access is available.
-- Proceed next with a narrow stabilization/observability cleanup only after Phase 3D validation remains green on the target merge baseline.
+- The post-merge baseline is validated and should not carry any remaining Phase 3C/3D implementation work.
+- Phase 3A, 3B, 3C, and 3D slices are complete on the current control baseline.
+- Proceed next with narrow stabilization/observability/documentation hygiene, or pause for explicit next-scope approval.
 - Continue to enforce no-migration/no-deferred-domain constraints unless separately approved.
 
 ## Cross-Linking
+- Post-merge roadmap reset: [docs/post-merge-roadmap-reset.md](./post-merge-roadmap-reset.md)
 - Latest scope review: [docs/scope-code-review.md](./scope-code-review.md)
 - Prior baseline review: [docs/project-pickup-review.md](./project-pickup-review.md)
 - Scope contract: [docs/project-scope.md](./project-scope.md)
