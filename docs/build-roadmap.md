@@ -8,7 +8,7 @@ Baseline reviewed state: [Scope Code Review and Stabilization Audit (2026-05-06)
 Post-merge reset state: [Post-Merge Roadmap Reset After Phase 3C/3D Validation (2026-05-06)](./post-merge-roadmap-reset.md).
 
 ## Current Phase
-**Post-merge stabilization reset after validated Manager/Admin Phase 3C/3D.**
+**Phase 4A pilot readiness after validated Manager/Admin Phase 3C/3D.**
 
 Interpretation as of **May 6, 2026**:
 - Core backend/API workflows are implemented and validated.
@@ -20,7 +20,8 @@ Interpretation as of **May 6, 2026**:
 - Manager/Admin **Phase 3D user-management polish and UX hardening is implemented** with safer Admin create/edit/deactivate/reset-password flows, clearer states, role-change confirmation, and regression tests.
 - The 2026-05-06 scope-code-review checkpoint fixed two small regressions: frontend report invoice-status labels/filters now match backend enum values, and Admin user invalid payloads now return controlled `400 Bad Request` responses.
 - The remote-provenance validation branch merged to `main` as `adfcf80084d7865bf67922c008ea20ab223f7086`, and the post-merge reset confirmed the local tree matches GitHub REST `main` metadata.
-- Phase 3C/3D is no longer active implementation work; the next work should remain stabilization/observability/documentation hygiene unless new scope is explicitly approved.
+- Phase 3C/3D is no longer active implementation work.
+- Phase 4A pilot readiness is active and implemented as opt-in local/demo seed data, a pilot runbook, and automated end-to-end workflow validation.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -52,6 +53,13 @@ The following are intentionally deferred and must not be partially introduced in
 - Parts compatibility recommendation engine
 - AI/scoring-based part recommendations
 
+## Phase 4A Pilot Readiness (Implemented)
+- Adds an opt-in `PilotDemoSeed` startup path for local/demo environments only.
+- Seeded data includes Admin, Manager, and Employee users, requesting/billing customers, service location, equipment, parts/vendor/category records, and three representative pilot job tickets.
+- The seed is idempotent and uses the `PILOT-4A` account-number marker to avoid duplicate local data.
+- Automated tests validate employee assigned-job visibility, clock in/out, work notes, part usage, manager approvals, and reporting visibility.
+- Full production seeding, purchasing, inventory intelligence, compatibility recommendations, and invoice/payment processing remain out of scope.
+
 ## Active Stabilization Concerns
 From the reviewed post-merge baseline:
 1. **Remote git transport warning:** direct `git fetch`/`git ls-remote` can still return GitHub HTTP 403 from this workspace, but the 2026-05-06 post-merge reset confirmed GitHub REST `main` metadata matches local `HEAD` at `adfcf80084d7865bf67922c008ea20ab223f7086`.
@@ -62,8 +70,9 @@ From the reviewed post-merge baseline:
 Keep post-merge work narrow and preserve the validated Phase 3C/3D baseline. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md), and the follow-up roadmap reset is documented in [Post-Merge Roadmap Reset After Phase 3C/3D Validation](./post-merge-roadmap-reset.md).
 
 ## Recommended Feature Order
-1. Complete stabilization/observability/documentation hygiene on the validated post-merge baseline.
-2. Re-assess deferred-domain or next-business-capability entry only through explicit scope approval after standard validation remains green.
+1. Use Phase 4A local pilot seed/runbook for guided review and workflow validation.
+2. Continue stabilization/observability/documentation hygiene on the validated baseline.
+3. Re-assess deferred-domain or next-business-capability entry only through explicit scope approval after standard validation remains green.
 
 ## Planned Sequence: Manager/Admin Phase 3A → 3D
 ### Phase 3A (Completed)

@@ -1,9 +1,11 @@
 using System.Text;
 using System.Text.Json;
 using JobTicketSystem.Api.Auth;
+using JobTicketSystem.Api.Pilot;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.Pilot;
 using JobTicketSystem.Application.Reporting;
 using JobTicketSystem.Application.Security;
 using JobTicketSystem.Application.TimeEntries;
@@ -79,6 +81,8 @@ builder.Services.AddScoped<IFileStorageProvider, LocalFileStorageProvider>();
 builder.Services.AddScoped<IJobTicketFilesService, JobTicketFilesService>();
 builder.Services.AddScoped<ITimeEntriesService, TimeEntriesService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
+builder.Services.AddScoped<IPilotDemoSeedService, PilotDemoSeedService>();
+builder.Services.AddHostedService<PilotDemoSeedHostedService>();
 
 var app = builder.Build();
 
