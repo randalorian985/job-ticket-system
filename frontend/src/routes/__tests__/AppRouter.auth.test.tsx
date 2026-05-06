@@ -322,6 +322,6 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Users (Admin only)' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'User Management' })).toBeInTheDocument()
   })
 })

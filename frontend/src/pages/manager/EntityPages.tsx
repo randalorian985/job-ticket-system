@@ -332,36 +332,219 @@ export function ReportsPage() {
   return <section className="card stack"><h2>Reports</h2><p className="muted">Manager/Admin report hub for invoice readiness, job costs, labor, parts, customer history, and equipment history.</p><p className="muted">Labor totals use time-entry labor-rate snapshots first. Legacy entries with null snapshots fall back to the documented employee-rate behavior.</p><Errorable error={error} /><div className="report-grid" aria-label="Available reports">{reportModes.map((reportMode) => <article className="report-card" key={reportMode}><h3>{reportTitleMap[reportMode]}</h3><p className="muted">{reportDescriptions[reportMode]}</p><button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>{loadingMode === reportMode ? 'Loading…' : `Run ${reportTitleMap[reportMode]}`}</button></article>)}</div><article className="card stack"><h3>Supported filters</h3><p className="muted">Shared report endpoints support date range, customer, billing party, service location, employee, job status, invoice status, offset, and limit. Invoice-ready and job cost summaries use the selected job ticket id. Customer and equipment history require their source IDs.</p><div className="report-filters"><label>From date<input aria-label="From date" type="date" value={filters.dateFromUtc?.slice(0, 10) ?? ''} onChange={(e) => setFilters({ ...filters, dateFromUtc: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })} /></label><label>To date<input aria-label="To date" type="date" value={filters.dateToUtc?.slice(0, 10) ?? ''} onChange={(e) => setFilters({ ...filters, dateToUtc: e.target.value ? `${e.target.value}T23:59:59Z` : undefined })} /></label><label>Customer id<input aria-label="Customer id" placeholder="Customer id" value={filters.customerId ?? ''} onChange={(e) => setFilters({ ...filters, customerId: e.target.value || undefined })} /></label><label>Billing customer id<input aria-label="Billing customer id" placeholder="Billing customer id" value={filters.billingPartyCustomerId ?? ''} onChange={(e) => setFilters({ ...filters, billingPartyCustomerId: e.target.value || undefined })} /></label><label>Service location id<input aria-label="Service location id" placeholder="Service location id" value={filters.serviceLocationId ?? ''} onChange={(e) => setFilters({ ...filters, serviceLocationId: e.target.value || undefined })} /></label><label>Employee id<input aria-label="Employee id" placeholder="Employee id" value={filters.employeeId ?? ''} onChange={(e) => setFilters({ ...filters, employeeId: e.target.value || undefined })} /></label><label>Job status<select aria-label="Job status" value={filters.jobStatus ?? ''} onChange={(e) => setFilters({ ...filters, jobStatus: e.target.value ? Number(e.target.value) : undefined })}><option value="">Any job status</option><option value="7">Completed</option><option value="9">Invoiced</option><option value="10">Reviewed</option></select></label><label>Invoice status<select aria-label="Invoice status" value={filters.invoiceStatus ?? ''} onChange={(e) => setFilters({ ...filters, invoiceStatus: e.target.value ? Number(e.target.value) : undefined })}><option value="">Any invoice status</option><option value="0">Not Ready</option><option value="1">Ready</option><option value="2">Invoiced</option><option value="3">Paid</option></select></label><label>Offset<input aria-label="Offset" type="number" min={0} value={filters.offset ?? 0} onChange={(e) => setFilters({ ...filters, offset: Number(e.target.value) || 0 })} /></label><label>Limit<input aria-label="Limit" type="number" min={1} value={filters.limit ?? 50} onChange={(e) => setFilters({ ...filters, limit: Number(e.target.value) || 50 })} /></label></div><div className="report-filters"><label>Job ticket id<input aria-label="Job ticket id" value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id" /></label><label>Customer history id<input aria-label="Customer history id" value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="Customer id for service history" /></label><label>Equipment history id<input aria-label="Equipment history id" value={equipmentId} onChange={(e) => setEquipmentId(e.target.value)} placeholder="Equipment id for service history" /></label></div></article><article className="card stack" aria-live="polite"><div className="report-results-heading"><div><h3>{title || 'Select a report'}</h3><p className="muted">{mode ? `${rows.length} visible row${rows.length === 1 ? '' : 's'}` : 'Run a report from the hub to load export-friendly rows.'}</p></div>{hasRows ? <a className="button-link" href={csvHref} download={`report-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`}>Export CSV</a> : null}</div>{loadingMode ? <p className="muted">Loading {reportTitleMap[loadingMode]}…</p> : null}{mode && !loadingMode && !hasRows && !error ? <p className="muted">No rows match the current report and filters.</p> : null}{hasRows ? <div className="table-scroll"><table><thead><tr>{columns.map((column) => <th key={column.header}>{column.header}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{columns.map((column) => <td key={column.header}>{column.render ? column.render(row as never) : column.value(row as never)}</td>)}</tr>)}</tbody></table></div> : null}</article></section>
 }
 
+type UserRole = 'Employee' | 'Manager' | 'Admin'
+
+const userRoles: UserRole[] = ['Employee', 'Manager', 'Admin']
+
+const emptyUserDraft = (): CreateUserDto => ({
+  userName: '',
+  email: '',
+  firstName: '',
+  lastName: '',
+  role: 'Employee',
+  password: ''
+})
+
+const userDisplayName = (user: UserDto) => `${user.firstName} ${user.lastName}`.trim() || user.userName || 'Unnamed user'
+const statusLabel = (user: UserDto) => user.isArchived || user.status !== 1 ? 'Inactive' : 'Active'
+
+const userRequestErrorMessage = (requestError: unknown, fallback: string) => {
+  if (requestError instanceof ApiError) {
+    if (requestError.status === 400) return requestError.message
+    if (requestError.status === 401 || requestError.status === 403) return 'Only Admin users can manage user accounts.'
+    if (requestError.status === 404) return 'The selected user could not be found. Refresh the list and try again.'
+    if (requestError.status >= 500) return 'The server could not complete the user-management request right now.'
+    return requestError.message
+  }
+
+  return fallback
+}
+
 export function UsersPage() {
   const [items, setItems] = useState<UserDto[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [editing, setEditing] = useState<UserDto | null>(null)
   const [passwordByUserId, setPasswordByUserId] = useState<Record<string, string>>({})
-  const [draft, setDraft] = useState<CreateUserDto>({ userName: '', email: '', firstName: '', lastName: '', role: 'Employee', password: 'Temp123!' })
-  const load = () => usersApi.list().then(setItems).catch(() => setError('Unable to load users.'))
-  useEffect(() => { load() }, [])
-  const save = async (event: FormEvent) => {
-    event.preventDefault()
+  const [draft, setDraft] = useState<CreateUserDto>(emptyUserDraft)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [busyUserId, setBusyUserId] = useState<string | null>(null)
+
+  const load = async () => {
     try {
-      if (editing) {
-        const updatePayload: UpdateUserDto = {
-          userName: draft.userName,
-          email: draft.email,
-          firstName: draft.firstName,
-          lastName: draft.lastName,
-          role: draft.role
-        }
-        await usersApi.update(editing.id, updatePayload)
-      }
-      else await usersApi.create(draft)
-      setEditing(null)
-      setDraft({ userName: '', email: '', firstName: '', lastName: '', role: 'Employee', password: 'Temp123!' })
-      await load()
+      setError(null)
+      setIsLoading(true)
+      setItems(await usersApi.list())
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : 'Unable to save user.')
+      setError(userRequestErrorMessage(requestError, 'Unable to load users.'))
+    } finally {
+      setIsLoading(false)
     }
   }
-  return <section className="card stack"><h2>Users (Admin only)</h2><Errorable error={error} /><form onSubmit={save} className="row"><input placeholder="Username" value={draft.userName} onChange={(e) => setDraft({ ...draft, userName: e.target.value })} /><input placeholder="First" value={draft.firstName} onChange={(e) => setDraft({ ...draft, firstName: e.target.value })} /><input placeholder="Last" value={draft.lastName} onChange={(e) => setDraft({ ...draft, lastName: e.target.value })} /><select value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })}><option>Employee</option><option>Manager</option><option>Admin</option></select>{editing ? null : <input placeholder="Password" value={draft.password} onChange={(e) => setDraft({ ...draft, password: e.target.value })} />}<button type="submit">{editing ? 'Save User' : 'Create User'}</button></form><ul>{items.map((x) => <li key={x.id}>{x.firstName} {x.lastName} · {x.userName} · {x.role} · {x.isArchived ? 'Archived' : 'Active'} <button onClick={() => { setEditing(x); setDraft({ userName: x.userName ?? '', email: x.email ?? '', firstName: x.firstName, lastName: x.lastName, role: x.role, password: '' }) }}>Edit</button> <button onClick={async () => { await usersApi.archive(x.id); await load() }}>Archive</button> <input placeholder="new password" value={passwordByUserId[x.id] ?? ''} onChange={(e) => setPasswordByUserId((prev) => ({ ...prev, [x.id]: e.target.value }))} /> <button onClick={async () => { const password = passwordByUserId[x.id]?.trim(); if (!password) { setError('New password is required.'); return } await usersApi.resetPassword(x.id, { newPassword: password }); setPasswordByUserId((prev) => ({ ...prev, [x.id]: '' })) }}>Reset Password</button></li>)}</ul></section>
+
+  useEffect(() => { load() }, [])
+
+  const validateDraft = () => {
+    if (!draft.userName.trim()) return 'Username is required.'
+    if (!draft.firstName.trim()) return 'First name is required.'
+    if (!draft.lastName.trim()) return 'Last name is required.'
+    if (!userRoles.includes(draft.role as UserRole)) return 'Choose a valid role: Employee, Manager, or Admin.'
+    if (!editing && !draft.password.trim()) return 'Temporary password is required when creating a user.'
+    if (draft.email && !/^\S+@\S+\.\S+$/.test(draft.email)) return 'Enter a valid email address or leave email blank.'
+    return null
+  }
+
+  const save = async (event: FormEvent) => {
+    event.preventDefault()
+    const validationError = validateDraft()
+    if (validationError) {
+      setError(validationError)
+      setSuccess(null)
+      return
+    }
+
+    try {
+      setError(null)
+      setSuccess(null)
+      setIsSaving(true)
+      const payload = {
+        userName: draft.userName.trim(),
+        email: draft.email?.trim() || null,
+        firstName: draft.firstName.trim(),
+        lastName: draft.lastName.trim(),
+        role: draft.role
+      }
+
+      if (editing) {
+        if (editing.role !== draft.role) {
+          const confirmed = window.confirm(`Change ${userDisplayName(editing)} from ${editing.role} to ${draft.role}? Role changes affect access immediately.`)
+          if (!confirmed) return
+        }
+
+        await usersApi.update(editing.id, payload as UpdateUserDto)
+        setSuccess(`${payload.firstName} ${payload.lastName} was updated.`)
+      } else {
+        await usersApi.create({ ...payload, password: draft.password } as CreateUserDto)
+        setSuccess(`${payload.firstName} ${payload.lastName} was created.`)
+      }
+
+      setEditing(null)
+      setDraft(emptyUserDraft())
+      await load()
+    } catch (requestError) {
+      setError(userRequestErrorMessage(requestError, editing ? 'Unable to update user.' : 'Unable to create user.'))
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const startEdit = (user: UserDto) => {
+    setEditing(user)
+    setError(null)
+    setSuccess(null)
+    setDraft({
+      userName: user.userName ?? '',
+      email: user.email ?? '',
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      password: ''
+    })
+  }
+
+  const cancelEdit = () => {
+    setEditing(null)
+    setDraft(emptyUserDraft())
+    setError(null)
+  }
+
+  const archiveUser = async (user: UserDto) => {
+    const confirmed = window.confirm(`Deactivate ${userDisplayName(user)}? They will lose active access after this change.`)
+    if (!confirmed) return
+
+    try {
+      setError(null)
+      setSuccess(null)
+      setBusyUserId(user.id)
+      await usersApi.archive(user.id)
+      setSuccess(`${userDisplayName(user)} was deactivated.`)
+      await load()
+    } catch (requestError) {
+      setError(userRequestErrorMessage(requestError, 'Unable to deactivate user.'))
+    } finally {
+      setBusyUserId(null)
+    }
+  }
+
+  const resetPassword = async (user: UserDto) => {
+    const newPassword = passwordByUserId[user.id]?.trim() ?? ''
+    if (!newPassword) {
+      setError('New password is required before resetting a password.')
+      setSuccess(null)
+      return
+    }
+
+    const confirmed = window.confirm(`Reset password for ${userDisplayName(user)}? Share the new temporary password only through an approved secure channel.`)
+    if (!confirmed) return
+
+    try {
+      setError(null)
+      setSuccess(null)
+      setBusyUserId(user.id)
+      await usersApi.resetPassword(user.id, { newPassword })
+      setPasswordByUserId((prev) => ({ ...prev, [user.id]: '' }))
+      setSuccess(`Password was reset for ${userDisplayName(user)}.`)
+    } catch (requestError) {
+      setError(userRequestErrorMessage(requestError, 'Unable to reset password.'))
+    } finally {
+      setBusyUserId(null)
+    }
+  }
+
+  return (
+    <section className="stack">
+      <article className="card stack">
+        <div>
+          <p className="muted"><Link to="/manage">Manager/Admin Console</Link> / User Management</p>
+          <h2>User Management</h2>
+          <p className="muted">Admin-only controls for account access, roles, deactivation, and password reset.</p>
+        </div>
+        <Errorable error={error} />
+        {success ? <p className="success">{success}</p> : null}
+        <form onSubmit={save} className="stack" aria-label={editing ? 'Edit user' : 'Create user'}>
+          <div className="form-grid">
+            <label>Username<input aria-label="Username" value={draft.userName} onChange={(e) => setDraft({ ...draft, userName: e.target.value })} /></label>
+            <label>Email<input aria-label="Email" type="email" value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} placeholder="optional" /></label>
+            <label>First name<input aria-label="First name" value={draft.firstName} onChange={(e) => setDraft({ ...draft, firstName: e.target.value })} /></label>
+            <label>Last name<input aria-label="Last name" value={draft.lastName} onChange={(e) => setDraft({ ...draft, lastName: e.target.value })} /></label>
+            <label>Role<select aria-label="Role" value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })}>{userRoles.map((role) => <option key={role} value={role}>{role}</option>)}</select></label>
+            {editing ? <p className="muted role-warning">Role changes are confirmed before save because they change route access immediately.</p> : <label>Temporary password<input aria-label="Temporary password" type="password" value={draft.password} onChange={(e) => setDraft({ ...draft, password: e.target.value })} autoComplete="new-password" /></label>}
+          </div>
+          <div className="row form-actions">
+            <button type="submit" disabled={isSaving}>{isSaving ? 'Saving user…' : editing ? 'Save user changes' : 'Create user'}</button>
+            {editing ? <button type="button" className="secondary-button" onClick={cancelEdit} disabled={isSaving}>Cancel edit</button> : null}
+          </div>
+        </form>
+      </article>
+
+      <article className="card stack" aria-live="polite">
+        <div className="report-results-heading">
+          <div>
+            <h3>Users</h3>
+            <p className="muted">{isLoading ? 'Loading user accounts…' : `${items.length} account${items.length === 1 ? '' : 's'} visible`}</p>
+          </div>
+        </div>
+        {isLoading ? <p className="muted">Loading user accounts…</p> : null}
+        {!isLoading && items.length === 0 && !error ? <p className="muted">No users have been created yet. Create the first user above.</p> : null}
+        {items.length > 0 ? <div className="table-scroll"><table><thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>{items.map((user) => {
+          const busy = busyUserId === user.id
+          const inactive = statusLabel(user) === 'Inactive'
+          return <tr key={user.id}><td>{userDisplayName(user)}</td><td>{user.userName ?? '—'}</td><td>{user.email ?? '—'}</td><td><span className="status-pill">{user.role}</span></td><td><span className={inactive ? 'status-pill inactive' : 'status-pill active'}>{statusLabel(user)}</span></td><td><div className="table-actions"><button type="button" onClick={() => startEdit(user)} disabled={busy}>Edit</button><button type="button" className="danger-button" onClick={() => archiveUser(user)} disabled={busy || inactive}>{busy ? 'Working…' : inactive ? 'Deactivated' : 'Deactivate'}</button><label className="sr-label">New password for {userDisplayName(user)}<input aria-label={`New password for ${userDisplayName(user)}`} type="password" placeholder="New temporary password" value={passwordByUserId[user.id] ?? ''} onChange={(e) => setPasswordByUserId((prev) => ({ ...prev, [user.id]: e.target.value }))} autoComplete="new-password" disabled={busy} /></label><button type="button" className="secondary-button" onClick={() => resetPassword(user)} disabled={busy}>{busy ? 'Working…' : 'Reset password'}</button></div></td></tr>
+        })}</tbody></table></div> : null}
+      </article>
+    </section>
+  )
 }
 
 export function UnauthorizedPage() {

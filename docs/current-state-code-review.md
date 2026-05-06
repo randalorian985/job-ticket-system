@@ -62,5 +62,10 @@ The following remain deferred and unimplemented in this pass:
 - Backend report endpoints, labor snapshot semantics, invoice-ready approval rules, authorization policies, and migrations were not changed for this slice.
 - Deferred domains remain deferred: parts purchase/vendor cost tracking, advanced inventory, and parts compatibility recommendation engine.
 
+## Phase 3D Update (2026-05-06)
+- Manager/Admin Phase 3D is now implemented as a bounded Admin user-management polish and UX-hardening workflow.
+- `/manage/users` remains Admin-only and now has clearer list/create/edit/deactivate/reset-password states, validation messaging, and confirmation prompts for sensitive actions.
+- Backend user contracts, role enum values, authorization policies, migrations, and deferred domains were not changed for this slice.
+
 ## Recommended Next Task
-- Run a narrow Phase 3D hardening pass from a verified remote baseline when GitHub fetch access is available; keep deferred domains out of scope.
+- Run a narrow stabilization/observability cleanup after Phase 3D merges; keep deferred domains out of scope.
