@@ -44,16 +44,29 @@ This repository is in a **foundation/stabilization phase** with core backend, em
 - `GET /health`
 - `GET /api/system/info`
 
-## Validation Quick Run
-From repository root:
+## Web Codex Setup Validation
+From repository root, run the setup validation script after making it executable:
+
+```bash
+chmod +x scripts/setup-codex.sh
+./scripts/setup-codex.sh
+```
+
+The script installs or makes available the .NET 8 SDK before backend validation, exports `DOTNET_ROOT`, prepends `DOTNET_ROOT` and `DOTNET_ROOT/tools` to `PATH`, restores/builds the backend solution, runs backend tests only when test projects exist, installs frontend dependencies, and then runs frontend build/test through `package.json` scripts.
+
+Remote Git operations are optional in web Codex and are not setup gates. The setup validation script does not require `git fetch`, `git pull`, `git push`, `gh auth login`, or `gh auth setup-git` to pass.
+
+## Manual Validation Quick Run
+From repository root after tools are available:
 
 ```bash
 dotnet restore backend/JobTicketSystem.sln
-dotnet build backend/JobTicketSystem.sln
-dotnet test backend/JobTicketSystem.sln
-cd frontend && npm install
-cd frontend && npm run build
-cd frontend && npm test
+dotnet build backend/JobTicketSystem.sln --no-restore
+dotnet test backend/JobTicketSystem.sln --no-build
+cd frontend
+npm install
+npm run build
+npm test
 ```
 
 - Phase 3B update: Manager/Admin master-data workflows now support create/edit/archive flows for customers, service locations, equipment, vendors, part categories, and parts in the UI and API.

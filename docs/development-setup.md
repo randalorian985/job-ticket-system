@@ -19,6 +19,20 @@ This guide explains how to prepare a local development environment for the Job T
 - Avoid implementing business entities/workflows until scope docs are approved.
 - When using this guide in automated environments, run commands from the repository root unless otherwise noted.
 
+
+## Web Codex setup validation
+
+From repository root:
+
+```bash
+chmod +x scripts/setup-codex.sh
+./scripts/setup-codex.sh
+```
+
+For web Codex, remote Git operations are optional and non-gating. The setup script intentionally skips required gates for `git fetch`, `git pull`, `git push`, `gh auth login`, and `gh auth setup-git`; validation must continue from the current workspace even when remote access is unavailable.
+
+The script exports `DOTNET_ROOT`, prepends `DOTNET_ROOT` and `DOTNET_ROOT/tools` to `PATH`, installs or makes available the .NET 8 SDK before backend validation, restores/builds the backend solution, runs backend tests only when test projects exist, installs frontend dependencies, and then runs frontend build/test through the scripts declared in `frontend/package.json`.
+
 ## Local setup steps
 
 1. Clone the repository.
