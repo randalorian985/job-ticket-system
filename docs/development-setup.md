@@ -33,6 +33,10 @@ For web Codex, remote Git operations are optional and non-gating. The setup scri
 
 The script exports `DOTNET_ROOT`, prepends `DOTNET_ROOT` and `DOTNET_ROOT/tools` to `PATH`, installs or makes available the .NET 8 SDK before backend validation, restores/builds the backend solution, runs backend tests only when test projects exist, installs frontend dependencies, and then runs frontend build/test through the scripts declared in `frontend/package.json`.
 
+## Local demo and UX preview
+
+For a guided local walkthrough, use the dedicated runbook: [Local Demo Runbook](./local-demo-runbook.md). It covers SQL Server startup, backend validation, public `/health` and `/api/system/info` checks, Vite production-build preview, and the public frontend `/preview` readiness route.
+
 ## Local setup steps
 
 1. Clone the repository.
