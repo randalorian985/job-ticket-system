@@ -184,13 +184,13 @@ describe('ReportsPage', () => {
   })
 
   it('applies supported filters, renders jobs ready to invoice rows, and exports escaped CSV', async () => {
-    vi.mocked(reportsApi.getJobsReadyToInvoice).mockResolvedValue([{ jobTicketId: 'j1', jobTicketNumber: 'JT-100', customer: 'Acme, "North"\nRegion', billingPartyCustomer: 'Acme Billing', jobStatus: 7, invoiceStatus: 1, approvedLaborHours: 2.5, approvedPartsCount: 3, estimatedBillableTotal: 120.5, completedAtUtc: '2026-04-01T12:00:00Z' }] as any)
+    vi.mocked(reportsApi.getJobsReadyToInvoice).mockResolvedValue([{ jobTicketId: 'j1', jobTicketNumber: 'JT-100', customer: 'Acme, "North"\nRegion', billingPartyCustomer: 'Acme Billing', jobStatus: 7, invoiceStatus: 2, approvedLaborHours: 2.5, approvedPartsCount: 3, estimatedBillableTotal: 120.5, completedAtUtc: '2026-04-01T12:00:00Z' }] as any)
     renderReports()
 
     fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-04-01' } })
     fireEvent.change(screen.getByLabelText('Billing customer id'), { target: { value: 'cust-bill-1' } })
     fireEvent.change(screen.getByLabelText('Service location id'), { target: { value: 'loc-1' } })
-    fireEvent.change(screen.getByLabelText('Invoice status'), { target: { value: '1' } })
+    fireEvent.change(screen.getByLabelText('Invoice status'), { target: { value: '2' } })
     fireEvent.click(screen.getByRole('button', { name: 'Run Jobs Ready to Invoice' }))
 
     expect(await screen.findByRole('link', { name: 'JT-100' })).toHaveAttribute('href', '/manage/job-tickets/j1')
@@ -200,7 +200,7 @@ describe('ReportsPage', () => {
       dateFromUtc: '2026-04-01T00:00:00Z',
       billingPartyCustomerId: 'cust-bill-1',
       serviceLocationId: 'loc-1',
-      invoiceStatus: 1
+      invoiceStatus: 2
     }))
 
     const csvHref = screen.getByRole('link', { name: 'Export CSV' }).getAttribute('href') ?? ''

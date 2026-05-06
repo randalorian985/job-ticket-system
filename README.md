@@ -75,4 +75,6 @@ npm test
 
 - Phase 3D update: Admin user management now has a safer list/create/edit/deactivate/reset-password workflow with loading, empty, success, error, validation, and confirmation states. Manager/Admin route boundaries remain unchanged, with `/manage/users` Admin-only and employee workflow routing preserved.
 
+- Scope review update: [docs/scope-code-review.md](docs/scope-code-review.md) records the 2026-05-06 stabilization audit. Local validation passed, two small regressions were fixed, no migrations were added, no deferred domains were implemented, and remote `origin/main` freshness could not be verified because `git fetch origin` returned GitHub HTTP 403 in this environment.
+
 - Foundation update: a public `GET /api/system/info` metadata endpoint now exposes service name, base API path, health endpoint path, environment name, and assembly version for deployment checks and frontend diagnostics.

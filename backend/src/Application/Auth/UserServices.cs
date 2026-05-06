@@ -27,6 +27,7 @@ public sealed class UsersService(ApplicationDbContext dbContext, IAuthService au
 
     public async Task<UserDto> CreateAsync(CreateUserDto request, CancellationToken cancellationToken = default)
     {
+        ValidateUserFields(request.UserName, request.FirstName, request.LastName);
         ValidateRole(request.Role);
         ValidationHelpers.ValidateRequired(request.Password, nameof(request.Password));
 
@@ -61,6 +62,7 @@ public sealed class UsersService(ApplicationDbContext dbContext, IAuthService au
             return null;
         }
 
+        ValidateUserFields(request.UserName, request.FirstName, request.LastName);
         ValidateRole(request.Role);
 
         if (!string.Equals(employee.UserName, request.UserName, StringComparison.OrdinalIgnoreCase)
@@ -109,8 +111,16 @@ public sealed class UsersService(ApplicationDbContext dbContext, IAuthService au
         return MapUser.Compile().Invoke(employee);
     }
 
+    private static void ValidateUserFields(string userName, string firstName, string lastName)
+    {
+        ValidationHelpers.ValidateRequired(userName, nameof(userName));
+        ValidationHelpers.ValidateRequired(firstName, nameof(firstName));
+        ValidationHelpers.ValidateRequired(lastName, nameof(lastName));
+    }
+
     private static void ValidateRole(string role)
     {
+        ValidationHelpers.ValidateRequired(role, nameof(role));
         if (!SystemRoles.All.Contains(role))
         {
             throw new ValidationException("Role must be one of: Admin, Manager, Employee.");
