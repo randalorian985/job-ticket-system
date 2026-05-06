@@ -66,8 +66,9 @@ export function UxPreviewReadinessPage() {
         <h2>Demo operator notes</h2>
         <p className="muted">
           Use this screen as the first smoke-check after{' '}
-          <code>VITE_API_BASE_URL=http://localhost:5000 npm run build</code> and <code>npm run preview</code>.
-          Set <code>VITE_API_BASE_URL</code> before building because Vite embeds it in the preview bundle. Then
+          <code>VITE_API_BASE_URL=http://localhost:5000 npm run build</code> and{' '}
+          <code>npm run preview -- --host 0.0.0.0</code>. Set <code>VITE_API_BASE_URL</code> before building
+          because Vite embeds it in the preview bundle. Then
           follow <code>docs/local-demo-runbook.md</code> for backend, database, health, and route walkthrough
           checks.
         </p>

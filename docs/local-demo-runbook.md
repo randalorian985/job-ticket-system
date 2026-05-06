@@ -69,6 +69,8 @@ docker compose ps
 
 Wait until the `job-ticket-sqlserver` health check is healthy before relying on database-backed API routes.
 
+If the workstation does not have Docker available and the review is limited to the public UX preview smoke path, record that as an environment limitation and continue with backend validation, public `/health`, public `/api/system/info`, and the static `/preview` page. Do not exercise sign-in or database-backed walkthrough steps until SQL Server is available.
+
 ### 2. Restore and validate the backend
 
 ```bash
