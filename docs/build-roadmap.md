@@ -14,7 +14,7 @@ Interpretation as of **May 6, 2026**:
 - Manager/Admin Phases 1 and 2 are implemented.
 - Manager/Admin **Phase 3A archive-confirmation slice is implemented**.
 - Manager/Admin **Phase 3B master-data lifecycle coverage is implemented**.
-- Manager/Admin **Phase 3C reports polish/export is implemented in the local snapshot and frontend-validated** during the fresh 2026-05-06 stabilization pickup audit.
+- Manager/Admin **Phase 3C reports polish/export is implemented** with a polished Manager/Admin reports hub, supported filters, export-friendly tables, and client-side CSV export; this feature PR re-runs standard backend and frontend validation from the available local baseline.
 - The next work should remain stabilization/verification first, then bounded Manager/Admin Phase 3D without entering deferred domains.
 
 ## Completed Scope
@@ -72,12 +72,12 @@ Before broadening Manager/Admin work, complete one explicit stabilization action
 - Endpoint usage remained within existing contracts; no new API groups introduced.
 - No migrations were added.
 
-### Phase 3C (Implemented locally; frontend-validated, backend/provenance pending)
-- Reports polish/export workflow is present for manager/admin operations in the checked-out local snapshot.
-- Added/refined report filters, export-friendly table rendering, and client-side CSV export from loaded report data.
+### Phase 3C (Implemented)
+- Reports polish/export workflow is present for Manager/Admin operations.
+- Added a reports hub for invoice-ready summary, job cost summary, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history.
+- Added supported report filters, export-friendly table rendering, loading/empty/error states, existing-route drill-in links, and client-side CSV export from loaded report data.
 - Added explicit labor snapshot/fallback labeling in reports UI; role boundaries and routing model unchanged.
-- No new business domain introduction.
-- Because the 2026-05-06 audits could not fetch remote refs, run the validated setup script, or run backend validation, treat this as implemented and frontend-validated locally but not fully provenance/backend validated until a pass succeeds with the validated setup script, working GitHub access, and .NET SDK access.
+- No backend reporting rule changes, migrations, or new business domain introduction.
 
 ### Phase 3D
 - Final pass for manager/admin regression hardening, test additions around existing behavior, and documentation alignment.
@@ -106,8 +106,8 @@ Merge-readiness requires:
 Concise readiness statement:
 - The local snapshot is ready for a stabilization/verification checkpoint, not new feature expansion.
 - Phase 3A and 3B slices are complete.
-- Phase 3C appears implemented locally, but latest-main provenance and full backend validation are pending.
-- Proceed next with latest-main verification, then Phase 3D bounded hardening only after validation is green.
+- Phase 3C is implemented; latest remote fetch may still need environment/auth verification when GitHub access is available.
+- Proceed next with Phase 3D bounded hardening only after validation remains green on the target merge baseline.
 - Continue to enforce no-migration/no-deferred-domain constraints unless separately approved.
 
 ## Cross-Linking

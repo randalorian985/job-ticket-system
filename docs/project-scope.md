@@ -136,6 +136,7 @@ The following remain deferred and are not implemented as active business domains
 
 ## Manager/Admin UI Phase 3C (Implemented)
 - Scope bounded to manager/admin reporting polish and export ergonomics only.
-- Added expanded report filter coverage and clearer labor-rate snapshot labeling in reports UI.
-- Added export-friendly table formatting and client-side CSV export from loaded report data.
-- No deferred domain implementation and no auth or route model change in this slice.
+- Added a Manager/Admin reports hub covering invoice-ready summary, job cost summary, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history.
+- Added supported report filter coverage and clearer labor-rate snapshot labeling in reports UI.
+- Added export-friendly table formatting, empty/loading/error states, detail links where existing Manager/Admin routes support them, and client-side CSV export from loaded report data.
+- No backend reporting rule changes, deferred domain implementation, migration, or auth/route model change in this slice.

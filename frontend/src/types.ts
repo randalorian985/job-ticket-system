@@ -530,6 +530,54 @@ export type ReportServiceHistoryItemDto = {
   completedAtUtc?: string | null
 }
 
+
+export type InvoiceReadyLaborLineDto = {
+  timeEntryId: string
+  employeeId: string
+  employeeName: string
+  laborHours: number
+  billableHours: number
+  costRate?: number | null
+  billRate?: number | null
+}
+
+export type InvoiceReadyPartLineDto = {
+  jobTicketPartId: string
+  partId: string
+  partNumber: string
+  partName: string
+  quantity: number
+  unitCostSnapshot: number
+  unitPriceSnapshot: number
+}
+
+export type InvoiceReadySummaryDto = {
+  jobTicketId: string
+  jobTicketNumber: string
+  customer: string
+  billingPartyCustomer: string
+  serviceLocation: string
+  equipment?: string | null
+  jobStatus: number
+  invoiceStatus: number
+  customerFacingNotes?: string | null
+  workDescriptions: string[]
+  approvedLaborEntries: InvoiceReadyLaborLineDto[]
+  approvedParts: InvoiceReadyPartLineDto[]
+  laborHours: number
+  laborCostTotal?: number | null
+  laborBillableTotal?: number | null
+  partsCostTotal: number
+  partsBillableTotal: number
+  miscCharges: number
+  tax: number
+  grandTotal: number
+  purchaseOrderNumber?: string | null
+  billingContactName?: string | null
+  billingContactPhone?: string | null
+  billingContactEmail?: string | null
+}
+
 export type JobCostSummaryDto = {
   jobTicketId: string
   jobTicketNumber: string
