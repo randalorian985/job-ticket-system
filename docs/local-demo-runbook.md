@@ -33,7 +33,7 @@ Out of scope:
 | Frontend preview | `http://localhost:4173` | Vite preview server for the production build output. |
 | UX readiness page | `http://localhost:4173/preview` | Public static frontend readiness screen for demo operators. |
 
-If `dotnet run` chooses a different backend URL, use that emitted URL consistently and set `VITE_API_BASE_URL` before starting Vite.
+If `dotnet run` chooses a different backend URL, use that emitted URL consistently. Because Vite embeds `VITE_API_BASE_URL` during `npm run build`, set the value before building the frontend, then restart preview from that freshly built bundle.
 
 ## One-time workstation preparation
 
@@ -106,7 +106,7 @@ Expected result:
 cd frontend
 npm install
 VITE_API_BASE_URL=http://localhost:5000 npm run build
-VITE_API_BASE_URL=http://localhost:5000 npm run preview -- --host 0.0.0.0
+npm run preview -- --host 0.0.0.0
 ```
 
 Keep the preview process running.
@@ -157,10 +157,12 @@ docker compose down -v
 
 ### Frontend cannot reach the backend
 
-Confirm the frontend was started with the same backend base URL emitted by the API process:
+Confirm the frontend was built with the same backend base URL emitted by the API process. Rebuild before restarting preview because Vite environment variables are baked into the production bundle:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:5000 npm run preview -- --host 0.0.0.0
+cd frontend
+VITE_API_BASE_URL=http://localhost:5000 npm run build
+npm run preview -- --host 0.0.0.0
 ```
 
 ### Health endpoint fails
@@ -184,5 +186,5 @@ Rebuild before restarting preview:
 ```bash
 cd frontend
 VITE_API_BASE_URL=http://localhost:5000 npm run build
-VITE_API_BASE_URL=http://localhost:5000 npm run preview -- --host 0.0.0.0
+npm run preview -- --host 0.0.0.0
 ```
