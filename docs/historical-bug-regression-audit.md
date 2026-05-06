@@ -1,6 +1,6 @@
 # Historical Bug Regression Audit
 
-Date: 2026-05-05 (UTC)
+Date: 2026-05-06 (UTC)
 
 ## Scope and Method
 This pass re-audited the full known historical bug set (A–M) using:
@@ -14,8 +14,11 @@ Constraints followed:
 - No backend enum numeric changes.
 - No migrations added.
 
-Environment constraint:
-- Local branch `work` was available, but no local `main` or `origin` remote was configured in this execution environment.
+Environment constraints:
+- Local branch `work` was available and initially clean.
+- `origin` was repaired to the GitHub repository URL, but `git fetch origin` failed with HTTP 403, so `origin/main` could not be verified.
+- The .NET SDK was not installed in this container, so backend restore/build/test could not run during this pass.
+- Frontend validation ran with Node `v20.19.6` and npm `11.4.2`; npm emitted a non-blocking `Unknown env config "http-proxy"` warning.
 
 ## Status Matrix (A–M)
 
@@ -48,17 +51,18 @@ Environment constraint:
   `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, `docs/development-setup.md`, `docs/build-roadmap.md`, `docs/full-code-review-gap-analysis.md`, `docs/current-state-code-review.md`, `docs/code-review-stabilization.md`
 
 ## Tests Found / Run
-- Backend test suite: `88 passed`.
-- Frontend test suite: `28 passed`.
-- Build validations for backend/frontend completed successfully.
+- Backend restore/build/test: blocked in this pass because `dotnet` was not installed.
+- Frontend install/build/test: run in this pass; see the project pickup review and PR validation notes for exact command outcomes.
+- Historical bug statuses below were verified by current code inspection and available frontend tests; backend runtime validation must be rerun in an environment with .NET 8 installed.
 
 ## Action Taken
-- Documentation synchronization update for this audit/current-state review, including explicit Manager/Admin Phase 3B master-data lifecycle coverage confirmation in roadmap-aligned docs.
+- Documentation synchronization update for this audit and the project pickup review, including explicit Manager/Admin Phase 3C implemented-but-needing-validation status.
 - No code-path changes were required based on this regression pass.
 
 ## Follow-Up Needed
-1. Re-run this same audit in an environment where `origin/main` is available, to attach explicit merge-base/SHA provenance.
-2. Clean npm shell/env warning source for `http-proxy` so CI/dev output is quieter.
+1. Re-run this same audit in an environment where `origin/main` is fetchable, to attach explicit merge-base/SHA provenance.
+2. Re-run backend restore/build/test in an environment with .NET 8 installed.
+3. Clean npm shell/env warning source for `http-proxy` so CI/dev output is quieter.
 
 ## Migration Changes
 - None.
