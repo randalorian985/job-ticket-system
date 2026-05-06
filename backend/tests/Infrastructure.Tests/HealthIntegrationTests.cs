@@ -31,4 +31,25 @@ public sealed class HealthIntegrationTests
         Assert.True(json.RootElement.TryGetProperty("entries", out var entriesProperty));
         Assert.Equal(JsonValueKind.Object, entriesProperty.ValueKind);
     }
+
+    [Fact]
+    public async Task System_info_endpoint_returns_foundational_metadata_without_authentication()
+    {
+        await using var factory = new TestApiFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/system/info");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("application/json", response.Content.Headers.ContentType?.MediaType, StringComparison.OrdinalIgnoreCase);
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(body);
+
+        Assert.Equal("Job Ticket Management System API", json.RootElement.GetProperty("serviceName").GetString());
+        Assert.Equal("/api", json.RootElement.GetProperty("apiBasePath").GetString());
+        Assert.Equal("/health", json.RootElement.GetProperty("healthEndpoint").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(json.RootElement.GetProperty("environmentName").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(json.RootElement.GetProperty("version").GetString()));
+    }
 }

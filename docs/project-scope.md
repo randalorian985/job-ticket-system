@@ -17,9 +17,14 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Foundation/stabilization with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-2, and Manager/Admin Phase 3A archive-confirmation slice.
+Foundation/stabilization with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-2, Manager/Admin Phase 3A archive-confirmation slice, and a public system metadata endpoint for deployment diagnostics.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
+
+## Public Platform Metadata
+- `GET /api/system/info` exposes service name, `/api` base path, `/health` endpoint path, hosting environment name, and API assembly version.
+- This endpoint is unauthenticated by design so deployment checks and the frontend shell can verify API compatibility before user login.
+- It does not expose business records, user details, secrets, connection strings, or storage paths.
 
 ## Frontend Workflow Status
 - React Employee Mobile Workflow is implemented with login, auth state, assigned-job list/detail, clock in/out with GPS, work-note submission, part-used submission, and file/photo upload screens.
