@@ -20,10 +20,25 @@
     }
     ```
 
+## System Metadata
+- `GET /api/system/info`
+  - Public endpoint for lightweight deployment diagnostics and frontend compatibility checks.
+  - **Response 200**
+    ```json
+    {
+      "serviceName": "Job Ticket Management System API",
+      "apiBasePath": "/api",
+      "healthEndpoint": "/health",
+      "environmentName": "Development",
+      "version": "1.0.0.0"
+    }
+    ```
+
 ## API Group Status
 
 ### Implemented and Active
 - Health (`/health`)
+- System metadata (`/api/system/info`)
 - Authentication (`/api/auth/*`)
 - User management (`/api/users/*`)
 - Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)

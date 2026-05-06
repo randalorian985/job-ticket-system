@@ -1,3 +1,11 @@
+export type SystemInfoDto = {
+  serviceName: string
+  apiBasePath: string
+  healthEndpoint: string
+  environmentName: string
+  version: string
+}
+
 export type ApiValidationError = {
   error?: string
   errors?: Record<string, string[]>
