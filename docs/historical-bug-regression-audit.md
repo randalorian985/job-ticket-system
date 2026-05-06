@@ -15,8 +15,9 @@ Constraints followed:
 - No migrations added.
 
 Environment constraints:
-- Local branch `work` was available and initially clean.
-- `origin` was repaired to the GitHub repository URL, but `git fetch origin` failed with HTTP 403, so `origin/main` could not be verified.
+- Local branch `work` was available and initially clean for the first pass; the fresh pickup audit ran on `review/stabilization-pickup-audit` from local HEAD `5c1fa89ddf8aaad42fe863bdfb36fcb9eec709c9`.
+- `origin` points to the GitHub repository URL, but remote fetch attempts failed with HTTP 403, so `origin/main` and setup-validation commit `c70ebaf66c519328bf3409c7a8689388686e64b5` could not be verified.
+- `scripts/setup-codex.sh` is absent from the current local workspace, so the validated setup-script path could not be rerun during the fresh pickup audit.
 - The .NET SDK was not installed in this container, so backend restore/build/test could not run during this pass.
 - Frontend validation ran with Node `v20.19.6` and npm `11.4.2`; npm emitted a non-blocking `Unknown env config "http-proxy"` warning.
 
@@ -51,8 +52,9 @@ Environment constraints:
   `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, `docs/development-setup.md`, `docs/build-roadmap.md`, `docs/full-code-review-gap-analysis.md`, `docs/current-state-code-review.md`, `docs/code-review-stabilization.md`
 
 ## Tests Found / Run
+- Setup script: blocked because `scripts/setup-codex.sh` is missing from the current local workspace.
 - Backend restore/build/test: blocked in this pass because `dotnet` was not installed.
-- Frontend install/build/test: run in this pass; see the project pickup review and PR validation notes for exact command outcomes.
+- Frontend install/build/test: passed in the fresh pickup audit; see the project pickup review and PR validation notes for exact command outcomes.
 - Historical bug statuses below were verified by current code inspection and available frontend tests; backend runtime validation must be rerun in an environment with .NET 8 installed.
 
 ## Action Taken
@@ -60,9 +62,10 @@ Environment constraints:
 - No code-path changes were required based on this regression pass.
 
 ## Follow-Up Needed
-1. Re-run this same audit in an environment where `origin/main` is fetchable, to attach explicit merge-base/SHA provenance.
-2. Re-run backend restore/build/test in an environment with .NET 8 installed.
-3. Clean npm shell/env warning source for `http-proxy` so CI/dev output is quieter.
+1. Restore or start from a checkout containing the validated `scripts/setup-codex.sh`, then rerun that setup script.
+2. Re-run this same audit in an environment where `origin/main` and the setup-validation baseline commit are fetchable, to attach explicit merge-base/SHA provenance.
+3. Re-run backend restore/build/test in an environment with .NET 8 installed.
+4. Clean npm shell/env warning source for `http-proxy` so CI/dev output is quieter.
 
 ## Migration Changes
 - None.

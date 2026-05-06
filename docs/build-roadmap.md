@@ -14,8 +14,8 @@ Interpretation as of **May 6, 2026**:
 - Manager/Admin Phases 1 and 2 are implemented.
 - Manager/Admin **Phase 3A archive-confirmation slice is implemented**.
 - Manager/Admin **Phase 3B master-data lifecycle coverage is implemented**.
-- Manager/Admin **Phase 3C reports polish/export is present in the local snapshot** but needs latest-main provenance and full backend/frontend validation before being treated as fully validated.
-- The next work should be stabilization/verification first, then bounded Manager/Admin Phase 3D without entering deferred domains.
+- Manager/Admin **Phase 3C reports polish/export is implemented in the local snapshot and frontend-validated** during the fresh 2026-05-06 stabilization pickup audit.
+- The next work should remain stabilization/verification first, then bounded Manager/Admin Phase 3D without entering deferred domains.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -48,16 +48,17 @@ The following are intentionally deferred and must not be partially introduced in
 
 ## Active Stabilization Concerns
 From the reviewed baseline:
-1. **Remote provenance gap:** the 2026-05-06 pickup review could not fetch `origin/main` because GitHub returned HTTP 403.
-2. **Backend validation gap:** the review container did not have the .NET SDK, so backend restore/build/test could not run.
-3. **npm environment warning:** npm emits `Unknown env config "http-proxy"`; it is warning-level when frontend commands still pass.
+1. **Setup-script gap:** `scripts/setup-codex.sh` is absent from the current local workspace, so the validated setup path from `chore/verify-codex-setup-validation` could not be rerun here.
+2. **Remote provenance gap:** the 2026-05-06 pickup audits could not fetch remote refs because GitHub returned HTTP 403.
+3. **Backend validation gap:** the review container did not have the .NET SDK, so backend restore/build/test could not run.
+4. **npm environment warning:** npm emits `Unknown env config "http-proxy"`; it is warning-level when frontend commands still pass.
 
 ## Immediate Hygiene Item
 Before broadening Manager/Admin work, complete one explicit stabilization action:
-- Re-run the pickup audit from fetchable `origin/main` in an environment with .NET 8 installed, then run the full standard validation sequence.
+- Re-run the pickup audit from a workspace that contains the validated `scripts/setup-codex.sh`, fetchable remote provenance, and .NET 8 installed, then run the full standard validation sequence.
 
 ## Recommended Feature Order
-1. Latest-main stabilization/verification pass for the implemented Phase 3C local snapshot.
+1. Stabilization/verification pass that successfully runs the validated setup script and backend/frontend validation for the implemented Phase 3C local snapshot.
 2. Manager/Admin Phase 3D (bounded completion polish + regression hardening).
 3. Re-assess deferred-domain entry only through explicit scope approval.
 
@@ -71,12 +72,12 @@ Before broadening Manager/Admin work, complete one explicit stabilization action
 - Endpoint usage remained within existing contracts; no new API groups introduced.
 - No migrations were added.
 
-### Phase 3C (Implemented locally; needs latest-main validation)
+### Phase 3C (Implemented locally; frontend-validated, backend/provenance pending)
 - Reports polish/export workflow is present for manager/admin operations in the checked-out local snapshot.
 - Added/refined report filters, export-friendly table rendering, and client-side CSV export from loaded report data.
 - Added explicit labor snapshot/fallback labeling in reports UI; role boundaries and routing model unchanged.
 - No new business domain introduction.
-- Because the 2026-05-06 review could not fetch `origin/main` or run backend validation, treat this as implemented-but-not-fully-validated until the stabilization pass is rerun with working GitHub and .NET SDK access.
+- Because the 2026-05-06 audits could not fetch remote refs, run the validated setup script, or run backend validation, treat this as implemented and frontend-validated locally but not fully provenance/backend validated until a pass succeeds with the validated setup script, working GitHub access, and .NET SDK access.
 
 ### Phase 3D
 - Final pass for manager/admin regression hardening, test additions around existing behavior, and documentation alignment.
