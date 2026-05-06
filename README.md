@@ -12,6 +12,7 @@ This repository is in a **post-Phase 3C/3D stabilization phase** with core backe
 - **API contract:** [docs/api-contract.md](docs/api-contract.md)
 - **Database design:** [docs/database-design.md](docs/database-design.md)
 - **Development setup and validation commands:** [docs/development-setup.md](docs/development-setup.md)
+- **Local demo runbook and UX preview readiness:** [docs/local-demo-runbook.md](docs/local-demo-runbook.md)
 
 ## Tech Stack
 - **Backend:** .NET 8 ASP.NET Core Web API
@@ -81,3 +82,5 @@ npm test
 - Scope review update: [docs/scope-code-review.md](docs/scope-code-review.md) records the 2026-05-06 stabilization audit. Local validation passed, two small regressions were fixed, no migrations were added, and no deferred domains were implemented.
 
 - Foundation update: a public `GET /api/system/info` metadata endpoint now exposes service name, base API path, health endpoint path, environment name, and assembly version for deployment checks and frontend diagnostics.
+
+- UX preview readiness update: [docs/local-demo-runbook.md](docs/local-demo-runbook.md) now documents local demo startup/shutdown, health checks, Vite build preview, and the public `/preview` frontend readiness screen.

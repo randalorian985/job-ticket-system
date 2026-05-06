@@ -62,6 +62,19 @@ describe('AppRouter authentication rendering', () => {
     vi.mocked(usersApi.list).mockResolvedValue([])
   })
 
+  it('renders the public UX preview readiness route without authentication', async () => {
+    vi.mocked(useAuth).mockReturnValue({ user: null, isLoading: false, login: vi.fn(), logout: vi.fn() })
+
+    render(
+      <MemoryRouter future={routerFuture} initialEntries={['/preview']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Job Ticket System local demo' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Employee login' })).toHaveAttribute('href', '/login')
+  })
+
   it('redirects unauthenticated users from protected routes to login', async () => {
     vi.mocked(useAuth).mockReturnValue({ user: null, isLoading: false, login: vi.fn(), logout: vi.fn() })
 

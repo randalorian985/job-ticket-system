@@ -20,6 +20,7 @@ import { JobTicketDetailPage } from '../pages/manager/JobTicketDetailPage'
 import { JobTicketListPage } from '../pages/manager/JobTicketListPage'
 import { ManagerDashboardPage } from '../pages/manager/ManagerDashboardPage'
 import { ManagerShell } from '../pages/manager/ManagerShell'
+import { UxPreviewReadinessPage } from '../pages/preview/UxPreviewReadinessPage'
 
 function HomeRoute() {
   const { user } = useAuth()
@@ -39,6 +40,7 @@ export function AppRouter() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <Route path="/preview" element={<UxPreviewReadinessPage />} />
 
       <Route element={<ProtectedRoute allowedRoles={['Employee']} />}>
         <Route path="/jobs" element={<MyJobsPage />} />

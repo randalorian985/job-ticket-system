@@ -227,3 +227,54 @@ th {
   font-size: 0.85rem;
   color: #475569;
 }
+
+.ux-preview-shell {
+  padding-top: 2rem;
+}
+
+.hero-card {
+  border: 1px solid #ccfbf1;
+  background: linear-gradient(135deg, #ffffff 0%, #ecfeff 100%);
+}
+
+.eyebrow {
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+
+.preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.preview-actions .button-link {
+  width: auto;
+}
+
+.secondary-link {
+  background: #334155;
+}
+
+.preview-card {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.preview-card h2 {
+  margin: 0;
+}
+
+.preview-card ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.preview-card li + li {
+  margin-top: 0.35rem;
+}
