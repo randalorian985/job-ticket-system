@@ -2,7 +2,7 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This repository is in a **foundation/stabilization phase** with core backend, employee workflow, and Manager/Admin phases 1-3A implemented.
+This repository is in a **foundation/stabilization phase** with core backend, employee workflow, and Manager/Admin phases 1-3C represented in the current local snapshot. Phase 3C should be treated as implemented-but-needing latest-main provenance and full validation when remote access and the .NET SDK are available.
 
 ## Project Navigation
 - **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)

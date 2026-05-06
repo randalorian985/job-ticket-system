@@ -19,6 +19,11 @@ dist/
 build/
 coverage/
 
+# TypeScript incremental build info
+frontend/*.tsbuildinfo
+frontend/tsconfig.*.tsbuildinfo
+
+
 # Env
 .env
 .env.*
