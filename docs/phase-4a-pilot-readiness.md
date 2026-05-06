@@ -76,6 +76,10 @@ dotnet build backend/JobTicketSystem.sln
 dotnet test backend/JobTicketSystem.sln --no-build
 ```
 
+## Latest safety and smoke review
+
+- 2026-05-06: See [Phase 4A Pilot Seed Safety and UX Smoke Review](phase-4a-pilot-seed-safety-and-ux-smoke.md) for the pilot seed guardrail review, backend/frontend validation results, local preview smoke checks, and the Docker limitation that prevented a seeded SQL Server browser walkthrough in this container.
+
 ## Operational guardrails
 
 - Keep `PilotDemoSeed:Enabled=false` in committed default settings.
