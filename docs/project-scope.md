@@ -17,7 +17,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Foundation/stabilization with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-3D, and a public system metadata endpoint for deployment diagnostics.
+Foundation/stabilization with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-3D, a public system metadata endpoint for deployment diagnostics, and Phase 4A local pilot readiness.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
 
@@ -123,6 +123,13 @@ This phase adds foundational security controls without replacing existing workfl
 - Archive outcomes now provide focused user-facing success and failure messaging tied to the confirmation result.
 - Existing `/manage` role boundaries, route structure, and API usage patterns remain unchanged in this slice.
 
+
+## Phase 4A Local Pilot Readiness
+- Local-only pilot seed data is available through explicit `PilotDemoSeed` configuration.
+- Seeded records support representative employee, manager, admin, master-data, job-ticket, labor, parts, and reporting walkthroughs.
+- The pilot seed path is disabled by default, idempotent, and intended for disposable local/demo databases only.
+- End-to-end validation covers employee assigned-job visibility, clock in/out, work notes, part usage, manager approvals, and reporting visibility.
+- Phase 4A does not add production seed data, purchasing workflows, inventory intelligence, compatibility recommendations, or invoice/payment processing.
 
 ## Deferred Scope Confirmation (Current)
 The following remain deferred and are not implemented as active business domains in this phase:

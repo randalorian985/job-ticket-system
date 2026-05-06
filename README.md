@@ -2,7 +2,7 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This repository is in a **post-Phase 3C/3D stabilization phase** with core backend, employee workflow, and Manager/Admin phases 1-3D validated on the current post-merge baseline. Phase 3C/3D work is complete; the next work should stay focused on stabilization, observability, documentation hygiene, or explicitly approved new scope without entering deferred domains.
+This repository is in a **Phase 4A pilot-readiness phase** with core backend, employee workflow, and Manager/Admin phases 1-3D validated on the current post-merge baseline. Phase 4A adds opt-in local pilot seed data, a local pilot runbook, and automated end-to-end workflow validation while keeping deferred production domains out of scope.
 
 ## Project Navigation
 - **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)
@@ -13,6 +13,7 @@ This repository is in a **post-Phase 3C/3D stabilization phase** with core backe
 - **Database design:** [docs/database-design.md](docs/database-design.md)
 - **Development setup and validation commands:** [docs/development-setup.md](docs/development-setup.md)
 - **Local demo runbook and UX preview readiness:** [docs/local-demo-runbook.md](docs/local-demo-runbook.md)
+- **Phase 4A pilot readiness:** [docs/phase-4a-pilot-readiness.md](docs/phase-4a-pilot-readiness.md)
 
 ## Tech Stack
 - **Backend:** .NET 8 ASP.NET Core Web API
@@ -84,3 +85,5 @@ npm test
 - Foundation update: a public `GET /api/system/info` metadata endpoint now exposes service name, base API path, health endpoint path, environment name, and assembly version for deployment checks and frontend diagnostics.
 
 - UX preview readiness update: [docs/local-demo-runbook.md](docs/local-demo-runbook.md) now documents local demo startup/shutdown, health checks, Vite build preview, and the public `/preview` frontend readiness screen.
+
+- Phase 4A update: Local pilot readiness now includes opt-in demo seed data, deterministic local credentials, a guided runbook, and automated end-to-end validation for employee clock-in/out, work notes, part usage, manager approvals, and reports visibility.
