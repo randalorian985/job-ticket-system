@@ -23,7 +23,7 @@ const previewSections = [
     items: [
       'Backend health must respond at /health.',
       'System metadata must respond at /api/system/info.',
-      'Frontend preview should be served from a built Vite bundle.'
+      'Frontend preview should be served from a freshly built Vite bundle.'
     ]
   }
 ]
@@ -65,8 +65,11 @@ export function UxPreviewReadinessPage() {
       <section className="card">
         <h2>Demo operator notes</h2>
         <p className="muted">
-          Use this screen as the first smoke-check after <code>npm run build</code> and <code>npm run preview</code>.
-          Then follow <code>docs/local-demo-runbook.md</code> for backend, database, health, and route walkthrough checks.
+          Use this screen as the first smoke-check after{' '}
+          <code>VITE_API_BASE_URL=http://localhost:5000 npm run build</code> and <code>npm run preview</code>.
+          Set <code>VITE_API_BASE_URL</code> before building because Vite embeds it in the preview bundle. Then
+          follow <code>docs/local-demo-runbook.md</code> for backend, database, health, and route walkthrough
+          checks.
         </p>
       </section>
     </main>
