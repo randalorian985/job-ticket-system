@@ -51,16 +51,15 @@ The following are intentionally deferred and must not be partially introduced in
 
 ## Active Stabilization Concerns
 From the reviewed baseline:
-1. **Remote provenance gap:** the 2026-05-06 scope-code-review audit could not fetch remote refs because GitHub returned HTTP 403. Local `origin/main` matched HEAD, but latest remote freshness was not verified.
+1. **Remote provenance transport warning:** direct `git fetch`/`git ls-remote` still return GitHub HTTP 403 from this workspace, but the 2026-05-06 remote-provenance validation confirmed GitHub REST `main` metadata matches local `HEAD` at `fc140b512320575233b53ba8382f4485a47a9689`.
 2. **npm environment warning:** npm emits `Unknown env config "http-proxy"`; it is warning-level because frontend install/build/test still pass.
-3. **Remote rerun needed:** re-run the same audit from an environment with fetchable GitHub credentials before claiming latest-main provenance.
+3. **React Router future-flag warnings:** frontend tests pass, while React Router v7 future-flag warnings remain visible and non-blocking.
 
 ## Immediate Hygiene Item
-Before broadening Manager/Admin work, complete one explicit stabilization action:
-- Re-run the pickup audit from a workspace with fetchable remote provenance, then run the full standard validation sequence.
+Before broadening Manager/Admin work, keep stabilization changes narrow and preserve the validated Phase 3C/3D snapshot. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md).
 
 ## Recommended Feature Order
-1. Stabilization/verification pass from a successfully fetched latest `origin/main`, confirming Phase 3C/3D local snapshot behavior and the small regression fixes remain present.
+1. Keep the Phase 3C/3D snapshot merge-ready on the validated baseline, with remote freshness confirmed by GitHub REST metadata when git smart-HTTP remains blocked.
 2. Re-assess deferred-domain entry only through explicit scope approval after standard validation remains green on the target merge baseline.
 
 ## Planned Sequence: Manager/Admin Phase 3A → 3D
