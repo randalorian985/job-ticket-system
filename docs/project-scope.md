@@ -17,7 +17,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Foundation/stabilization with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-2, Manager/Admin Phase 3A archive-confirmation slice, and a public system metadata endpoint for deployment diagnostics.
+Foundation/stabilization with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-3D, and a public system metadata endpoint for deployment diagnostics.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
 
@@ -140,3 +140,10 @@ The following remain deferred and are not implemented as active business domains
 - Added supported report filter coverage and clearer labor-rate snapshot labeling in reports UI.
 - Added export-friendly table formatting, empty/loading/error states, detail links where existing Manager/Admin routes support them, and client-side CSV export from loaded report data.
 - No backend reporting rule changes, deferred domain implementation, migration, or auth/route model change in this slice.
+
+## Manager/Admin UI Phase 3D (Implemented)
+- Scope bounded to Admin user-management polish, Manager/Admin UX hardening, route-boundary clarity, tests, and documentation sync.
+- Admin-only `/manage/users` now presents a clearer user list with role and active/inactive status display, create/edit forms, loading/empty/success/error states, and field validation.
+- Deactivate, reset-password, and role-change actions require explicit confirmation before invoking existing `/api/users` endpoints.
+- Manager users remain blocked from `/manage/users`; Employee users remain blocked from `/manage`; Manager/Admin users remain blocked from employee-only `/jobs` routes.
+- No backend contract changes, migrations, enum changes, authorization weakening, password hash exposure, or deferred-domain implementation were added.

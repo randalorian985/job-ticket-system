@@ -6,7 +6,7 @@ This roadmap is the project control center for delivery sequencing and merge-rea
 Baseline reviewed state: [Project Pickup Review and Roadmap Checkpoint (2026-05-06)](./project-pickup-review.md).
 
 ## Current Phase
-**Stabilization checkpoint before Manager/Admin Phase 3D.**
+**Manager/Admin Phase 3D implemented; stabilization/merge validation checkpoint.**
 
 Interpretation as of **May 6, 2026**:
 - Core backend/API workflows are implemented and validated.
@@ -14,8 +14,9 @@ Interpretation as of **May 6, 2026**:
 - Manager/Admin Phases 1 and 2 are implemented.
 - Manager/Admin **Phase 3A archive-confirmation slice is implemented**.
 - Manager/Admin **Phase 3B master-data lifecycle coverage is implemented**.
-- Manager/Admin **Phase 3C reports polish/export is implemented** with a polished Manager/Admin reports hub, supported filters, export-friendly tables, and client-side CSV export; this feature PR re-runs standard backend and frontend validation from the available local baseline.
-- The next work should remain stabilization/verification first, then bounded Manager/Admin Phase 3D without entering deferred domains.
+- Manager/Admin **Phase 3C reports polish/export is implemented** with a polished Manager/Admin reports hub, supported filters, export-friendly tables, and client-side CSV export.
+- Manager/Admin **Phase 3D user-management polish and UX hardening is implemented** with safer Admin create/edit/deactivate/reset-password flows, clearer states, role-change confirmation, and regression tests.
+- The next work should remain stabilization/verification first before any deferred-domain proposal.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -37,7 +38,8 @@ Interpretation as of **May 6, 2026**:
 - Manager/Admin shell and operational routes (`/manage` + section routes), including admin-only users route.
 - Manager/Admin Phase 3A archive confirmation UX slice.
 - Manager/Admin Phase 3B master-data lifecycle screens.
-- Manager/Admin Phase 3C reports filters, tables, labor snapshot labeling, and client-side CSV export in the local snapshot.
+- Manager/Admin Phase 3C reports filters, tables, labor snapshot labeling, and client-side CSV export.
+- Manager/Admin Phase 3D Admin user-management polish, role-aware UX hardening, and regression coverage.
 
 ## Deferred Scope (Must Stay Deferred)
 The following are intentionally deferred and must not be partially introduced in unrelated PRs:
@@ -59,8 +61,7 @@ Before broadening Manager/Admin work, complete one explicit stabilization action
 
 ## Recommended Feature Order
 1. Stabilization/verification pass that successfully runs the validated setup script and backend/frontend validation for the implemented Phase 3C local snapshot.
-2. Manager/Admin Phase 3D (bounded completion polish + regression hardening).
-3. Re-assess deferred-domain entry only through explicit scope approval.
+2. Re-assess deferred-domain entry only through explicit scope approval after Phase 3D has merged and standard validation remains green.
 
 ## Planned Sequence: Manager/Admin Phase 3A → 3D
 ### Phase 3A (Completed)
@@ -79,9 +80,12 @@ Before broadening Manager/Admin work, complete one explicit stabilization action
 - Added explicit labor snapshot/fallback labeling in reports UI; role boundaries and routing model unchanged.
 - No backend reporting rule changes, migrations, or new business domain introduction.
 
-### Phase 3D
-- Final pass for manager/admin regression hardening, test additions around existing behavior, and documentation alignment.
-- Confirm stable handoff package before any deferred-domain proposal.
+### Phase 3D (Implemented)
+- Polished the Admin-only user-management page with table layout, create/edit flows, active/inactive role display, loading/empty/success/error states, and validation messaging.
+- Added confirmation gates for deactivation, password reset, and role changes that affect access immediately.
+- Kept `/manage/users` Admin-only and preserved Manager/Admin vs Employee route boundaries.
+- Added focused frontend regression coverage for Admin user-management and route authorization behavior.
+- No backend contract changes, migrations, or deferred-domain behavior were added.
 
 ## Validation Requirements Before Merge
 Run these standard checks from repo root:
@@ -107,7 +111,7 @@ Concise readiness statement:
 - The local snapshot is ready for a stabilization/verification checkpoint, not new feature expansion.
 - Phase 3A and 3B slices are complete.
 - Phase 3C is implemented; latest remote fetch may still need environment/auth verification when GitHub access is available.
-- Proceed next with Phase 3D bounded hardening only after validation remains green on the target merge baseline.
+- Proceed next with a narrow stabilization/observability cleanup only after Phase 3D validation remains green on the target merge baseline.
 - Continue to enforce no-migration/no-deferred-domain constraints unless separately approved.
 
 ## Cross-Linking

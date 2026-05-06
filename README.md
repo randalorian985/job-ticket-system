@@ -2,7 +2,7 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This repository is in a **foundation/stabilization phase** with core backend, employee workflow, and Manager/Admin phases 1-3C represented in the current local snapshot. A fresh 2026-05-06 pickup audit found Phase 3C implemented and frontend-validated locally, but backend validation, latest remote provenance, and the validated `scripts/setup-codex.sh` rerun remain blocked in this workspace.
+This repository is in a **foundation/stabilization phase** with core backend, employee workflow, and Manager/Admin phases 1-3D represented in the current local snapshot. Phase 3D adds Admin user-management polish, role-aware Manager/Admin UX hardening, and regression coverage without entering deferred domains.
 
 ## Project Navigation
 - **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)
@@ -72,5 +72,7 @@ npm test
 - Phase 3B update: Manager/Admin master-data workflows now support create/edit/archive flows for customers, service locations, equipment, vendors, part categories, and parts in the UI and API.
 
 - Phase 3C update: Manager/Admin reports workflow now provides a reports hub for invoice-ready summary, job cost summary, jobs ready to invoice, labor by job/employee, parts by job, customer service history, and equipment service history. The UI uses existing reporting endpoints, supported shared filters, export-friendly tables, concise labor snapshot/fallback labeling, Manager/Admin route protection, and client-side CSV export from loaded report data.
+
+- Phase 3D update: Admin user management now has a safer list/create/edit/deactivate/reset-password workflow with loading, empty, success, error, validation, and confirmation states. Manager/Admin route boundaries remain unchanged, with `/manage/users` Admin-only and employee workflow routing preserved.
 
 - Foundation update: a public `GET /api/system/info` metadata endpoint now exposes service name, base API path, health endpoint path, environment name, and assembly version for deployment checks and frontend diagnostics.
