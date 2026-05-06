@@ -208,6 +208,10 @@ docker compose down -v
 
 ## Troubleshooting
 
+### Docker CLI exists but containers cannot start
+
+The Phase 4A seeded walkthrough requires a working Docker daemon that can pull images, create container layers, and start containers with the published SQL Server port. The `docker --version` and `docker compose version` checks confirm the client tools, but they are not enough by themselves. If `docker compose up -d` fails with daemon, mount, layer extraction, or permission errors, record the environment limitation and rerun the seeded SQL Server walkthrough on a workstation or CI runner with full Docker Engine privileges. Do not substitute an in-memory database for the Docker-backed local pilot walkthrough.
+
 ### Frontend cannot reach the backend
 
 Confirm the frontend was built with the same backend base URL emitted by the API process. Rebuild before restarting preview because Vite environment variables are baked into the production bundle:
