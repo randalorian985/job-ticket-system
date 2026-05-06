@@ -59,7 +59,14 @@ public sealed class UsersController(IUsersService usersService) : ControllerBase
     [HttpPost("{id:guid}/reset-password")]
     public async Task<ActionResult<UserDto>> ResetPasswordAsync(Guid id, [FromBody] ResetPasswordDto request, CancellationToken cancellationToken = default)
     {
-        var user = await usersService.ResetPasswordAsync(id, request.NewPassword, cancellationToken);
-        return user is null ? NotFound() : Ok(user);
+        try
+        {
+            var user = await usersService.ResetPasswordAsync(id, request.NewPassword, cancellationToken);
+            return user is null ? NotFound() : Ok(user);
+        }
+        catch (Exception ex) when (ex is ValidationException)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 }

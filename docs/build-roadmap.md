@@ -3,7 +3,7 @@
 ## Source of Truth and Baseline
 This roadmap is the project control center for delivery sequencing and merge-readiness.
 
-Baseline reviewed state: [Project Pickup Review and Roadmap Checkpoint (2026-05-06)](./project-pickup-review.md).
+Baseline reviewed state: [Scope Code Review and Stabilization Audit (2026-05-06)](./scope-code-review.md).
 
 ## Current Phase
 **Manager/Admin Phase 3D implemented; stabilization/merge validation checkpoint.**
@@ -16,6 +16,7 @@ Interpretation as of **May 6, 2026**:
 - Manager/Admin **Phase 3B master-data lifecycle coverage is implemented**.
 - Manager/Admin **Phase 3C reports polish/export is implemented** with a polished Manager/Admin reports hub, supported filters, export-friendly tables, and client-side CSV export.
 - Manager/Admin **Phase 3D user-management polish and UX hardening is implemented** with safer Admin create/edit/deactivate/reset-password flows, clearer states, role-change confirmation, and regression tests.
+- The 2026-05-06 scope-code-review checkpoint fixed two small regressions: frontend report invoice-status labels/filters now match backend enum values, and Admin user invalid payloads now return controlled `400 Bad Request` responses.
 - The next work should remain stabilization/verification first before any deferred-domain proposal.
 
 ## Completed Scope
@@ -50,18 +51,17 @@ The following are intentionally deferred and must not be partially introduced in
 
 ## Active Stabilization Concerns
 From the reviewed baseline:
-1. **Setup-script gap:** `scripts/setup-codex.sh` is absent from the current local workspace, so the validated setup path from `chore/verify-codex-setup-validation` could not be rerun here.
-2. **Remote provenance gap:** the 2026-05-06 pickup audits could not fetch remote refs because GitHub returned HTTP 403.
-3. **Backend validation gap:** the review container did not have the .NET SDK, so backend restore/build/test could not run.
-4. **npm environment warning:** npm emits `Unknown env config "http-proxy"`; it is warning-level when frontend commands still pass.
+1. **Remote provenance gap:** the 2026-05-06 scope-code-review audit could not fetch remote refs because GitHub returned HTTP 403. Local `origin/main` matched HEAD, but latest remote freshness was not verified.
+2. **npm environment warning:** npm emits `Unknown env config "http-proxy"`; it is warning-level because frontend install/build/test still pass.
+3. **Remote rerun needed:** re-run the same audit from an environment with fetchable GitHub credentials before claiming latest-main provenance.
 
 ## Immediate Hygiene Item
 Before broadening Manager/Admin work, complete one explicit stabilization action:
-- Re-run the pickup audit from a workspace that contains the validated `scripts/setup-codex.sh`, fetchable remote provenance, and .NET 8 installed, then run the full standard validation sequence.
+- Re-run the pickup audit from a workspace with fetchable remote provenance, then run the full standard validation sequence.
 
 ## Recommended Feature Order
-1. Stabilization/verification pass that successfully runs the validated setup script and backend/frontend validation for the implemented Phase 3C local snapshot.
-2. Re-assess deferred-domain entry only through explicit scope approval after Phase 3D has merged and standard validation remains green.
+1. Stabilization/verification pass from a successfully fetched latest `origin/main`, confirming Phase 3C/3D local snapshot behavior and the small regression fixes remain present.
+2. Re-assess deferred-domain entry only through explicit scope approval after standard validation remains green on the target merge baseline.
 
 ## Planned Sequence: Manager/Admin Phase 3A → 3D
 ### Phase 3A (Completed)
@@ -115,7 +115,8 @@ Concise readiness statement:
 - Continue to enforce no-migration/no-deferred-domain constraints unless separately approved.
 
 ## Cross-Linking
-- Baseline review: [docs/project-pickup-review.md](./project-pickup-review.md)
+- Latest scope review: [docs/scope-code-review.md](./scope-code-review.md)
+- Prior baseline review: [docs/project-pickup-review.md](./project-pickup-review.md)
 - Scope contract: [docs/project-scope.md](./project-scope.md)
 - API contract: [docs/api-contract.md](./api-contract.md)
 - Setup/validation commands: [docs/development-setup.md](./development-setup.md)

@@ -267,6 +267,27 @@ public sealed class AuthIntegrationTests
         Assert.Equal(HttpStatusCode.OK, reject.StatusCode);
     }
 
+
+    [Fact]
+    public async Task Admin_user_invalid_payloads_return_controlled_bad_request_responses()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedUsersAsync(db, auth));
+
+        var client = factory.CreateClient();
+        await client.SetBearerTokenAsync("admin", "AdminPass!123");
+
+        var createResponse = await client.PostAsJsonAsync("/api/users", new CreateUserDto("", "new@example.com", "New", "User", SystemRoles.Employee, "TempPass!123"));
+        Assert.Equal(HttpStatusCode.BadRequest, createResponse.StatusCode);
+
+        var employeeId = await factory.GetEmployeeIdAsync();
+        var updateResponse = await client.PutAsJsonAsync($"/api/users/{employeeId}", new UpdateUserDto("employee", "employee@example.com", "Employee", "User", "Owner"));
+        Assert.Equal(HttpStatusCode.BadRequest, updateResponse.StatusCode);
+
+        var resetResponse = await client.PostAsJsonAsync($"/api/users/{employeeId}/reset-password", new ResetPasswordDto(""));
+        Assert.Equal(HttpStatusCode.BadRequest, resetResponse.StatusCode);
+    }
+
     [Fact]
     public async Task Employee_can_use_parts_lookup_without_manager_cost_fields()
     {
