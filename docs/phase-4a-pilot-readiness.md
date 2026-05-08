@@ -84,6 +84,7 @@ dotnet test backend/JobTicketSystem.sln --no-build
 
 - Keep `PilotDemoSeed:Enabled=false` in committed default settings.
 - Prefer environment variables for local seed activation.
-- Use a disposable local SQL Server database or Docker volume for walkthroughs.
+- Use a disposable local SQL Server database or Docker volume for walkthroughs. Confirm `docker info` succeeds before Docker-backed SQL Server walkthroughs; nested/Codex containers may have Docker client tools but still lack daemon privileges.
+- Run Docker-backed Phase 4A walkthroughs on Docker Desktop, a workstation Docker Engine, or a CI/self-hosted runner with full Docker privileges when the current environment cannot start containers.
 - Remove/reset the local volume after demos that should start from a clean seed state.
 - Do not extend Phase 4A seed data into deferred purchasing, inventory intelligence, or recommendation workflows.
