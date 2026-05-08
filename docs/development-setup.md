@@ -31,7 +31,9 @@ chmod +x scripts/setup-codex.sh
 
 For web Codex, remote Git operations are optional and non-gating. The setup script intentionally skips required gates for `git fetch`, `git pull`, `git push`, `gh auth login`, and `gh auth setup-git`; validation must continue from the current workspace even when remote access is unavailable.
 
-The script exports `DOTNET_ROOT`, prepends `DOTNET_ROOT` and `DOTNET_ROOT/tools` to `PATH`, installs or makes available the .NET 8 SDK before backend validation, restores/builds the backend solution, runs backend tests only when test projects exist, installs frontend dependencies, and then runs frontend build/test through the scripts declared in `frontend/package.json`.
+The script installs or validates required Linux tools, .NET 8 SDK, GitHub CLI (`gh`), Docker client, and Docker Compose where package installation is available. It confirms Node.js/npm availability, verifies the repository root structure, repairs the `origin` remote, attempts non-gating `origin` fetch / `origin/main` checks, restores the backend solution, installs frontend dependencies, and repeats the origin check at the end. When `GITHUB_TOKEN` or `GH_TOKEN` is present, it attempts GitHub CLI authentication without printing token values; unauthenticated `gh` remains a warning, not a setup failure.
+
+Docker client installation is separate from Docker Engine daemon availability. The setup script runs `docker --version`, `docker compose version`, and `docker info`; failure of `docker info` in a nested/Codex container means the client tools may be installed but container runtime privileges are unavailable. This is an environment limitation, not a product validation failure. The Docker-backed Phase 4A SQL Server walkthrough must be run where `docker info` succeeds and containers can start, such as Docker Desktop, a workstation Docker Engine, or a CI/self-hosted runner with full Docker privileges.
 
 ## Local demo and UX preview
 
@@ -48,11 +50,16 @@ For a guided local walkthrough, use the dedicated runbook: [Local Demo Runbook](
 
 ## SQL Server Docker setup
 
-From the repository root:
+From the repository root, first confirm daemon access and then start SQL Server:
 
 ```bash
+docker --version
+docker compose version
+docker info
 docker compose up -d
 ```
+
+`docker info` must succeed before relying on the Docker-backed SQL Server walkthrough. If it fails in a nested/Codex container, rerun this portion on Docker Desktop, a workstation Docker Engine, or a CI/self-hosted runner with full Docker privileges.
 
 Connection details for local development:
 

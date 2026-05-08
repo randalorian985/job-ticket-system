@@ -55,9 +55,11 @@ chmod +x scripts/setup-codex.sh
 ./scripts/setup-codex.sh
 ```
 
-The script installs or makes available the .NET 8 SDK before backend validation, exports `DOTNET_ROOT`, prepends `DOTNET_ROOT` and `DOTNET_ROOT/tools` to `PATH`, restores/builds the backend solution, runs backend tests only when test projects exist, installs frontend dependencies, and then runs frontend build/test through `package.json` scripts.
+The script installs or validates required Linux tools, .NET 8 SDK, GitHub CLI (`gh`), Docker client, and Docker Compose where the environment permits package installation. It confirms Node.js/npm availability, verifies the repository root structure, repairs the `origin` remote, attempts non-gating `origin` fetch / `origin/main` checks, restores the backend solution, installs frontend dependencies, and repeats the origin check at the end. If `GITHUB_TOKEN` or `GH_TOKEN` is present, the script attempts `gh auth login --with-token` without printing token values; unauthenticated `gh` remains a warning, not a setup failure.
 
-Remote Git operations are optional in web Codex and are not setup gates. The setup validation script does not require `git fetch`, `git pull`, `git push`, `gh auth login`, or `gh auth setup-git` to pass.
+Docker client and Compose checks do not prove that Docker Engine/container runtime privileges are available. The script runs `docker info` separately and warns when nested or restricted Codex containers can install Docker clients but cannot reach a daemon. The Docker-backed Phase 4A SQL Server walkthrough requires `docker info` to succeed and containers to run; use Docker Desktop, a workstation Docker Engine, or a CI/self-hosted runner with full Docker privileges for that walkthrough.
+
+Remote Git operations are optional in web Codex and are not setup gates. The setup validation script repairs `origin` and attempts fetch checks, but it must continue when `git fetch`, `git pull`, `git push`, `gh auth login`, or `gh auth setup-git` cannot complete in a restricted environment.
 
 ## Manual Validation Quick Run
 From repository root after tools are available:

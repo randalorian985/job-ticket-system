@@ -48,8 +48,12 @@ If `dotnet run` chooses a different backend URL, use that emitted URL consistent
    dotnet --info
    node --version
    npm --version
+   docker --version
    docker compose version
+   docker info
    ```
+
+   `docker info` must succeed before the Docker-backed SQL Server walkthrough. Docker client tools alone are insufficient in nested/Codex containers that lack daemon or container runtime privileges.
 
 ## Demo startup sequence
 
@@ -69,7 +73,7 @@ docker compose ps
 
 Wait until the `job-ticket-sqlserver` health check is healthy before relying on database-backed API routes.
 
-If the workstation does not have Docker available and the review is limited to the public UX preview smoke path, record that as an environment limitation and continue with backend validation, public `/health`, public `/api/system/info`, and the static `/preview` page. Do not exercise sign-in or database-backed walkthrough steps until SQL Server is available.
+If the workstation does not have Docker available, or if `docker info` fails because a nested/Codex container lacks Docker daemon privileges, record that as an environment limitation and continue only with backend validation, public `/health`, public `/api/system/info`, and the static `/preview` page. Do not exercise sign-in or database-backed walkthrough steps until SQL Server is available on Docker Desktop, a workstation Docker Engine, or a CI/self-hosted runner with full Docker privileges.
 
 ### 2. Restore and validate the backend
 
@@ -210,7 +214,7 @@ docker compose down -v
 
 ### Docker CLI exists but containers cannot start
 
-The Phase 4A seeded walkthrough requires a working Docker daemon that can pull images, create container layers, and start containers with the published SQL Server port. The `docker --version` and `docker compose version` checks confirm the client tools, but they are not enough by themselves. If `docker compose up -d` fails with daemon, mount, layer extraction, or permission errors, record the environment limitation and rerun the seeded SQL Server walkthrough on a workstation or CI runner with full Docker Engine privileges. Do not substitute an in-memory database for the Docker-backed local pilot walkthrough.
+The Phase 4A seeded walkthrough requires a working Docker daemon that can pull images, create container layers, and start containers with the published SQL Server port. The `docker --version` and `docker compose version` checks confirm the client tools, but they are not enough by themselves; run `docker info` before `docker compose up -d`. If `docker info` or `docker compose up -d` fails with daemon, mount, layer extraction, or permission errors, record the environment limitation and rerun the seeded SQL Server walkthrough on Docker Desktop, a workstation Docker Engine, or a CI/self-hosted runner with full Docker Engine privileges. Do not substitute an in-memory database for the Docker-backed local pilot walkthrough.
 
 ### Frontend cannot reach the backend
 
