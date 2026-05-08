@@ -59,6 +59,7 @@ describe('AppRouter authentication rendering', () => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
     vi.mocked(usersApi.list).mockResolvedValue([])
   })
 

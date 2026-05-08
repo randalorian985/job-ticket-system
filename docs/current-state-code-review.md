@@ -69,3 +69,14 @@ The following remain deferred and unimplemented in this pass:
 
 ## Recommended Next Task
 - Run a narrow stabilization/observability cleanup after Phase 3D merges; keep deferred domains out of scope.
+
+## Phase 4B Update (2026-05-08)
+- Manager/Admin Phase 4B pilot workflow polish is implemented as a bounded frontend usability slice.
+- Job list filtering is client-side only and uses existing job/customer/location data; no new query-builder infrastructure or backend API contract changes were introduced.
+- Dashboard summary counts are derived from the existing Manager/Admin job list endpoint.
+- Job detail review now has clearer labor/work, time, parts, files/photos, status/priority, and browser print affordances without PDF generation or server-side exports.
+- Authorization boundaries remain unchanged: employees stay out of Manager/Admin routes, `/manage` remains Manager/Admin-only, and `/manage/users` remains Admin-only.
+- No migrations were added, and deferred domains remain deferred.
+
+## Recommended Next Task
+- Run a pilot-feedback pass against real manager/admin users and prioritize one narrow stabilization item from observed day-to-day workflow friction.

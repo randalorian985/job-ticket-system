@@ -278,3 +278,84 @@ th {
 .preview-card li + li {
   margin-top: 0.35rem;
 }
+
+.filter-panel,
+.summary-grid,
+.review-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.review-list {
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.summary-card,
+.review-grid > div {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.85rem;
+}
+
+.summary-card strong {
+  font-size: 1.6rem;
+}
+
+.summary-card span,
+.review-grid span {
+  font-size: 0.85rem;
+}
+
+.review-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.review-heading .secondary-button {
+  max-width: 220px;
+}
+
+.review-section ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .desktop-shell,
+  .mobile-shell {
+    max-width: none;
+    padding: 0;
+  }
+
+  .inline-links,
+  .no-print,
+  .button-link,
+  button {
+    display: none !important;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid #cbd5e1;
+    break-inside: avoid;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

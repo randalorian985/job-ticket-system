@@ -8,7 +8,7 @@ Baseline reviewed state: [Scope Code Review and Stabilization Audit (2026-05-06)
 Post-merge reset state: [Post-Merge Roadmap Reset After Phase 3C/3D Validation (2026-05-06)](./post-merge-roadmap-reset.md).
 
 ## Current Phase
-**Phase 4A pilot readiness after validated Manager/Admin Phase 3C/3D.**
+**Phase 4B pilot workflow polish after Phase 4A pilot readiness.**
 
 Interpretation as of **May 6, 2026**:
 - Core backend/API workflows are implemented and validated.
@@ -21,7 +21,8 @@ Interpretation as of **May 6, 2026**:
 - The 2026-05-06 scope-code-review checkpoint fixed two small regressions: frontend report invoice-status labels/filters now match backend enum values, and Admin user invalid payloads now return controlled `400 Bad Request` responses.
 - The remote-provenance validation branch merged to `main` as `adfcf80084d7865bf67922c008ea20ab223f7086`, and the post-merge reset confirmed the local tree matches GitHub REST `main` metadata.
 - Phase 3C/3D is no longer active implementation work.
-- Phase 4A pilot readiness is active and implemented as opt-in local/demo seed data, a pilot runbook, and automated end-to-end workflow validation.
+- Phase 4A pilot readiness is implemented as opt-in local/demo seed data, a pilot runbook, and automated end-to-end workflow validation.
+- Phase 4B pilot workflow polish is implemented as bounded frontend usability improvements for existing manager/admin job workflows.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -45,6 +46,7 @@ Interpretation as of **May 6, 2026**:
 - Manager/Admin Phase 3B master-data lifecycle screens.
 - Manager/Admin Phase 3C reports filters, tables, labor snapshot labeling, and client-side CSV export.
 - Manager/Admin Phase 3D Admin user-management polish, role-aware UX hardening, and regression coverage.
+- Manager/Admin Phase 4B pilot workflow polish for job list filters, dashboard summary counts, and print-friendly job review.
 
 ## Deferred Scope (Must Stay Deferred)
 The following are intentionally deferred and must not be partially introduced in unrelated PRs:
@@ -133,3 +135,9 @@ Concise readiness statement:
 - Setup/validation commands: [docs/development-setup.md](./development-setup.md)
 - Top-level orientation: [README.md](../README.md)
 
+
+## Phase 4B Pilot Workflow Polish (Implemented)
+- Manager/Admin job tickets now have bounded client-side search and filters for status, priority, and customer using already-loaded ticket/master-data responses.
+- Manager/Admin dashboard now shows a small operational job summary from existing job list data: open, assigned, in-progress, waiting-on-parts, completed/review-ready, and invoice-ready counts.
+- Manager/Admin job detail now presents clearer job review sections for labor/work, time, parts usage, files/photos, status/priority, and browser print support with print-only CSS behavior.
+- No backend contracts, authorization policies, enum numeric values, migrations, production seeding, server-side exports, or deferred product domains were added in this phase.
