@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { ApiError } from '../../api/httpClient'
 import { masterDataApi } from '../../api/masterDataApi'
@@ -63,7 +63,8 @@ describe('CustomersPage', () => {
   it('renders master-data create/edit workflow shell', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
     render(<CustomersPage />)
-    expect(await screen.findByText('Acme (No account)')).toBeInTheDocument()
+    expect(await screen.findByText(/Acme/)).toBeInTheDocument()
+    expect(screen.getByText(/No account/)).toBeInTheDocument()
     expect(screen.getByText('Create Customer')).toBeInTheDocument()
   })
 
@@ -78,6 +79,26 @@ describe('CustomersPage', () => {
 
     await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({ name: 'Bad Customer' }))
     expect(await screen.findByText('Name is required.')).toBeInTheDocument()
+  })
+
+
+
+  it('filters customers by search/status, resets filters, and shows no-match state', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+      { id: 'c1', name: 'Acme', contactName: 'Alex', email: 'alex@example.com', isArchived: false },
+      { id: 'c2', name: 'Beta', contactName: 'Bea', email: 'bea@example.com', isArchived: true }
+    ] as any)
+
+    render(<CustomersPage />)
+    expect(await screen.findByText(/Acme/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Search customers'), { target: { value: 'bea' } })
+    expect(screen.queryByText(/Acme/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Beta/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'active' } })
+    expect(screen.getByText('No customers match the current filters.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }))
+    expect(screen.getByText(/Acme/)).toBeInTheDocument()
+    expect(screen.getByText(/Beta/)).toBeInTheDocument()
   })
 
   it('archives and unarchives customers and surfaces archive failure', async () => {
@@ -106,6 +127,23 @@ describe('CustomersPage', () => {
 })
 
 describe('ServiceLocationsPage', () => {
+
+  it('filters service locations by customer and search', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+      { id: 'l1', customerId: 'c1', companyName: 'Acme', locationName: 'HQ', addressLine1: '1 Main', city: 'Tulsa', state: 'OK', postalCode: '74101', country: 'US', isActive: true, isArchived: false },
+      { id: 'l2', customerId: 'c2', companyName: 'Beta', locationName: 'Depot', addressLine1: '2 Oak', city: 'Dallas', state: 'TX', postalCode: '75001', country: 'US', isActive: true, isArchived: false }
+    ] as any)
+
+    render(<ServiceLocationsPage />)
+    expect(await screen.findByText(/HQ/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c2' } })
+    expect(screen.queryByText(/HQ/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Depot/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Search service locations'), { target: { value: 'missing' } })
+    expect(screen.getByText('No service locations match the current filters.')).toBeInTheDocument()
+  })
+
   it('archives and unarchives service locations and surfaces archive failure', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listServiceLocations)
@@ -143,6 +181,24 @@ describe('ServiceLocationsPage', () => {
   })
 
 describe('EquipmentPage', () => {
+
+  it('filters equipment by customer and archived status', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', locationName: 'HQ' }, { id: 'l2', locationName: 'Depot' }] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([
+      { id: 'e1', name: 'Pump', customerId: 'c1', serviceLocationId: 'l1', isArchived: false },
+      { id: 'e2', name: 'Motor', customerId: 'c2', serviceLocationId: 'l2', serialNumber: 'SN-2', isArchived: true }
+    ] as any)
+
+    render(<EquipmentPage />)
+    expect(await screen.findByText(/Pump/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c2' } })
+    expect(screen.queryByText(/Pump/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Motor/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'active' } })
+    expect(screen.getByText('No equipment records match the current filters.')).toBeInTheDocument()
+  })
+
   it('archives and unarchives equipment and surfaces unarchive failure', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
@@ -164,6 +220,37 @@ describe('EquipmentPage', () => {
 })
 
 describe('PartsPage', () => {
+
+  it('filters parts, vendors, and categories with reset controls', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([
+      { id: 'p1', partCategoryId: 'pc1', vendorId: 'v1', partNumber: 'FLT-1', name: 'Filter', description: 'Air filter', unitCost: 1, unitPrice: 2, isArchived: false },
+      { id: 'p2', partCategoryId: 'pc2', vendorId: 'v2', partNumber: 'BLT-2', name: 'Belt', description: 'Drive belt', unitCost: 3, unitPrice: 4, isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([{ id: 'v1', name: 'Vendor A', isArchived: false }, { id: 'v2', name: 'Vendor B', isArchived: true }] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([{ id: 'pc1', name: 'Filters', isArchived: false }, { id: 'pc2', name: 'Belts', description: 'Drive parts', isArchived: true }] as any)
+
+    render(<PartsPage />)
+    expect(await screen.findByText(/FLT-1/)).toBeInTheDocument()
+    const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
+    fireEvent.change(within(partsCard).getByLabelText('Category'), { target: { value: 'pc2' } })
+    expect(screen.queryByText(/FLT-1/)).not.toBeInTheDocument()
+    expect(screen.getByText(/BLT-2/)).toBeInTheDocument()
+    fireEvent.change(within(partsCard).getByLabelText('Vendor'), { target: { value: 'v1' } })
+    expect(screen.getByText('No parts match the current filters.')).toBeInTheDocument()
+    fireEvent.click(within(partsCard).getByRole('button', { name: 'Reset filters' }))
+    expect(screen.getByText(/FLT-1/)).toBeInTheDocument()
+
+    const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
+    fireEvent.change(within(vendorsCard).getByLabelText('Search vendors'), { target: { value: 'Vendor B' } })
+    expect(within(vendorsCard).queryByText(/Vendor A/)).not.toBeInTheDocument()
+    expect(within(vendorsCard).getByText(/Vendor B/)).toBeInTheDocument()
+
+    const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
+    fireEvent.change(within(categoriesCard).getByLabelText('Search part categories'), { target: { value: 'Drive' } })
+    expect(within(categoriesCard).queryByText(/Filters/)).not.toBeInTheDocument()
+    expect(within(categoriesCard).getByText(/Belts/)).toBeInTheDocument()
+  })
+
 
   it('surfaces part save validation errors from the API', async () => {
     vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
