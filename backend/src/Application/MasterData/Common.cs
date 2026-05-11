@@ -7,7 +7,7 @@ public sealed class ValidationException : Exception
     }
 }
 
-public sealed record PagedQuery(int Offset = 0, int Limit = 50)
+public sealed record PagedQuery(int Offset = 0, int Limit = 50, bool IncludeArchived = false)
 {
     public int NormalizedOffset => Offset < 0 ? 0 : Offset;
     public int NormalizedLimit => Limit <= 0 ? 50 : Math.Min(Limit, 200);

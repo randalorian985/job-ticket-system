@@ -9,8 +9,8 @@ public sealed class PartsController(IPartsService service) : MasterDataControlle
 {
     [HttpGet]
     [Authorize(Policy = "ManagerOrAdmin")]
-    public async Task<ActionResult<IReadOnlyList<PartDto>>> ListAsync([FromQuery] int offset = 0, [FromQuery] int limit = 50, CancellationToken cancellationToken = default)
-        => Ok(await service.ListAsync(new PagedQuery(offset, limit), cancellationToken));
+    public async Task<ActionResult<IReadOnlyList<PartDto>>> ListAsync([FromQuery] int offset = 0, [FromQuery] int limit = 50, [FromQuery] bool includeArchived = false, CancellationToken cancellationToken = default)
+        => Ok(await service.ListAsync(new PagedQuery(offset, limit, includeArchived), cancellationToken));
 
     [HttpGet("{id:guid}")]
     [Authorize(Policy = "ManagerOrAdmin")]
@@ -27,7 +27,7 @@ public sealed class PartsController(IPartsService service) : MasterDataControlle
         try
         {
             var created = await service.CreateAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetAsync), new { id = created.Id }, created);
+            return Created($"{Request.Path}/{created.Id}", created);
         }
         catch (Exception exception)
         {

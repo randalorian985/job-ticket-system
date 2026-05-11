@@ -112,7 +112,7 @@ This phase adds foundational security controls without replacing existing workfl
 - Manager/admin job ticket create route is available at `/manage/job-tickets/new` and edit workflows are available from the ticket detail screen.
 - Job ticket status/archive flows include explicit enum-value labels, confirmation prompts, and error/success messaging.
 - Reports view now supports query filters (date range, customer, employee, status), export-friendly table rendering, and client-side CSV export from loaded data.
-- Manager/admin master-data pages now include targeted create/edit/archive forms for customers, service locations, and parts.
+- Manager/admin master-data pages now include targeted create/edit/archive/unarchive forms for customers, service locations, equipment, vendors, part categories, and parts, with archived-record visibility scoped to the manager/admin workflow.
 - Admin-only users page now includes targeted create/edit/archive/reset-password operations via existing `/api/users` endpoints.
 - Employee route tree (`/jobs`, `/jobs/:jobTicketId`) remains unchanged.
 - Deferred domains remain unchanged and unimplemented: parts purchase/vendor cost tracking, advanced inventory, compatibility recommendation engine.
@@ -138,7 +138,7 @@ The following remain deferred and are not implemented as active business domains
 - Parts compatibility recommendation engine
 - AI/scoring-based part recommendations
 
-- Phase 3B delivered: complete Manager/Admin master-data maintenance workflows (customers, locations, equipment, vendors, part categories, parts), excluding purchasing/inventory intelligence domains.
+- Phase 3B delivered: complete Manager/Admin master-data maintenance workflows (customers, locations, equipment, vendors, part categories, parts), including validation/error paths and archived-record restore flows, while excluding purchasing/inventory intelligence domains.
 
 
 ## Manager/Admin UI Phase 3C (Implemented)

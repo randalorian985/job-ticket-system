@@ -63,6 +63,7 @@
 All list endpoints support simple pagination with optional query params:
 - `offset` (default `0`)
 - `limit` (default `50`, max `200`)
+- `includeArchived` (default `false`; when `true`, Manager/Admin responses include soft-archived rows with `isArchived: true` so unarchive workflows can present and restore them)
 
 ### Customers
 - `GET /api/customers`
@@ -113,7 +114,7 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/parts/{id}/archive`
 - `POST /api/parts/{id}/unarchive`
 
-Unarchive endpoints can return validation errors (`400`) when required linked records are archived/deleted/inactive, and `404` when the target record does not exist.
+List/detail/create/update responses use DTOs and expose `isArchived` for master-data rows; EF entities remain internal. Unarchive endpoints can return validation errors (`400`) when required linked records are archived/deleted/inactive, and `404` when the target record does not exist.
 
 ## Job Tickets (Current)
 ### Endpoints
@@ -279,4 +280,4 @@ Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 - Unauthorized route: `/unauthorized` for authenticated users lacking required role claims.
 
 ## Phase 3B Master Data
-- Manager/Admin endpoints for customers, service locations, equipment, vendors, part categories, and parts are used for list/detail/create/update/archive workflows via DTO contracts.
+- Manager/Admin endpoints for customers, service locations, equipment, vendors, part categories, and parts are used for list/detail/create/update/archive/unarchive workflows via DTO contracts. Collection endpoints accept `includeArchived=true` to support UI unarchive flows without exposing EF entities.
