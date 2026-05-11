@@ -12,8 +12,18 @@ vi.mock('../../api/masterDataApi', () => ({
     listParts: vi.fn(),
     listVendors: vi.fn(),
     listPartCategories: vi.fn(),
+    createCustomer: vi.fn(),
+    updateCustomer: vi.fn(),
+    createServiceLocation: vi.fn(),
+    updateServiceLocation: vi.fn(),
+    createEquipment: vi.fn(),
+    updateEquipment: vi.fn(),
+    createPart: vi.fn(),
+    updatePart: vi.fn(),
     createVendor: vi.fn(),
+    updateVendor: vi.fn(),
     createPartCategory: vi.fn(),
+    updatePartCategory: vi.fn(),
     listServiceLocations: vi.fn(),
     listEquipment: vi.fn(),
     archiveCustomer: vi.fn(),
@@ -55,6 +65,19 @@ describe('CustomersPage', () => {
     render(<CustomersPage />)
     expect(await screen.findByText('Acme (No account)')).toBeInTheDocument()
     expect(screen.getByText('Create Customer')).toBeInTheDocument()
+  })
+
+
+  it('surfaces API validation errors when customer save fails', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.createCustomer).mockRejectedValue(new ApiError('Name is required.', 400))
+
+    render(<CustomersPage />)
+    fireEvent.change(screen.getByPlaceholderText('Name'), { target: { value: 'Bad Customer' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Customer' }))
+
+    await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({ name: 'Bad Customer' }))
+    expect(await screen.findByText('Name is required.')).toBeInTheDocument()
   })
 
   it('archives and unarchives customers and surfaces archive failure', async () => {
@@ -107,6 +130,18 @@ describe('ServiceLocationsPage', () => {
   })
 })
 
+
+  it('validates required service-location fields before create', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
+
+    render(<ServiceLocationsPage />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Create Location' }))
+
+    expect(await screen.findByText('All address fields are required.')).toBeInTheDocument()
+    expect(masterDataApi.createServiceLocation).not.toHaveBeenCalled()
+  })
+
 describe('EquipmentPage', () => {
   it('archives and unarchives equipment and surfaces unarchive failure', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
@@ -129,6 +164,22 @@ describe('EquipmentPage', () => {
 })
 
 describe('PartsPage', () => {
+
+  it('surfaces part save validation errors from the API', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([{ id: 'pc1', name: 'Category A', isArchived: false }] as any)
+    vi.mocked(masterDataApi.createPart).mockRejectedValue(new ApiError('Part number must be unique.', 400))
+
+    render(<PartsPage />)
+    fireEvent.change(await screen.findByPlaceholderText('Part Number'), { target: { value: 'PN-1' } })
+    fireEvent.change(screen.getByPlaceholderText('Name'), { target: { value: 'Filter' } })
+    fireEvent.change(screen.getByDisplayValue('Category'), { target: { value: 'pc1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Part' }))
+
+    expect(await screen.findByText('Part number must be unique.')).toBeInTheDocument()
+  })
+
   it('archives and unarchives part/vendor/category and surfaces API errors', async () => {
     vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'PN-1', name: 'Filter', unitCost: 1, unitPrice: 2, isArchived: false }] as any)
     vi.mocked(masterDataApi.listVendors).mockResolvedValue([{ id: 'v1', name: 'Vendor A', isArchived: false }] as any)

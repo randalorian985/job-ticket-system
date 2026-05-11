@@ -83,7 +83,8 @@ Keep post-merge work narrow and preserve the validated Phase 3C/3D baseline. The
 
 ### Phase 3B (Completed)
 - Delivered end-to-end manager/admin master-data lifecycle coverage across existing APIs for list/detail/create/update/archive/unarchive flows.
-- Endpoint usage remained within existing contracts; no new API groups introduced.
+- Added archived-record list visibility through `includeArchived=true` and `isArchived` DTO fields so Manager/Admin users can complete unarchive workflows without exposing EF entities.
+- Endpoint usage remained within existing API groups; no deferred purchasing, vendor-cost, advanced-inventory, AI/scoring, or recommendation domains were introduced.
 - No migrations were added.
 
 ### Phase 3C (Implemented)

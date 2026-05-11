@@ -193,6 +193,47 @@ public sealed class MasterDataServicesTests
         Assert.Null(await service.GetAsync(created.Id));
     }
 
+
+    [Fact]
+    public async Task Master_data_lists_can_include_archived_records_for_manager_admin_workflows()
+    {
+        await using var context = CreateContext();
+        var customer = new Customer { Name = "Customer A" };
+        var vendor = new Vendor { Name = "Vendor A" };
+        var category = new PartCategory { Name = "Category A" };
+        context.AddRange(customer, vendor, category);
+        await context.SaveChangesAsync();
+
+        var location = new ServiceLocation { CustomerId = customer.Id, CompanyName = "Acme", LocationName = "HQ", AddressLine1 = "123 Main", City = "Austin", State = "TX", PostalCode = "78701", Country = "USA" };
+        context.ServiceLocations.Add(location);
+        await context.SaveChangesAsync();
+
+        var customerService = new CustomersService(context);
+        var locationService = new ServiceLocationsService(context);
+        var equipmentService = new EquipmentService(context);
+        var vendorService = new VendorsService(context);
+        var categoryService = new PartCategoriesService(context);
+        var partsService = new PartsService(context);
+
+        var equipment = await equipmentService.CreateAsync(new CreateEquipmentDto(customer.Id, location.Id, null, null, "Lift", "E-1"));
+        var part = await partsService.CreateAsync(new CreatePartDto(category.Id, vendor.Id, "P-1", "Filter", null, 1m, 2m, 3m, 1m));
+
+        await customerService.ArchiveAsync(customer.Id);
+        await locationService.ArchiveAsync(location.Id);
+        await equipmentService.ArchiveAsync(equipment.Id);
+        await vendorService.ArchiveAsync(vendor.Id);
+        await categoryService.ArchiveAsync(category.Id);
+        await partsService.ArchiveAsync(part.Id);
+
+        Assert.Empty(await customerService.ListAsync(new PagedQuery()));
+        Assert.True((await customerService.ListAsync(new PagedQuery(IncludeArchived: true))).Single().IsArchived);
+        Assert.True((await locationService.ListAsync(new PagedQuery(IncludeArchived: true))).Single().IsArchived);
+        Assert.True((await equipmentService.ListAsync(new PagedQuery(IncludeArchived: true))).Single().IsArchived);
+        Assert.True((await vendorService.ListAsync(new PagedQuery(IncludeArchived: true))).Single().IsArchived);
+        Assert.True((await categoryService.ListAsync(new PagedQuery(IncludeArchived: true))).Single().IsArchived);
+        Assert.True((await partsService.ListAsync(new PagedQuery(IncludeArchived: true))).Single().IsArchived);
+    }
+
     private static ApplicationDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

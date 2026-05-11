@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.JobTickets;
+using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Security;
 using JobTicketSystem.Application.TimeEntries;
 using JobTicketSystem.Domain.Entities;
@@ -267,6 +268,47 @@ public sealed class AuthIntegrationTests
         Assert.Equal(HttpStatusCode.OK, reject.StatusCode);
     }
 
+
+
+    [Fact]
+    public async Task Manager_admin_master_data_endpoints_enforce_roles_and_return_validation_errors()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedUsersAsync(db, auth));
+
+        var managerClient = factory.CreateClient();
+        await managerClient.SetBearerTokenAsync("manager", "ManagerPass!123");
+        var managerList = await managerClient.GetAsync("/api/customers?includeArchived=true");
+        Assert.Equal(HttpStatusCode.OK, managerList.StatusCode);
+
+        var invalidCreate = await managerClient.PostAsJsonAsync("/api/customers", new CreateCustomerDto("", null, null, null, null));
+        Assert.Equal(HttpStatusCode.BadRequest, invalidCreate.StatusCode);
+
+        var created = await managerClient.PostAsJsonAsync("/api/customers", new CreateCustomerDto("Master Data Customer", "M-1", null, null, null));
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var customer = await created.Content.ReadFromJsonAsync<CustomerDto>();
+        Assert.NotNull(customer);
+        Assert.False(customer!.IsArchived);
+
+        var archived = await managerClient.PostAsync($"/api/customers/{customer.Id}/archive", null);
+        Assert.Equal(HttpStatusCode.NoContent, archived.StatusCode);
+
+        var archivedList = await managerClient.GetFromJsonAsync<List<CustomerDto>>("/api/customers?includeArchived=true");
+        Assert.Contains(archivedList!, x => x.Id == customer.Id && x.IsArchived);
+
+        var unarchived = await managerClient.PostAsync($"/api/customers/{customer.Id}/unarchive", null);
+        Assert.Equal(HttpStatusCode.NoContent, unarchived.StatusCode);
+
+        var employeeClient = factory.CreateClient();
+        await employeeClient.SetBearerTokenAsync("employee", "EmployeePass!123");
+        var employeeList = await employeeClient.GetAsync("/api/customers");
+        Assert.Equal(HttpStatusCode.Forbidden, employeeList.StatusCode);
+
+        var adminClient = factory.CreateClient();
+        await adminClient.SetBearerTokenAsync("admin", "AdminPass!123");
+        var adminList = await adminClient.GetAsync("/api/parts?includeArchived=true");
+        Assert.Equal(HttpStatusCode.OK, adminList.StatusCode);
+    }
 
     [Fact]
     public async Task Admin_user_invalid_payloads_return_controlled_bad_request_responses()
