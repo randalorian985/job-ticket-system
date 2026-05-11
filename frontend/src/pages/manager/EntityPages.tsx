@@ -38,6 +38,59 @@ import { formatDate, getApprovalLabel } from './managerDisplay'
 
 function Errorable({ error }: { error: string | null }) { return error ? <p className="error">{error}</p> : null }
 
+
+type ArchiveFilter = 'all' | 'active' | 'archived'
+
+const normalizeSearchValue = (value?: string | number | null) => String(value ?? '').toLowerCase()
+const matchesTextSearch = (query: string, values: Array<string | number | null | undefined>) => {
+  const normalizedQuery = query.trim().toLowerCase()
+  return !normalizedQuery || values.some((value) => normalizeSearchValue(value).includes(normalizedQuery))
+}
+const matchesArchiveFilter = (filter: ArchiveFilter, isArchived?: boolean) => {
+  if (filter === 'active') return !isArchived
+  if (filter === 'archived') return Boolean(isArchived)
+  return true
+}
+const archiveStatusLabel = (isArchived?: boolean) => isArchived ? 'Archived' : 'Active'
+const customerNameById = (customers: CustomerDto[], id?: string | null) => customers.find((customer) => customer.id === id)?.name ?? ''
+const locationNameById = (locations: ServiceLocationDto[], id?: string | null) => locations.find((location) => location.id === id)?.locationName ?? ''
+const categoryNameById = (categories: PartCategoryDto[], id?: string | null) => categories.find((category) => category.id === id)?.name ?? ''
+const vendorNameById = (vendors: VendorDto[], id?: string | null) => vendors.find((vendor) => vendor.id === id)?.name ?? ''
+
+function MasterDataFilters({
+  label,
+  search,
+  searchPlaceholder,
+  archiveFilter,
+  onSearchChange,
+  onArchiveFilterChange,
+  onReset,
+  children
+}: {
+  label: string
+  search: string
+  searchPlaceholder: string
+  archiveFilter: ArchiveFilter
+  onSearchChange: (value: string) => void
+  onArchiveFilterChange: (value: ArchiveFilter) => void
+  onReset: () => void
+  children?: JSX.Element | JSX.Element[]
+}) {
+  return <div className="master-data-filters" aria-label={`${label} filters`}>
+    <label>Search {label}<input value={search} placeholder={searchPlaceholder} onChange={(event) => onSearchChange(event.target.value)} /></label>
+    <label>Status<select value={archiveFilter} onChange={(event) => onArchiveFilterChange(event.target.value as ArchiveFilter)}><option value="all">All records</option><option value="active">Active only</option><option value="archived">Archived only</option></select></label>
+    {children}
+    <button type="button" className="secondary-button" onClick={onReset}>Reset filters</button>
+  </div>
+}
+
+function MasterDataListState({ loading, totalCount, filteredCount, noun }: { loading: boolean, totalCount: number, filteredCount: number, noun: string }) {
+  if (loading) return <p className="muted">Loading {noun}…</p>
+  if (totalCount === 0) return <p className="muted">No {noun} have been created yet.</p>
+  if (filteredCount === 0) return <p className="muted">No {noun} match the current filters.</p>
+  return null
+}
+
 const masterDataRequestErrorMessage = (requestError: unknown, fallback: string) => {
   if (requestError instanceof ApiError) {
     if (requestError.status === 400) return requestError.message
@@ -49,13 +102,24 @@ const masterDataRequestErrorMessage = (requestError: unknown, fallback: string) 
   return fallback
 }
 
+
 export function CustomersPage() {
   const [items, setItems] = useState<CustomerDto[]>([])
   const [draft, setDraft] = useState<CreateCustomerDto>({ name: '' })
   const [editId, setEditId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = () => masterDataApi.listCustomers().then(setItems).catch(() => setError('Unable to load customers.'))
+  const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('all')
+  const load = () => {
+    setIsLoading(true)
+    return masterDataApi.listCustomers()
+      .then((customerList) => { setItems(customerList) })
+      .catch(() => setError('Unable to load customers.'))
+      .finally(() => setIsLoading(false))
+  }
   useEffect(() => { load() }, [])
+  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && matchesTextSearch(search, [x.name, x.accountNumber, x.contactName, x.email, x.phone])), [items, search, archiveFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!draft.name.trim()) return setError('Customer name is required.')
@@ -68,8 +132,9 @@ export function CustomersPage() {
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save customer.'))
     }
   }
-  return <section className="card stack"><h2>Customers</h2><Errorable error={error} /><form onSubmit={save} className="row"><input placeholder="Name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /><button type="submit">{editId ? 'Save Customer' : 'Create Customer'}</button></form><ul>{items.map((x) => <li key={x.id}>{x.name} ({x.accountNumber ?? 'No account'}) <button onClick={() => { setDraft({ name: x.name, accountNumber: x.accountNumber, contactName: x.contactName, email: x.email, phone: x.phone }); setEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchiveCustomer(x.id); else await masterDataApi.archiveCustomer(x.id); await load() } catch { setError('Unable to update customer archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></section>
+  return <section className="card stack"><h2>Customers</h2><Errorable error={error} /><form onSubmit={save} className="row"><input placeholder="Name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /><button type="submit">{editId ? 'Save Customer' : 'Create Customer'}</button></form><MasterDataFilters label="customers" search={search} searchPlaceholder="Search by name, account, contact, email, or phone" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all') }} /><MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="customers" /><ul>{filteredItems.map((x) => <li key={x.id}>{x.name} ({x.accountNumber ?? 'No account'}) · <span className={`status-pill ${x.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(x.isArchived)}</span> <button onClick={() => { setDraft({ name: x.name, accountNumber: x.accountNumber, contactName: x.contactName, email: x.email, phone: x.phone }); setEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchiveCustomer(x.id); else await masterDataApi.archiveCustomer(x.id); await load() } catch { setError('Unable to update customer archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></section>
 }
+
 
 export function ServiceLocationsPage() {
   const [items, setItems] = useState<ServiceLocationDto[]>([])
@@ -77,8 +142,19 @@ export function ServiceLocationsPage() {
   const [draft, setDraft] = useState<CreateServiceLocationDto>({ companyName: '', locationName: '', addressLine1: '', city: '', state: '', postalCode: '', country: 'US', isActive: true })
   const [editId, setEditId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = () => Promise.all([masterDataApi.listServiceLocations(), masterDataApi.listCustomers()]).then(([l, c]) => { setItems(l); setCustomers(c) }).catch(() => setError('Unable to load service locations.'))
+  const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('all')
+  const [customerFilter, setCustomerFilter] = useState('')
+  const load = () => {
+    setIsLoading(true)
+    return Promise.all([masterDataApi.listServiceLocations(), masterDataApi.listCustomers()])
+      .then(([l, c]) => { setItems(l); setCustomers(c) })
+      .catch(() => setError('Unable to load service locations.'))
+      .finally(() => setIsLoading(false))
+  }
   useEffect(() => { load() }, [])
+  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [x.locationName, x.companyName, customerNameById(customers, x.customerId), x.addressLine1, x.city, x.state, x.postalCode, x.country])), [items, customers, search, archiveFilter, customerFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!draft.companyName || !draft.locationName || !draft.addressLine1 || !draft.city || !draft.state || !draft.postalCode || !draft.country) return setError('All address fields are required.')
@@ -91,8 +167,9 @@ export function ServiceLocationsPage() {
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save service location.'))
     }
   }
-  return <section className="card stack"><h2>Service Locations</h2><Errorable error={error} /><form onSubmit={save} className="stack"><input placeholder="Company" value={draft.companyName} onChange={(e) => setDraft({ ...draft, companyName: e.target.value })} /><input placeholder="Location Name" value={draft.locationName} onChange={(e) => setDraft({ ...draft, locationName: e.target.value })} /><input placeholder="Address" value={draft.addressLine1} onChange={(e) => setDraft({ ...draft, addressLine1: e.target.value })} /><div className="row"><input placeholder="City" value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} /><input placeholder="State" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })} /></div><div className="row"><input placeholder="Postal" value={draft.postalCode} onChange={(e) => setDraft({ ...draft, postalCode: e.target.value })} /><input placeholder="Country" value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })} /></div><select value={draft.customerId ?? ''} onChange={(e) => setDraft({ ...draft, customerId: e.target.value || null })}><option value="">No customer</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select><label><input type="checkbox" checked={draft.isActive ?? true} onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })} /> Active</label><button type="submit">{editId ? 'Save Location' : 'Create Location'}</button></form><ul>{items.map((x) => <li key={x.id}>{x.locationName} · {x.companyName} · {x.isActive ? 'Active' : 'Inactive'} <button onClick={() => { setDraft(x); setEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchiveServiceLocation(x.id); else await masterDataApi.archiveServiceLocation(x.id); await load() } catch { setError('Unable to update service location archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></section>
+  return <section className="card stack"><h2>Service Locations</h2><Errorable error={error} /><form onSubmit={save} className="stack"><input placeholder="Company" value={draft.companyName} onChange={(e) => setDraft({ ...draft, companyName: e.target.value })} /><input placeholder="Location Name" value={draft.locationName} onChange={(e) => setDraft({ ...draft, locationName: e.target.value })} /><input placeholder="Address" value={draft.addressLine1} onChange={(e) => setDraft({ ...draft, addressLine1: e.target.value })} /><div className="row"><input placeholder="City" value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} /><input placeholder="State" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })} /></div><div className="row"><input placeholder="Postal" value={draft.postalCode} onChange={(e) => setDraft({ ...draft, postalCode: e.target.value })} /><input placeholder="Country" value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })} /></div><select value={draft.customerId ?? ''} onChange={(e) => setDraft({ ...draft, customerId: e.target.value || null })}><option value="">No customer</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select><label><input type="checkbox" checked={draft.isActive ?? true} onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })} /> Active</label><button type="submit">{editId ? 'Save Location' : 'Create Location'}</button></form><MasterDataFilters label="service locations" search={search} searchPlaceholder="Search by location, customer, company, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all'); setCustomerFilter('') }}><label>Customer<select value={customerFilter} onChange={(event) => setCustomerFilter(event.target.value)}><option value="">All customers</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label></MasterDataFilters><MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="service locations" /><ul>{filteredItems.map((x) => <li key={x.id}>{x.locationName} · {x.companyName} · {customerNameById(customers, x.customerId) || 'No customer'} · {x.isActive ? 'Active' : 'Inactive'} · <span className={`status-pill ${x.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(x.isArchived)}</span> <button onClick={() => { setDraft(x); setEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchiveServiceLocation(x.id); else await masterDataApi.archiveServiceLocation(x.id); await load() } catch { setError('Unable to update service location archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></section>
 }
+
 
 export function EquipmentPage() {
   const [items, setItems] = useState<EquipmentDto[]>([])
@@ -101,8 +178,19 @@ export function EquipmentPage() {
   const [draft, setDraft] = useState<CreateEquipmentDto>({ customerId: '', serviceLocationId: '', ownerCustomerId: null, responsibleBillingCustomerId: null, name: '', equipmentNumber: '' })
   const [editId, setEditId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = () => Promise.all([masterDataApi.listEquipment(), masterDataApi.listCustomers(), masterDataApi.listServiceLocations()]).then(([equipment, customerList, locationList]) => { setItems(equipment); setCustomers(customerList); setLocations(locationList) }).catch(() => setError('Unable to load equipment.'))
+  const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('all')
+  const [customerFilter, setCustomerFilter] = useState('')
+  const load = () => {
+    setIsLoading(true)
+    return Promise.all([masterDataApi.listEquipment(), masterDataApi.listCustomers(), masterDataApi.listServiceLocations()])
+      .then(([equipment, customerList, locationList]) => { setItems(equipment); setCustomers(customerList); setLocations(locationList) })
+      .catch(() => setError('Unable to load equipment.'))
+      .finally(() => setIsLoading(false))
+  }
   useEffect(() => { load() }, [])
+  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter || x.ownerCustomerId === customerFilter || x.responsibleBillingCustomerId === customerFilter) && matchesTextSearch(search, [x.name, x.equipmentNumber, x.unitNumber, x.serialNumber, x.modelNumber, x.manufacturer, x.equipmentType, customerNameById(customers, x.customerId), customerNameById(customers, x.ownerCustomerId), customerNameById(customers, x.responsibleBillingCustomerId), locationNameById(locations, x.serviceLocationId)])), [items, customers, locations, search, archiveFilter, customerFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!draft.customerId || !draft.serviceLocationId || !draft.name.trim()) return setError('Customer, location, and equipment name are required.')
@@ -117,8 +205,9 @@ export function EquipmentPage() {
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save equipment.'))
     }
   }
-  return <section className="card stack"><h2>Equipment</h2><Errorable error={error} /><form onSubmit={save} className="stack"><div className="row"><select value={draft.customerId} onChange={(e) => setDraft({ ...draft, customerId: e.target.value })}><option value="">Customer</option>{customers.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select><select value={draft.serviceLocationId} onChange={(e) => setDraft({ ...draft, serviceLocationId: e.target.value })}><option value="">Service location</option>{locations.map((x) => <option key={x.id} value={x.id}>{x.locationName}</option>)}</select></div><input placeholder="Equipment name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /><input placeholder="Equipment number" value={draft.equipmentNumber ?? ''} onChange={(e) => setDraft({ ...draft, equipmentNumber: e.target.value })} /><button type="submit">{editId ? 'Save Equipment' : 'Create Equipment'}</button></form><ul>{items.map((x) => <li key={x.id}>{x.name} · Owner {x.ownerCustomerId ?? x.customerId} · Billing {x.responsibleBillingCustomerId ?? 'n/a'} · Location {x.serviceLocationId} <button onClick={() => { setDraft(x); setEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchiveEquipment(x.id); else await masterDataApi.archiveEquipment(x.id); await load() } catch { setError('Unable to update equipment archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></section>
+  return <section className="card stack"><h2>Equipment</h2><Errorable error={error} /><form onSubmit={save} className="stack"><div className="row"><select value={draft.customerId} onChange={(e) => setDraft({ ...draft, customerId: e.target.value })}><option value="">Customer</option>{customers.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select><select value={draft.serviceLocationId} onChange={(e) => setDraft({ ...draft, serviceLocationId: e.target.value })}><option value="">Service location</option>{locations.map((x) => <option key={x.id} value={x.id}>{x.locationName}</option>)}</select></div><input placeholder="Equipment name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /><input placeholder="Equipment number" value={draft.equipmentNumber ?? ''} onChange={(e) => setDraft({ ...draft, equipmentNumber: e.target.value })} /><button type="submit">{editId ? 'Save Equipment' : 'Create Equipment'}</button></form><MasterDataFilters label="equipment" search={search} searchPlaceholder="Search by name, unit, serial, model, customer, or location" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all'); setCustomerFilter('') }}><label>Customer<select value={customerFilter} onChange={(event) => setCustomerFilter(event.target.value)}><option value="">All customers</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label></MasterDataFilters><MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="equipment records" /><ul>{filteredItems.map((x) => <li key={x.id}>{x.name} · Owner {customerNameById(customers, x.ownerCustomerId ?? x.customerId) || x.ownerCustomerId || x.customerId} · Billing {customerNameById(customers, x.responsibleBillingCustomerId) || x.responsibleBillingCustomerId || 'n/a'} · Location {locationNameById(locations, x.serviceLocationId) || x.serviceLocationId} · <span className={`status-pill ${x.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(x.isArchived)}</span> <button onClick={() => { setDraft(x); setEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchiveEquipment(x.id); else await masterDataApi.archiveEquipment(x.id); await load() } catch { setError('Unable to update equipment archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></section>
 }
+
 
 export function PartsPage() {
   const [parts, setParts] = useState<PartDto[]>([])
@@ -127,8 +216,26 @@ export function PartsPage() {
   const [draft, setDraft] = useState<CreatePartDto>({ partCategoryId: '', partNumber: '', name: '', unitCost: 0, unitPrice: 0, quantityOnHand: 0, reorderThreshold: 0 })
   const [editId, setEditId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = () => Promise.all([masterDataApi.listParts(), masterDataApi.listVendors(), masterDataApi.listPartCategories()]).then(([p, v, c]) => { setParts(p); setVendors(v); setCategories(c) }).catch(() => setError('Unable to load parts, vendors, or categories.'))
+  const [isLoading, setIsLoading] = useState(true)
+  const [partSearch, setPartSearch] = useState('')
+  const [partArchiveFilter, setPartArchiveFilter] = useState<ArchiveFilter>('all')
+  const [partCategoryFilter, setPartCategoryFilter] = useState('')
+  const [partVendorFilter, setPartVendorFilter] = useState('')
+  const [vendorSearch, setVendorSearch] = useState('')
+  const [vendorArchiveFilter, setVendorArchiveFilter] = useState<ArchiveFilter>('all')
+  const [categorySearch, setCategorySearch] = useState('')
+  const [categoryArchiveFilter, setCategoryArchiveFilter] = useState<ArchiveFilter>('all')
+  const load = () => {
+    setIsLoading(true)
+    return Promise.all([masterDataApi.listParts(), masterDataApi.listVendors(), masterDataApi.listPartCategories()])
+      .then(([p, v, c]) => { setParts(p); setVendors(v); setCategories(c) })
+      .catch(() => setError('Unable to load parts, vendors, or categories.'))
+      .finally(() => setIsLoading(false))
+  }
   useEffect(() => { load() }, [])
+  const filteredParts = useMemo(() => parts.filter((x) => matchesArchiveFilter(partArchiveFilter, x.isArchived) && (!partCategoryFilter || x.partCategoryId === partCategoryFilter) && (!partVendorFilter || x.vendorId === partVendorFilter) && matchesTextSearch(partSearch, [x.partNumber, x.name, x.description, categoryNameById(categories, x.partCategoryId), vendorNameById(vendors, x.vendorId)])), [parts, vendors, categories, partSearch, partArchiveFilter, partCategoryFilter, partVendorFilter])
+  const filteredVendors = useMemo(() => vendors.filter((x) => matchesArchiveFilter(vendorArchiveFilter, x.isArchived) && matchesTextSearch(vendorSearch, [x.name, x.accountNumber, x.contactName, x.email, x.phone])), [vendors, vendorSearch, vendorArchiveFilter])
+  const filteredCategories = useMemo(() => categories.filter((x) => matchesArchiveFilter(categoryArchiveFilter, x.isArchived) && matchesTextSearch(categorySearch, [x.name, x.description])), [categories, categorySearch, categoryArchiveFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!draft.partCategoryId || !draft.partNumber || !draft.name) return setError('Category, part number, and name are required.')
@@ -146,7 +253,7 @@ export function PartsPage() {
   const [categoryDraft, setCategoryDraft] = useState<CreatePartCategoryDto>({ name: '', description: '' })
   const [categoryEditId, setCategoryEditId] = useState<string | null>(null)
 
-  return <section className="stack"><article className="card stack"><h2>Parts</h2><Errorable error={error} /><form onSubmit={save} className="stack"><div className="row"><input placeholder="Part Number" value={draft.partNumber} onChange={(e) => setDraft({ ...draft, partNumber: e.target.value })} /><input placeholder="Name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></div><div className="row"><select value={draft.partCategoryId} onChange={(e) => setDraft({ ...draft, partCategoryId: e.target.value })}><option value="">Category</option>{categories.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select><select value={draft.vendorId ?? ''} onChange={(e) => setDraft({ ...draft, vendorId: e.target.value || null })}><option value="">Vendor</option>{vendors.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></div><div className="row"><input type="number" placeholder="Cost" value={draft.unitCost} onChange={(e) => setDraft({ ...draft, unitCost: Number(e.target.value) })} /><input type="number" placeholder="Price" value={draft.unitPrice} onChange={(e) => setDraft({ ...draft, unitPrice: Number(e.target.value) })} /></div><button type="submit">{editId ? 'Save Part' : 'Create Part'}</button></form><ul>{parts.map((x) => <li key={x.id}>{x.partNumber} - {x.name} · Cost {x.unitCost} · Price {x.unitPrice} <button onClick={() => { setDraft(x); setEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchivePart(x.id); else await masterDataApi.archivePart(x.id); await load() } catch { setError('Unable to update archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></article><article className="card stack"><h3>Vendors</h3><form className="row" onSubmit={async (e) => { e.preventDefault(); if (!vendorDraft.name.trim()) return setError('Vendor name is required.'); try { setError(null); if (vendorEditId) await masterDataApi.updateVendor(vendorEditId, vendorDraft); else await masterDataApi.createVendor(vendorDraft); setVendorDraft({ name: '' }); setVendorEditId(null); await load() } catch (requestError) { setError(masterDataRequestErrorMessage(requestError, 'Unable to save vendor.')) } }}><input placeholder="Vendor name" value={vendorDraft.name} onChange={(e) => setVendorDraft({ ...vendorDraft, name: e.target.value })} /><button type="submit">{vendorEditId ? 'Save Vendor' : 'Create Vendor'}</button></form><ul>{vendors.map((x) => <li key={x.id}>{x.name} <button onClick={() => { setVendorDraft(x); setVendorEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchiveVendor(x.id); else await masterDataApi.archiveVendor(x.id); await load() } catch { setError('Unable to update archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></article><article className="card stack"><h3>Part Categories</h3><form className="row" onSubmit={async (e) => { e.preventDefault(); if (!categoryDraft.name.trim()) return setError('Part category name is required.'); try { setError(null); if (categoryEditId) await masterDataApi.updatePartCategory(categoryEditId, categoryDraft); else await masterDataApi.createPartCategory(categoryDraft); setCategoryDraft({ name: '', description: '' }); setCategoryEditId(null); await load() } catch (requestError) { setError(masterDataRequestErrorMessage(requestError, 'Unable to save part category.')) } }}><input placeholder="Category name" value={categoryDraft.name} onChange={(e) => setCategoryDraft({ ...categoryDraft, name: e.target.value })} /><button type="submit">{categoryEditId ? 'Save Category' : 'Create Category'}</button></form><ul>{categories.map((x) => <li key={x.id}>{x.name} <button onClick={() => { setCategoryDraft(x); setCategoryEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchivePartCategory(x.id); else await masterDataApi.archivePartCategory(x.id); await load() } catch { setError('Unable to update archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></article></section>
+  return <section className="stack"><article className="card stack"><h2>Parts</h2><Errorable error={error} /><form onSubmit={save} className="stack"><div className="row"><input placeholder="Part Number" value={draft.partNumber} onChange={(e) => setDraft({ ...draft, partNumber: e.target.value })} /><input placeholder="Name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></div><div className="row"><select value={draft.partCategoryId} onChange={(e) => setDraft({ ...draft, partCategoryId: e.target.value })}><option value="">Category</option>{categories.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select><select value={draft.vendorId ?? ''} onChange={(e) => setDraft({ ...draft, vendorId: e.target.value || null })}><option value="">Vendor</option>{vendors.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></div><div className="row"><input type="number" placeholder="Cost" value={draft.unitCost} onChange={(e) => setDraft({ ...draft, unitCost: Number(e.target.value) })} /><input type="number" placeholder="Price" value={draft.unitPrice} onChange={(e) => setDraft({ ...draft, unitPrice: Number(e.target.value) })} /></div><button type="submit">{editId ? 'Save Part' : 'Create Part'}</button></form><MasterDataFilters label="parts" search={partSearch} searchPlaceholder="Search by part number, name, category, vendor, or description" archiveFilter={partArchiveFilter} onSearchChange={setPartSearch} onArchiveFilterChange={setPartArchiveFilter} onReset={() => { setPartSearch(''); setPartArchiveFilter('all'); setPartCategoryFilter(''); setPartVendorFilter('') }}><label>Category<select value={partCategoryFilter} onChange={(event) => setPartCategoryFilter(event.target.value)}><option value="">All categories</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label>Vendor<select value={partVendorFilter} onChange={(event) => setPartVendorFilter(event.target.value)}><option value="">All vendors</option>{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select></label></MasterDataFilters><MasterDataListState loading={isLoading} totalCount={parts.length} filteredCount={filteredParts.length} noun="parts" /><ul>{filteredParts.map((x) => <li key={x.id}>{x.partNumber} - {x.name} · {categoryNameById(categories, x.partCategoryId) || 'No category'} · {vendorNameById(vendors, x.vendorId) || 'No vendor'} · Cost {x.unitCost} · Price {x.unitPrice} · <span className={`status-pill ${x.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(x.isArchived)}</span> <button onClick={() => { setDraft(x); setEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchivePart(x.id); else await masterDataApi.archivePart(x.id); await load() } catch { setError('Unable to update archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></article><article className="card stack"><h3>Vendors</h3><form className="row" onSubmit={async (e) => { e.preventDefault(); if (!vendorDraft.name.trim()) return setError('Vendor name is required.'); try { setError(null); if (vendorEditId) await masterDataApi.updateVendor(vendorEditId, vendorDraft); else await masterDataApi.createVendor(vendorDraft); setVendorDraft({ name: '' }); setVendorEditId(null); await load() } catch (requestError) { setError(masterDataRequestErrorMessage(requestError, 'Unable to save vendor.')) } }}><input placeholder="Vendor name" value={vendorDraft.name} onChange={(e) => setVendorDraft({ ...vendorDraft, name: e.target.value })} /><button type="submit">{vendorEditId ? 'Save Vendor' : 'Create Vendor'}</button></form><MasterDataFilters label="vendors" search={vendorSearch} searchPlaceholder="Search by name, account, contact, email, or phone" archiveFilter={vendorArchiveFilter} onSearchChange={setVendorSearch} onArchiveFilterChange={setVendorArchiveFilter} onReset={() => { setVendorSearch(''); setVendorArchiveFilter('all') }} /><MasterDataListState loading={isLoading} totalCount={vendors.length} filteredCount={filteredVendors.length} noun="vendors" /><ul>{filteredVendors.map((x) => <li key={x.id}>{x.name} · <span className={`status-pill ${x.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(x.isArchived)}</span> <button onClick={() => { setVendorDraft(x); setVendorEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchiveVendor(x.id); else await masterDataApi.archiveVendor(x.id); await load() } catch { setError('Unable to update archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></article><article className="card stack"><h3>Part Categories</h3><form className="row" onSubmit={async (e) => { e.preventDefault(); if (!categoryDraft.name.trim()) return setError('Part category name is required.'); try { setError(null); if (categoryEditId) await masterDataApi.updatePartCategory(categoryEditId, categoryDraft); else await masterDataApi.createPartCategory(categoryDraft); setCategoryDraft({ name: '', description: '' }); setCategoryEditId(null); await load() } catch (requestError) { setError(masterDataRequestErrorMessage(requestError, 'Unable to save part category.')) } }}><input placeholder="Category name" value={categoryDraft.name} onChange={(e) => setCategoryDraft({ ...categoryDraft, name: e.target.value })} /><button type="submit">{categoryEditId ? 'Save Category' : 'Create Category'}</button></form><MasterDataFilters label="part categories" search={categorySearch} searchPlaceholder="Search by name or description" archiveFilter={categoryArchiveFilter} onSearchChange={setCategorySearch} onArchiveFilterChange={setCategoryArchiveFilter} onReset={() => { setCategorySearch(''); setCategoryArchiveFilter('all') }} /><MasterDataListState loading={isLoading} totalCount={categories.length} filteredCount={filteredCategories.length} noun="part categories" /><ul>{filteredCategories.map((x) => <li key={x.id}>{x.name} · <span className={`status-pill ${x.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(x.isArchived)}</span> <button onClick={() => { setCategoryDraft(x); setCategoryEditId(x.id) }}>Edit</button> <button onClick={async () => { try { if (x.isArchived) await masterDataApi.unarchivePartCategory(x.id); else await masterDataApi.archivePartCategory(x.id); await load() } catch { setError('Unable to update archive state.') } }}>{x.isArchived ? 'Unarchive' : 'Archive'}</button></li>)}</ul></article></section>
 }
 
 export function TimeApprovalPage() { const [jobId, setJobId] = useState(''); const [entries, setEntries] = useState<TimeEntryDto[]>([]); const [error, setError] = useState<string | null>(null); const load = () => jobId ? timeEntriesApi.listByJob(jobId).then(setEntries).catch(() => setError('Unable to load time entries for job.')) : Promise.resolve(); const approve = async (id: string) => { await timeEntriesApi.approve(id, { approvedByUserId: '' }); await load() }; const reject = async (id: string) => { await timeEntriesApi.reject(id, { rejectedByUserId: '', reason: 'Rejected in manager review' }); await load() }; return <section className="card stack"><h2>Time Approval</h2><p className="muted">Enter a job ticket id to review and action time entries.</p><input value={jobId} onChange={(e) => setJobId(e.target.value)} placeholder="Job ticket id" /><button onClick={() => load()}>Load Time Entries</button><Errorable error={error} /><ul>{entries.map((x) => <li key={x.id}>{x.employeeId} · {formatDate(x.startedAtUtc)} - {formatDate(x.endedAtUtc)} · {x.laborHours}h · {getApprovalLabel(x.approvalStatus)} <button onClick={() => approve(x.id)}>Approve</button> <button onClick={() => reject(x.id)}>Reject</button></li>)}</ul></section> }
