@@ -193,6 +193,11 @@ describe('JobDetailPage', () => {
     expect(screen.getByRole('heading', { name: 'Upload Photo / File' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument()
 
+    const invoiceAttachment = screen.getByLabelText('Invoice attachment')
+    expect(invoiceAttachment).toHaveAttribute('type', 'checkbox')
+    expect(invoiceAttachment.closest('label')).toHaveClass('row')
+    expect(invoiceAttachment.closest('label')).not.toHaveClass('master-data-form-row')
+
     const user = userEvent.setup()
     const uploadButton = screen.getByRole('button', { name: 'Upload' })
     await user.click(uploadButton)
