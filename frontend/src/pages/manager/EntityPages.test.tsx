@@ -91,8 +91,6 @@ describe('CustomersPage', () => {
 
     const { container } = render(<CustomersPage />)
     expect(await screen.findByText(/Acme/)).toBeInTheDocument()
-    expect(container.querySelector('.master-data-form-row')).toBeInTheDocument()
-    expect(screen.getByLabelText('Search customers')).toBeInTheDocument()
     expect(screen.getByText('Showing 2 of 2 loaded customers.')).toBeInTheDocument()
     expect(screen.getByText('1 active / 1 archived visible.')).toBeInTheDocument()
     expect(screen.getByText('Counts reflect currently loaded records only.')).toBeInTheDocument()

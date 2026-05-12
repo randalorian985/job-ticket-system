@@ -450,11 +450,6 @@ th {
 }
 
 @media (max-width: 640px) {
-  .master-data-form-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .master-data-item {
     grid-template-columns: 1fr;
   }
