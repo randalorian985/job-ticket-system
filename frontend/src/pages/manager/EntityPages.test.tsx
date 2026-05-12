@@ -89,7 +89,7 @@ describe('CustomersPage', () => {
       { id: 'c2', name: 'Beta', contactName: 'Bea', email: 'bea@example.com', isArchived: true }
     ] as any)
 
-    render(<CustomersPage />)
+    const { container } = render(<CustomersPage />)
     expect(await screen.findByText(/Acme/)).toBeInTheDocument()
     expect(screen.getByText('Showing 2 of 2 loaded customers.')).toBeInTheDocument()
     expect(screen.getByText('1 active / 1 archived visible.')).toBeInTheDocument()
