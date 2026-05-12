@@ -93,22 +93,56 @@ function MasterDataListState({ loading, totalCount, filteredCount, noun }: { loa
 
 type ArchivableRecord = { isArchived?: boolean }
 
-const countNoun = (count: number, singular: string, plural = `${singular}s`) => count === 1 ? singular : plural
-const loadedCountText = (visibleCount: number, totalCount: number, noun: string) => `Showing ${visibleCount} of ${totalCount} loaded ${noun}.`
-const archivedVisibleText = (visibleRecords: ArchivableRecord[]) => {
-  const archivedCount = visibleRecords.filter((record) => record.isArchived).length
-  return archivedCount > 0 ? `${archivedCount} archived ${countNoun(archivedCount, 'record')} visible.` : 'No archived records visible.'
-}
+const visibleLoadedCountText = (visibleCount: number, totalCount: number, noun: string) => `Showing ${visibleCount} of ${totalCount} loaded ${noun}.`
 
-function MasterDataListSummary<T extends ArchivableRecord>({ loading, totalCount, filteredItems, noun }: { loading: boolean, totalCount: number, filteredItems: T[], noun: string }) {
+function MasterDataListSummary<T extends ArchivableRecord>({
+  loading,
+  totalCount,
+  filteredItems,
+  noun
+}: {
+  loading: boolean
+  totalCount: number
+  filteredItems: T[]
+  noun: string
+}) {
   if (loading || totalCount === 0) return null
+
   const activeCount = filteredItems.filter((record) => !record.isArchived).length
   const archivedCount = filteredItems.length - activeCount
-  return <div className="master-data-summary" aria-live="polite"><strong>{loadedCountText(filteredItems.length, totalCount, noun)}</strong><span>{activeCount} active / {archivedCount} archived visible.</span><span>{archivedVisibleText(filteredItems)}</span><span>Counts use currently loaded records only; no additional pages are requested here.</span></div>
+
+  return <div className="master-data-summary" aria-live="polite">
+    <strong>{visibleLoadedCountText(filteredItems.length, totalCount, noun)}</strong>
+    <span>{activeCount} active / {archivedCount} archived visible.</span>
+    <span>Counts reflect currently loaded records only.</span>
+  </div>
 }
 
-function MasterDataItem({ title, statusArchived, meta, actions }: { title: string, statusArchived?: boolean, meta: Array<string | number | null | undefined | JSX.Element>, actions: JSX.Element }) {
-  return <li className="master-data-item"><div className="master-data-item-main"><div className="master-data-title-row"><strong className="master-data-title">{title}</strong><span className={`status-pill ${statusArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(statusArchived)}</span></div><div className="master-data-meta">{meta.filter((value) => value !== null && value !== undefined && value !== '').map((value, index) => <span key={index}>{value}</span>)}</div></div><div className="master-data-actions">{actions}</div></li>
+function MasterDataItem({
+  title,
+  statusArchived,
+  meta,
+  actions
+}: {
+  title: string
+  statusArchived?: boolean
+  meta: Array<string | number | null | undefined | JSX.Element>
+  actions: JSX.Element
+}) {
+  const visibleMeta = meta.filter((value) => value !== null && value !== undefined && value !== '')
+
+  return <li className="master-data-item">
+    <div className="master-data-item-main">
+      <div className="master-data-title-row">
+        <strong className="master-data-title">{title}</strong>
+        <span className={`status-pill ${statusArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(statusArchived)}</span>
+      </div>
+      <div className="master-data-meta">
+        {visibleMeta.map((value, index) => <span key={index}>{value}</span>)}
+      </div>
+    </div>
+    <div className="master-data-actions">{actions}</div>
+  </li>
 }
 
 const masterDataRequestErrorMessage = (requestError: unknown, fallback: string) => {
