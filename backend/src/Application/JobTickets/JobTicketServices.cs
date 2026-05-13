@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Entities;
@@ -305,6 +306,10 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         await EnsureJobTicketExists(jobTicketId, cancellationToken);
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
         ValidationHelpers.ValidateRequired(request.Notes, nameof(request.Notes));
+        if (!Enum.IsDefined(request.EntryType))
+        {
+            throw new ValidationException("EntryType is not a valid work entry type.");
+        }
 
         if (request.EmployeeId.HasValue && !await dbContext.Employees.AnyAsync(x => x.Id == request.EmployeeId.Value, cancellationToken))
         {
@@ -335,7 +340,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         return await dbContext.JobTicketParts
             .Where(x => x.JobTicketId == jobTicketId)
             .OrderByDescending(x => x.AddedAtUtc)
-            .Select(MapJobTicketPart)
+            .Select(MapJobTicketPart(currentUserContext.IsManager))
             .ToListAsync(cancellationToken);
     }
 
@@ -397,7 +402,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Create, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"PartId\":\"{request.PartId}\",\"Quantity\":{request.Quantity}}}");
         await dbContext.SaveChangesAsync(cancellationToken);
-        return MapJobTicketPart.Compile().Invoke(entry);
+        return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
 
     public async Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
@@ -407,6 +412,10 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         if (request.ApprovalStatus.HasValue)
         {
             EnsureManagerOrAdmin();
+            if (!Enum.IsDefined(request.ApprovalStatus.Value))
+            {
+                throw new ValidationException("ApprovalStatus is not a valid job part approval status.");
+            }
         }
 
         if (request.AllowManagerOverride && !currentUserContext.IsManager)
@@ -465,7 +474,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Update, oldValues, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"Quantity\":{entry.Quantity},\"IsBillable\":{entry.IsBillable.ToString().ToLowerInvariant()},\"ApprovalStatus\":\"{entry.ApprovalStatus}\"}}");
         await dbContext.SaveChangesAsync(cancellationToken);
-        return MapJobTicketPart.Compile().Invoke(entry);
+        return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
 
     public async Task<JobTicketPartDto?> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, ApproveJobTicketPartDto request, CancellationToken cancellationToken = default)
@@ -484,7 +493,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Approval, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"ApprovalStatus\":\"Approved\"}}");
         await dbContext.SaveChangesAsync(cancellationToken);
-        return MapJobTicketPart.Compile().Invoke(entry);
+        return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
 
     public async Task<JobTicketPartDto?> RejectPartAsync(Guid jobTicketId, Guid jobTicketPartId, RejectJobTicketPartDto request, CancellationToken cancellationToken = default)
@@ -509,7 +518,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Approval, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"ApprovalStatus\":\"Rejected\"}}");
         await dbContext.SaveChangesAsync(cancellationToken);
-        return MapJobTicketPart.Compile().Invoke(entry);
+        return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
 
     public async Task<JobTicketPartDto?> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default)
@@ -534,7 +543,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Delete, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"RestoreInventory\":{request.RestoreInventory.ToString().ToLowerInvariant()}}}");
         await dbContext.SaveChangesAsync(cancellationToken);
-        return MapJobTicketPart.Compile().Invoke(entry);
+        return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
 
 
@@ -735,14 +744,14 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         x.CustomerFacingNotes,
         x.ArchiveReason);
 
-    private static readonly System.Linq.Expressions.Expression<Func<JobTicketPart, JobTicketPartDto>> MapJobTicketPart = x => new JobTicketPartDto(
+    private static System.Linq.Expressions.Expression<Func<JobTicketPart, JobTicketPartDto>> MapJobTicketPart(bool includePricing) => x => new JobTicketPartDto(
         x.Id,
         x.JobTicketId,
         x.PartId,
         x.EquipmentId,
         x.Quantity,
-        x.UnitCostSnapshot,
-        x.SalePriceSnapshot,
+        includePricing ? x.UnitCostSnapshot : null,
+        includePricing ? x.SalePriceSnapshot : null,
         x.ComponentCategory,
         x.FailureDescription,
         x.RepairDescription,
@@ -914,8 +923,8 @@ public sealed record JobTicketPartDto(
     Guid PartId,
     Guid? EquipmentId,
     decimal Quantity,
-    decimal UnitCostSnapshot,
-    decimal SalePriceSnapshot,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] decimal? UnitCostSnapshot,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] decimal? SalePriceSnapshot,
     string? ComponentCategory,
     string? FailureDescription,
     string? RepairDescription,

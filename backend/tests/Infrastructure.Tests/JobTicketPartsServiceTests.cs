@@ -79,6 +79,41 @@ public sealed class JobTicketPartsServiceTests
     }
 
     [Fact]
+    public async Task Update_part_rejects_invalid_approval_status()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
+
+        await Assert.ThrowsAsync<ValidationException>(() => service.UpdatePartAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketPartDto(1m, null, true, (JobPartApprovalStatus)999, null, refs.Manager.Id)));
+
+        Assert.Equal(JobPartApprovalStatus.Pending, context.JobTicketParts.Single(x => x.Id == created.Id).ApprovalStatus);
+    }
+
+    [Fact]
+    public async Task Employee_part_responses_hide_price_snapshots_while_manager_responses_keep_them()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var managerService = new JobTicketsService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var managerCreated = await managerService.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
+
+        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+        var employeeListed = await employeeService.ListPartsAsync(refs.JobTicket.Id);
+        var employeeUpdated = await employeeService.UpdatePartAsync(refs.JobTicket.Id, managerCreated.Id, new UpdateJobTicketPartDto(1m, "employee note", true, null, null, refs.Employee.Id));
+
+        Assert.Equal(12.34m, managerCreated.UnitCostSnapshot);
+        Assert.Equal(25.67m, managerCreated.SalePriceSnapshot);
+        Assert.Null(employeeListed.Single().UnitCostSnapshot);
+        Assert.Null(employeeListed.Single().SalePriceSnapshot);
+        Assert.NotNull(employeeUpdated);
+        Assert.Null(employeeUpdated!.UnitCostSnapshot);
+        Assert.Null(employeeUpdated.SalePriceSnapshot);
+    }
+
+    [Fact]
     public async Task List_excludes_archived_job_parts()
     {
         await using var context = CreateContext();

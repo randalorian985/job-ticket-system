@@ -148,18 +148,18 @@ List/detail/create/update responses use DTOs and expose `isArchived` for master-
 - Status transition to `Completed` sets `CompletedAtUtc`; leaving `Completed` clears it.
 - Archive requests must provide `ArchiveReason`.
 - Assignment API enforces one active assignment per employee per ticket.
-- Work entries are note/description records only in this phase (no time tracking or file uploads).
+- Work entries are note/description records only in this phase (no time tracking or file uploads). `EntryType` must be a defined `WorkEntryType` value (`1=Note`, `2=Diagnosis`, `3=Repair`, `4=Inspection`, `5=Recommendation`); invalid enum values are rejected with `400 Bad Request`.
 - Job ticket files are stored outside SQL Server through a storage provider abstraction (`IFileStorageProvider`).
-- Current provider writes to a configurable local root (`FileStorage:RootPath`) and stores only metadata in `JobTicketFiles`.
+- Current provider writes to a configurable local root (`FileStorage:RootPath`) and stores only metadata in `JobTicketFiles`; file DTO responses do not expose provider storage keys or local paths.
 - Supported upload types: `jpg`, `jpeg`, `png`, `webp`, and `pdf` (`image/jpeg`, `image/png`, `image/webp`, `application/pdf`).
 - File rows support optional `EquipmentId`, `WorkEntryId`, and `UploadedByEmployeeId` validation when provided.
 - File archive endpoint is soft-delete only (`IsDeleted = true`) and archived files are excluded from normal list/get calls.
 - File upload, metadata update, and archive actions are audit logged.
-- Job part usage stores immutable `UnitCostSnapshot` and `SalePriceSnapshot` from the Part master record at add time.
+- Job part usage stores immutable `UnitCostSnapshot` and `SalePriceSnapshot` from the Part master record at add time. Manager/Admin job-part responses include these snapshots; assigned-employee job-part response paths omit them.
 - Job part quantity must be greater than zero; job ticket and part references must be active.
 - `AddedByEmployeeId` is optional but, when provided, must reference an active employee assigned to the ticket unless manager override is enabled.
 - Approved or invoiced part usage rows are locked from edits unless manager override is enabled.
-- Part approval state transitions are manager/admin-only (`approve`/`reject` endpoints). Employee updates cannot set approval status.
+- Part approval state transitions are manager/admin-only (`approve`/`reject` endpoints). Employee updates cannot set approval status. Numeric job-part approval values are `1=Pending`, `2=Approved`, `3=Rejected`, `4=Invoiced`.
 - Rejection requires a non-empty reason.
 - Archiving is soft-delete only (`IsDeleted = true`) and excluded from normal lists via query filters.
 - Inventory decrement/restore is supported through add/archive DTO flags (`AdjustInventory`, `RestoreInventory`).

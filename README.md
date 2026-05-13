@@ -47,6 +47,11 @@ This repository is in a **Phase 4A pilot-readiness phase** with core backend, em
 - `GET /health`
 - `GET /api/system/info`
 
+## Stabilization Contract Notes
+- Assigned-employee job-part API responses omit cost/sale snapshot fields; Manager/Admin responses retain those values for approval and reporting workflows.
+- Work-note submissions use backend `WorkEntryType` numeric values (`1=Note`) and invalid enum values are rejected before persistence.
+- File DTO responses expose safe metadata only and do not include storage provider keys or local file paths; uploads continue to return deterministic `201 Created` responses with API-relative `Location` headers.
+
 ## Web Codex Setup Validation
 From repository root, run the setup validation script after making it executable:
 

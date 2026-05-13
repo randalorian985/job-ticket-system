@@ -82,7 +82,7 @@ describe('JobDetailPage', () => {
       {
         id: 'work-1',
         jobTicketId: 'job-1',
-        entryType: 0,
+        entryType: 1,
         notes: 'Inspected hydraulic lines',
         performedAtUtc: '2026-04-28T10:00:00Z',
         employeeId: 'employee-1'

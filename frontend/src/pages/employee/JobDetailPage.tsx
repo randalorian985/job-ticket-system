@@ -215,7 +215,7 @@ export function JobDetailPage() {
     try {
       await jobTicketsApi.addWorkEntry(jobTicketId, {
         employeeId: user?.employeeId,
-        entryType: 0,
+        entryType: 1,
         notes: workNote,
         performedAtUtc: null
       })

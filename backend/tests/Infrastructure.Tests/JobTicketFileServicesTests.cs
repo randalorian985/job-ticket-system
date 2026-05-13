@@ -34,8 +34,8 @@ public sealed class JobTicketFileServicesTests
 
         Assert.Equal("photo.jpg", result.OriginalFileName);
         Assert.Equal(".jpg", result.FileExtension);
-        Assert.StartsWith("job-tickets/", result.StorageKey);
         Assert.Single(context.JobTicketFiles);
+        Assert.StartsWith("job-tickets/", context.JobTicketFiles.Single().StorageKey);
     }
 
     [Fact]
