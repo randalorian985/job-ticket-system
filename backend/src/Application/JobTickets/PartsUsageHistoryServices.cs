@@ -50,11 +50,13 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
             var equipmentType = requestedEquipment.EquipmentType;
             history = history.Where(x =>
                 x.EquipmentId == requestedEquipment.Id ||
-                x.JobTicket.EquipmentId == requestedEquipment.Id ||
+                (x.EquipmentId == null && x.JobTicket.EquipmentId == requestedEquipment.Id) ||
                 (!string.IsNullOrWhiteSpace(modelNumber) &&
-                    (x.Equipment!.ModelNumber == modelNumber || x.JobTicket.Equipment!.ModelNumber == modelNumber)) ||
+                    ((x.EquipmentId != null && x.Equipment!.ModelNumber == modelNumber) ||
+                     (x.EquipmentId == null && x.JobTicket.Equipment!.ModelNumber == modelNumber))) ||
                 (!string.IsNullOrWhiteSpace(equipmentType) &&
-                    (x.Equipment!.EquipmentType == equipmentType || x.JobTicket.Equipment!.EquipmentType == equipmentType)));
+                    ((x.EquipmentId != null && x.Equipment!.EquipmentType == equipmentType) ||
+                     (x.EquipmentId == null && x.JobTicket.Equipment!.EquipmentType == equipmentType))));
         }
 
         var rows = await history
