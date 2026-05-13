@@ -1,0 +1,77 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { masterDataApi } from '../../api/masterDataApi'
+import { partsUsageHistoryApi } from '../../api/partsUsageHistoryApi'
+import { PartsUsageHistoryPage } from './PartsUsageHistoryPage'
+
+vi.mock('../../api/masterDataApi', () => ({
+  masterDataApi: {
+    listEquipment: vi.fn(),
+    listParts: vi.fn()
+  }
+}))
+
+vi.mock('../../api/partsUsageHistoryApi', () => ({
+  partsUsageHistoryApi: {
+    list: vi.fn()
+  }
+}))
+
+beforeEach(() => {
+  cleanup()
+  vi.clearAllMocks()
+})
+
+describe('PartsUsageHistoryPage', () => {
+  it('renders cautious parts usage history evidence without recommendation language', async () => {
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Crane A', isArchived: false }] as any)
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'SEAL-1', name: 'Seal Kit', isArchived: false }] as any)
+    vi.mocked(partsUsageHistoryApi.list).mockResolvedValue([
+      {
+        jobTicketPartId: 'jtp1',
+        jobTicketId: 'job1',
+        ticketNumber: 'JT-2026-000101',
+        partId: 'p1',
+        partNumber: 'SEAL-1',
+        partName: 'Seal Kit',
+        equipmentId: 'eq1',
+        equipmentName: 'Crane A',
+        modelNumber: 'X100',
+        quantity: 1,
+        componentCategory: 'Hydraulic',
+        repairDescription: 'Replaced leaking seal',
+        technicianNotes: 'Observed after install',
+        compatibilityNotes: 'Verify before reuse',
+        addedAtUtc: '2026-05-01T12:00:00Z',
+        approvalStatus: 2,
+        evidenceTags: ['previously used on this equipment', 'technician-confirmed']
+      }
+    ] as any)
+
+    render(<PartsUsageHistoryPage />, { wrapper: MemoryRouter })
+
+    expect((await screen.findAllByText('SEAL-1 · Seal Kit')).length).toBeGreaterThan(0)
+    expect(screen.getByText('previously used on this equipment')).toBeInTheDocument()
+    expect(screen.getByText('technician-confirmed')).toBeInTheDocument()
+    expect(screen.getByText(/not compatibility guarantees or automatic recommendations/i)).toBeInTheDocument()
+    expect(screen.queryByText(/recommended part/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/guaranteed compatible/i)).not.toBeInTheDocument()
+  })
+
+  it('passes selected equipment and part filters to history API', async () => {
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Crane A', isArchived: false }] as any)
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'SEAL-1', name: 'Seal Kit', isArchived: false }] as any)
+    vi.mocked(partsUsageHistoryApi.list).mockResolvedValue([] as any)
+
+    render(<PartsUsageHistoryPage />, { wrapper: MemoryRouter })
+
+    await screen.findByText('No parts usage history matches the current filters.')
+    const filters = screen.getByRole('form', { name: 'parts usage history filters' })
+    fireEvent.change(within(filters).getByRole('combobox', { name: 'Equipment' }), { target: { value: 'eq1' } })
+    fireEvent.change(within(filters).getByRole('combobox', { name: 'Part' }), { target: { value: 'p1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Review History' }))
+
+    await waitFor(() => expect(partsUsageHistoryApi.list).toHaveBeenLastCalledWith({ equipmentId: 'eq1', partId: 'p1', limit: 50 }))
+  })
+})

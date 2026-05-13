@@ -3,3 +3,5 @@ export { PartsApprovalPage, TimeApprovalPage } from './approvals/ApprovalPages'
 export { ReportsPage } from './reports/ReportsPage'
 export { UnauthorizedPage } from './users/UnauthorizedPage'
 export { UsersPage } from './users/UsersPage'
+
+export { PartsUsageHistoryPage } from './PartsUsageHistoryPage'
