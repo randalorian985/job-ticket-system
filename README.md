@@ -43,6 +43,10 @@ This repository is in a **Phase 4A pilot-readiness phase** with core backend, em
 /docs
 ```
 
+
+## Parts Usage History Visibility
+Manager/Admin users can open `/manage/parts-usage-history` to review read-only historical part usage. The view uses cautious evidence labels such as “previously used on this equipment,” “commonly used with this model,” “technician-confirmed,” “possible match based on similar jobs,” and “needs verification.” It intentionally does not provide guaranteed compatibility claims, automatic recommendations, AI/scoring logic, confidence scores, purchasing workflows, vendor cost tracking, or advanced inventory.
+
 ## Public Platform Endpoints
 - `GET /health`
 - `GET /api/system/info`

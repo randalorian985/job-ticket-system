@@ -9,6 +9,7 @@ import {
   EquipmentPage,
   PartsApprovalPage,
   PartsPage,
+  PartsUsageHistoryPage,
   ReportsPage,
   ServiceLocationsPage,
   TimeApprovalPage,
@@ -57,6 +58,7 @@ export function AppRouter() {
           <Route path="service-locations" element={<ServiceLocationsPage />} />
           <Route path="equipment" element={<EquipmentPage />} />
           <Route path="parts" element={<PartsPage />} />
+          <Route path="parts-usage-history" element={<PartsUsageHistoryPage />} />
           <Route path="time-approval" element={<TimeApprovalPage />} />
           <Route path="parts-approval" element={<PartsApprovalPage />} />
           <Route path="reports" element={<ReportsPage />} />

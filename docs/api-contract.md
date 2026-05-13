@@ -45,6 +45,7 @@
 - Job tickets (`/api/job-tickets/*`)
 - Time entries (`/api/time-entries/*`)
 - Reporting (`/api/reports/*`)
+- Parts usage history visibility (`/api/parts/usage-history`)
 
 ### Implemented Backend + Frontend (Manager/Admin UI Phases 1-2)
 - Manager/Admin React routes consume management/reporting endpoints for read-first pages plus targeted edit workflows.
@@ -58,6 +59,8 @@
 - Advanced inventory management workflows.
 - Parts compatibility recommendation engine.
 - AI/scoring-based part recommendations.
+
+Parts usage history is a visibility-only workflow and must not be interpreted as a compatibility recommendation engine.
 
 ## Master Data (Current)
 All list endpoints support simple pagination with optional query params:
@@ -115,6 +118,16 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/parts/{id}/unarchive`
 
 List/detail/create/update responses use DTOs and expose `isArchived` for master-data rows; EF entities remain internal. Unarchive endpoints can return validation errors (`400`) when required linked records are archived/deleted/inactive, and `404` when the target record does not exist.
+
+### Parts Usage History Visibility
+- `GET /api/parts/usage-history`
+  - Manager/Admin only.
+  - Query params: `equipmentId`, `partId`, `offset` (default `0`), `limit` (default `50`, max `100`).
+  - Returns DTO rows only; EF entities are not exposed.
+  - Soft-archived job-part, equipment, part, and job-ticket rows remain excluded by global query filters.
+  - Response fields include job ticket reference, part number/name, optional equipment/model context, quantity, historical technician notes, approval status, and `evidenceTags`.
+  - `evidenceTags` use cautious phrases only: `previously used on this equipment`, `commonly used with this model`, `technician-confirmed`, `possible match based on similar jobs`, and `needs verification`.
+  - The endpoint does not return confidence scores, rankings, compatibility guarantees, purchasing data, vendor cost data, or automated recommendations.
 
 ## Job Tickets (Current)
 ### Endpoints

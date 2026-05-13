@@ -17,6 +17,7 @@ export function ManagerShell() {
           <Link to="/manage/service-locations">Service Locations</Link>
           <Link to="/manage/equipment">Equipment</Link>
           <Link to="/manage/parts">Parts</Link>
+          <Link to="/manage/parts-usage-history">Parts Usage History</Link>
           <Link to="/manage/time-approval">Time Approval</Link>
           <Link to="/manage/parts-approval">Parts Approval</Link>
           <Link to="/manage/reports">Reports</Link>

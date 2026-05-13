@@ -65,6 +65,13 @@ Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap
 - Employee access is assignment-scoped for job-specific workflows.
 - Manager/Admin approval and archive workflows are policy-protected for time and part approvals.
 
+## Parts Usage History Visibility
+- Manager/Admin users can review historical job-part usage from `/manage/parts-usage-history`.
+- The workflow is read-only visibility into existing job part records and supports direct filters for equipment and part.
+- Wording must remain cautious: previously used on this equipment, commonly used with this model, technician-confirmed, possible match based on similar jobs, and needs verification.
+- This workflow does not claim guaranteed compatibility and does not automatically recommend parts.
+- Existing soft-delete/archive behavior remains in force; archived records are excluded from history results.
+
 ## Future Parts Compatibility Engine Data Capture
 - This phase adds **structured compatibility data capture only** for equipment and job-ticket-part history.
 - Equipment records now support manufacturer, model number, serial number, equipment type, unit number, and year attributes.

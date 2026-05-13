@@ -276,6 +276,40 @@ export type PartLookupDto = {
   description?: string | null
 }
 
+
+export type PartsUsageHistoryItemDto = {
+  jobTicketPartId: string
+  jobTicketId: string
+  ticketNumber: string
+  partId: string
+  partNumber: string
+  partName: string
+  equipmentId?: string | null
+  equipmentName?: string | null
+  manufacturer?: string | null
+  modelNumber?: string | null
+  equipmentType?: string | null
+  quantity: number
+  componentCategory?: string | null
+  failureDescription?: string | null
+  repairDescription?: string | null
+  technicianNotes?: string | null
+  compatibilityNotes?: string | null
+  notes?: string | null
+  installedAtUtc?: string | null
+  addedAtUtc: string
+  wasSuccessful?: boolean | null
+  approvalStatus: number
+  evidenceTags: string[]
+}
+
+export type PartsUsageHistoryQuery = {
+  equipmentId?: string
+  partId?: string
+  offset?: number
+  limit?: number
+}
+
 export type JobTicketFileDto = {
   id: string
   jobTicketId: string
