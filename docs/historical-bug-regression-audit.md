@@ -24,10 +24,10 @@ Environment constraints:
 
 | Group | Current status | Notes |
 |---|---|---|
-| A. File/photo uploads | Fixed | Safe deterministic `201 Created` + non-leaking Location and access enforcement remain in place with tests. |
+| A. File/photo uploads | Fixed | Safe deterministic `201 Created` + non-leaking Location and access enforcement remain in place with tests; file DTOs also omit storage provider keys. |
 | B. Time tracking | Fixed | Service-layer manager/admin adjustment enforcement + single-open-entry and approval rules verified by code/tests. |
-| C. Job parts | Fixed | Employee approval bypass remains blocked; snapshot and approval/invoiced guardrails remain covered. |
-| D. Frontend enum/display | Fixed | Explicit numeric maps and unknown fallbacks remain in use; this audit corrected reports invoice-status labels/filter values to match backend `InvoiceStatus` numeric values 1-6. |
+| C. Job parts | Fixed | Employee approval bypass remains blocked; snapshot and approval/invoiced guardrails remain covered; assigned-employee job-part responses omit cost/sale snapshots while Manager/Admin responses retain them. |
+| D. Frontend enum/display | Fixed | Explicit numeric maps and unknown fallbacks remain in use; approval labels now match backend values (`1=Pending`, `2=Approved`, `3=Rejected`, `4=Invoiced`) and work-note submissions use `WorkEntryType.Note = 1`. |
 | E. Auth/routing | Fixed | Employee/Manager/Admin route boundaries and logout behavior remain protected by router tests. |
 | F. Environment/dependencies | Fixed | Node guidance remains aligned with frontend manifests; tooling built/tests successfully in this environment. |
 | G. Health endpoint | Fixed | `/health` remains unauthenticated and returns documented JSON contract including `status`, `totalDuration`, `entries`. |
@@ -57,6 +57,7 @@ Environment constraints:
 - Remote provenance verification was blocked because `git fetch origin` returned GitHub HTTP 403.
 
 ## Action Taken
+- Stabilization update: employee job-part response pricing redaction, work-entry enum validation, frontend approval/work-note enum alignment, and file DTO storage-key redaction.
 - Documentation synchronization update for the scope-code-review checkpoint.
 - Corrected reports invoice-status labels/filter values to match backend enum numeric values.
 - Hardened Admin user payload validation so invalid create/update/reset-password payloads return controlled `400 Bad Request` responses.

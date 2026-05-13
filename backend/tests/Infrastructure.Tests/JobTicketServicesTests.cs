@@ -150,6 +150,19 @@ public sealed class JobTicketServicesTests
         Assert.Equal("Initial inspection complete", entry.Notes);
     }
 
+    [Fact]
+    public async Task Add_work_entry_rejects_invalid_entry_type()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedCoreReferencesAsync(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var ticket = await service.CreateAsync(BuildCreateRequest(refs));
+
+        await Assert.ThrowsAsync<ValidationException>(() => service.AddWorkEntryAsync(ticket.Id, new AddJobWorkEntryDto(refs.Employee.Id, (WorkEntryType)999, "Invalid type", null)));
+
+        Assert.Empty(await context.JobWorkEntries.Where(x => x.JobTicketId == ticket.Id).ToListAsync());
+    }
+
     private static CreateJobTicketDto BuildCreateRequest(SeedRefs refs)
         => new(
             refs.Customer.Id,

@@ -238,6 +238,11 @@ public sealed class AuthIntegrationTests
         Assert.DoesNotContain("storage", location, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("blob", location, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("key=", location, StringComparison.OrdinalIgnoreCase);
+
+        var payload = await response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(payload);
+        Assert.False(json.RootElement.TryGetProperty("storageKey", out _));
+        Assert.Equal("photo.jpg", json.RootElement.GetProperty("originalFileName").GetString());
     }
 
     [Fact]
@@ -363,6 +368,65 @@ public sealed class AuthIntegrationTests
         Assert.True(first.TryGetProperty("partNumber", out _));
         Assert.True(first.TryGetProperty("name", out _));
         Assert.False(first.TryGetProperty("unitCost", out _));
+    }
+
+    [Fact]
+    public async Task Assigned_employee_part_list_omits_price_snapshots_but_manager_list_keeps_them()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync(async (db, auth) =>
+        {
+            var refs = await SeedDataAsync(db, auth);
+            var category = new PartCategory { Name = "Filters" };
+            db.PartCategories.Add(category);
+            await db.SaveChangesAsync();
+
+            var part = new Part
+            {
+                PartCategoryId = category.Id,
+                PartNumber = "F-100",
+                Name = "Air Filter",
+                UnitCost = 10m,
+                UnitPrice = 20m
+            };
+            db.Parts.Add(part);
+            await db.SaveChangesAsync();
+
+            db.JobTicketParts.Add(new JobTicketPart
+            {
+                JobTicketId = refs.AssignedJob.Id,
+                PartId = part.Id,
+                Quantity = 1m,
+                UnitCostSnapshot = part.UnitCost,
+                SalePriceSnapshot = part.UnitPrice,
+                IsBillable = true,
+                AddedAtUtc = DateTime.UtcNow,
+                AddedByEmployeeId = refs.Employee.Id
+            });
+            await db.SaveChangesAsync();
+        });
+
+        var assigned = await factory.GetAssignedJobIdAsync();
+        var employeeClient = factory.CreateClient();
+        await employeeClient.SetBearerTokenAsync("employee", "EmployeePass!123");
+        var employeeResponse = await employeeClient.GetAsync($"/api/job-tickets/{assigned}/parts");
+
+        Assert.Equal(HttpStatusCode.OK, employeeResponse.StatusCode);
+        using (var employeeJson = JsonDocument.Parse(await employeeResponse.Content.ReadAsStringAsync()))
+        {
+            var partJson = employeeJson.RootElement[0];
+            Assert.False(partJson.TryGetProperty("unitCostSnapshot", out _));
+            Assert.False(partJson.TryGetProperty("salePriceSnapshot", out _));
+        }
+
+        var managerClient = factory.CreateClient();
+        await managerClient.SetBearerTokenAsync("manager", "ManagerPass!123");
+        var managerResponse = await managerClient.GetAsync($"/api/job-tickets/{assigned}/parts");
+
+        Assert.Equal(HttpStatusCode.OK, managerResponse.StatusCode);
+        using var managerJson = JsonDocument.Parse(await managerResponse.Content.ReadAsStringAsync());
+        Assert.Equal(10m, managerJson.RootElement[0].GetProperty("unitCostSnapshot").GetDecimal());
+        Assert.Equal(20m, managerJson.RootElement[0].GetProperty("salePriceSnapshot").GetDecimal());
     }
 
     [Fact]

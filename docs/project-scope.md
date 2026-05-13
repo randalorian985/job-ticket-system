@@ -36,11 +36,11 @@ Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap
 - Change status independently through a dedicated status endpoint with completed-date conventions.
 - Archive tickets using soft-delete semantics with a required archive reason.
 - Assign and unassign employees with duplicate-assignment prevention.
-- Add and list non-time-tracking work notes (work entries).
-- Track parts used on job tickets with immutable pricing snapshots and optional inventory decrement/restore behavior.
+- Add and list non-time-tracking work notes (work entries), with invalid work-entry enum values rejected before persistence.
+- Track parts used on job tickets with immutable pricing snapshots and optional inventory decrement/restore behavior; pricing snapshots remain Manager/Admin-visible and are omitted from assigned-employee job-part API responses.
 - Approve, reject (with reason), update, and archive job part usage entries through dedicated workflow endpoints.
 - Upload and manage job ticket files/photos with soft-archive behavior and optional linkage to equipment/work entries.
-- Persist file metadata in SQL while storing file content through a pluggable storage provider abstraction (local provider in this phase).
+- Persist safe file metadata in SQL while storing file content through a pluggable storage provider abstraction (local provider in this phase); API file DTOs do not expose provider storage keys or local paths.
 - Record audit logs for create, update, status changes, archive, assignment changes, and work entry additions.
   - Includes job part add/update/archive/approve/reject and job file upload/update/archive actions.
 

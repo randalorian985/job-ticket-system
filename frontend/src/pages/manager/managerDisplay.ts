@@ -3,11 +3,15 @@ export const formatDate = (value?: string | null) => (value ? new Date(value).to
 export const getApprovalLabel = (value: number) => {
   switch (value) {
     case 1:
-      return 'Approved'
-    case 2:
-      return 'Rejected'
-    default:
       return 'Pending'
+    case 2:
+      return 'Approved'
+    case 3:
+      return 'Rejected'
+    case 4:
+      return 'Invoiced'
+    default:
+      return 'Unknown'
   }
 }
 
