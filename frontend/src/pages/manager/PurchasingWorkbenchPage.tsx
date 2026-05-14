@@ -58,7 +58,7 @@ function normalizeSearchValue(value: string | number | null | undefined) {
 
 function escapeCsvValue(value: string | number) {
   const text = String(value)
-  return `"${text.replaceAll('"', '""')}"`
+  return `"${text.split('"').join('""')}"`
 }
 
 export function PurchasingWorkbenchPage() {
