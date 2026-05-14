@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { masterDataApi } from '../../api/masterDataApi'
 import { partsUsageHistoryApi } from '../../api/partsUsageHistoryApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
@@ -68,9 +69,17 @@ describe('PartsUsageHistoryPage', () => {
 
     await screen.findByText('No parts usage history matches the current filters.')
     const filters = screen.getByRole('form', { name: 'parts usage history filters' })
-    fireEvent.change(within(filters).getByRole('combobox', { name: 'Equipment' }), { target: { value: 'eq1' } })
-    fireEvent.change(within(filters).getByRole('combobox', { name: 'Part' }), { target: { value: 'p1' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Review History' }))
+    const equipmentSelect = within(filters).getByRole('combobox', { name: 'Equipment' })
+    const partSelect = within(filters).getByRole('combobox', { name: 'Part' })
+    const user = userEvent.setup()
+
+    await user.selectOptions(equipmentSelect, 'eq1')
+    await user.selectOptions(partSelect, 'p1')
+
+    expect(equipmentSelect).toHaveValue('eq1')
+    expect(partSelect).toHaveValue('p1')
+
+    fireEvent.submit(filters)
 
     await waitFor(() => expect(partsUsageHistoryApi.list).toHaveBeenLastCalledWith({ equipmentId: 'eq1', partId: 'p1', limit: 50 }))
   })
