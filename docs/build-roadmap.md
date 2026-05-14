@@ -151,3 +151,11 @@ Concise readiness statement:
 - Manager/Admin dashboard now shows a small operational job summary from existing job list data: open, assigned, in-progress, waiting-on-parts, completed/review-ready, and invoice-ready counts.
 - Manager/Admin job detail now presents clearer job review sections for labor/work, time, parts usage, files/photos, status/priority, and browser print support with print-only CSS behavior.
 - No backend contracts, authorization policies, enum numeric values, migrations, production seeding, server-side exports, or deferred product domains were added in this phase.
+
+## Parts Purchase / Vendor Cost Tracking Phase 2 (Implemented in current slice)
+- Added dedicated purchase-order and purchase-order-line persistence for vendor purchasing records.
+- Added Manager/Admin API coverage for list/detail/create/update/submit/receive/cancel/archive/unarchive purchase-order workflows.
+- Added vendor invoice tracking fields and landed-cost recording fields for freight, tax, other landed costs, and landed-cost notes.
+- Added Manager/Admin purchasing UI coverage for creating purchase orders, reviewing line details, recording receiving quantities, and saving vendor invoice/landed-cost details.
+- Added a schema migration for the new purchasing records tables.
+- Explicitly kept advanced inventory, warehouse/truck inventory, inventory ledgers, replenishment automation, recommendation logic, AI/scoring, and auth model changes out of scope.
