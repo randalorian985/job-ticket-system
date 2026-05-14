@@ -32,8 +32,8 @@ describe('ReportsPage', () => {
         approvedLaborHours: 2.5,
         laborCostTotal: 125,
         laborBillableTotal: 300,
-        createdAtUtc: '2026-05-01T12:00:00Z',
-        completedAtUtc: '2026-05-02T12:00:00Z'
+        createdAtUtc: '2026-05-01T00:30:00Z',
+        completedAtUtc: '2026-05-02T00:30:00Z'
       }
     ] as any)
 
@@ -45,6 +45,8 @@ describe('ReportsPage', () => {
     expect(screen.getByRole('columnheader', { name: 'Labor Billable (Snapshot/Fallback)' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '$300.00' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Completed (UTC)' })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: '2026-05-01' })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: '2026-05-02' })).toBeInTheDocument()
 
     const exportLink = screen.getByRole('link', { name: 'Export loaded rows as CSV' })
     const href = exportLink.getAttribute('href') ?? ''
