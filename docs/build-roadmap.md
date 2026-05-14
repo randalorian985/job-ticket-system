@@ -8,7 +8,7 @@ Baseline reviewed state: [Scope Code Review and Stabilization Audit (2026-05-06)
 Post-merge reset state: [Post-Merge Roadmap Reset After Phase 3C/3D Validation (2026-05-06)](./post-merge-roadmap-reset.md).
 
 ## Current Phase
-**Post-Phase 4B stabilization, observability, and documentation hygiene.**
+**Parts Purchase / Vendor Cost Tracking Phase 1 - Manager purchasing workbench.**
 
 Interpretation as of **May 14, 2026**:
 - Core backend/API workflows are implemented and validated.
@@ -20,8 +20,8 @@ Interpretation as of **May 14, 2026**:
 - Manager/Admin **Phase 3D user-management polish and UX hardening is implemented** with safer Admin create/edit/deactivate/reset-password flows, clearer states, role-change confirmation, and regression tests.
 - Phase 4A pilot readiness is implemented as opt-in local/demo seed data, a pilot runbook, and automated end-to-end workflow validation.
 - Phase 4B pilot workflow polish is implemented as bounded frontend usability improvements for existing manager/admin job workflows.
-- PR #84 (`feat(reports): polish Manager/Admin export workflow`) and PR #85 (`Stabilize React Router future-flag test harnesses`) are merged into `main` and should now be treated as part of the live baseline rather than active work.
-- There are no currently open PRs on the repository baseline reflected by this roadmap snapshot.
+- The first purchasing slice is now implemented as a Manager/Admin `/manage/purchasing` workbench over existing parts, vendors, categories, unit-cost, quantity-on-hand, and reorder-threshold data.
+- This first purchasing slice intentionally stops short of purchase orders, receiving, vendor invoice tracking, landed cost, and advanced inventory transactions.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -37,6 +37,7 @@ Interpretation as of **May 14, 2026**:
 - Job parts workflow with approval/rejection/archive behavior.
 - Job ticket file upload/list/download/archive workflows.
 - Reporting foundation endpoints (invoice-ready summaries, cost/labor/parts rollups, service history).
+- Initial purchasing visibility over existing vendor, cost, stock-on-hand, and reorder-threshold part data.
 
 ### Frontend delivered
 - Employee routes and workflows (`/login`, `/jobs`, `/jobs/:jobTicketId`).
@@ -47,34 +48,37 @@ Interpretation as of **May 14, 2026**:
 - Manager/Admin Phase 3D Admin user-management polish, role-aware UX hardening, and regression coverage.
 - Manager/Admin Phase 4B pilot workflow polish for job list filters, dashboard summary counts, and print-friendly job review.
 - Shared router-aware future-flag test harness coverage for the current React Router baseline.
+- Manager/Admin purchasing workbench for reorder-focused review, vendor/category/status filtering, and CSV export from loaded rows.
 
-## Deferred Scope (Must Stay Deferred)
-The following are intentionally deferred and must not be partially introduced in unrelated PRs:
-- Parts purchase/vendor cost tracking
-- Advanced inventory workflows
-- Parts compatibility recommendation engine
-- AI/scoring-based part recommendations
+## Deferred Scope (Still Deferred)
+The following remain deferred and must not be partially introduced outside the approved phase order:
+- Purchase orders, receiving, vendor invoice tracking, and landed cost workflows.
+- Advanced inventory workflows.
+- Parts compatibility recommendation engine.
+- AI/scoring-based part recommendations.
 
 ## Phase 4A Pilot Readiness (Implemented)
 - Adds an opt-in `PilotDemoSeed` startup path for local/demo environments only.
 - Seeded data includes Admin, Manager, and Employee users, requesting/billing customers, service location, equipment, parts/vendor/category records, and three representative pilot job tickets.
 - The seed is idempotent and uses the `PILOT-4A` account-number marker to avoid duplicate local data.
 - Automated tests validate employee assigned-job visibility, clock in/out, work notes, part usage, manager approvals, and reporting visibility.
-- Full production seeding, purchasing, inventory intelligence, compatibility recommendations, and invoice/payment processing remain out of scope.
+- Full production seeding, dedicated purchasing records, advanced inventory intelligence, compatibility recommendations, and invoice/payment processing remain out of scope.
 
 ## Active Stabilization Concerns
 From the reviewed live baseline:
 1. **Remote git transport warning:** direct `git fetch`/`git ls-remote` can still return GitHub HTTP 403 from this workspace, so clone/fetch failures remain environment limitations rather than product-code findings.
 2. **npm environment warning:** npm emits `Unknown env config "http-proxy"`; it is warning-level because frontend install/build/test still pass.
 3. **Router future config discipline:** app and test harnesses now share the same router future configuration; future frontend tests should keep using that shared path instead of reintroducing ad hoc router wrappers.
+4. **Purchasing phase discipline:** keep the current purchasing slice anchored to existing master-data APIs until a separate, explicit purchase-order/receiving phase is scoped.
 
 ## Immediate Hygiene Item
-Keep post-merge work narrow and preserve the validated Phase 4 baseline. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md), and the follow-up roadmap reset is documented in [Post-Merge Roadmap Reset After Phase 3C/3D Validation](./post-merge-roadmap-reset.md).
+Keep the validated Phase 4 baseline intact while expanding only the approved purchasing scope. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md), and the follow-up roadmap reset is documented in [Post-Merge Roadmap Reset After Phase 3C/3D Validation](./post-merge-roadmap-reset.md).
 
 ## Recommended Feature Order
-1. Continue stabilization/observability/documentation hygiene on the validated baseline.
-2. Use Phase 4A local pilot seed/runbook for guided review and workflow validation.
-3. Re-assess deferred-domain or next-business-capability entry only through explicit scope approval after standard validation remains green.
+1. Finish Parts Purchase / Vendor Cost Tracking Phase 1 with docs, validation, and any bounded follow-up polish on the purchasing workbench.
+2. Continue Parts Purchase / Vendor Cost Tracking Phase 2 with dedicated purchasing records for purchase orders, receiving, vendor invoice tracking, and landed cost.
+3. Add Advanced Inventory workflows only after the purchasing records phase is stable.
+4. Re-assess Parts Compatibility Recommendation Engine entry only after purchasing and inventory foundations are complete.
 
 ## Planned Sequence: Manager/Admin Phase 3A → 3D
 ### Phase 3A (Completed)
@@ -101,6 +105,12 @@ Keep post-merge work narrow and preserve the validated Phase 4 baseline. The 202
 - Added focused frontend regression coverage for Admin user-management and route authorization behavior.
 - No backend contract changes, migrations, or deferred-domain behavior were added.
 
+## Parts Purchase / Vendor Cost Tracking Phase 1 (Current)
+- Added a Manager/Admin purchasing workbench at `/manage/purchasing` using existing master-data endpoints only.
+- Derived reorder-ready rows from current part `quantityOnHand`, `reorderThreshold`, `unitCost`, `vendorId`, and category relationships.
+- Added search, vendor/category/status filters, summary counts, and client-side CSV export from already loaded rows.
+- No new backend purchasing endpoints, purchase-order entities, receiving workflows, landed-cost calculations, migrations, or auth changes were added in this slice.
+
 ## Validation Requirements Before Merge
 Run these standard checks from repo root:
 
@@ -122,10 +132,10 @@ Merge-readiness requires:
 
 ## Readiness for Next Workstream
 Concise readiness statement:
-- The live baseline is validated and should not carry any remaining Phase 3A-4B implementation work.
-- Phase 3A, 3B, 3C, 3D, 4A, and 4B slices are complete on the current control baseline.
-- Proceed next with narrow stabilization/observability/documentation hygiene, or pause for explicit next-scope approval.
-- Continue to enforce no-migration/no-deferred-domain constraints unless separately approved.
+- The live baseline is complete through Phase 4B and now includes the first purchasing workbench slice.
+- Phase 3A, 3B, 3C, 3D, 4A, and 4B slices remain complete on the current control baseline.
+- Proceed next with bounded purchasing/vendor-cost slices before advanced inventory or recommendation work.
+- Continue to enforce no-migration and no-auth-weakening constraints unless a later approved phase explicitly requires otherwise.
 
 ## Cross-Linking
 - Post-merge roadmap reset: [docs/post-merge-roadmap-reset.md](./post-merge-roadmap-reset.md)

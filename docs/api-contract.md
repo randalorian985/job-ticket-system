@@ -47,15 +47,16 @@
 - Reporting (`/api/reports/*`)
 - Parts usage history visibility (`/api/parts/usage-history`)
 
-### Implemented Backend + Frontend (Manager/Admin UI Phases 1-2)
+### Implemented Backend + Frontend (Manager/Admin UI Phases 1-2 and later slices)
 - Manager/Admin React routes consume management/reporting endpoints for read-first pages plus targeted edit workflows.
 - Job ticket management now includes create (`/manage/job-tickets/new`), detail edit, assignment add/remove, status update confirmation, and archive reason capture.
 - Reports UI consumes existing report query filters (`dateFromUtc`, `dateToUtc`, `customerId`, `employeeId`, `jobStatus`, etc.) and supports client-side CSV export from loaded rows.
 - Master-data screens now include targeted create/edit/archive actions for supported APIs.
 - Admin-only frontend route for `/api/users` remains isolated and now includes create/edit/archive/reset-password actions.
+- Manager/Admin `/manage/purchasing` reuses existing parts, vendors, and part-category APIs to derive reorder-ready workbench rows on the client, including summary counts, vendor/category/status filters, and client-side CSV export.
 
 ### Deferred Future Features (Not Implemented)
-- Parts purchase/vendor cost tracking workflows.
+- Dedicated purchase-order, receiving, vendor invoice tracking, and landed-cost workflows.
 - Advanced inventory management workflows.
 - Parts compatibility recommendation engine.
 - AI/scoring-based part recommendations.
@@ -118,6 +119,13 @@ All list endpoints support simple pagination with optional query params:
 - `POST /api/parts/{id}/unarchive`
 
 List/detail/create/update responses use DTOs and expose `isArchived` for master-data rows; EF entities remain internal. Unarchive endpoints can return validation errors (`400`) when required linked records are archived/deleted/inactive, and `404` when the target record does not exist.
+
+### Purchasing Workbench (Current Frontend Slice)
+- No dedicated `/api/purchasing/*` endpoints exist yet in this first slice.
+- Manager/Admin `/manage/purchasing` currently composes existing `GET /api/parts`, `GET /api/vendors`, and `GET /api/part-categories` responses.
+- The workbench derives reorder-ready rows from `quantityOnHand`, `reorderThreshold`, `unitCost`, `vendorId`, and category relationships already present in the returned DTOs.
+- CSV export is client-side only and generated from already loaded visible rows.
+- This slice does not create purchase orders, receiving records, vendor invoices, landed-cost calculations, or inventory transactions.
 
 ### Parts Usage History Visibility
 - `GET /api/parts/usage-history`
@@ -258,40 +266,3 @@ Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 - Protected endpoints require bearer token.
 
 ## Authorization Policies
-
-- `AdminOnly`: system-level management endpoints (`/api/users/*`).
-- `ManagerOrAdmin`: reporting, archive/delete, assignment, approval/rejection flows.
-- `EmployeeOrAbove`: general authenticated access.
-- `AssignedEmployeeOrManager`: job-ticket file/work/parts actions requiring assignment for employees.
-
-### Employee Mobile Workflow API Notes
-
-- Employee mobile clients should use `POST /api/auth/login` and `GET /api/auth/me` for token/session state.
-- Employee job access is assignment-scoped. `GET /api/job-tickets` is automatically filtered to assigned jobs for non-manager users.
-- Employee work actions for assigned jobs:
-  - `GET/POST /api/job-tickets/{id}/work-entries`
-  - `GET/POST /api/job-tickets/{jobTicketId}/parts`
-  - `GET /api/parts/lookup` for part selection
-  - `POST /api/time-entries/clock-in`
-  - `POST /api/time-entries/clock-out`
-  - `GET /api/time-entries/open?employeeId={employeeId}`
-  - `GET/POST /api/job-tickets/{jobTicketId}/files`
-
-## User Management
-
-- `GET /api/users`
-- `GET /api/users/{id}`
-- `POST /api/users`
-- `PUT /api/users/{id}`
-- `POST /api/users/{id}/archive`
-- `POST /api/users/{id}/reset-password`
-
-
-## Frontend Route Notes (Current)
-- Employee routes: `/login`, `/jobs`, `/jobs/:jobTicketId`.
-- Manager/Admin routes: `/manage`, `/manage/job-tickets`, `/manage/job-tickets/new`, `/manage/job-tickets/:jobTicketId`, `/manage/customers`, `/manage/service-locations`, `/manage/equipment`, `/manage/parts`, `/manage/time-approval`, `/manage/parts-approval`, `/manage/reports`.
-- Admin-only route: `/manage/users` (consumes `/api/users`).
-- Unauthorized route: `/unauthorized` for authenticated users lacking required role claims.
-
-## Phase 3B Master Data
-- Manager/Admin endpoints for customers, service locations, equipment, vendors, part categories, and parts are used for list/detail/create/update/archive/unarchive workflows via DTO contracts. Collection endpoints accept `includeArchived=true` to support UI unarchive flows without exposing EF entities.

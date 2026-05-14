@@ -2,7 +2,7 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This repository is on a **validated post-Phase 4B baseline** with the core backend, employee workflow, Manager/Admin phases 1-3D, Phase 4A local pilot readiness, and Phase 4B pilot workflow polish implemented on `main`. Current follow-up work should stay in narrow stabilization, observability, and documentation hygiene unless new business scope is explicitly approved.
+This repository is on a **validated post-Phase 4 baseline** with the core backend, employee workflow, Manager/Admin phases 1-3D, Phase 4A local pilot readiness, Phase 4B pilot workflow polish, and an initial Manager/Admin purchasing workbench slice now implemented. Current follow-up work should stay focused on the broader purchasing/vendor-cost workflow without jumping ahead into advanced inventory or recommendation logic.
 
 ## Project Navigation
 - **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)
@@ -88,6 +88,8 @@ npm test
 - Phase 3C update: Manager/Admin reports workflow now provides a reports hub for invoice-ready summary, job cost summary, jobs ready to invoice, labor by job/employee, parts by job, customer service history, and equipment service history. The UI uses existing reporting endpoints, supported shared filters, scan-friendly numeric/date tables, explicit labor Snapshot/Fallback labels, Manager/Admin route protection, and client-side CSV export from already loaded report data.
 
 - Phase 3D update: Admin user management now has a safer list/create/edit/deactivate/reset-password workflow with loading, empty, success, error, validation, and confirmation states. Manager/Admin route boundaries remain unchanged, with `/manage/users` Admin-only and employee workflow routing preserved.
+
+- Purchasing update: Manager/Admin `/manage/purchasing` now provides a reorder-focused workbench using existing parts, vendor, category, unit-cost, quantity-on-hand, and reorder-threshold data, with search, vendor/category/status filtering, and client-side CSV export from loaded rows. Purchase orders, receiving, vendor invoice matching, landed cost, and advanced inventory remain follow-up slices.
 
 - Post-merge roadmap reset: [docs/post-merge-roadmap-reset.md](docs/post-merge-roadmap-reset.md) records the 2026-05-06 post-merge validation reset. Backend/frontend validation passed on local `HEAD` `adfcf80084d7865bf67922c008ea20ab223f7086`, GitHub REST confirmed remote `main` at the same SHA, and direct `git fetch origin` remains a non-blocking HTTP 403 environment warning.
 

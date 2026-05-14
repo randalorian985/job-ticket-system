@@ -5,3 +5,4 @@ export { UnauthorizedPage } from './users/UnauthorizedPage'
 export { UsersPage } from './users/UsersPage'
 
 export { PartsUsageHistoryPage } from './PartsUsageHistoryPage'
+export { PurchasingWorkbenchPage } from './PurchasingWorkbenchPage'

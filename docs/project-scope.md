@@ -17,7 +17,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Post-Phase 4B stabilization/documentation hygiene with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-3D, Phase 4A local pilot readiness, Phase 4B pilot workflow polish, and the current reports/router stabilization follow-ups merged on `main`.
+Parts purchase/vendor cost tracking Phase 1 with the implemented post-Phase 4 baseline plus an initial Manager/Admin purchasing workbench that reuses existing part, vendor, category, unit-cost, quantity-on-hand, and reorder-threshold data.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
 
@@ -130,14 +130,21 @@ This phase adds foundational security controls without replacing existing workfl
 - Seeded records support representative employee, manager, admin, master-data, job-ticket, labor, parts, and reporting walkthroughs.
 - The pilot seed path is disabled by default, idempotent, and intended for disposable local/demo databases only.
 - End-to-end validation covers employee assigned-job visibility, clock in/out, work notes, part usage, manager approvals, and reporting visibility.
-- Phase 4A does not add production seed data, purchasing workflows, inventory intelligence, compatibility recommendations, or invoice/payment processing.
+- Phase 4A does not add production seed data, dedicated purchasing records, advanced inventory intelligence, compatibility recommendations, or invoice/payment processing.
+
+## Manager/Admin Purchasing Workbench (Current Phase)
+- Manager/Admin users can open `/manage/purchasing` for reorder-focused purchasing visibility built on existing master-data records.
+- The workbench uses current part, vendor, category, unit-cost, quantity-on-hand, and reorder-threshold fields to surface out-of-stock, below-threshold, at-threshold, and healthy parts.
+- The workflow supports search plus vendor, category, and stock-status filters and client-side CSV export from already loaded rows.
+- This slice does not add purchase orders, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory transactions, replenishment automation, or automatic recommendations.
+- Existing soft-delete/archive behavior and Manager/Admin-only route boundaries remain in force.
 
 ## Deferred Scope Confirmation (Current)
 The following remain deferred and are not implemented as active business domains in this phase:
-- Parts purchase/vendor cost tracking
-- Advanced inventory workflows
-- Parts compatibility recommendation engine
-- AI/scoring-based part recommendations
+- Purchase orders, receiving, vendor invoice tracking, and landed cost workflows.
+- Advanced inventory workflows.
+- Parts compatibility recommendation engine.
+- AI/scoring-based part recommendations.
 
 - Phase 3B delivered: complete Manager/Admin master-data maintenance workflows (customers, locations, equipment, vendors, part categories, parts), including validation/error paths and archived-record restore flows, while excluding purchasing/inventory intelligence domains.
 
