@@ -187,6 +187,25 @@ public sealed class ReportingServiceTests
     }
 
     [Fact]
+    public async Task Job_rollup_reports_include_lifecycle_dates_for_export()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedAsync(context);
+        var service = new ReportingService(context);
+
+        var ready = Assert.Single((await service.GetJobsReadyToInvoiceAsync(new ReportQueryFiltersDto())).Where(x => x.JobTicketId == refs.MainJob.Id));
+        var labor = Assert.Single((await service.GetLaborByJobAsync(new ReportQueryFiltersDto())).Where(x => x.JobTicketId == refs.MainJob.Id));
+        var parts = Assert.Single((await service.GetPartsByJobAsync(new ReportQueryFiltersDto())).Where(x => x.JobTicketId == refs.MainJob.Id));
+
+        Assert.NotEqual(default, ready.CreatedAtUtc);
+        Assert.Equal(refs.MainJob.CompletedAtUtc, ready.CompletedAtUtc);
+        Assert.NotEqual(default, labor.CreatedAtUtc);
+        Assert.Equal(refs.MainJob.CompletedAtUtc, labor.CompletedAtUtc);
+        Assert.NotEqual(default, parts.CreatedAtUtc);
+        Assert.Equal(refs.MainJob.CompletedAtUtc, parts.CompletedAtUtc);
+    }
+
+    [Fact]
     public async Task Customer_service_history_returns_jobs_for_requesting_customer()
     {
         await using var context = CreateContext();
