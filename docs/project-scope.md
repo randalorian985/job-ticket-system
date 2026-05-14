@@ -17,7 +17,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Foundation/stabilization with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-3D, a public system metadata endpoint for deployment diagnostics, and Phase 4A local pilot readiness.
+Post-Phase 4B stabilization/documentation hygiene with implemented backend core workflows, employee mobile workflow, Manager/Admin UI Phases 1-3D, Phase 4A local pilot readiness, Phase 4B pilot workflow polish, and the current reports/router stabilization follow-ups merged on `main`.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
 
@@ -51,7 +51,6 @@ Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap
 - **Equipment Owner**: The customer/account that owns a piece of equipment. Equipment ownership can differ from the billing party.
 - **Equipment Responsible Billing Party**: The customer/account responsible for billing tied to equipment-level service responsibility. This party can differ from the equipment owner.
 
-
 ## Time Tracking Workflow (Current API Foundation)
 - Employees clock in/out against job tickets with required GPS coordinates and optional location accuracy metadata.
 - Clock-in validation requires active employee records, active job tickets, and active assignment to the ticket.
@@ -79,7 +78,6 @@ Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap
 - Job ticket parts can optionally link to a specific equipment record and to another job ticket part record that replaced it.
 - This phase **does not** implement compatibility recommendations, AI/ML behavior, or automated part suggestions.
 
-
 ## Reporting Foundation (Current API Foundation)
 - Added read-only reporting endpoints for invoice-ready summaries, job cost summaries, jobs ready to invoice, labor rollups, parts rollups, and customer/equipment service history.
 - Reporting calculations are constrained to approved labor and approved job parts by default.
@@ -87,7 +85,6 @@ Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap
 - Parts totals use immutable job-part snapshot pricing to preserve financial history.
 - This phase does not create invoices, process payments, or add authentication/UI flows.
 - File/photo upload currently supports local development storage and intentionally defers cloud storage providers (Azure Blob Storage/S3) to a later phase.
-
 
 ## Authentication & Role Enforcement Phase
 
@@ -101,7 +98,6 @@ This phase adds foundational security controls without replacing existing workfl
 - Admin user management endpoints for CRUD/archive/reset-password.
 - No external SSO/OAuth, password reset workflow, or email verification in this phase.
 
-
 ## Manager/Admin UI Phase 1 (Implemented)
 - Protected manager/admin shell route (`/manage`) with dashboard navigation for operational sections.
 - Read-first list/detail visibility for job tickets, including assignments, work entries, time entries, parts, and file/photo metadata.
@@ -112,7 +108,6 @@ This phase adds foundational security controls without replacing existing workfl
 - Employee mobile workflow routes remain active (`/login`, `/jobs`, `/jobs/:jobTicketId`).
 - Deferred domains remain unchanged: parts purchase/vendor cost tracking, advanced inventory, and parts compatibility recommendation engine are not implemented in this phase.
 - Deferred domains also include AI/scoring-based part recommendations.
-
 
 ## Manager/Admin UI Phase 2 (Implemented)
 - Job ticket detail now supports manager/admin assignment management (assign/unassign with duplicate prevention UX and refresh after mutation).
@@ -130,7 +125,6 @@ This phase adds foundational security controls without replacing existing workfl
 - Archive outcomes now provide focused user-facing success and failure messaging tied to the confirmation result.
 - Existing `/manage` role boundaries, route structure, and API usage patterns remain unchanged in this slice.
 
-
 ## Phase 4A Local Pilot Readiness
 - Local-only pilot seed data is available through explicit `PilotDemoSeed` configuration.
 - Seeded records support representative employee, manager, admin, master-data, job-ticket, labor, parts, and reporting walkthroughs.
@@ -146,7 +140,6 @@ The following remain deferred and are not implemented as active business domains
 - AI/scoring-based part recommendations
 
 - Phase 3B delivered: complete Manager/Admin master-data maintenance workflows (customers, locations, equipment, vendors, part categories, parts), including validation/error paths and archived-record restore flows, while excluding purchasing/inventory intelligence domains.
-
 
 ## Manager/Admin UI Phase 3C (Implemented)
 - Scope bounded to manager/admin reporting polish and export ergonomics only.
