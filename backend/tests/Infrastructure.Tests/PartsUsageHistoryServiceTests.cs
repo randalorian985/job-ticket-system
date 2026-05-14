@@ -29,6 +29,7 @@ public sealed class PartsUsageHistoryServiceTests
         Assert.Contains("commonly used with this model", sameModel.EvidenceTags);
         Assert.Contains("needs verification", sameModel.EvidenceTags);
         Assert.DoesNotContain(history, x => x.JobTicketPartId == refs.ArchivedJobTicketPartId);
+        Assert.DoesNotContain(history, x => x.JobTicketPartId == refs.UnrelatedEquipmentPartOnTargetJobId);
     }
 
     [Fact]
@@ -72,8 +73,9 @@ public sealed class PartsUsageHistoryServiceTests
         var part = new Part { PartCategory = category, PartNumber = "SEAL-1", Name = "Seal Kit", UnitCost = 10m, UnitPrice = 20m };
         var targetEquipment = new Equipment { Customer = customer, ServiceLocation = location, Name = "Crane A", ModelNumber = "X100", EquipmentType = "Crane" };
         var modelPeerEquipment = new Equipment { Customer = customer, ServiceLocation = location, Name = "Crane B", ModelNumber = "X100", EquipmentType = "Crane" };
+        var unrelatedEquipment = new Equipment { Customer = customer, ServiceLocation = location, Name = "Forklift A", ModelNumber = "F900", EquipmentType = "Forklift" };
 
-        context.AddRange(customer, billingCustomer, location, manager, employee, category, part, targetEquipment, modelPeerEquipment);
+        context.AddRange(customer, billingCustomer, location, manager, employee, category, part, targetEquipment, modelPeerEquipment, unrelatedEquipment);
         await context.SaveChangesAsync();
 
         var targetJob = NewJob(customer.Id, billingCustomer.Id, location.Id, targetEquipment.Id, "JT-2026-000101");
@@ -85,11 +87,18 @@ public sealed class PartsUsageHistoryServiceTests
         var exact = NewPart(targetJob.Id, part.Id, targetEquipment.Id, JobPartApprovalStatus.Approved, true);
         var sameModel = NewPart(modelPeerJob.Id, part.Id, modelPeerEquipment.Id, JobPartApprovalStatus.Pending, null);
         var archived = NewPart(archivedJob.Id, part.Id, targetEquipment.Id, JobPartApprovalStatus.Approved, true);
+        var unrelatedEquipmentPartOnTargetJob = NewPart(targetJob.Id, part.Id, unrelatedEquipment.Id, JobPartApprovalStatus.Approved, true);
         archived.IsDeleted = true;
-        context.JobTicketParts.AddRange(exact, sameModel, archived);
+        context.JobTicketParts.AddRange(exact, sameModel, archived, unrelatedEquipmentPartOnTargetJob);
         await context.SaveChangesAsync();
 
-        return new HistoryRefs(manager.Id, employee.Id, targetEquipment.Id, modelPeerEquipment.Id, archived.Id);
+        return new HistoryRefs(
+            manager.Id,
+            employee.Id,
+            targetEquipment.Id,
+            modelPeerEquipment.Id,
+            archived.Id,
+            unrelatedEquipmentPartOnTargetJob.Id);
     }
 
     private static JobTicket NewJob(Guid customerId, Guid billingCustomerId, Guid locationId, Guid equipmentId, string ticketNumber) => new()
@@ -130,5 +139,11 @@ public sealed class PartsUsageHistoryServiceTests
         return new ApplicationDbContext(options);
     }
 
-    private sealed record HistoryRefs(Guid ManagerId, Guid EmployeeId, Guid TargetEquipmentId, Guid ModelPeerEquipmentId, Guid ArchivedJobTicketPartId);
+    private sealed record HistoryRefs(
+        Guid ManagerId,
+        Guid EmployeeId,
+        Guid TargetEquipmentId,
+        Guid ModelPeerEquipmentId,
+        Guid ArchivedJobTicketPartId,
+        Guid UnrelatedEquipmentPartOnTargetJobId);
 }
