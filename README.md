@@ -2,7 +2,7 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This repository is in a **Phase 4A pilot-readiness phase** with core backend, employee workflow, and Manager/Admin phases 1-3D validated on the current post-merge baseline. Phase 4A adds opt-in local pilot seed data, a local pilot runbook, and automated end-to-end workflow validation while keeping deferred production domains out of scope.
+This repository is on a **validated post-Phase 4B baseline** with the core backend, employee workflow, Manager/Admin phases 1-3D, Phase 4A local pilot readiness, and Phase 4B pilot workflow polish implemented on `main`. Current follow-up work should stay in narrow stabilization, observability, and documentation hygiene unless new business scope is explicitly approved.
 
 ## Project Navigation
 - **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)
@@ -98,3 +98,5 @@ npm test
 - UX preview readiness update: [docs/local-demo-runbook.md](docs/local-demo-runbook.md) now documents local demo startup/shutdown, health checks, Vite build preview, and the public `/preview` frontend readiness screen.
 
 - Phase 4A update: Local pilot readiness now includes opt-in demo seed data, deterministic local credentials, a guided runbook, and automated end-to-end validation for employee clock-in/out, work notes, part usage, manager approvals, and reports visibility.
+
+- Phase 4B update: Pilot workflow polish is implemented with manager/admin job list filters, dashboard summary counts, print-friendly job review, the merged reports export polish follow-up, and aligned router future-flag test harnesses for the current frontend baseline.
