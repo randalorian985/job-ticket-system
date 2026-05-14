@@ -215,7 +215,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext, ICurre
 
         entity.IsDeleted = true;
         entity.DeletedAtUtc = DateTime.UtcNow;
-        entity.DeletedByUserId = currentUserContext.EmployeeId;
+        entity.DeletedByUserId = currentUserContext.UserId;
         AddAudit(entity.Id, nameof(PurchaseOrder), AuditActionType.Delete, null, $"{{\"OrderNumber\":\"{entity.OrderNumber}\"}}");
         await dbContext.SaveChangesAsync(cancellationToken);
         return Map(entity);
@@ -339,10 +339,10 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext, ICurre
             EntityId = entityId,
             EntityName = entityName,
             ActionType = actionType,
-            UserId = currentUserContext.EmployeeId,
+            UserId = currentUserContext.UserId,
             OldValuesJson = oldValuesJson,
             NewValuesJson = newValuesJson,
-            IpAddress = currentUserContext.UserName
+            IpAddress = null
         });
     }
 
@@ -352,7 +352,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext, ICurre
             entity.Id,
             entity.OrderNumber,
             entity.VendorId,
-            entity.Vendor.Name,
+            entity.Vendor?.Name ?? string.Empty,
             entity.Status,
             entity.OrderedAtUtc,
             entity.ExpectedAtUtc,
@@ -369,8 +369,8 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext, ICurre
             entity.Lines.OrderBy(x => x.CreatedAtUtc).Select(line => new PurchaseOrderLineDto(
                 line.Id,
                 line.PartId,
-                line.Part.PartNumber,
-                line.Part.Name,
+                line.Part?.PartNumber ?? string.Empty,
+                line.Part?.Name ?? string.Empty,
                 line.QuantityOrdered,
                 line.QuantityReceived,
                 line.UnitCost,
