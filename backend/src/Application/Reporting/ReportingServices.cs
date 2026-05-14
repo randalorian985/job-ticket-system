@@ -51,10 +51,10 @@ public sealed record InvoiceReadyLaborLineDto(Guid TimeEntryId, Guid EmployeeId,
 public sealed record InvoiceReadyPartLineDto(Guid JobTicketPartId, Guid PartId, string PartNumber, string PartName, decimal Quantity, decimal UnitCostSnapshot, decimal UnitPriceSnapshot);
 
 public sealed record JobCostSummaryDto(Guid JobTicketId, string JobTicketNumber, decimal LaborHours, decimal LaborCostTotal, decimal LaborBillableTotal, decimal PartsCostTotal, decimal PartsBillableTotal, decimal GrandTotal);
-public sealed record JobsReadyToInvoiceItemDto(Guid JobTicketId, string JobTicketNumber, string Customer, string BillingPartyCustomer, JobTicketStatus JobStatus, InvoiceStatus InvoiceStatus, decimal ApprovedLaborHours, decimal ApprovedPartsCount, decimal EstimatedBillableTotal, DateTime? CompletedAtUtc);
-public sealed record LaborByJobDto(Guid JobTicketId, string JobTicketNumber, string Customer, decimal ApprovedLaborHours, decimal LaborCostTotal, decimal LaborBillableTotal);
+public sealed record JobsReadyToInvoiceItemDto(Guid JobTicketId, string JobTicketNumber, string Customer, string BillingPartyCustomer, JobTicketStatus JobStatus, InvoiceStatus InvoiceStatus, decimal ApprovedLaborHours, decimal ApprovedPartsCount, decimal EstimatedBillableTotal, DateTime CreatedAtUtc, DateTime? CompletedAtUtc);
+public sealed record LaborByJobDto(Guid JobTicketId, string JobTicketNumber, string Customer, decimal ApprovedLaborHours, decimal LaborCostTotal, decimal LaborBillableTotal, DateTime CreatedAtUtc, DateTime? CompletedAtUtc);
 public sealed record LaborByEmployeeDto(Guid EmployeeId, string EmployeeName, decimal ApprovedLaborHours, decimal LaborCostTotal, decimal LaborBillableTotal, int JobCount);
-public sealed record PartsByJobDto(Guid JobTicketId, string JobTicketNumber, string Customer, decimal ApprovedPartQuantity, decimal PartsCostTotal, decimal PartsBillableTotal);
+public sealed record PartsByJobDto(Guid JobTicketId, string JobTicketNumber, string Customer, decimal ApprovedPartQuantity, decimal PartsCostTotal, decimal PartsBillableTotal, DateTime CreatedAtUtc, DateTime? CompletedAtUtc);
 public sealed record ServiceHistoryItemDto(Guid JobTicketId, string JobTicketNumber, Guid CustomerId, string Customer, Guid? EquipmentId, string? Equipment, string Title, JobTicketStatus JobStatus, DateTime CreatedAtUtc, DateTime? CompletedAtUtc);
 
 public interface IReportingService
@@ -198,6 +198,7 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
                 x.Parts.Where(p => p.ApprovalStatus == JobPartApprovalStatus.Approved).Sum(p => p.Quantity),
                 x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.BillableHours * (t.BillRateSnapshot ?? t.Employee.BillRate ?? t.Employee.LaborRate ?? 0m))
                     + x.Parts.Where(p => p.ApprovalStatus == JobPartApprovalStatus.Approved).Sum(p => p.Quantity * p.SalePriceSnapshot),
+                x.CreatedAtUtc,
                 x.CompletedAtUtc))
             .ToListAsync(cancellationToken);
     }
@@ -217,7 +218,9 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
                 x.Customer.Name,
                 x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.LaborHours),
                 x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.LaborHours * (t.CostRateSnapshot ?? t.Employee.CostRate ?? 0m)),
-                x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.BillableHours * (t.BillRateSnapshot ?? t.Employee.BillRate ?? t.Employee.LaborRate ?? 0m))))
+                x.TimeEntries.Where(t => t.ApprovalStatus == TimeEntryApprovalStatus.Approved && t.EndedAtUtc.HasValue).Sum(t => t.BillableHours * (t.BillRateSnapshot ?? t.Employee.BillRate ?? t.Employee.LaborRate ?? 0m)),
+                x.CreatedAtUtc,
+                x.CompletedAtUtc))
             .ToListAsync(cancellationToken);
     }
 
@@ -289,7 +292,9 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
                 x.Customer.Name,
                 x.Parts.Where(p => p.ApprovalStatus == JobPartApprovalStatus.Approved).Sum(p => p.Quantity),
                 x.Parts.Where(p => p.ApprovalStatus == JobPartApprovalStatus.Approved).Sum(p => p.Quantity * p.UnitCostSnapshot),
-                x.Parts.Where(p => p.ApprovalStatus == JobPartApprovalStatus.Approved).Sum(p => p.Quantity * p.SalePriceSnapshot)))
+                x.Parts.Where(p => p.ApprovalStatus == JobPartApprovalStatus.Approved).Sum(p => p.Quantity * p.SalePriceSnapshot),
+                x.CreatedAtUtc,
+                x.CompletedAtUtc))
             .ToListAsync(cancellationToken);
     }
 

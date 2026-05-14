@@ -237,14 +237,15 @@ The collection-style report endpoints (`jobs-ready-to-invoice`, `labor/by-job`, 
 - Parts totals always use `JobTicketPart.UnitCostSnapshot` and `JobTicketPart.SalePriceSnapshot`.
 - Grand total is computed as labor billable total + parts billable total + misc placeholder + tax placeholder.
 - Jobs-ready-to-invoice requires completed/reviewed jobs with approved labor and/or approved parts, and excludes invoiced/closed invoice states.
+- Export-oriented job rollups include UTC lifecycle dates where available: `jobs-ready-to-invoice`, `labor/by-job`, and `parts/by-job` return `createdAtUtc` and nullable `completedAtUtc`; service history rows already expose the same lifecycle dates.
 
 
 ### Manager/Admin Reports UI Contract Notes (Phase 3C)
 - Existing reporting endpoints and auth policies are unchanged; Phase 3C is a UI/operator polish slice only.
 - Manager/Admin reports UI presents a report hub for invoice-ready summary, job cost summary, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history.
 - Manager/Admin reports UI exposes only supported filters: shared date/customer/billing-party/service-location/employee/job-status/invoice-status/offset/limit filters for collection reports, `jobTicketId` for invoice-ready/job-cost summaries, `customerId` for customer service history, and `equipmentId` for equipment service history. Human-readable picker/search filters remain a follow-up unless added to existing APIs later.
-- Reports CSV export is client-side and generated from already loaded visible data only (no new export API endpoint). CSV headers are friendly labels and values are quoted/escaped by the frontend utility.
-- Labor reporting UI text explicitly labels snapshot-first behavior with fallback for legacy null snapshot values.
+- Reports CSV export is client-side and generated from already loaded visible data only (no new export API endpoint). CSV headers are friendly labels and values are quoted/escaped by the frontend utility; numeric totals export as raw numbers while the on-screen table keeps localized money/hour formatting.
+- Labor reporting UI text and table headers explicitly label cost/billable totals as Snapshot/Fallback so operators know immutable time-entry rates are used first and legacy null snapshot values fall back to employee rates.
 
 ## Versioning
 Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.

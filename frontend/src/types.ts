@@ -521,6 +521,7 @@ export type JobsReadyToInvoiceItemDto = {
   approvedLaborHours: number
   approvedPartsCount: number
   estimatedBillableTotal: number
+  createdAtUtc: string
   completedAtUtc?: string | null
 }
 
@@ -531,6 +532,8 @@ export type LaborByJobDto = {
   approvedLaborHours: number
   laborCostTotal: number
   laborBillableTotal: number
+  createdAtUtc: string
+  completedAtUtc?: string | null
 }
 
 export type LaborByEmployeeDto = {
@@ -549,6 +552,8 @@ export type PartsByJobDto = {
   approvedPartQuantity: number
   partsCostTotal: number
   partsBillableTotal: number
+  createdAtUtc: string
+  completedAtUtc?: string | null
 }
 
 export type ReportServiceHistoryItemDto = {

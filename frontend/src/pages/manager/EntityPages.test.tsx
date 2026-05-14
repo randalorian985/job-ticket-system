@@ -322,11 +322,11 @@ describe('ReportsPage', () => {
     expect(screen.getByText('Parts by Job')).toBeInTheDocument()
     expect(screen.getByText('Customer Service History')).toBeInTheDocument()
     expect(screen.getByText('Equipment Service History')).toBeInTheDocument()
-    expect(screen.getByText(/Labor totals use time-entry labor-rate snapshots first/i)).toBeInTheDocument()
+    expect(screen.getByText(/Labor totals are labeled as Snapshot\/Fallback/i)).toBeInTheDocument()
   })
 
   it('applies supported filters, renders jobs ready to invoice rows, and exports escaped CSV', async () => {
-    vi.mocked(reportsApi.getJobsReadyToInvoice).mockResolvedValue([{ jobTicketId: 'j1', jobTicketNumber: 'JT-100', customer: 'Acme, "North"\nRegion', billingPartyCustomer: 'Acme Billing', jobStatus: 7, invoiceStatus: 2, approvedLaborHours: 2.5, approvedPartsCount: 3, estimatedBillableTotal: 120.5, completedAtUtc: '2026-04-01T12:00:00Z' }] as any)
+    vi.mocked(reportsApi.getJobsReadyToInvoice).mockResolvedValue([{ jobTicketId: 'j1', jobTicketNumber: 'JT-100', customer: 'Acme, "North"\nRegion', billingPartyCustomer: 'Acme Billing', jobStatus: 7, invoiceStatus: 2, approvedLaborHours: 2.5, approvedPartsCount: 3, estimatedBillableTotal: 120.5, createdAtUtc: '2026-03-31T12:00:00Z', completedAtUtc: '2026-04-01T12:00:00Z' }] as any)
     renderReports()
 
     fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-04-01' } })
@@ -345,7 +345,7 @@ describe('ReportsPage', () => {
       invoiceStatus: 2
     }))
 
-    const csvHref = screen.getByRole('link', { name: 'Export CSV' }).getAttribute('href') ?? ''
+    const csvHref = screen.getByRole('link', { name: 'Export loaded rows as CSV' }).getAttribute('href') ?? ''
     const csv = decodeURIComponent(csvHref.replace('data:text/csv;charset=utf-8,', ''))
     expect(csv).toContain('Job Ticket,Customer,Billing Party')
     expect(csv).toContain('"Acme, ""North""\nRegion"')

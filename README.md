@@ -85,7 +85,7 @@ npm test
 
 - Phase 3B update: Manager/Admin master-data workflows now support list/detail DTO contracts plus create/edit/archive/unarchive flows for customers, service locations, equipment, vendors, part categories, and parts in the UI and API, including archived-record visibility for unarchive actions.
 
-- Phase 3C update: Manager/Admin reports workflow now provides a reports hub for invoice-ready summary, job cost summary, jobs ready to invoice, labor by job/employee, parts by job, customer service history, and equipment service history. The UI uses existing reporting endpoints, supported shared filters, export-friendly tables, concise labor snapshot/fallback labeling, Manager/Admin route protection, and client-side CSV export from loaded report data.
+- Phase 3C update: Manager/Admin reports workflow now provides a reports hub for invoice-ready summary, job cost summary, jobs ready to invoice, labor by job/employee, parts by job, customer service history, and equipment service history. The UI uses existing reporting endpoints, supported shared filters, scan-friendly numeric/date tables, explicit labor Snapshot/Fallback labels, Manager/Admin route protection, and client-side CSV export from already loaded report data.
 
 - Phase 3D update: Admin user management now has a safer list/create/edit/deactivate/reset-password workflow with loading, empty, success, error, validation, and confirmation states. Manager/Admin route boundaries remain unchanged, with `/manage/users` Admin-only and employee workflow routing preserved.
 
