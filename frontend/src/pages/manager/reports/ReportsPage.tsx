@@ -50,6 +50,7 @@ const quantity = (value?: number | null) => typeof value === 'number' ? value.to
 const hours = (value?: number | null) => typeof value === 'number' ? `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} h` : '—'
 const dateOnly = (value?: string | null) => value ? new Date(value).toLocaleDateString() : '—'
 const dateForExport = (value?: string | null) => value ? value.slice(0, 10) : ''
+const dateUtc = (value?: string | null) => value ? dateForExport(value) : '—'
 
 const getJobStatusLabel = (value: number) => {
   switch (value) {
@@ -115,8 +116,8 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Approved Labor Hours', value: (row: JobsReadyToInvoiceItemDto) => row.approvedLaborHours, render: (row) => hours(row.approvedLaborHours), align: 'number' },
     { header: 'Approved Parts Qty', value: (row: JobsReadyToInvoiceItemDto) => row.approvedPartsCount, render: (row) => quantity(row.approvedPartsCount), align: 'number' },
     { header: 'Estimated Billable Total', value: (row: JobsReadyToInvoiceItemDto) => row.estimatedBillableTotal, render: (row) => money(row.estimatedBillableTotal), align: 'number' },
-    { header: 'Created (UTC)', value: (row: JobsReadyToInvoiceItemDto) => dateForExport(row.createdAtUtc), render: (row) => dateOnly(row.createdAtUtc) },
-    { header: 'Completed (UTC)', value: (row: JobsReadyToInvoiceItemDto) => dateForExport(row.completedAtUtc), render: (row) => dateOnly(row.completedAtUtc) }
+    { header: 'Created (UTC)', value: (row: JobsReadyToInvoiceItemDto) => dateForExport(row.createdAtUtc), render: (row) => dateUtc(row.createdAtUtc) },
+    { header: 'Completed (UTC)', value: (row: JobsReadyToInvoiceItemDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ],
   laborJob: [
     { header: 'Job Ticket', value: (row: LaborByJobDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
@@ -124,8 +125,8 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Approved Labor Hours', value: (row: LaborByJobDto) => row.approvedLaborHours, render: (row) => hours(row.approvedLaborHours), align: 'number' },
     { header: 'Labor Cost (Snapshot/Fallback)', value: (row: LaborByJobDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
     { header: 'Labor Billable (Snapshot/Fallback)', value: (row: LaborByJobDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
-    { header: 'Created (UTC)', value: (row: LaborByJobDto) => dateForExport(row.createdAtUtc), render: (row) => dateOnly(row.createdAtUtc) },
-    { header: 'Completed (UTC)', value: (row: LaborByJobDto) => dateForExport(row.completedAtUtc), render: (row) => dateOnly(row.completedAtUtc) }
+    { header: 'Created (UTC)', value: (row: LaborByJobDto) => dateForExport(row.createdAtUtc), render: (row) => dateUtc(row.createdAtUtc) },
+    { header: 'Completed (UTC)', value: (row: LaborByJobDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ],
   laborEmployee: [
     { header: 'Employee', value: (row: LaborByEmployeeDto) => row.employeeName },
@@ -140,8 +141,8 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Approved Part Quantity', value: (row: PartsByJobDto) => row.approvedPartQuantity, render: (row) => quantity(row.approvedPartQuantity), align: 'number' },
     { header: 'Parts Cost', value: (row: PartsByJobDto) => row.partsCostTotal, render: (row) => money(row.partsCostTotal), align: 'number' },
     { header: 'Parts Billable', value: (row: PartsByJobDto) => row.partsBillableTotal, render: (row) => money(row.partsBillableTotal), align: 'number' },
-    { header: 'Created (UTC)', value: (row: PartsByJobDto) => dateForExport(row.createdAtUtc), render: (row) => dateOnly(row.createdAtUtc) },
-    { header: 'Completed (UTC)', value: (row: PartsByJobDto) => dateForExport(row.completedAtUtc), render: (row) => dateOnly(row.completedAtUtc) }
+    { header: 'Created (UTC)', value: (row: PartsByJobDto) => dateForExport(row.createdAtUtc), render: (row) => dateUtc(row.createdAtUtc) },
+    { header: 'Completed (UTC)', value: (row: PartsByJobDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ],
   customerHistory: [
     { header: 'Job Ticket', value: (row: ReportServiceHistoryItemDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
@@ -149,8 +150,8 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Equipment', value: (row: ReportServiceHistoryItemDto) => row.equipment ?? '', render: (row) => managerListLink('/manage/equipment', row.equipment) },
     { header: 'Title', value: (row: ReportServiceHistoryItemDto) => row.title },
     { header: 'Job Status', value: (row: ReportServiceHistoryItemDto) => getJobStatusLabel(row.jobStatus) },
-    { header: 'Created (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.createdAtUtc), render: (row) => dateOnly(row.createdAtUtc) },
-    { header: 'Completed (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.completedAtUtc), render: (row) => dateOnly(row.completedAtUtc) }
+    { header: 'Created (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.createdAtUtc), render: (row) => dateUtc(row.createdAtUtc) },
+    { header: 'Completed (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ],
   equipmentHistory: [
     { header: 'Job Ticket', value: (row: ReportServiceHistoryItemDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
@@ -158,8 +159,8 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Equipment', value: (row: ReportServiceHistoryItemDto) => row.equipment ?? '', render: (row) => managerListLink('/manage/equipment', row.equipment) },
     { header: 'Title', value: (row: ReportServiceHistoryItemDto) => row.title },
     { header: 'Job Status', value: (row: ReportServiceHistoryItemDto) => getJobStatusLabel(row.jobStatus) },
-    { header: 'Created (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.createdAtUtc), render: (row) => dateOnly(row.createdAtUtc) },
-    { header: 'Completed (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.completedAtUtc), render: (row) => dateOnly(row.completedAtUtc) }
+    { header: 'Created (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.createdAtUtc), render: (row) => dateUtc(row.createdAtUtc) },
+    { header: 'Completed (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ]
 }
 
