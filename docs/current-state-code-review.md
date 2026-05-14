@@ -56,7 +56,6 @@ The following remain deferred and unimplemented in this pass:
 - Parts Compatibility Recommendation Engine
 - AI/scoring-based recommendations
 
-
 ## Phase 3C Update (2026-05-06)
 - Manager/Admin Phase 3C reports polish/export is now implemented as a bounded UI workflow: reports hub, supported filters, loading/empty/error states, export-friendly tables, existing-route drill-in links, and client-side CSV export.
 - Backend report endpoints, labor snapshot semantics, invoice-ready approval rules, authorization policies, and migrations were not changed for this slice.
@@ -80,3 +79,12 @@ The following remain deferred and unimplemented in this pass:
 
 ## Recommended Next Task
 - Run a pilot-feedback pass against real manager/admin users and prioritize one narrow stabilization item from observed day-to-day workflow friction.
+
+## Live Baseline Addendum (2026-05-14)
+- The live repository baseline has moved beyond the earlier Phase 4B note: PR #84 merged additional Manager/Admin reports export polish (UTC lifecycle date columns for export-oriented rollups, scan-friendly numeric/date tables, explicit Snapshot/Fallback labeling, and CSV contract clarification), and PR #85 merged shared router future-flag test harness alignment.
+- There are no remaining open PRs tied to those workflows, so they should now be treated as part of the baseline rather than active implementation work.
+- The current safe lane is narrow stabilization, observability, and documentation hygiene on the post-Phase 4B baseline unless a new business capability is explicitly approved.
+- Remote Git clone/fetch HTTP 403 failures and the npm `http-proxy` warning remain environment concerns, not confirmed product-code regressions.
+
+## Recommended Next Task
+- Keep work bounded to small stabilization or documentation-alignment PRs on the live baseline until explicit new scope is chosen.
