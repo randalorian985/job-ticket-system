@@ -161,3 +161,26 @@ The following remain deferred and are not implemented as active business domains
 - Deactivate, reset-password, and role-change actions require explicit confirmation before invoking existing `/api/users` endpoints.
 - Manager users remain blocked from `/manage/users`; Employee users remain blocked from `/manage`; Manager/Admin users remain blocked from employee-only `/jobs` routes.
 - No backend contract changes, migrations, enum changes, authorization weakening, password hash exposure, or deferred-domain implementation were added.
+
+## Parts Purchase / Vendor Cost Tracking Phase 2 Scope
+Phase 2 adds dedicated purchasing records and a Manager/Admin workflow for:
+- purchase orders;
+- receiving quantities against purchase-order lines;
+- vendor invoice number/date/status tracking;
+- landed-cost recording for freight, tax, other landed costs, and notes.
+
+Scope boundaries retained:
+- Controllers stay thin and delegate business rules to application services.
+- APIs use request/response DTOs and do not expose EF entities.
+- Purchase orders preserve soft-delete/archive behavior.
+- Manager/Admin authorization remains required for purchasing endpoints and UI routes.
+- No enum renumbering or auth weakening is included.
+- Receiving records vendor fulfillment progress only; it does not update inventory quantities or create inventory ledgers.
+
+Still out of scope:
+- advanced inventory;
+- warehouse or truck inventory workflows;
+- inventory transaction ledgers;
+- replenishment automation;
+- recommendation logic;
+- AI/scoring.

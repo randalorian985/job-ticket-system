@@ -108,9 +108,9 @@ export function PartsUsageHistoryPage() {
               </li>
             ))}
           </ul>
-        ) : (
+        ) : !isLoading ? (
           <p className="muted">No parts usage history matches the current filters.</p>
-        )}
+        ) : null}
       </article>
     </section>
   )
