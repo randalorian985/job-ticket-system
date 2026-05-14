@@ -129,9 +129,14 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
                 throw new ValidationException("Received purchase orders cannot add or remove lines.");
             }
 
+            var requestedLineByPartId = request.Lines.ToDictionary(x => x.PartId);
             foreach (var existing in activeLines)
             {
-                var requested = request.Lines.Single(x => x.PartId == existing.PartId);
+                if (!requestedLineByPartId.TryGetValue(existing.PartId, out var requested))
+                {
+                    throw new ValidationException("Received purchase orders cannot add or remove lines.");
+                }
+
                 if (requested.QuantityOrdered < existing.QuantityReceived) throw new ValidationException("QuantityOrdered cannot be below received quantity.");
                 existing.QuantityOrdered = requested.QuantityOrdered;
                 existing.UnitCost = requested.UnitCost;
@@ -289,6 +294,11 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
             if (line.PartId == Guid.Empty) throw new ValidationException("PartId is required for every purchase order line.");
             if (line.QuantityOrdered <= 0) throw new ValidationException("QuantityOrdered must be greater than zero.");
             ValidateNonNegative(line.UnitCost, nameof(line.UnitCost));
+        }
+
+        if (lines.GroupBy(line => line.PartId).Any(group => group.Count() > 1))
+        {
+            throw new ValidationException("Purchase order lines cannot contain duplicate PartId values.");
         }
     }
 

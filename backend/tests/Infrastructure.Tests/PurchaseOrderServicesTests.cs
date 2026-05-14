@@ -90,6 +90,84 @@ public sealed class PurchaseOrderServicesTests
         Assert.Equal("PurchaseOrderNumber must be unique.", exception.Message);
     }
 
+
+    [Fact]
+    public async Task Purchase_order_create_rejects_duplicate_part_lines_as_validation()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateAsync(new CreatePurchaseOrderDto(
+            vendor.Id,
+            "PO-DUP-PART-CREATE",
+            null,
+            null,
+            null,
+            [
+                new PurchaseOrderLineRequestDto(part.Id, 1m, 2m),
+                new PurchaseOrderLineRequestDto(part.Id, 2m, 2m)
+            ])));
+
+        Assert.Equal("Purchase order lines cannot contain duplicate PartId values.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Purchase_order_update_rejects_duplicate_part_lines_as_validation()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-DUP-PART-UPDATE", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UpdateAsync(created.Id, new UpdatePurchaseOrderDto(
+            created.PurchaseOrderNumber,
+            created.ExpectedAtUtc,
+            null,
+            null,
+            VendorInvoiceStatus.Pending,
+            0m,
+            0m,
+            0m,
+            null,
+            null,
+            [
+                new PurchaseOrderLineRequestDto(part.Id, 1m, 2m),
+                new PurchaseOrderLineRequestDto(part.Id, 2m, 2m)
+            ])));
+
+        Assert.Equal("Purchase order lines cannot contain duplicate PartId values.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Received_purchase_order_update_rejects_duplicate_part_lines_without_invalid_operation()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-DUP-PART-RECEIVED", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 2m, 2m)]));
+        await service.SubmitAsync(created.Id);
+        await service.ReceiveAsync(created.Id, new ReceivePurchaseOrderDto(null, [new ReceivePurchaseOrderLineDto(created.Lines.Single().Id, 1m)]));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UpdateAsync(created.Id, new UpdatePurchaseOrderDto(
+            created.PurchaseOrderNumber,
+            created.ExpectedAtUtc,
+            null,
+            null,
+            VendorInvoiceStatus.Pending,
+            0m,
+            0m,
+            0m,
+            null,
+            null,
+            [
+                new PurchaseOrderLineRequestDto(part.Id, 2m, 2m),
+                new PurchaseOrderLineRequestDto(part.Id, 3m, 2m)
+            ])));
+
+        Assert.Equal("Purchase order lines cannot contain duplicate PartId values.", exception.Message);
+    }
+
     [Fact]
     public async Task Archived_purchase_order_can_be_reviewed_and_unarchived()
     {
