@@ -21,6 +21,8 @@ public sealed class ApplicationDbContextTests
         Assert.Contains(typeof(Vendor), entityTypes);
         Assert.Contains(typeof(PartCategory), entityTypes);
         Assert.Contains(typeof(Part), entityTypes);
+        Assert.Contains(typeof(PurchaseOrder), entityTypes);
+        Assert.Contains(typeof(PurchaseOrderLine), entityTypes);
         Assert.Contains(typeof(JobTicket), entityTypes);
         Assert.Contains(typeof(JobTicketEmployee), entityTypes);
         Assert.Contains(typeof(TimeEntry), entityTypes);
@@ -40,6 +42,9 @@ public sealed class ApplicationDbContextTests
 
         AssertPrecision<Part>(model, nameof(Part.UnitCost), 18, 2);
         AssertPrecision<Part>(model, nameof(Part.QuantityOnHand), 18, 4);
+        AssertPrecision<PurchaseOrder>(model, nameof(PurchaseOrder.TotalLandedCost), 18, 2);
+        AssertPrecision<PurchaseOrderLine>(model, nameof(PurchaseOrderLine.QuantityOrdered), 18, 4);
+        AssertPrecision<PurchaseOrderLine>(model, nameof(PurchaseOrderLine.LandedUnitCost), 18, 2);
         AssertPrecision<TimeEntry>(model, nameof(TimeEntry.LaborHours), 18, 4);
         AssertPrecision<Equipment>(model, nameof(Equipment.Latitude), 9, 6);
         AssertPrecision<ServiceLocation>(model, nameof(ServiceLocation.Latitude), 9, 6);
@@ -71,10 +76,28 @@ public sealed class ApplicationDbContextTests
     }
 
     [Fact]
+    public void Model_configures_purchase_order_relationships()
+    {
+        using var context = CreateContext();
+        var entityType = GetEntityType<PurchaseOrder>(context);
+
+        AssertRelationship(entityType, nameof(PurchaseOrder.Vendor), nameof(PurchaseOrder.VendorId));
+    }
+
+    [Fact]
     public void Model_applies_soft_delete_query_filter_to_service_location()
     {
         using var context = CreateContext();
         var entityType = GetEntityType<ServiceLocation>(context);
+
+        Assert.NotNull(entityType.GetQueryFilter());
+    }
+
+    [Fact]
+    public void Model_applies_soft_delete_query_filter_to_purchase_order()
+    {
+        using var context = CreateContext();
+        var entityType = GetEntityType<PurchaseOrder>(context);
 
         Assert.NotNull(entityType.GetQueryFilter());
     }
