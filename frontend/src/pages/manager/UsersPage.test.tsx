@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { ApiError } from '../../api/httpClient'
 import { usersApi } from '../../api/usersApi'
+import { renderWithRouter } from '../../test/renderWithRouter'
 import { UsersPage } from './EntityPages'
 
 vi.mock('../../api/usersApi', () => ({
@@ -37,7 +37,7 @@ const inactiveUser = {
   isArchived: true
 }
 
-const renderUsers = () => render(<MemoryRouter><UsersPage /></MemoryRouter>)
+const renderUsers = () => renderWithRouter(<UsersPage />)
 
 beforeEach(() => {
   cleanup()

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 import { ApiError } from '../../api/httpClient'
 import { masterDataApi } from '../../api/masterDataApi'
 import { reportsApi } from '../../api/reportsApi'
+import { renderWithRouter } from '../../test/renderWithRouter'
 import { CustomersPage, EquipmentPage, PartsPage, ReportsPage, ServiceLocationsPage } from './EntityPages'
 
 vi.mock('../../api/masterDataApi', () => ({
@@ -68,7 +68,6 @@ describe('CustomersPage', () => {
     expect(screen.getByText('Create Customer')).toBeInTheDocument()
   })
 
-
   it('surfaces API validation errors when customer save fails', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.createCustomer).mockRejectedValue(new ApiError('Name is required.', 400))
@@ -80,8 +79,6 @@ describe('CustomersPage', () => {
     await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({ name: 'Bad Customer' }))
     expect(await screen.findByText('Name is required.')).toBeInTheDocument()
   })
-
-
 
   it('filters customers by search/status, resets filters, and shows no-match state', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
@@ -133,7 +130,6 @@ describe('CustomersPage', () => {
 })
 
 describe('ServiceLocationsPage', () => {
-
   it('filters service locations by customer and search', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
@@ -174,20 +170,18 @@ describe('ServiceLocationsPage', () => {
   })
 })
 
+it('validates required service-location fields before create', async () => {
+  vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
+  vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
 
-  it('validates required service-location fields before create', async () => {
-    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
-    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
+  render(<ServiceLocationsPage />)
+  fireEvent.click(await screen.findByRole('button', { name: 'Create Location' }))
 
-    render(<ServiceLocationsPage />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Create Location' }))
-
-    expect(await screen.findByText('All address fields are required.')).toBeInTheDocument()
-    expect(masterDataApi.createServiceLocation).not.toHaveBeenCalled()
-  })
+  expect(await screen.findByText('All address fields are required.')).toBeInTheDocument()
+  expect(masterDataApi.createServiceLocation).not.toHaveBeenCalled()
+})
 
 describe('EquipmentPage', () => {
-
   it('filters equipment by customer and archived status', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', locationName: 'HQ' }, { id: 'l2', locationName: 'Depot' }] as any)
@@ -226,7 +220,6 @@ describe('EquipmentPage', () => {
 })
 
 describe('PartsPage', () => {
-
   it('filters parts, vendors, and categories with reset controls', async () => {
     vi.mocked(masterDataApi.listParts).mockResolvedValue([
       { id: 'p1', partCategoryId: 'pc1', vendorId: 'v1', partNumber: 'FLT-1', name: 'Filter', description: 'Air filter', unitCost: 1, unitPrice: 2, isArchived: false },
@@ -262,7 +255,6 @@ describe('PartsPage', () => {
     expect(within(categoriesCard).queryByText(/Filters/)).not.toBeInTheDocument()
     expect(within(categoriesCard).getByText(/Belts/)).toBeInTheDocument()
   })
-
 
   it('surfaces part save validation errors from the API', async () => {
     vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
@@ -316,7 +308,7 @@ describe('PartsPage', () => {
 })
 
 describe('ReportsPage', () => {
-  const renderReports = () => render(<MemoryRouter><ReportsPage /></MemoryRouter>)
+  const renderReports = () => renderWithRouter(<ReportsPage />)
 
   it('renders the Manager/Admin reports hub and supported report cards', () => {
     renderReports()
