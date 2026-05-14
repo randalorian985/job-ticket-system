@@ -174,6 +174,7 @@ export function PurchasingWorkbenchPage() {
     if (!selectedOrder) return
     try {
       await purchasingApi.updatePurchaseOrder(selectedOrder.id, {
+        purchaseOrderNumber: selectedOrder.purchaseOrderNumber,
         expectedAtUtc: selectedOrder.expectedAtUtc,
         vendorInvoiceNumber: invoiceForm.vendorInvoiceNumber || null,
         vendorInvoiceDateUtc: toUtcIsoDate(invoiceForm.vendorInvoiceDateUtc),

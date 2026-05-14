@@ -135,9 +135,31 @@ describe('PurchasingWorkbenchPage', () => {
     await user.click(within(review).getByRole('button', { name: 'Save invoice and landed costs' }))
 
     await waitFor(() => expect(purchasingApi.updatePurchaseOrder).toHaveBeenCalledWith('po-a', expect.objectContaining({
+      purchaseOrderNumber: 'PO-1001',
       vendorInvoiceNumber: 'INV-77',
       freightCost: 7,
       lines: [expect.objectContaining({ partId: 'part-a' })]
     })))
+  })
+
+  it('keeps archived purchase orders reviewable and supports unarchive from detail', async () => {
+    vi.mocked(purchasingApi.listPurchaseOrders).mockResolvedValue([{
+      ...purchaseOrder,
+      isArchived: true,
+      orderedSubtotal: 48,
+      quantityOrdered: 4,
+      quantityReceived: 0
+    }] as any)
+    vi.mocked(purchasingApi.getPurchaseOrder).mockResolvedValue({ ...purchaseOrder, isArchived: true } as any)
+    vi.mocked(purchasingApi.unarchivePurchaseOrder).mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithRouter(<PurchasingWorkbenchPage />)
+
+    expect(await screen.findByText('PO-1001 (archived)')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Review' }))
+    expect(await screen.findByRole('heading', { name: 'Review PO-1001' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Unarchive' }))
+
+    await waitFor(() => expect(purchasingApi.unarchivePurchaseOrder).toHaveBeenCalledWith('po-a'))
   })
 })

@@ -30,6 +30,7 @@ public sealed class PurchaseOrderServicesTests
             new DateTime(2026, 5, 8, 0, 0, 0, DateTimeKind.Utc),
             [new ReceivePurchaseOrderLineDto(created.Lines.Single().Id, 4m)]));
         var updated = await service.UpdateAsync(created.Id, new UpdatePurchaseOrderDto(
+            created.PurchaseOrderNumber,
             created.ExpectedAtUtc,
             "INV-77",
             new DateTime(2026, 5, 9, 0, 0, 0, DateTimeKind.Utc),
@@ -48,6 +49,65 @@ public sealed class PurchaseOrderServicesTests
         Assert.Equal(50m, updated.InvoiceSubtotal);
         Assert.Equal(12m, updated.LandedCostTotal);
         Assert.Equal(5m, (await context.Parts.SingleAsync(x => x.Id == part.Id)).QuantityOnHand);
+    }
+
+
+    [Fact]
+    public async Task Purchase_order_create_rejects_duplicate_purchase_order_number_as_validation()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+        await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-DUP", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-DUP", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)])));
+
+        Assert.Equal("PurchaseOrderNumber must be unique.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Purchase_order_update_rejects_duplicate_purchase_order_number_as_validation()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+        var first = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-FIRST", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
+        var second = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-SECOND", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UpdateAsync(second.Id, new UpdatePurchaseOrderDto(
+            first.PurchaseOrderNumber,
+            second.ExpectedAtUtc,
+            null,
+            null,
+            VendorInvoiceStatus.Pending,
+            0m,
+            0m,
+            0m,
+            null,
+            null,
+            [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)])));
+
+        Assert.Equal("PurchaseOrderNumber must be unique.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Archived_purchase_order_can_be_reviewed_and_unarchived()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-REVIEW", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
+
+        await service.ArchiveAsync(created.Id);
+        var archived = await service.GetAsync(created.Id);
+        var unarchived = await service.UnarchiveAsync(created.Id);
+        var restored = await service.GetAsync(created.Id);
+
+        Assert.NotNull(archived);
+        Assert.True(archived!.IsArchived);
+        Assert.True(unarchived);
+        Assert.NotNull(restored);
+        Assert.False(restored!.IsArchived);
     }
 
     [Fact]

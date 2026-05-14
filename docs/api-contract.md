@@ -292,7 +292,7 @@ Request fields:
 - `lines[]` with `partId`, `quantityOrdered`, `unitCost`, and optional `notes`
 
 ### `PUT /api/purchase-orders/{id}`
-Updates expected date, vendor invoice number/date/status, landed-cost fields (`freightCost`, `taxAmount`, `otherLandedCost`, `landedCostNotes`), notes, and line cost/quantity details where allowed. Received purchase orders cannot add/remove lines through this endpoint.
+Updates purchase-order number, expected date, vendor invoice number/date/status, landed-cost fields (`freightCost`, `taxAmount`, `otherLandedCost`, `landedCostNotes`), notes, and line cost/quantity details where allowed. Received purchase orders cannot add/remove lines through this endpoint.
 
 ### Workflow actions
 - `POST /api/purchase-orders/{id}/submit`: moves a draft PO to submitted.

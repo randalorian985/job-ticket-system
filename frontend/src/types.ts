@@ -700,6 +700,7 @@ export type CreatePurchaseOrderDto = {
 }
 
 export type UpdatePurchaseOrderDto = {
+  purchaseOrderNumber?: string | null
   expectedAtUtc?: string | null
   vendorInvoiceNumber?: string | null
   vendorInvoiceDateUtc?: string | null

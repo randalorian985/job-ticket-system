@@ -11,7 +11,7 @@ public sealed record PurchaseOrderDto(Guid Id, string PurchaseOrderNumber, Guid 
 public sealed record PurchaseOrderListItemDto(Guid Id, string PurchaseOrderNumber, Guid VendorId, string VendorName, PurchaseOrderStatus Status, DateTime OrderedAtUtc, DateTime? ExpectedAtUtc, DateTime? ReceivedAtUtc, string? VendorInvoiceNumber, VendorInvoiceStatus InvoiceStatus, decimal OrderedSubtotal, decimal LandedCostTotal, decimal QuantityOrdered, decimal QuantityReceived, bool IsArchived);
 public sealed record PurchaseOrderLineRequestDto(Guid PartId, decimal QuantityOrdered, decimal UnitCost, string? Notes = null);
 public sealed record CreatePurchaseOrderDto(Guid VendorId, string? PurchaseOrderNumber, DateTime? OrderedAtUtc, DateTime? ExpectedAtUtc, string? Notes, IReadOnlyList<PurchaseOrderLineRequestDto> Lines);
-public sealed record UpdatePurchaseOrderDto(DateTime? ExpectedAtUtc, string? VendorInvoiceNumber, DateTime? VendorInvoiceDateUtc, VendorInvoiceStatus InvoiceStatus, decimal FreightCost, decimal TaxAmount, decimal OtherLandedCost, string? LandedCostNotes, string? Notes, IReadOnlyList<PurchaseOrderLineRequestDto> Lines);
+public sealed record UpdatePurchaseOrderDto(string? PurchaseOrderNumber, DateTime? ExpectedAtUtc, string? VendorInvoiceNumber, DateTime? VendorInvoiceDateUtc, VendorInvoiceStatus InvoiceStatus, decimal FreightCost, decimal TaxAmount, decimal OtherLandedCost, string? LandedCostNotes, string? Notes, IReadOnlyList<PurchaseOrderLineRequestDto> Lines);
 public sealed record ReceivePurchaseOrderLineDto(Guid LineId, decimal ReceivedQuantity);
 public sealed record ReceivePurchaseOrderDto(DateTime? ReceivedAtUtc, IReadOnlyList<ReceivePurchaseOrderLineDto> Lines);
 
@@ -61,18 +61,20 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     }
 
     public Task<PurchaseOrderDto?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
-        MapQuery(dbContext.PurchaseOrders.Where(x => x.Id == id)).SingleOrDefaultAsync(cancellationToken);
+        MapQuery(dbContext.PurchaseOrders.IgnoreQueryFilters().Where(x => x.Id == id)).SingleOrDefaultAsync(cancellationToken);
 
     public async Task<PurchaseOrderDto> CreateAsync(CreatePurchaseOrderDto request, CancellationToken cancellationToken = default)
     {
         await ValidateVendor(request.VendorId, cancellationToken);
         ValidateLines(request.Lines);
         await ValidateParts(request.Lines.Select(x => x.PartId), cancellationToken);
+        var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? await GeneratePurchaseOrderNumber(cancellationToken) : request.PurchaseOrderNumber.Trim();
+        await EnsurePurchaseOrderNumberIsUnique(purchaseOrderNumber, null, cancellationToken);
 
         var entity = new PurchaseOrder
         {
             VendorId = request.VendorId,
-            PurchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? await GeneratePurchaseOrderNumber(cancellationToken) : request.PurchaseOrderNumber.Trim(),
+            PurchaseOrderNumber = purchaseOrderNumber,
             OrderedAtUtc = ToUtcOrNow(request.OrderedAtUtc),
             ExpectedAtUtc = ToNullableUtc(request.ExpectedAtUtc),
             Notes = NullIfWhitespace(request.Notes),
@@ -105,6 +107,10 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         ValidateLines(request.Lines);
         await ValidateParts(request.Lines.Select(x => x.PartId), cancellationToken);
 
+        var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? entity.PurchaseOrderNumber : request.PurchaseOrderNumber.Trim();
+        await EnsurePurchaseOrderNumberIsUnique(purchaseOrderNumber, entity.Id, cancellationToken);
+
+        entity.PurchaseOrderNumber = purchaseOrderNumber;
         entity.ExpectedAtUtc = ToNullableUtc(request.ExpectedAtUtc);
         entity.VendorInvoiceNumber = NullIfWhitespace(request.VendorInvoiceNumber);
         entity.VendorInvoiceDateUtc = ToNullableUtc(request.VendorInvoiceDateUtc);
@@ -257,6 +263,15 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     private async Task ValidateVendor(Guid vendorId, CancellationToken cancellationToken)
     {
         if (!await dbContext.Vendors.AnyAsync(x => x.Id == vendorId, cancellationToken)) throw new ValidationException("VendorId does not reference an active vendor.");
+    }
+
+    private async Task EnsurePurchaseOrderNumberIsUnique(string purchaseOrderNumber, Guid? currentPurchaseOrderId, CancellationToken cancellationToken)
+    {
+        var duplicateExists = await dbContext.PurchaseOrders
+            .IgnoreQueryFilters()
+            .AnyAsync(x => x.PurchaseOrderNumber == purchaseOrderNumber && (!currentPurchaseOrderId.HasValue || x.Id != currentPurchaseOrderId.Value), cancellationToken);
+
+        if (duplicateExists) throw new ValidationException("PurchaseOrderNumber must be unique.");
     }
 
     private async Task ValidateParts(IEnumerable<Guid> partIds, CancellationToken cancellationToken)
