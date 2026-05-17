@@ -7,10 +7,12 @@ Baseline reviewed state: [Scope Code Review and Stabilization Audit (2026-05-06)
 
 Post-merge reset state: [Post-Merge Roadmap Reset After Phase 3C/3D Validation (2026-05-06)](./post-merge-roadmap-reset.md).
 
-## Current Phase
-**Parts Purchase / Vendor Cost Tracking Phase 1 - Manager purchasing workbench.**
+Latest purchasing milestone: PR #88 merged Parts Purchase / Vendor Cost Tracking Phase 2 on 2026-05-17.
 
-Interpretation as of **May 14, 2026**:
+## Current Phase
+**Post-Phase 2 purchasing stabilization and roadmap control.**
+
+Interpretation as of **May 17, 2026**:
 - Core backend/API workflows are implemented and validated.
 - Employee mobile workflow is implemented and validated.
 - Manager/Admin Phases 1 and 2 are implemented.
@@ -20,8 +22,9 @@ Interpretation as of **May 14, 2026**:
 - Manager/Admin **Phase 3D user-management polish and UX hardening is implemented** with safer Admin create/edit/deactivate/reset-password flows, clearer states, role-change confirmation, and regression tests.
 - Phase 4A pilot readiness is implemented as opt-in local/demo seed data, a pilot runbook, and automated end-to-end workflow validation.
 - Phase 4B pilot workflow polish is implemented as bounded frontend usability improvements for existing manager/admin job workflows.
-- The first purchasing slice is now implemented as a Manager/Admin `/manage/purchasing` workbench over existing parts, vendors, categories, unit-cost, quantity-on-hand, and reorder-threshold data.
-- This first purchasing slice intentionally stops short of purchase orders, receiving, vendor invoice tracking, landed cost, and advanced inventory transactions.
+- Parts Purchase / Vendor Cost Tracking Phase 1 is implemented as a Manager/Admin `/manage/purchasing` workbench over existing parts, vendors, categories, unit-cost, quantity-on-hand, and reorder-threshold data.
+- Parts Purchase / Vendor Cost Tracking Phase 2 is implemented with dedicated purchase-order records, receiving quantities, vendor invoice tracking, landed-cost recording, Manager/Admin API/UI coverage, migration, docs, and tests.
+- The next roadmap gate is stabilization and validation of the purchasing records foundation before any advanced inventory, transaction-ledger, replenishment automation, recommendation, or AI/scoring work begins.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -38,6 +41,7 @@ Interpretation as of **May 14, 2026**:
 - Job ticket file upload/list/download/archive workflows.
 - Reporting foundation endpoints (invoice-ready summaries, cost/labor/parts rollups, service history).
 - Initial purchasing visibility over existing vendor, cost, stock-on-hand, and reorder-threshold part data.
+- Dedicated purchasing records for purchase orders, purchase-order lines, receiving progress, vendor invoice tracking, and landed-cost recording.
 
 ### Frontend delivered
 - Employee routes and workflows (`/login`, `/jobs`, `/jobs/:jobTicketId`).
@@ -49,11 +53,14 @@ Interpretation as of **May 14, 2026**:
 - Manager/Admin Phase 4B pilot workflow polish for job list filters, dashboard summary counts, and print-friendly job review.
 - Shared router-aware future-flag test harness coverage for the current React Router baseline.
 - Manager/Admin purchasing workbench for reorder-focused review, vendor/category/status filtering, and CSV export from loaded rows.
+- Manager/Admin purchasing records workflow for creating purchase orders, reviewing line details, recording receiving quantities, saving vendor invoice details, recording landed costs, and archive/unarchive review.
 
 ## Deferred Scope (Still Deferred)
 The following remain deferred and must not be partially introduced outside the approved phase order:
-- Purchase orders, receiving, vendor invoice tracking, and landed cost workflows.
 - Advanced inventory workflows.
+- Warehouse/truck inventory workflows.
+- Inventory transaction ledgers.
+- Replenishment automation.
 - Parts compatibility recommendation engine.
 - AI/scoring-based part recommendations.
 
@@ -62,23 +69,23 @@ The following remain deferred and must not be partially introduced outside the a
 - Seeded data includes Admin, Manager, and Employee users, requesting/billing customers, service location, equipment, parts/vendor/category records, and three representative pilot job tickets.
 - The seed is idempotent and uses the `PILOT-4A` account-number marker to avoid duplicate local data.
 - Automated tests validate employee assigned-job visibility, clock in/out, work notes, part usage, manager approvals, and reporting visibility.
-- Full production seeding, dedicated purchasing records, advanced inventory intelligence, compatibility recommendations, and invoice/payment processing remain out of scope.
+- Full production seeding, advanced inventory intelligence, compatibility recommendations, and invoice/payment processing remain out of scope.
 
 ## Active Stabilization Concerns
 From the reviewed live baseline:
-1. **Remote git transport warning:** direct `git fetch`/`git ls-remote` can still return GitHub HTTP 403 from this workspace, so clone/fetch failures remain environment limitations rather than product-code findings.
-2. **npm environment warning:** npm emits `Unknown env config "http-proxy"`; it is warning-level because frontend install/build/test still pass.
-3. **Router future config discipline:** app and test harnesses now share the same router future configuration; future frontend tests should keep using that shared path instead of reintroducing ad hoc router wrappers.
-4. **Purchasing phase discipline:** keep the current purchasing slice anchored to existing master-data APIs until a separate, explicit purchase-order/receiving phase is scoped.
+1. **Remote git transport warning:** direct `git fetch`/`git ls-remote` can still return GitHub HTTP 403 from some workspaces, so clone/fetch failures remain environment limitations rather than product-code findings.
+2. **npm environment warning:** npm can emit `Unknown env config "http-proxy"`; it is warning-level when frontend install/build/test still pass.
+3. **Router future config discipline:** app and test harnesses share the same router future configuration; future frontend tests should keep using that shared path instead of reintroducing ad hoc router wrappers.
+4. **Purchasing phase discipline:** keep the purchasing records foundation stable and cost-record focused before any separate advanced inventory or recommendation phase is approved.
 
 ## Immediate Hygiene Item
-Keep the validated Phase 4 baseline intact while expanding only the approved purchasing scope. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md), and the follow-up roadmap reset is documented in [Post-Merge Roadmap Reset After Phase 3C/3D Validation](./post-merge-roadmap-reset.md).
+Keep the validated post-Phase 4 baseline and merged purchasing records foundation intact while expanding only approved purchasing stabilization scope. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md), and the follow-up roadmap reset is documented in [Post-Merge Roadmap Reset After Phase 3C/3D Validation](./post-merge-roadmap-reset.md).
 
 ## Recommended Feature Order
-1. Finish Parts Purchase / Vendor Cost Tracking Phase 1 with docs, validation, and any bounded follow-up polish on the purchasing workbench.
-2. Continue Parts Purchase / Vendor Cost Tracking Phase 2 with dedicated purchasing records for purchase orders, receiving, vendor invoice tracking, and landed cost.
-3. Add Advanced Inventory workflows only after the purchasing records phase is stable.
-4. Re-assess Parts Compatibility Recommendation Engine entry only after purchasing and inventory foundations are complete.
+1. Stabilize Parts Purchase / Vendor Cost Tracking Phase 2 with bounded docs, validation, and merge-readiness polish on the purchase-order workflow.
+2. Add Advanced Inventory workflows only after the purchasing records phase is stable and explicitly scoped.
+3. Re-assess Parts Compatibility Recommendation Engine entry only after purchasing and inventory foundations are complete.
+4. Keep AI/scoring-based recommendation logic deferred until explicitly approved after the compatibility and inventory foundations are mature.
 
 ## Planned Sequence: Manager/Admin Phase 3A → 3D
 ### Phase 3A (Completed)
@@ -105,11 +112,20 @@ Keep the validated Phase 4 baseline intact while expanding only the approved pur
 - Added focused frontend regression coverage for Admin user-management and route authorization behavior.
 - No backend contract changes, migrations, or deferred-domain behavior were added.
 
-## Parts Purchase / Vendor Cost Tracking Phase 1 (Current)
+## Parts Purchase / Vendor Cost Tracking Phase 1 (Implemented)
 - Added a Manager/Admin purchasing workbench at `/manage/purchasing` using existing master-data endpoints only.
 - Derived reorder-ready rows from current part `quantityOnHand`, `reorderThreshold`, `unitCost`, `vendorId`, and category relationships.
 - Added search, vendor/category/status filters, summary counts, and client-side CSV export from already loaded rows.
 - No new backend purchasing endpoints, purchase-order entities, receiving workflows, landed-cost calculations, migrations, or auth changes were added in this slice.
+
+## Parts Purchase / Vendor Cost Tracking Phase 2 (Implemented)
+- Added dedicated purchase-order and purchase-order-line persistence for vendor purchasing records.
+- Added Manager/Admin API coverage for list/detail/create/update/submit/receive/cancel/archive/unarchive purchase-order workflows.
+- Added vendor invoice tracking fields and landed-cost recording fields for freight, tax, other landed costs, and landed-cost notes.
+- Added Manager/Admin purchasing UI coverage for creating purchase orders, reviewing line details, recording receiving quantities, saving vendor invoice/landed-cost details, and archive/unarchive review.
+- Added a schema migration for the new purchasing records tables.
+- Added validation for duplicate purchase-order numbers and duplicate part lines.
+- Explicitly kept advanced inventory, warehouse/truck inventory, inventory ledgers, replenishment automation, recommendation logic, AI/scoring, and auth model changes out of scope.
 
 ## Validation Requirements Before Merge
 Run these standard checks from repo root:
@@ -132,10 +148,11 @@ Merge-readiness requires:
 
 ## Readiness for Next Workstream
 Concise readiness statement:
-- The live baseline is complete through Phase 4B and now includes the first purchasing workbench slice.
+- The live baseline is complete through Phase 4B and Parts Purchase / Vendor Cost Tracking Phase 2.
 - Phase 3A, 3B, 3C, 3D, 4A, and 4B slices remain complete on the current control baseline.
-- Proceed next with bounded purchasing/vendor-cost slices before advanced inventory or recommendation work.
-- Continue to enforce no-migration and no-auth-weakening constraints unless a later approved phase explicitly requires otherwise.
+- Proceed next with bounded purchasing-record stabilization before advanced inventory or recommendation work.
+- Continue to enforce no-auth-weakening and no-enum-renumbering constraints.
+- Add new migrations only when a later approved phase explicitly requires schema changes.
 
 ## Cross-Linking
 - Post-merge roadmap reset: [docs/post-merge-roadmap-reset.md](./post-merge-roadmap-reset.md)
@@ -151,11 +168,3 @@ Concise readiness statement:
 - Manager/Admin dashboard now shows a small operational job summary from existing job list data: open, assigned, in-progress, waiting-on-parts, completed/review-ready, and invoice-ready counts.
 - Manager/Admin job detail now presents clearer job review sections for labor/work, time, parts usage, files/photos, status/priority, and browser print support with print-only CSS behavior.
 - No backend contracts, authorization policies, enum numeric values, migrations, production seeding, server-side exports, or deferred product domains were added in this phase.
-
-## Parts Purchase / Vendor Cost Tracking Phase 2 (Implemented in current slice)
-- Added dedicated purchase-order and purchase-order-line persistence for vendor purchasing records.
-- Added Manager/Admin API coverage for list/detail/create/update/submit/receive/cancel/archive/unarchive purchase-order workflows.
-- Added vendor invoice tracking fields and landed-cost recording fields for freight, tax, other landed costs, and landed-cost notes.
-- Added Manager/Admin purchasing UI coverage for creating purchase orders, reviewing line details, recording receiving quantities, and saving vendor invoice/landed-cost details.
-- Added a schema migration for the new purchasing records tables.
-- Explicitly kept advanced inventory, warehouse/truck inventory, inventory ledgers, replenishment automation, recommendation logic, AI/scoring, and auth model changes out of scope.
