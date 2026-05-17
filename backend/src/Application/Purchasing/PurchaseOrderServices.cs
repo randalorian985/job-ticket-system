@@ -188,7 +188,9 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         foreach (var received in request.Lines)
         {
             if (!activeLines.TryGetValue(received.LineId, out var line)) throw new ValidationException("Received line does not belong to this purchase order.");
-            line.QuantityReceived = ValidateNonNegative(received.ReceivedQuantity, nameof(received.ReceivedQuantity));
+            var receivedQuantity = ValidateNonNegative(received.ReceivedQuantity, nameof(received.ReceivedQuantity));
+            if (receivedQuantity < line.QuantityReceived) throw new ValidationException("Received quantity cannot decrease once inventory is received.");
+            line.QuantityReceived = receivedQuantity;
             if (line.QuantityReceived > line.QuantityOrdered) throw new ValidationException("Received quantity cannot exceed ordered quantity.");
         }
 
