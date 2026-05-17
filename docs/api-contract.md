@@ -266,3 +266,41 @@ Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 - Protected endpoints require bearer token.
 
 ## Authorization Policies
+## Purchase Orders and Vendor Cost Tracking
+All purchase-order endpoints require the existing `ManagerOrAdmin` authorization policy. Responses are DTOs and do not expose EF entities.
+
+### `GET /api/purchase-orders`
+Query parameters:
+- `includeArchived` (`boolean`, optional): includes soft-archived purchase orders when `true`.
+- `vendorId` (`guid`, optional): filters to one vendor.
+- `status` (`PurchaseOrderStatus`, optional): filters by purchase-order status.
+
+Returns `PurchaseOrderListItemDto[]` with purchase-order number, vendor, status, ordered/received quantities, vendor invoice summary, ordered subtotal, landed-cost total, and `isArchived`.
+
+### `GET /api/purchase-orders/{id}`
+Returns `PurchaseOrderDto`, including active line DTOs with part number/name, ordered quantity, received quantity, unit cost, and line subtotal.
+
+### `POST /api/purchase-orders`
+Creates a draft purchase order.
+
+Request fields:
+- `vendorId`
+- `purchaseOrderNumber` (optional; generated when blank)
+- `orderedAtUtc` (optional; current UTC when blank)
+- `expectedAtUtc` (optional)
+- `notes` (optional)
+- `lines[]` with `partId`, `quantityOrdered`, `unitCost`, and optional `notes`
+
+### `PUT /api/purchase-orders/{id}`
+Updates purchase-order number, expected date, vendor invoice number/date/status, landed-cost fields (`freightCost`, `taxAmount`, `otherLandedCost`, `landedCostNotes`), notes, and line cost/quantity details where allowed. Received purchase orders cannot add/remove lines through this endpoint.
+
+### Workflow actions
+- `POST /api/purchase-orders/{id}/submit`: moves a draft PO to submitted.
+- `POST /api/purchase-orders/{id}/receive`: records received quantities per line; does not adjust part inventory quantities.
+- `POST /api/purchase-orders/{id}/cancel`: cancels draft/submitted purchase orders when not received/invoiced/closed.
+- `POST /api/purchase-orders/{id}/archive`: soft-archives a purchase order.
+- `POST /api/purchase-orders/{id}/unarchive`: restores a soft-archived purchase order.
+
+Enums are appended only:
+- `PurchaseOrderStatus`: `1=Draft`, `2=Submitted`, `3=PartiallyReceived`, `4=Received`, `5=Invoiced`, `6=Closed`, `7=Cancelled`.
+- `VendorInvoiceStatus`: `1=Pending`, `2=Matched`, `3=Approved`, `4=Paid`, `5=Void`.

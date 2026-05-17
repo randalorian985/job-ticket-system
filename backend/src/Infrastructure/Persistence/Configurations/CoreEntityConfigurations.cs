@@ -141,6 +141,47 @@ public sealed class PartConfiguration : IEntityTypeConfiguration<Part>
     }
 }
 
+
+public sealed class PurchaseOrderConfiguration : IEntityTypeConfiguration<PurchaseOrder>
+{
+    public void Configure(EntityTypeBuilder<PurchaseOrder> builder)
+    {
+        builder.ConfigureAuditableEntity();
+        builder.ConfigureSoftDelete();
+        builder.Property(x => x.PurchaseOrderNumber).HasMaxLength(50).IsRequired();
+        builder.Property(x => x.VendorInvoiceNumber).HasMaxLength(100);
+        builder.Property(x => x.FreightCost).HasPrecision(18, 2);
+        builder.Property(x => x.TaxAmount).HasPrecision(18, 2);
+        builder.Property(x => x.OtherLandedCost).HasPrecision(18, 2);
+        builder.Property(x => x.LandedCostNotes).HasMaxLength(2000);
+        builder.Property(x => x.Notes).HasMaxLength(4000);
+        builder.HasOne(x => x.Vendor).WithMany(x => x.PurchaseOrders).HasForeignKey(x => x.VendorId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => x.PurchaseOrderNumber).IsUnique();
+        builder.HasIndex(x => x.VendorId);
+        builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => x.InvoiceStatus);
+        builder.HasIndex(x => x.OrderedAtUtc);
+        builder.HasIndex(x => x.ExpectedAtUtc);
+    }
+}
+
+public sealed class PurchaseOrderLineConfiguration : IEntityTypeConfiguration<PurchaseOrderLine>
+{
+    public void Configure(EntityTypeBuilder<PurchaseOrderLine> builder)
+    {
+        builder.ConfigureAuditableEntity();
+        builder.ConfigureSoftDelete();
+        builder.Property(x => x.QuantityOrdered).HasPrecision(18, 4);
+        builder.Property(x => x.QuantityReceived).HasPrecision(18, 4);
+        builder.Property(x => x.UnitCost).HasPrecision(18, 2);
+        builder.Property(x => x.Notes).HasMaxLength(2000);
+        builder.HasOne(x => x.PurchaseOrder).WithMany(x => x.Lines).HasForeignKey(x => x.PurchaseOrderId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.Part).WithMany(x => x.PurchaseOrderLines).HasForeignKey(x => x.PartId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => x.PurchaseOrderId);
+        builder.HasIndex(x => x.PartId);
+    }
+}
+
 public sealed class JobTicketConfiguration : IEntityTypeConfiguration<JobTicket>
 {
     public void Configure(EntityTypeBuilder<JobTicket> builder)

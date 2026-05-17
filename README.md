@@ -102,3 +102,8 @@ npm test
 - Phase 4A update: Local pilot readiness now includes opt-in demo seed data, deterministic local credentials, a guided runbook, and automated end-to-end validation for employee clock-in/out, work notes, part usage, manager approvals, and reports visibility.
 
 - Phase 4B update: Pilot workflow polish is implemented with manager/admin job list filters, dashboard summary counts, print-friendly job review, the merged reports export polish follow-up, and aligned router future-flag test harnesses for the current frontend baseline.
+
+## Purchasing Records and Vendor Cost Tracking
+Manager/Admin users can now use `/manage/purchasing` for the second purchasing slice: creating dedicated purchase orders, submitting them for vendor fulfillment, recording receiving quantities, tracking vendor invoice status/numbers/dates, and capturing freight/tax/other landed costs. These workflows use dedicated `/api/purchase-orders` DTO contracts and preserve Manager/Admin authorization boundaries.
+
+This slice remains cost-record focused. It intentionally does not add advanced inventory, warehouse/truck stock workflows, transaction ledgers, replenishment automation, recommendation logic, AI/scoring, or auth model changes.

@@ -7,6 +7,7 @@ using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Pilot;
 using JobTicketSystem.Application.Reporting;
+using JobTicketSystem.Application.Purchasing;
 using JobTicketSystem.Application.Security;
 using JobTicketSystem.Application.TimeEntries;
 using JobTicketSystem.Infrastructure.Persistence;
@@ -82,6 +83,7 @@ builder.Services.AddScoped<IFileStorageProvider, LocalFileStorageProvider>();
 builder.Services.AddScoped<IJobTicketFilesService, JobTicketFilesService>();
 builder.Services.AddScoped<ITimeEntriesService, TimeEntriesService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
+builder.Services.AddScoped<IPurchaseOrdersService, PurchaseOrdersService>();
 builder.Services.AddScoped<IPilotDemoSeedService, PilotDemoSeedService>();
 builder.Services.AddHostedService<PilotDemoSeedHostedService>();
 

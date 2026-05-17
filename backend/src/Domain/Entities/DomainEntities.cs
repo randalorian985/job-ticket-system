@@ -115,6 +115,7 @@ public sealed class Vendor : SoftDeletableEntity
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public ICollection<Part> Parts { get; set; } = new List<Part>();
+    public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
 }
 
 public sealed class PartCategory : SoftDeletableEntity
@@ -138,6 +139,39 @@ public sealed class Part : SoftDeletableEntity
     public decimal QuantityOnHand { get; set; }
     public decimal ReorderThreshold { get; set; }
     public ICollection<JobTicketPart> JobTicketParts { get; set; } = new List<JobTicketPart>();
+    public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = new List<PurchaseOrderLine>();
+}
+
+public sealed class PurchaseOrder : SoftDeletableEntity
+{
+    public Guid VendorId { get; set; }
+    public Vendor Vendor { get; set; } = null!;
+    public string PurchaseOrderNumber { get; set; } = string.Empty;
+    public PurchaseOrderStatus Status { get; set; } = PurchaseOrderStatus.Draft;
+    public DateTime OrderedAtUtc { get; set; }
+    public DateTime? ExpectedAtUtc { get; set; }
+    public DateTime? ReceivedAtUtc { get; set; }
+    public string? VendorInvoiceNumber { get; set; }
+    public DateTime? VendorInvoiceDateUtc { get; set; }
+    public VendorInvoiceStatus InvoiceStatus { get; set; } = VendorInvoiceStatus.Pending;
+    public decimal FreightCost { get; set; }
+    public decimal TaxAmount { get; set; }
+    public decimal OtherLandedCost { get; set; }
+    public string? LandedCostNotes { get; set; }
+    public string? Notes { get; set; }
+    public ICollection<PurchaseOrderLine> Lines { get; set; } = new List<PurchaseOrderLine>();
+}
+
+public sealed class PurchaseOrderLine : SoftDeletableEntity
+{
+    public Guid PurchaseOrderId { get; set; }
+    public PurchaseOrder PurchaseOrder { get; set; } = null!;
+    public Guid PartId { get; set; }
+    public Part Part { get; set; } = null!;
+    public decimal QuantityOrdered { get; set; }
+    public decimal QuantityReceived { get; set; }
+    public decimal UnitCost { get; set; }
+    public string? Notes { get; set; }
 }
 
 public sealed class JobTicket : SoftDeletableEntity

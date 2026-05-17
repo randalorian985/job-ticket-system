@@ -13,3 +13,5 @@ public enum JobPartApprovalStatus { Pending = 1, Approved = 2, Rejected = 3, Inv
 public enum FileVisibility { Internal = 1, Customer = 2, Vendor = 3 }
 public enum AuditActionType { Create = 1, Update = 2, Delete = 3, Restore = 4, StatusChange = 5, Assignment = 6, Approval = 7 }
 public enum InvoiceStatus { NotReady = 1, Ready = 2, Drafted = 3, Sent = 4, Paid = 5, Void = 6 }
+public enum PurchaseOrderStatus { Draft = 1, Submitted = 2, PartiallyReceived = 3, Received = 4, Invoiced = 5, Closed = 6, Cancelled = 7 }
+public enum VendorInvoiceStatus { Pending = 1, Matched = 2, Approved = 3, Paid = 4, Void = 5 }
