@@ -197,7 +197,6 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         if (entity.Status is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Only submitted purchase orders can be received.");
 
         var receivedAtUtc = ToNullableUtc(request.ReceivedAtUtc);
-        ValidateChronology(entity.OrderedAtUtc, entity.ExpectedAtUtc, receivedAtUtc, entity.VendorInvoiceDateUtc);
 
         var activeLines = entity.Lines.Where(x => !x.IsDeleted).ToDictionary(x => x.Id);
         foreach (var received in request.Lines)
@@ -210,8 +209,11 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         }
 
         var allReceived = activeLines.Values.All(x => x.QuantityReceived >= x.QuantityOrdered);
+        var persistedReceivedAtUtc = allReceived ? ToUtcOrNow(request.ReceivedAtUtc) : receivedAtUtc;
+        ValidateChronology(entity.OrderedAtUtc, entity.ExpectedAtUtc, persistedReceivedAtUtc, entity.VendorInvoiceDateUtc);
+
         entity.Status = allReceived ? PurchaseOrderStatus.Received : PurchaseOrderStatus.PartiallyReceived;
-        entity.ReceivedAtUtc = allReceived ? ToUtcOrNow(request.ReceivedAtUtc) : receivedAtUtc;
+        entity.ReceivedAtUtc = persistedReceivedAtUtc;
         await dbContext.SaveChangesAsync(cancellationToken);
         return await GetAsync(id, cancellationToken);
     }
