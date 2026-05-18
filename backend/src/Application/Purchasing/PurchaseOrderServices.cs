@@ -180,6 +180,11 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     public async Task<PurchaseOrderDto?> ReceiveAsync(Guid id, ReceivePurchaseOrderDto request, CancellationToken cancellationToken = default)
     {
         if (request.Lines.Count == 0) throw new ValidationException("At least one received line is required.");
+        if (request.Lines.GroupBy(x => x.LineId).Any(group => group.Count() > 1))
+        {
+            throw new ValidationException("Received lines cannot contain duplicate LineId values.");
+        }
+
         var entity = await dbContext.PurchaseOrders.Include(x => x.Lines).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
         if (entity.Status is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Only submitted purchase orders can be received.");
