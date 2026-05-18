@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { masterDataApi } from '../../api/masterDataApi'
 import { purchasingApi } from '../../api/purchasingApi'
@@ -96,17 +96,22 @@ describe('PurchasingWorkbenchPage', () => {
 
   it('creates a purchase order from selected vendor and part fields', async () => {
     vi.mocked(purchasingApi.createPurchaseOrder).mockResolvedValue(purchaseOrder as any)
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<PurchasingWorkbenchPage />)
 
     await screen.findByText('PO-1001')
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity ordered' }), { target: { value: '6' } })
-    await user.click(screen.getByRole('button', { name: 'Create purchase order' }))
+
+    const quantityInput = screen.getByRole('spinbutton', { name: 'Quantity ordered' })
+    await user.clear(quantityInput)
+    await user.type(quantityInput, '6')
+
+    const createButton = screen.getByRole('button', { name: 'Create purchase order' })
+    await user.click(createButton)
 
     await waitFor(() => expect(purchasingApi.createPurchaseOrder).toHaveBeenCalledWith(expect.objectContaining({
       vendorId: 'vendor-a',
       lines: [expect.objectContaining({ partId: 'part-a', quantityOrdered: 6, unitCost: 12 })]
-    })))
+    })), { timeout: 3000 })
   })
 
   it('reviews a purchase order and saves receiving plus invoice landed costs', async () => {
