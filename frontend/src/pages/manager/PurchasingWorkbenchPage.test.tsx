@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { masterDataApi } from '../../api/masterDataApi'
 import { purchasingApi } from '../../api/purchasingApi'
@@ -100,8 +100,7 @@ describe('PurchasingWorkbenchPage', () => {
     renderWithRouter(<PurchasingWorkbenchPage />)
 
     await screen.findByText('PO-1001')
-    await user.clear(screen.getByRole('spinbutton', { name: 'Quantity ordered' }))
-    await user.type(screen.getByRole('spinbutton', { name: 'Quantity ordered' }), '6')
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity ordered' }), { target: { value: '6' } })
     await user.click(screen.getByRole('button', { name: 'Create purchase order' }))
 
     await waitFor(() => expect(purchasingApi.createPurchaseOrder).toHaveBeenCalledWith(expect.objectContaining({
