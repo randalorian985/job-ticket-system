@@ -36,37 +36,18 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         if (vendorId.HasValue) query = query.Where(x => x.VendorId == vendorId.Value);
         if (status.HasValue) query = query.Where(x => x.Status == status.Value);
 
-        return await query
-            .Include(x => x.Vendor)
-            .Include(x => x.Lines)
-            .OrderByDescending(x => x.OrderedAtUtc)
-            .ThenBy(x => x.PurchaseOrderNumber)
-            .Select(x => new PurchaseOrderListItemDto(
-                x.Id,
-                x.PurchaseOrderNumber,
-                x.VendorId,
-                x.Vendor.Name,
-                x.Status,
-                x.OrderedAtUtc,
-                x.ExpectedAtUtc,
-                x.ReceivedAtUtc,
-                x.VendorInvoiceNumber,
-                x.InvoiceStatus,
-                x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityOrdered * line.UnitCost),
-                x.FreightCost + x.TaxAmount + x.OtherLandedCost,
-                x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityOrdered),
-                x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityReceived),
-                x.IsDeleted))
-            .ToListAsync(cancellationToken);
+        return await query.Include(x => x.Vendor).Include(x => x.Lines).OrderByDescending(x => x.OrderedAtUtc).ThenBy(x => x.PurchaseOrderNumber).Select(x => new PurchaseOrderListItemDto(x.Id, x.PurchaseOrderNumber, x.VendorId, x.Vendor.Name, x.Status, x.OrderedAtUtc, x.ExpectedAtUtc, x.ReceivedAtUtc, x.VendorInvoiceNumber, x.InvoiceStatus, x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityOrdered * line.UnitCost), x.FreightCost + x.TaxAmount + x.OtherLandedCost, x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityOrdered), x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityReceived), x.IsDeleted)).ToListAsync(cancellationToken);
     }
 
-    public Task<PurchaseOrderDto?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
-        MapQuery(dbContext.PurchaseOrders.IgnoreQueryFilters().Where(x => x.Id == id)).SingleOrDefaultAsync(cancellationToken);
+    public Task<PurchaseOrderDto?> GetAsync(Guid id, CancellationToken cancellationToken = default) => MapQuery(dbContext.PurchaseOrders.IgnoreQueryFilters().Where(x => x.Id == id)).SingleOrDefaultAsync(cancellationToken);
 
     public async Task<PurchaseOrderDto> CreateAsync(CreatePurchaseOrderDto request, CancellationToken cancellationToken = default)
     {
         await ValidateVendor(request.VendorId, cancellationToken);
         ValidateLines(request.Lines);
+        var orderedAtUtc = ToUtcOrNow(request.OrderedAtUtc);
+        var expectedAtUtc = ToNullableUtc(request.ExpectedAtUtc);
+        ValidateExpectedAt(orderedAtUtc, expectedAtUtc);
         await ValidateParts(request.Lines.Select(x => x.PartId), cancellationToken);
         var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? await GeneratePurchaseOrderNumber(cancellationToken) : request.PurchaseOrderNumber.Trim();
         await EnsurePurchaseOrderNumberIsUnique(purchaseOrderNumber, null, cancellationToken);
@@ -75,8 +56,8 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         {
             VendorId = request.VendorId,
             PurchaseOrderNumber = purchaseOrderNumber,
-            OrderedAtUtc = ToUtcOrNow(request.OrderedAtUtc),
-            ExpectedAtUtc = ToNullableUtc(request.ExpectedAtUtc),
+            OrderedAtUtc = orderedAtUtc,
+            ExpectedAtUtc = expectedAtUtc,
             Notes = NullIfWhitespace(request.Notes),
             Status = PurchaseOrderStatus.Draft,
             InvoiceStatus = VendorInvoiceStatus.Pending
@@ -84,13 +65,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
         foreach (var line in request.Lines)
         {
-            entity.Lines.Add(new PurchaseOrderLine
-            {
-                PartId = line.PartId,
-                QuantityOrdered = line.QuantityOrdered,
-                UnitCost = line.UnitCost,
-                Notes = NullIfWhitespace(line.Notes)
-            });
+            entity.Lines.Add(new PurchaseOrderLine { PartId = line.PartId, QuantityOrdered = line.QuantityOrdered, UnitCost = line.UnitCost, Notes = NullIfWhitespace(line.Notes) });
         }
 
         dbContext.PurchaseOrders.Add(entity);
@@ -105,6 +80,8 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         if (entity.Status is PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Closed or cancelled purchase orders cannot be updated.");
 
         ValidateLines(request.Lines);
+        ValidateExpectedAt(entity.OrderedAtUtc, ToNullableUtc(request.ExpectedAtUtc));
+        ValidateVendorInvoiceDate(entity.OrderedAtUtc, ToNullableUtc(request.VendorInvoiceDateUtc));
         await ValidateParts(request.Lines.Select(x => x.PartId), cancellationToken);
 
         var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? entity.PurchaseOrderNumber : request.PurchaseOrderNumber.Trim();
@@ -124,19 +101,11 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         var activeLines = entity.Lines.Where(x => !x.IsDeleted).ToList();
         if (activeLines.Any(x => x.QuantityReceived > 0))
         {
-            if (request.Lines.Select(x => x.PartId).OrderBy(x => x).SequenceEqual(activeLines.Select(x => x.PartId).OrderBy(x => x)) is false)
-            {
-                throw new ValidationException("Received purchase orders cannot add or remove lines.");
-            }
-
+            if (request.Lines.Select(x => x.PartId).OrderBy(x => x).SequenceEqual(activeLines.Select(x => x.PartId).OrderBy(x => x)) is false) throw new ValidationException("Received purchase orders cannot add or remove lines.");
             var requestedLineByPartId = request.Lines.ToDictionary(x => x.PartId);
             foreach (var existing in activeLines)
             {
-                if (!requestedLineByPartId.TryGetValue(existing.PartId, out var requested))
-                {
-                    throw new ValidationException("Received purchase orders cannot add or remove lines.");
-                }
-
+                if (!requestedLineByPartId.TryGetValue(existing.PartId, out var requested)) throw new ValidationException("Received purchase orders cannot add or remove lines.");
                 if (requested.QuantityOrdered < existing.QuantityReceived) throw new ValidationException("QuantityOrdered cannot be below received quantity.");
                 existing.QuantityOrdered = requested.QuantityOrdered;
                 existing.UnitCost = requested.UnitCost;
@@ -153,13 +122,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
             foreach (var line in request.Lines)
             {
-                entity.Lines.Add(new PurchaseOrderLine
-                {
-                    PartId = line.PartId,
-                    QuantityOrdered = line.QuantityOrdered,
-                    UnitCost = line.UnitCost,
-                    Notes = NullIfWhitespace(line.Notes)
-                });
+                entity.Lines.Add(new PurchaseOrderLine { PartId = line.PartId, QuantityOrdered = line.QuantityOrdered, UnitCost = line.UnitCost, Notes = NullIfWhitespace(line.Notes) });
             }
         }
 
@@ -167,27 +130,15 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         return await GetAsync(id, cancellationToken);
     }
 
-    public async Task<PurchaseOrderDto?> SubmitAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var entity = await dbContext.PurchaseOrders.Include(x => x.Lines).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
-        if (entity is null) return null;
-        if (!entity.Lines.Any(x => !x.IsDeleted)) throw new ValidationException("A purchase order must have at least one active line before submit.");
-        if (entity.Status == PurchaseOrderStatus.Draft) entity.Status = PurchaseOrderStatus.Submitted;
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return await GetAsync(id, cancellationToken);
-    }
-
     public async Task<PurchaseOrderDto?> ReceiveAsync(Guid id, ReceivePurchaseOrderDto request, CancellationToken cancellationToken = default)
     {
         if (request.Lines.Count == 0) throw new ValidationException("At least one received line is required.");
-        if (request.Lines.GroupBy(x => x.LineId).Any(group => group.Count() > 1))
-        {
-            throw new ValidationException("Received lines cannot contain duplicate LineId values.");
-        }
+        if (request.Lines.GroupBy(x => x.LineId).Any(group => group.Count() > 1)) throw new ValidationException("Received lines cannot contain duplicate LineId values.");
 
         var entity = await dbContext.PurchaseOrders.Include(x => x.Lines).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
         if (entity.Status is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Only submitted purchase orders can be received.");
+        ValidateReceivedAt(entity.OrderedAtUtc, ToNullableUtc(request.ReceivedAtUtc));
 
         var activeLines = entity.Lines.Where(x => !x.IsDeleted).ToDictionary(x => x.Id);
         foreach (var received in request.Lines)
@@ -236,41 +187,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         return true;
     }
 
-    private static IQueryable<PurchaseOrderDto> MapQuery(IQueryable<PurchaseOrder> query) => query
-        .Include(x => x.Vendor)
-        .Include(x => x.Lines).ThenInclude(x => x.Part)
-        .Select(x => new PurchaseOrderDto(
-            x.Id,
-            x.PurchaseOrderNumber,
-            x.VendorId,
-            x.Vendor.Name,
-            x.Status,
-            x.OrderedAtUtc,
-            x.ExpectedAtUtc,
-            x.ReceivedAtUtc,
-            x.VendorInvoiceNumber,
-            x.VendorInvoiceDateUtc,
-            x.InvoiceStatus,
-            x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityOrdered * line.UnitCost),
-            x.FreightCost,
-            x.TaxAmount,
-            x.OtherLandedCost,
-            x.FreightCost + x.TaxAmount + x.OtherLandedCost,
-            x.LandedCostNotes,
-            x.Notes,
-            x.IsDeleted,
-            x.Lines.Where(line => !line.IsDeleted).OrderBy(line => line.Part.PartNumber).Select(line => new PurchaseOrderLineDto(
-                line.Id,
-                line.PurchaseOrderId,
-                line.PartId,
-                line.Part.PartNumber,
-                line.Part.Name,
-                line.QuantityOrdered,
-                line.QuantityReceived,
-                line.UnitCost,
-                line.QuantityOrdered * line.UnitCost,
-                line.Notes,
-                line.IsDeleted)).ToList()));
+    private static IQueryable<PurchaseOrderDto> MapQuery(IQueryable<PurchaseOrder> query) => query.Include(x => x.Vendor).Include(x => x.Lines).ThenInclude(x => x.Part).Select(x => new PurchaseOrderDto(x.Id, x.PurchaseOrderNumber, x.VendorId, x.Vendor.Name, x.Status, x.OrderedAtUtc, x.ExpectedAtUtc, x.ReceivedAtUtc, x.VendorInvoiceNumber, x.VendorInvoiceDateUtc, x.InvoiceStatus, x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityOrdered * line.UnitCost), x.FreightCost, x.TaxAmount, x.OtherLandedCost, x.FreightCost + x.TaxAmount + x.OtherLandedCost, x.LandedCostNotes, x.Notes, x.IsDeleted, x.Lines.Where(line => !line.IsDeleted).OrderBy(line => line.Part.PartNumber).Select(line => new PurchaseOrderLineDto(line.Id, line.PurchaseOrderId, line.PartId, line.Part.PartNumber, line.Part.Name, line.QuantityOrdered, line.QuantityReceived, line.UnitCost, line.QuantityOrdered * line.UnitCost, line.Notes, line.IsDeleted)).ToList()));
 
     private async Task ValidateVendor(Guid vendorId, CancellationToken cancellationToken)
     {
@@ -279,10 +196,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
     private async Task EnsurePurchaseOrderNumberIsUnique(string purchaseOrderNumber, Guid? currentPurchaseOrderId, CancellationToken cancellationToken)
     {
-        var duplicateExists = await dbContext.PurchaseOrders
-            .IgnoreQueryFilters()
-            .AnyAsync(x => x.PurchaseOrderNumber == purchaseOrderNumber && (!currentPurchaseOrderId.HasValue || x.Id != currentPurchaseOrderId.Value), cancellationToken);
-
+        var duplicateExists = await dbContext.PurchaseOrders.IgnoreQueryFilters().AnyAsync(x => x.PurchaseOrderNumber == purchaseOrderNumber && (!currentPurchaseOrderId.HasValue || x.Id != currentPurchaseOrderId.Value), cancellationToken);
         if (duplicateExists) throw new ValidationException("PurchaseOrderNumber must be unique.");
     }
 
@@ -303,16 +217,28 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
             ValidateNonNegative(line.UnitCost, nameof(line.UnitCost));
         }
 
-        if (lines.GroupBy(line => line.PartId).Any(group => group.Count() > 1))
-        {
-            throw new ValidationException("Purchase order lines cannot contain duplicate PartId values.");
-        }
+        if (lines.GroupBy(line => line.PartId).Any(group => group.Count() > 1)) throw new ValidationException("Purchase order lines cannot contain duplicate PartId values.");
     }
 
     private async Task<string> GeneratePurchaseOrderNumber(CancellationToken cancellationToken)
     {
         var count = await dbContext.PurchaseOrders.IgnoreQueryFilters().CountAsync(cancellationToken) + 1;
         return $"PO-{DateTime.UtcNow:yyyyMMdd}-{count:0000}";
+    }
+
+    private static void ValidateExpectedAt(DateTime orderedAtUtc, DateTime? expectedAtUtc)
+    {
+        if (expectedAtUtc.HasValue && expectedAtUtc.Value < orderedAtUtc) throw new ValidationException("ExpectedAtUtc cannot be before OrderedAtUtc.");
+    }
+
+    private static void ValidateVendorInvoiceDate(DateTime orderedAtUtc, DateTime? vendorInvoiceDateUtc)
+    {
+        if (vendorInvoiceDateUtc.HasValue && vendorInvoiceDateUtc.Value < orderedAtUtc) throw new ValidationException("VendorInvoiceDateUtc cannot be before OrderedAtUtc.");
+    }
+
+    private static void ValidateReceivedAt(DateTime orderedAtUtc, DateTime? receivedAtUtc)
+    {
+        if (receivedAtUtc.HasValue && receivedAtUtc.Value < orderedAtUtc) throw new ValidationException("ReceivedAtUtc cannot be before OrderedAtUtc.");
     }
 
     private static decimal ValidateNonNegative(decimal value, string fieldName)
