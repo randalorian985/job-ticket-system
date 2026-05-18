@@ -17,7 +17,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Parts purchase/vendor cost tracking Phase 1 with the implemented post-Phase 4 baseline plus an initial Manager/Admin purchasing workbench that reuses existing part, vendor, category, unit-cost, quantity-on-hand, and reorder-threshold data.
+Parts purchase/vendor cost tracking Phase 2 on top of the implemented post-Phase 4 baseline, including both the Manager/Admin purchasing workbench and the dedicated purchase-order, receiving, vendor invoice tracking, and landed-cost workflows.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
 
@@ -132,17 +132,19 @@ This phase adds foundational security controls without replacing existing workfl
 - End-to-end validation covers employee assigned-job visibility, clock in/out, work notes, part usage, manager approvals, and reporting visibility.
 - Phase 4A does not add production seed data, dedicated purchasing records, advanced inventory intelligence, compatibility recommendations, or invoice/payment processing.
 
-## Manager/Admin Purchasing Workbench (Current Phase)
+## Manager/Admin Purchasing Workbench (Implemented Slice)
 - Manager/Admin users can open `/manage/purchasing` for reorder-focused purchasing visibility built on existing master-data records.
 - The workbench uses current part, vendor, category, unit-cost, quantity-on-hand, and reorder-threshold fields to surface out-of-stock, below-threshold, at-threshold, and healthy parts.
 - The workflow supports search plus vendor, category, and stock-status filters and client-side CSV export from already loaded rows.
-- This slice does not add purchase orders, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory transactions, replenishment automation, or automatic recommendations.
+- This first purchasing slice established reorder visibility before dedicated purchasing records were added.
 - Existing soft-delete/archive behavior and Manager/Admin-only route boundaries remain in force.
 
 ## Deferred Scope Confirmation (Current)
 The following remain deferred and are not implemented as active business domains in this phase:
-- Purchase orders, receiving, vendor invoice tracking, and landed cost workflows.
 - Advanced inventory workflows.
+- Warehouse or truck inventory workflows.
+- Inventory transaction ledgers.
+- Replenishment automation.
 - Parts compatibility recommendation engine.
 - AI/scoring-based part recommendations.
 
@@ -176,6 +178,7 @@ Scope boundaries retained:
 - Manager/Admin authorization remains required for purchasing endpoints and UI routes.
 - No enum renumbering or auth weakening is included.
 - Receiving records vendor fulfillment progress only; it does not update inventory quantities or create inventory ledgers.
+- Receive requests reject duplicate `LineId` entries and do not allow recorded received quantities to decrease once saved.
 
 Still out of scope:
 - advanced inventory;
