@@ -210,11 +210,66 @@ export function UsersPage() {
         </div>
         {isLoading ? <p className="muted">Loading user accounts…</p> : null}
         {!isLoading && items.length === 0 && !error ? <p className="muted">No users have been created yet. Create the first user above.</p> : null}
-        {items.length > 0 ? <div className="table-scroll"><table><thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>{items.map((user) => {
-          const busy = busyUserId === user.id
-          const inactive = statusLabel(user) === 'Inactive'
-          return <tr key={user.id}><td>{userDisplayName(user)}</td><td>{user.userName ?? '—'}</td><td>{user.email ?? '—'}</td><td><span className="status-pill">{user.role}</span></td><td><span className={inactive ? 'status-pill inactive' : 'status-pill active'}>{statusLabel(user)}</span></td><td><div className="table-actions"><button type="button" onClick={() => startEdit(user)} disabled={busy}>Edit</button><button type="button" className="danger-button" onClick={() => archiveUser(user)} disabled={busy || inactive}>{busy ? 'Working…' : inactive ? 'Deactivated' : 'Deactivate'}</button><label className="sr-label">New password for {userDisplayName(user)}<input aria-label={`New password for ${userDisplayName(user)}`} type="password" placeholder="New temporary password" value={passwordByUserId[user.id] ?? ''} onChange={(e) => setPasswordByUserId((prev) => ({ ...prev, [user.id]: e.target.value }))} autoComplete="new-password" disabled={busy} /></label><button type="button" className="secondary-button" onClick={() => resetPassword(user)} disabled={busy}>{busy ? 'Working…' : 'Reset password'}</button></div></td></tr>
-        })}</tbody></table></div> : null}
+        {items.length > 0 ? (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((user) => {
+                  const busy = busyUserId === user.id
+                  const inactive = statusLabel(user) === 'Inactive'
+                  const displayName = userDisplayName(user)
+
+                  return (
+                    <tr key={user.id}>
+                      <td>{displayName}</td>
+                      <td>{user.userName ?? '—'}</td>
+                      <td>{user.email ?? '—'}</td>
+                      <td><span className="status-pill">{user.role}</span></td>
+                      <td>
+                        <span className={inactive ? 'status-pill inactive' : 'status-pill active'}>
+                          {statusLabel(user)}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button type="button" onClick={() => startEdit(user)} disabled={busy}>Edit</button>
+                          <button type="button" className="danger-button" onClick={() => archiveUser(user)} disabled={busy || inactive}>
+                            {busy ? 'Working…' : inactive ? 'Deactivated' : 'Deactivate'}
+                          </button>
+                          <label className="sr-label">
+                            New password for {displayName}
+                            <input
+                              aria-label={`New password for ${displayName}`}
+                              type="password"
+                              placeholder="New temporary password"
+                              value={passwordByUserId[user.id] ?? ''}
+                              onChange={(event) => setPasswordByUserId((prev) => ({ ...prev, [user.id]: event.target.value }))}
+                              autoComplete="new-password"
+                              disabled={busy}
+                            />
+                          </label>
+                          <button type="button" className="secondary-button" onClick={() => resetPassword(user)} disabled={busy}>
+                            {busy ? 'Working…' : 'Reset password'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </article>
     </section>
   )

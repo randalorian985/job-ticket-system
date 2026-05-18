@@ -121,8 +121,7 @@ public sealed class AssignedEmployeeOrManagerHandler(JobTicketSystem.Infrastruct
         }
 
         if (context.Resource is not HttpContext httpContext
-            || !httpContext.Request.RouteValues.TryGetValue("jobTicketId", out var routeValue)
-            || !Guid.TryParse(routeValue?.ToString(), out var jobTicketId)
+            || !TryGetJobTicketId(httpContext, out var jobTicketId)
             || !Guid.TryParse(context.User.FindFirstValue("employee_id") ?? context.User.FindFirstValue(ClaimTypes.NameIdentifier), out var employeeId))
         {
             return;
@@ -133,5 +132,21 @@ public sealed class AssignedEmployeeOrManagerHandler(JobTicketSystem.Infrastruct
         {
             context.Succeed(requirement);
         }
+    }
+
+    private static bool TryGetJobTicketId(HttpContext httpContext, out Guid jobTicketId)
+    {
+        jobTicketId = Guid.Empty;
+
+        foreach (var routeKey in new[] { "jobTicketId", "id" })
+        {
+            if (httpContext.Request.RouteValues.TryGetValue(routeKey, out var routeValue)
+                && Guid.TryParse(routeValue?.ToString(), out jobTicketId))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
