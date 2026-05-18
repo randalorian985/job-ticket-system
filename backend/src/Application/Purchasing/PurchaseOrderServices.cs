@@ -68,6 +68,9 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         await ValidateVendor(request.VendorId, cancellationToken);
         ValidateLines(request.Lines);
         await ValidateParts(request.Lines.Select(x => x.PartId), cancellationToken);
+        var orderedAtUtc = ToUtcOrNow(request.OrderedAtUtc);
+        var expectedAtUtc = ToNullableUtc(request.ExpectedAtUtc);
+        ValidateChronology(orderedAtUtc, expectedAtUtc, null, null);
         var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? await GeneratePurchaseOrderNumber(cancellationToken) : request.PurchaseOrderNumber.Trim();
         await EnsurePurchaseOrderNumberIsUnique(purchaseOrderNumber, null, cancellationToken);
 
@@ -75,8 +78,8 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         {
             VendorId = request.VendorId,
             PurchaseOrderNumber = purchaseOrderNumber,
-            OrderedAtUtc = ToUtcOrNow(request.OrderedAtUtc),
-            ExpectedAtUtc = ToNullableUtc(request.ExpectedAtUtc),
+            OrderedAtUtc = orderedAtUtc,
+            ExpectedAtUtc = expectedAtUtc,
             Notes = NullIfWhitespace(request.Notes),
             Status = PurchaseOrderStatus.Draft,
             InvoiceStatus = VendorInvoiceStatus.Pending
@@ -110,10 +113,14 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? entity.PurchaseOrderNumber : request.PurchaseOrderNumber.Trim();
         await EnsurePurchaseOrderNumberIsUnique(purchaseOrderNumber, entity.Id, cancellationToken);
 
+        var expectedAtUtc = ToNullableUtc(request.ExpectedAtUtc);
+        var vendorInvoiceDateUtc = ToNullableUtc(request.VendorInvoiceDateUtc);
+        ValidateChronology(entity.OrderedAtUtc, expectedAtUtc, entity.ReceivedAtUtc, vendorInvoiceDateUtc);
+
         entity.PurchaseOrderNumber = purchaseOrderNumber;
-        entity.ExpectedAtUtc = ToNullableUtc(request.ExpectedAtUtc);
+        entity.ExpectedAtUtc = expectedAtUtc;
         entity.VendorInvoiceNumber = NullIfWhitespace(request.VendorInvoiceNumber);
-        entity.VendorInvoiceDateUtc = ToNullableUtc(request.VendorInvoiceDateUtc);
+        entity.VendorInvoiceDateUtc = vendorInvoiceDateUtc;
         entity.InvoiceStatus = request.InvoiceStatus;
         entity.FreightCost = ValidateNonNegative(request.FreightCost, nameof(request.FreightCost));
         entity.TaxAmount = ValidateNonNegative(request.TaxAmount, nameof(request.TaxAmount));
@@ -189,6 +196,9 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         if (entity is null) return null;
         if (entity.Status is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Only submitted purchase orders can be received.");
 
+        var receivedAtUtc = ToNullableUtc(request.ReceivedAtUtc);
+        ValidateChronology(entity.OrderedAtUtc, entity.ExpectedAtUtc, receivedAtUtc, entity.VendorInvoiceDateUtc);
+
         var activeLines = entity.Lines.Where(x => !x.IsDeleted).ToDictionary(x => x.Id);
         foreach (var received in request.Lines)
         {
@@ -201,7 +211,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
         var allReceived = activeLines.Values.All(x => x.QuantityReceived >= x.QuantityOrdered);
         entity.Status = allReceived ? PurchaseOrderStatus.Received : PurchaseOrderStatus.PartiallyReceived;
-        entity.ReceivedAtUtc = allReceived ? ToUtcOrNow(request.ReceivedAtUtc) : ToNullableUtc(request.ReceivedAtUtc);
+        entity.ReceivedAtUtc = allReceived ? ToUtcOrNow(request.ReceivedAtUtc) : receivedAtUtc;
         await dbContext.SaveChangesAsync(cancellationToken);
         return await GetAsync(id, cancellationToken);
     }
@@ -306,6 +316,24 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         if (lines.GroupBy(line => line.PartId).Any(group => group.Count() > 1))
         {
             throw new ValidationException("Purchase order lines cannot contain duplicate PartId values.");
+        }
+    }
+
+    private static void ValidateChronology(DateTime orderedAtUtc, DateTime? expectedAtUtc, DateTime? receivedAtUtc, DateTime? vendorInvoiceDateUtc)
+    {
+        if (expectedAtUtc.HasValue && expectedAtUtc.Value < orderedAtUtc)
+        {
+            throw new ValidationException("Expected receipt date cannot be earlier than the ordered date.");
+        }
+
+        if (receivedAtUtc.HasValue && receivedAtUtc.Value < orderedAtUtc)
+        {
+            throw new ValidationException("Received date cannot be earlier than the ordered date.");
+        }
+
+        if (vendorInvoiceDateUtc.HasValue && vendorInvoiceDateUtc.Value < orderedAtUtc)
+        {
+            throw new ValidationException("Vendor invoice date cannot be earlier than the ordered date.");
         }
     }
 
