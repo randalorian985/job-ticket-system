@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { renderWithRouter } from '../../../test/renderWithRouter'
 import { reportsApi } from '../../../api/reportsApi'
 import { ReportsPage } from './ReportsPage'
 
@@ -37,7 +37,7 @@ describe('ReportsPage', () => {
       }
     ] as any)
 
-    render(<ReportsPage />, { wrapper: MemoryRouter })
+    renderWithRouter(<ReportsPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Job' }))
 

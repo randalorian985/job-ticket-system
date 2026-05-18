@@ -167,6 +167,32 @@ public sealed class AuthIntegrationTests
     }
 
     [Fact]
+    public async Task Assigned_employee_can_add_work_entry_on_id_based_job_ticket_route()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedDataAsync(db, auth));
+
+        var client = factory.CreateClient();
+        await client.SetBearerTokenAsync("employee", "EmployeePass!123");
+
+        var assigned = await factory.GetAssignedJobIdAsync();
+        var unassigned = await factory.GetUnassignedJobIdAsync();
+        var employeeId = await factory.GetEmployeeIdAsync();
+
+        var assignedResponse = await client.PostAsJsonAsync(
+            $"/api/job-tickets/{assigned}/work-entries",
+            new AddJobWorkEntryDto(employeeId, WorkEntryType.Note, "Employee route check", null));
+
+        Assert.Equal(HttpStatusCode.OK, assignedResponse.StatusCode);
+
+        var unassignedResponse = await client.PostAsJsonAsync(
+            $"/api/job-tickets/{unassigned}/work-entries",
+            new AddJobWorkEntryDto(employeeId, WorkEntryType.Note, "Should be blocked", null));
+
+        Assert.Equal(HttpStatusCode.Forbidden, unassignedResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Employee_clock_in_and_file_upload_require_assigned_job()
     {
         await using var factory = new TestApiFactory();
