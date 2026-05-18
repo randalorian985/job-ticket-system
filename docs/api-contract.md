@@ -46,6 +46,7 @@
 - Time entries (`/api/time-entries/*`)
 - Reporting (`/api/reports/*`)
 - Parts usage history visibility (`/api/parts/usage-history`)
+- Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 
 ### Implemented Backend + Frontend (Manager/Admin UI Phases 1-2 and later slices)
 - Manager/Admin React routes consume management/reporting endpoints for read-first pages plus targeted edit workflows.
@@ -53,11 +54,13 @@
 - Reports UI consumes existing report query filters (`dateFromUtc`, `dateToUtc`, `customerId`, `employeeId`, `jobStatus`, etc.) and supports client-side CSV export from loaded rows.
 - Master-data screens now include targeted create/edit/archive actions for supported APIs.
 - Admin-only frontend route for `/api/users` remains isolated and now includes create/edit/archive/reset-password actions.
-- Manager/Admin `/manage/purchasing` reuses existing parts, vendors, and part-category APIs to derive reorder-ready workbench rows on the client, including summary counts, vendor/category/status filters, and client-side CSV export.
+- Manager/Admin `/manage/purchasing` includes both the reorder-focused workbench that derives rows from existing parts/vendor/category APIs and the dedicated purchase-order workflow backed by `/api/purchase-orders`.
 
 ### Deferred Future Features (Not Implemented)
-- Dedicated purchase-order, receiving, vendor invoice tracking, and landed-cost workflows.
 - Advanced inventory management workflows.
+- Warehouse/truck inventory workflows.
+- Inventory transaction ledgers.
+- Replenishment automation.
 - Parts compatibility recommendation engine.
 - AI/scoring-based part recommendations.
 
@@ -120,12 +123,11 @@ All list endpoints support simple pagination with optional query params:
 
 List/detail/create/update responses use DTOs and expose `isArchived` for master-data rows; EF entities remain internal. Unarchive endpoints can return validation errors (`400`) when required linked records are archived/deleted/inactive, and `404` when the target record does not exist.
 
-### Purchasing Workbench (Current Frontend Slice)
-- No dedicated `/api/purchasing/*` endpoints exist yet in this first slice.
-- Manager/Admin `/manage/purchasing` currently composes existing `GET /api/parts`, `GET /api/vendors`, and `GET /api/part-categories` responses.
+### Purchasing Workbench (Implemented Frontend Slice)
+- Manager/Admin `/manage/purchasing` still includes the reorder-focused workbench that composes existing `GET /api/parts`, `GET /api/vendors`, and `GET /api/part-categories` responses.
 - The workbench derives reorder-ready rows from `quantityOnHand`, `reorderThreshold`, `unitCost`, `vendorId`, and category relationships already present in the returned DTOs.
-- CSV export is client-side only and generated from already loaded visible rows.
-- This slice does not create purchase orders, receiving records, vendor invoices, landed-cost calculations, or inventory transactions.
+- CSV export for the workbench is client-side only and generated from already loaded visible rows.
+- The workbench sits alongside the dedicated purchase-order APIs described below; it is not a separate inventory transaction system.
 
 ### Parts Usage History Visibility
 - `GET /api/parts/usage-history`
@@ -266,8 +268,10 @@ Planned: URL-based versioning (`/api/v1/...`) once endpoints stabilize.
 - Protected endpoints require bearer token.
 
 ## Authorization Policies
+- Purchase-order endpoints require the existing `ManagerOrAdmin` authorization policy.
+- Purchase-order responses are DTOs and do not expose EF entities.
+
 ## Purchase Orders and Vendor Cost Tracking
-All purchase-order endpoints require the existing `ManagerOrAdmin` authorization policy. Responses are DTOs and do not expose EF entities.
 
 ### `GET /api/purchase-orders`
 Query parameters:
@@ -297,6 +301,10 @@ Updates purchase-order number, expected date, vendor invoice number/date/status,
 ### Workflow actions
 - `POST /api/purchase-orders/{id}/submit`: moves a draft PO to submitted.
 - `POST /api/purchase-orders/{id}/receive`: records received quantities per line; does not adjust part inventory quantities.
+  - Request must include at least one line.
+  - Duplicate `LineId` entries are rejected.
+  - A line's recorded received quantity cannot decrease once it has been saved.
+  - `receivedQuantity` cannot exceed `quantityOrdered`.
 - `POST /api/purchase-orders/{id}/cancel`: cancels draft/submitted purchase orders when not received/invoiced/closed.
 - `POST /api/purchase-orders/{id}/archive`: soft-archives a purchase order.
 - `POST /api/purchase-orders/{id}/unarchive`: restores a soft-archived purchase order.
