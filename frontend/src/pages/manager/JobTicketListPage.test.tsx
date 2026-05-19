@@ -66,9 +66,13 @@ describe('Manager list pages', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(await screen.findByText('JT-2')).toBeInTheDocument()
 
+    const resetFiltersButton = screen.getByRole('button', { name: 'Reset Filters' })
+    expect(resetFiltersButton).toBeDisabled()
+
     fireEvent.change(screen.getByLabelText(/Search tickets/i), { target: { value: 'compressor' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(resetFiltersButton).toBeEnabled()
 
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: '5' } })
     expect(screen.getByText('No job tickets match the current filters. Reset filters to see all tickets.')).toBeInTheDocument()
@@ -78,7 +82,8 @@ describe('Manager list pages', () => {
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c-1' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('Reset Filters'))
+    fireEvent.click(resetFiltersButton)
+    expect(resetFiltersButton).toBeDisabled()
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('JT-2')).toBeInTheDocument()
   })
