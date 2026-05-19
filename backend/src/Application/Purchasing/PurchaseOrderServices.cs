@@ -126,6 +126,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         entity.VendorInvoiceNumber = normalizedVendorInvoiceNumber;
         entity.VendorInvoiceDateUtc = vendorInvoiceDateUtc;
         entity.InvoiceStatus = request.InvoiceStatus;
+        entity.Status = ResolveInvoiceBackedStatus(entity.Status, request.InvoiceStatus);
         entity.FreightCost = ValidateNonNegative(request.FreightCost, nameof(request.FreightCost));
         entity.TaxAmount = ValidateNonNegative(request.TaxAmount, nameof(request.TaxAmount));
         entity.OtherLandedCost = ValidateNonNegative(request.OtherLandedCost, nameof(request.OtherLandedCost));
@@ -346,6 +347,21 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         {
             throw new ValidationException("Vendor invoice date cannot be earlier than the received date.");
         }
+    }
+
+    private static PurchaseOrderStatus ResolveInvoiceBackedStatus(PurchaseOrderStatus currentStatus, VendorInvoiceStatus invoiceStatus)
+    {
+        if (invoiceStatus != VendorInvoiceStatus.Pending && currentStatus is PurchaseOrderStatus.Received or PurchaseOrderStatus.Invoiced)
+        {
+            return PurchaseOrderStatus.Invoiced;
+        }
+
+        if (invoiceStatus == VendorInvoiceStatus.Pending && currentStatus == PurchaseOrderStatus.Invoiced)
+        {
+            return PurchaseOrderStatus.Received;
+        }
+
+        return currentStatus;
     }
 
     private static void ValidateInvoiceMetadata(VendorInvoiceStatus invoiceStatus, string? vendorInvoiceNumber, DateTime? vendorInvoiceDateUtc)
