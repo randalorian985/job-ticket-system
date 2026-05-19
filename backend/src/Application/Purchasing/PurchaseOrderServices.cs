@@ -117,9 +117,12 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         var vendorInvoiceDateUtc = ToNullableUtc(request.VendorInvoiceDateUtc);
         ValidateChronology(entity.OrderedAtUtc, expectedAtUtc, entity.ReceivedAtUtc, vendorInvoiceDateUtc);
 
+        var normalizedVendorInvoiceNumber = NullIfWhitespace(request.VendorInvoiceNumber);
+        ValidateInvoiceMetadata(request.InvoiceStatus, normalizedVendorInvoiceNumber, vendorInvoiceDateUtc);
+
         entity.PurchaseOrderNumber = purchaseOrderNumber;
         entity.ExpectedAtUtc = expectedAtUtc;
-        entity.VendorInvoiceNumber = NullIfWhitespace(request.VendorInvoiceNumber);
+        entity.VendorInvoiceNumber = normalizedVendorInvoiceNumber;
         entity.VendorInvoiceDateUtc = vendorInvoiceDateUtc;
         entity.InvoiceStatus = request.InvoiceStatus;
         entity.FreightCost = ValidateNonNegative(request.FreightCost, nameof(request.FreightCost));
@@ -341,6 +344,14 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         if (vendorInvoiceDateUtc.HasValue && receivedAtUtc.HasValue && vendorInvoiceDateUtc.Value < receivedAtUtc.Value)
         {
             throw new ValidationException("Vendor invoice date cannot be earlier than the received date.");
+        }
+    }
+
+    private static void ValidateInvoiceMetadata(VendorInvoiceStatus invoiceStatus, string? vendorInvoiceNumber, DateTime? vendorInvoiceDateUtc)
+    {
+        if (invoiceStatus != VendorInvoiceStatus.Pending && (string.IsNullOrWhiteSpace(vendorInvoiceNumber) || !vendorInvoiceDateUtc.HasValue))
+        {
+            throw new ValidationException("Vendor invoice number and invoice date are required when invoice status is not pending.");
         }
     }
 
