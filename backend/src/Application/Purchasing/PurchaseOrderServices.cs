@@ -119,6 +119,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
         var normalizedVendorInvoiceNumber = NullIfWhitespace(request.VendorInvoiceNumber);
         ValidateInvoiceMetadata(request.InvoiceStatus, normalizedVendorInvoiceNumber, vendorInvoiceDateUtc);
+        ValidateInvoiceStatusForReceipt(request.InvoiceStatus, entity.Status);
 
         entity.PurchaseOrderNumber = purchaseOrderNumber;
         entity.ExpectedAtUtc = expectedAtUtc;
@@ -352,6 +353,14 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         if (invoiceStatus != VendorInvoiceStatus.Pending && (string.IsNullOrWhiteSpace(vendorInvoiceNumber) || !vendorInvoiceDateUtc.HasValue))
         {
             throw new ValidationException("Vendor invoice number and invoice date are required when invoice status is not pending.");
+        }
+    }
+
+    private static void ValidateInvoiceStatusForReceipt(VendorInvoiceStatus invoiceStatus, PurchaseOrderStatus purchaseOrderStatus)
+    {
+        if (invoiceStatus != VendorInvoiceStatus.Pending && purchaseOrderStatus is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Submitted)
+        {
+            throw new ValidationException("Vendor invoice status cannot move beyond pending until inventory has been received.");
         }
     }
 
