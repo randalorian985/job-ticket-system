@@ -51,6 +51,29 @@ public sealed class PurchaseOrderServicesTests
         Assert.Equal(5m, (await context.Parts.SingleAsync(x => x.Id == part.Id)).QuantityOnHand);
     }
 
+    [Fact]
+    public async Task Purchase_order_update_rejects_non_pending_invoice_status_without_invoice_metadata()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-INV-META", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UpdateAsync(created.Id, new UpdatePurchaseOrderDto(
+            created.PurchaseOrderNumber,
+            created.ExpectedAtUtc,
+            null,
+            null,
+            VendorInvoiceStatus.Matched,
+            0m,
+            0m,
+            0m,
+            null,
+            null,
+            [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)])));
+
+        Assert.Equal("Vendor invoice number and invoice date are required when invoice status is not pending.", exception.Message);
+    }
 
     [Fact]
     public async Task Purchase_order_create_rejects_duplicate_purchase_order_number_as_validation()
