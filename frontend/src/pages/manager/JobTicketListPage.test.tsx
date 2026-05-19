@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { routerFuture } from '../../routes/routerFuture'
@@ -54,6 +55,21 @@ describe('Manager list pages', () => {
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
   })
 
+  it('shows queue summary counts for active, urgent, waiting, and unscheduled work', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
+      { id: 'job-3', ticketNumber: 'JT-3', title: 'Archive ticket', status: 7, priority: 1, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-11T08:00:00Z' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('Active tickets')).toBeInTheDocument()
+    expect(screen.getByText('Urgent active')).toBeInTheDocument()
+    expect(screen.getByText('Waiting')).toBeInTheDocument()
+    expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
+  })
+
   it('filters by search text, status, priority, and customer, then resets filters', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' },
@@ -65,9 +81,13 @@ describe('Manager list pages', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(await screen.findByText('JT-2')).toBeInTheDocument()
 
+    const resetFiltersButton = screen.getByRole('button', { name: 'Reset Filters' })
+    expect(resetFiltersButton).toBeDisabled()
+
     fireEvent.change(screen.getByLabelText(/Search tickets/i), { target: { value: 'compressor' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(resetFiltersButton).toBeEnabled()
 
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: '5' } })
     expect(screen.getByText('No job tickets match the current filters. Reset filters to see all tickets.')).toBeInTheDocument()
@@ -77,7 +97,8 @@ describe('Manager list pages', () => {
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c-1' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('Reset Filters'))
+    fireEvent.click(resetFiltersButton)
+    expect(resetFiltersButton).toBeDisabled()
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('JT-2')).toBeInTheDocument()
   })
@@ -97,5 +118,14 @@ describe('Manager list pages', () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByText('Unable to load manager job tickets.')).toBeInTheDocument())
+  })
+
+  it('shows a permission-specific error for rejected manager access', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockRejectedValue(new ApiError('Forbidden', 403, undefined))
+
+    renderPage()
+
+    await waitFor(() => expect(screen.getByText('You do not have permission to load this manager view.')).toBeInTheDocument())
+    expect(screen.queryByText('Unable to load manager job tickets.')).not.toBeInTheDocument()
   })
 })
