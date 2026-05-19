@@ -374,9 +374,9 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
     private static void ValidateInvoiceStatusForReceipt(VendorInvoiceStatus invoiceStatus, PurchaseOrderStatus purchaseOrderStatus)
     {
-        if (invoiceStatus != VendorInvoiceStatus.Pending && purchaseOrderStatus is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Submitted)
+        if (invoiceStatus != VendorInvoiceStatus.Pending && purchaseOrderStatus is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Submitted or PurchaseOrderStatus.PartiallyReceived)
         {
-            throw new ValidationException("Vendor invoice status cannot move beyond pending until inventory has been received.");
+            throw new ValidationException("Vendor invoice status cannot move beyond pending until inventory has been fully received.");
         }
     }
 
