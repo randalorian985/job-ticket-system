@@ -337,6 +337,11 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         {
             throw new ValidationException("Vendor invoice date cannot be earlier than the ordered date.");
         }
+
+        if (vendorInvoiceDateUtc.HasValue && receivedAtUtc.HasValue && vendorInvoiceDateUtc.Value < receivedAtUtc.Value)
+        {
+            throw new ValidationException("Vendor invoice date cannot be earlier than the received date.");
+        }
     }
 
     private async Task<string> GeneratePurchaseOrderNumber(CancellationToken cancellationToken)
