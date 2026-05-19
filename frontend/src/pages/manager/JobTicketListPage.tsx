@@ -8,6 +8,8 @@ import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from '../employee/
 import { formatDate, jobStatusOptions, priorityOptions } from './managerDisplay'
 
 const allFilterValue = 'all'
+const activeStatusValues = new Set([2, 3, 4, 5, 6])
+const waitingStatusValues = new Set([5, 6])
 
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
@@ -61,6 +63,20 @@ export function JobTicketListPage() {
     })
   }, [customerFilter, customers, jobs, locations, priorityFilter, searchText, statusFilter])
 
+  const triageSummary = useMemo(() => {
+    const activeJobs = filteredJobs.filter((job) => activeStatusValues.has(job.status))
+    const urgentJobs = filteredJobs.filter((job) => job.priority === 4 && activeStatusValues.has(job.status))
+    const waitingJobs = filteredJobs.filter((job) => waitingStatusValues.has(job.status))
+    const unscheduledJobs = activeJobs.filter((job) => !job.scheduledStartAtUtc)
+
+    return {
+      activeCount: activeJobs.length,
+      urgentCount: urgentJobs.length,
+      waitingCount: waitingJobs.length,
+      unscheduledCount: unscheduledJobs.length
+    }
+  }, [filteredJobs])
+
   const hasActiveFilters = statusFilter !== allFilterValue || priorityFilter !== allFilterValue || customerFilter !== allFilterValue || Boolean(searchText.trim())
 
   const resetFilters = () => {
@@ -74,6 +90,15 @@ export function JobTicketListPage() {
     <section className="card stack">
       <div className="row"><h2>Job Tickets</h2><Link to="/manage/job-tickets/new">Create Ticket</Link></div>
       <p className="muted">Search and filter the current manager job list using existing ticket data.</p>
+
+      {!isLoading && !error && jobs.length ? (
+        <section className="summary-grid" aria-label="queue summary">
+          <div className="summary-card"><span>Active tickets</span><strong>{triageSummary.activeCount}</strong><span className="muted">Submitted through waiting statuses.</span></div>
+          <div className="summary-card"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong><span className="muted">Urgent priority tickets still active.</span></div>
+          <div className="summary-card"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong><span className="muted">Waiting on parts or customer.</span></div>
+          <div className="summary-card"><span>Unscheduled active</span><strong>{triageSummary.unscheduledCount}</strong><span className="muted">Active tickets without a start time.</span></div>
+        </section>
+      ) : null}
 
       <section className="filter-panel" aria-label="job ticket filters">
         <label className="sr-label">

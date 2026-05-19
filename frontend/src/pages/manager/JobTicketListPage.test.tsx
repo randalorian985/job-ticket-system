@@ -55,6 +55,21 @@ describe('Manager list pages', () => {
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
   })
 
+  it('shows queue summary counts for active, urgent, waiting, and unscheduled work', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
+      { id: 'job-3', ticketNumber: 'JT-3', title: 'Archive ticket', status: 7, priority: 1, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-11T08:00:00Z' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('Active tickets')).toBeInTheDocument()
+    expect(screen.getByText('Urgent active')).toBeInTheDocument()
+    expect(screen.getByText('Waiting')).toBeInTheDocument()
+    expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
+  })
+
   it('filters by search text, status, priority, and customer, then resets filters', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' },
