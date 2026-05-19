@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { routerFuture } from '../../routes/routerFuture'
@@ -97,5 +98,14 @@ describe('Manager list pages', () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByText('Unable to load manager job tickets.')).toBeInTheDocument())
+  })
+
+  it('shows a permission-specific error for rejected manager access', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockRejectedValue(new ApiError('Forbidden', 403, undefined))
+
+    renderPage()
+
+    await waitFor(() => expect(screen.getByText('You do not have permission to load this manager view.')).toBeInTheDocument())
+    expect(screen.queryByText('Unable to load manager job tickets.')).not.toBeInTheDocument()
   })
 })
