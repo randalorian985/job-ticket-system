@@ -230,6 +230,22 @@ public sealed class PurchaseOrderServicesTests
     }
 
     [Fact]
+    public async Task Purchase_order_cancel_rejects_partially_received_orders()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-PARTIAL-CANCEL", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 5m, 12m)]));
+        await service.SubmitAsync(created.Id);
+        await service.ReceiveAsync(created.Id, new ReceivePurchaseOrderDto(null, [new ReceivePurchaseOrderLineDto(created.Lines.Single().Id, 2m)]));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CancelAsync(created.Id));
+
+        Assert.Equal("Purchase orders with receipt, invoice, or close activity cannot be cancelled.", exception.Message);
+    }
+
+    [Fact]
     public async Task Archived_purchase_order_can_be_reviewed_and_unarchived()
     {
         await using var context = CreateContext();
