@@ -208,14 +208,18 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         var receivedAtUtc = ToNullableUtc(request.ReceivedAtUtc);
 
         var activeLines = entity.Lines.Where(x => !x.IsDeleted).ToDictionary(x => x.Id);
+        var receivedAnyQuantity = false;
         foreach (var received in request.Lines)
         {
             if (!activeLines.TryGetValue(received.LineId, out var line)) throw new ValidationException("Received line does not belong to this purchase order.");
             var receivedQuantity = ValidateNonNegative(received.ReceivedQuantity, nameof(received.ReceivedQuantity));
             if (receivedQuantity < line.QuantityReceived) throw new ValidationException("Received quantity cannot decrease once inventory is received.");
+            if (receivedQuantity > line.QuantityReceived) receivedAnyQuantity = true;
             line.QuantityReceived = receivedQuantity;
             if (line.QuantityReceived > line.QuantityOrdered) throw new ValidationException("Received quantity cannot exceed ordered quantity.");
         }
+
+        if (!receivedAnyQuantity) throw new ValidationException("At least one received quantity must increase.");
 
         var allReceived = activeLines.Values.All(x => x.QuantityReceived >= x.QuantityOrdered);
         var persistedReceivedAtUtc = allReceived ? ToUtcOrNow(request.ReceivedAtUtc) : receivedAtUtc;
