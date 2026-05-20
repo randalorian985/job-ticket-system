@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 
 export function ManagerShell() {
@@ -11,18 +11,18 @@ export function ManagerShell() {
         <h1>Manager/Admin Console</h1>
         <p className="muted">{user?.firstName} {user?.lastName} ({user?.role})</p>
         <div className="inline-links">
-          <Link to="/manage">Dashboard</Link>
-          <Link to="/manage/job-tickets">Job Tickets</Link>
-          <Link to="/manage/customers">Customers</Link>
-          <Link to="/manage/service-locations">Service Locations</Link>
-          <Link to="/manage/equipment">Equipment</Link>
-          <Link to="/manage/parts">Parts</Link>
-          <Link to="/manage/purchasing">Purchasing</Link>
-          <Link to="/manage/parts-usage-history">Parts Usage History</Link>
-          <Link to="/manage/time-approval">Time Approval</Link>
-          <Link to="/manage/parts-approval">Parts Approval</Link>
-          <Link to="/manage/reports">Reports</Link>
-          {isAdmin ? <Link to="/manage/users">Users</Link> : null}
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} end to="/manage">Dashboard</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/job-tickets">Job Tickets</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/customers">Customers</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/service-locations">Service Locations</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/equipment">Equipment</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/parts">Parts</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/purchasing">Purchasing</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/parts-usage-history">Parts Usage History</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/time-approval">Time Approval</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/parts-approval">Parts Approval</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/reports">Reports</NavLink>
+          {isAdmin ? <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/users">Users</NavLink> : null}
         </div>
         <button onClick={logout}>Logout</button>
       </header>
