@@ -30,7 +30,36 @@ public interface IPurchaseOrdersService
 
 public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPurchaseOrdersService
 {
-    // truncated unchanged content omitted for brevity in automation update
+    public async Task<IReadOnlyList<PurchaseOrderListItemDto>> ListAsync(bool includeArchived = false, Guid? vendorId = null, PurchaseOrderStatus? status = null, CancellationToken cancellationToken = default)
+    {
+        var query = includeArchived ? dbContext.PurchaseOrders.IgnoreQueryFilters() : dbContext.PurchaseOrders;
+        if (vendorId.HasValue) query = query.Where(x => x.VendorId == vendorId.Value);
+        if (status.HasValue) query = query.Where(x => x.Status == status.Value);
+
+        return await query
+            .Include(x => x.Vendor)
+            .Include(x => x.Lines)
+            .OrderByDescending(x => x.OrderedAtUtc)
+            .ThenBy(x => x.PurchaseOrderNumber)
+            .Select(x => new PurchaseOrderListItemDto(
+                x.Id,
+                x.PurchaseOrderNumber,
+                x.VendorId,
+                x.Vendor.Name,
+                x.Status,
+                x.OrderedAtUtc,
+                x.ExpectedAtUtc,
+                x.ReceivedAtUtc,
+                x.VendorInvoiceNumber,
+                x.InvoiceStatus,
+                x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityOrdered * line.UnitCost),
+                x.FreightCost + x.TaxAmount + x.OtherLandedCost,
+                x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityOrdered),
+                x.Lines.Where(line => !line.IsDeleted).Sum(line => line.QuantityReceived),
+                x.IsDeleted))
+            .ToListAsync(cancellationToken);
+    }
+
     private async Task EnsurePurchaseOrderNumberIsUnique(string purchaseOrderNumber, Guid? currentPurchaseOrderId, CancellationToken cancellationToken)
     {
         var normalizedPurchaseOrderNumber = NormalizePurchaseOrderNumber(purchaseOrderNumber);
