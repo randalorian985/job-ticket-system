@@ -305,7 +305,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         var duplicateExists = await dbContext.PurchaseOrders
             .IgnoreQueryFilters()
             .AnyAsync(
-                x => NormalizePurchaseOrderNumber(x.PurchaseOrderNumber) == normalizedPurchaseOrderNumber
+                x => x.PurchaseOrderNumber.Trim().ToUpper() == normalizedPurchaseOrderNumber
                      && (!currentPurchaseOrderId.HasValue || x.Id != currentPurchaseOrderId.Value),
                 cancellationToken);
 
