@@ -73,8 +73,9 @@ public sealed class PurchaseOrderServicesTests
         var service = new PurchaseOrdersService(context);
         var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-CLOSED", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
 
-        await context.PurchaseOrders.Where(x => x.Id == created.Id)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, PurchaseOrderStatus.Closed));
+        var entity = await context.PurchaseOrders.SingleAsync(x => x.Id == created.Id);
+        entity.Status = PurchaseOrderStatus.Closed;
+        await context.SaveChangesAsync();
 
         var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UpdateAsync(created.Id, new UpdatePurchaseOrderDto(
             created.PurchaseOrderNumber,
