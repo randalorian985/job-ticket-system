@@ -235,7 +235,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     {
         var entity = await dbContext.PurchaseOrders.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
-        if (entity.Status is PurchaseOrderStatus.Received or PurchaseOrderStatus.Invoiced or PurchaseOrderStatus.Closed) throw new ValidationException("Received, invoiced, or closed purchase orders cannot be cancelled.");
+        if (entity.Status is PurchaseOrderStatus.PartiallyReceived or PurchaseOrderStatus.Received or PurchaseOrderStatus.Invoiced or PurchaseOrderStatus.Closed) throw new ValidationException("Purchase orders with receipt, invoice, or close activity cannot be cancelled.");
         entity.Status = PurchaseOrderStatus.Cancelled;
         await dbContext.SaveChangesAsync(cancellationToken);
         return await GetAsync(id, cancellationToken);
