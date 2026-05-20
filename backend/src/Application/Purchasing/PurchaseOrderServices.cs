@@ -107,7 +107,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     {
         var entity = await dbContext.PurchaseOrders.Include(x => x.Lines).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
-        if (entity.Status is PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Closed or cancelled purchase orders cannot be updated.");
+        EnsureCanUpdate(entity.Status);
 
         ValidateLines(request.Lines);
         await ValidateParts(request.Lines.Select(x => x.PartId), cancellationToken);
@@ -203,7 +203,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
         var entity = await dbContext.PurchaseOrders.Include(x => x.Lines).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
-        if (entity.Status is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Only submitted purchase orders can be received.");
+        EnsureCanReceive(entity.Status);
 
         var receivedAtUtc = ToNullableUtc(request.ReceivedAtUtc);
 
@@ -235,7 +235,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     {
         var entity = await dbContext.PurchaseOrders.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
-        if (entity.Status is PurchaseOrderStatus.PartiallyReceived or PurchaseOrderStatus.Received or PurchaseOrderStatus.Invoiced or PurchaseOrderStatus.Closed) throw new ValidationException("Purchase orders with receipt, invoice, or close activity cannot be cancelled.");
+        EnsureCanCancel(entity.Status);
         entity.Status = PurchaseOrderStatus.Cancelled;
         await dbContext.SaveChangesAsync(cancellationToken);
         return await GetAsync(id, cancellationToken);
@@ -361,6 +361,25 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
             throw new ValidationException("Vendor invoice date cannot be earlier than the received date.");
         }
     }
+
+    // Centralized lifecycle guards keep status transition rules readable and avoid scattered enum checks.
+    private static void EnsureCanUpdate(PurchaseOrderStatus status)
+    {
+        if (status is PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Closed or cancelled purchase orders cannot be updated.");
+    }
+
+    private static void EnsureCanReceive(PurchaseOrderStatus status)
+    {
+        if (status is PurchaseOrderStatus.Draft or PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Only submitted purchase orders can be received.");
+    }
+
+    private static void EnsureCanCancel(PurchaseOrderStatus status)
+    {
+        if (HasReceiptInvoiceOrCloseActivity(status)) throw new ValidationException("Purchase orders with receipt, invoice, or close activity cannot be cancelled.");
+    }
+
+    private static bool HasReceiptInvoiceOrCloseActivity(PurchaseOrderStatus status) =>
+        status is PurchaseOrderStatus.PartiallyReceived or PurchaseOrderStatus.Received or PurchaseOrderStatus.Invoiced or PurchaseOrderStatus.Closed;
 
     private static PurchaseOrderStatus ResolveInvoiceBackedStatus(PurchaseOrderStatus currentStatus, VendorInvoiceStatus invoiceStatus)
     {
