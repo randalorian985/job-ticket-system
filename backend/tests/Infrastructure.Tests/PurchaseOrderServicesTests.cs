@@ -66,6 +66,33 @@ public sealed class PurchaseOrderServicesTests
     }
 
     [Fact]
+    public async Task Purchase_order_update_rejects_closed_orders()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-CLOSED", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
+
+        await context.PurchaseOrders.Where(x => x.Id == created.Id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, PurchaseOrderStatus.Closed));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UpdateAsync(created.Id, new UpdatePurchaseOrderDto(
+            created.PurchaseOrderNumber,
+            null,
+            null,
+            null,
+            VendorInvoiceStatus.Pending,
+            0m,
+            0m,
+            0m,
+            null,
+            null,
+            [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)])));
+
+        Assert.Equal("Closed or cancelled purchase orders cannot be updated.", exception.Message);
+    }
+
+    [Fact]
     public async Task Purchase_order_update_rejects_non_pending_invoice_status_without_invoice_metadata()
     {
         await using var context = CreateContext();
