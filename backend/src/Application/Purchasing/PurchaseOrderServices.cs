@@ -71,7 +71,9 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         var orderedAtUtc = ToUtcOrNow(request.OrderedAtUtc);
         var expectedAtUtc = ToNullableUtc(request.ExpectedAtUtc);
         ValidateChronology(orderedAtUtc, expectedAtUtc, null, null);
-        var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? await GeneratePurchaseOrderNumber(cancellationToken) : request.PurchaseOrderNumber.Trim();
+        var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber)
+            ? await GeneratePurchaseOrderNumber(cancellationToken)
+            : NormalizePurchaseOrderNumber(request.PurchaseOrderNumber);
         await EnsurePurchaseOrderNumberIsUnique(purchaseOrderNumber, null, cancellationToken);
 
         var entity = new PurchaseOrder
@@ -110,7 +112,9 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         ValidateLines(request.Lines);
         await ValidateParts(request.Lines.Select(x => x.PartId), cancellationToken);
 
-        var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber) ? entity.PurchaseOrderNumber : request.PurchaseOrderNumber.Trim();
+        var purchaseOrderNumber = string.IsNullOrWhiteSpace(request.PurchaseOrderNumber)
+            ? entity.PurchaseOrderNumber
+            : NormalizePurchaseOrderNumber(request.PurchaseOrderNumber);
         await EnsurePurchaseOrderNumberIsUnique(purchaseOrderNumber, entity.Id, cancellationToken);
 
         var expectedAtUtc = ToNullableUtc(request.ExpectedAtUtc);
@@ -296,9 +300,14 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
     private async Task EnsurePurchaseOrderNumberIsUnique(string purchaseOrderNumber, Guid? currentPurchaseOrderId, CancellationToken cancellationToken)
     {
+        var normalizedPurchaseOrderNumber = NormalizePurchaseOrderNumber(purchaseOrderNumber);
+
         var duplicateExists = await dbContext.PurchaseOrders
             .IgnoreQueryFilters()
-            .AnyAsync(x => x.PurchaseOrderNumber == purchaseOrderNumber && (!currentPurchaseOrderId.HasValue || x.Id != currentPurchaseOrderId.Value), cancellationToken);
+            .AnyAsync(
+                x => x.PurchaseOrderNumber.Trim().ToUpper() == normalizedPurchaseOrderNumber
+                     && (!currentPurchaseOrderId.HasValue || x.Id != currentPurchaseOrderId.Value),
+                cancellationToken);
 
         if (duplicateExists) throw new ValidationException("PurchaseOrderNumber must be unique.");
     }
@@ -392,6 +401,7 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         return value;
     }
 
+    private static string NormalizePurchaseOrderNumber(string purchaseOrderNumber) => purchaseOrderNumber.Trim().ToUpperInvariant();
     private static DateTime ToUtcOrNow(DateTime? value) => ToNullableUtc(value) ?? DateTime.UtcNow;
     private static DateTime? ToNullableUtc(DateTime? value) => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : null;
     private static string? NullIfWhitespace(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
