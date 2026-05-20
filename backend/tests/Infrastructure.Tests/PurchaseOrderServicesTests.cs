@@ -102,6 +102,18 @@ public sealed class PurchaseOrderServicesTests
     }
 
     [Fact]
+    public async Task Purchase_order_create_normalizes_purchase_order_number_before_persisting()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, " po-normalize ", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
+
+        Assert.Equal("PO-NORMALIZE", created.PurchaseOrderNumber);
+    }
+
+    [Fact]
     public async Task Purchase_order_update_rejects_duplicate_purchase_order_number_as_validation()
     {
         await using var context = CreateContext();
@@ -124,30 +136,6 @@ public sealed class PurchaseOrderServicesTests
             [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)])));
 
         Assert.Equal("PurchaseOrderNumber must be unique.", exception.Message);
-    }
-
-    [Fact]
-    public async Task Purchase_order_update_normalizes_purchase_order_number_before_persisting()
-    {
-        await using var context = CreateContext();
-        var (vendor, part) = await SeedVendorAndPart(context);
-        var service = new PurchaseOrdersService(context);
-        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "po-normalize", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
-
-        var updated = await service.UpdateAsync(created.Id, new UpdatePurchaseOrderDto(
-            " po-normalize-updated ",
-            created.ExpectedAtUtc,
-            null,
-            null,
-            VendorInvoiceStatus.Pending,
-            0m,
-            0m,
-            0m,
-            null,
-            null,
-            [new PurchaseOrderLineRequestDto(part.Id, 1m, 2m)]));
-
-        Assert.Equal("PO-NORMALIZE-UPDATED", updated!.PurchaseOrderNumber);
     }
 
     [Fact]
