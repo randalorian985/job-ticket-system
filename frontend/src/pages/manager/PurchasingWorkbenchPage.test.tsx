@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { masterDataApi } from '../../api/masterDataApi'
 import { purchasingApi } from '../../api/purchasingApi'
@@ -102,8 +102,7 @@ describe('PurchasingWorkbenchPage', () => {
     await screen.findByText('PO-1001')
 
     const quantityInput = screen.getByRole('spinbutton', { name: 'Quantity ordered' })
-    await user.clear(quantityInput)
-    await user.type(quantityInput, '6')
+    fireEvent.change(quantityInput, { target: { value: '6' } })
 
     const createButton = screen.getByRole('button', { name: 'Create purchase order' })
     await user.click(createButton)

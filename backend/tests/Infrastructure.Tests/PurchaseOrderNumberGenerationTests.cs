@@ -25,6 +25,45 @@ public sealed class PurchaseOrderNumberGenerationTests
         Assert.EndsWith("0002", created.PurchaseOrderNumber);
     }
 
+    [Fact]
+    public async Task Auto_generated_purchase_order_number_uses_daily_sequence_instead_of_total_count()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+
+        for (var sequence = 1; sequence <= 5; sequence++)
+        {
+            await service.CreateAsync(new CreatePurchaseOrderDto(
+                vendor.Id,
+                $"PO-20240101-{sequence:0000}",
+                null,
+                null,
+                null,
+                [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)]));
+        }
+
+        var todayPrefix = $"PO-{DateTime.UtcNow:yyyyMMdd}";
+
+        await service.CreateAsync(new CreatePurchaseOrderDto(
+            vendor.Id,
+            $"{todayPrefix}-0001",
+            null,
+            null,
+            null,
+            [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)]));
+
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(
+            vendor.Id,
+            null,
+            null,
+            null,
+            null,
+            [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)]));
+
+        Assert.Equal($"{todayPrefix}-0002", created.PurchaseOrderNumber);
+    }
+
     private static async Task<(Vendor Vendor, Part Part)> SeedVendorAndPart(ApplicationDbContext context)
     {
         var vendor = new Vendor { Name = "Delta Supply" };
