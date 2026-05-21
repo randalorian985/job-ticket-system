@@ -307,7 +307,7 @@ Updates purchase-order number, expected date, vendor invoice number/date/status,
   - `receivedQuantity` cannot exceed `quantityOrdered`.
 - `POST /api/purchase-orders/{id}/cancel`: cancels draft/submitted purchase orders when not received/invoiced/closed.
 - `POST /api/purchase-orders/{id}/archive`: soft-archives a purchase order.
-- `POST /api/purchase-orders/{id}/unarchive`: restores a soft-archived purchase order.
+- `POST /api/purchase-orders/{id}/unarchive`: restores a soft-archived purchase order; returns `400 Bad Request` when restore validation fails, including purchase-order-number uniqueness collisions, and `404 Not Found` when the target purchase order does not exist.
 
 Enums are appended only:
 - `PurchaseOrderStatus`: `1=Draft`, `2=Submitted`, `3=PartiallyReceived`, `4=Received`, `5=Invoiced`, `6=Closed`, `7=Cancelled`.
