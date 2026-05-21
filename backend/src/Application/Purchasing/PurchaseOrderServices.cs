@@ -194,7 +194,8 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         var entity = await dbContext.PurchaseOrders.Include(x => x.Lines).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
         if (!entity.Lines.Any(x => !x.IsDeleted)) throw new ValidationException("A purchase order must have at least one active line before submit.");
-        if (entity.Status == PurchaseOrderStatus.Draft) entity.Status = PurchaseOrderStatus.Submitted;
+        EnsureCanSubmit(entity.Status);
+        entity.Status = PurchaseOrderStatus.Submitted;
         await dbContext.SaveChangesAsync(cancellationToken);
         return await GetAsync(id, cancellationToken);
     }
@@ -370,6 +371,11 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         {
             throw new ValidationException("Vendor invoice date cannot be earlier than the received date.");
         }
+    }
+
+    private static void EnsureCanSubmit(PurchaseOrderStatus status)
+    {
+        if (status != PurchaseOrderStatus.Draft) throw new ValidationException("Only draft purchase orders can be submitted.");
     }
 
     private static void EnsureCanUpdate(PurchaseOrderStatus status)
