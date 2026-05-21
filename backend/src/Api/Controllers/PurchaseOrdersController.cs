@@ -102,7 +102,16 @@ public sealed class PurchaseOrdersController(IPurchaseOrdersService service) : C
 
     [HttpPost("{id:guid}/unarchive")]
     public async Task<ActionResult> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default)
-        => await service.UnarchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
+    {
+        try
+        {
+            return await service.UnarchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
 
     private ActionResult HandleValidation(Exception exception)
     {
