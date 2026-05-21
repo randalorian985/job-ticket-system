@@ -125,6 +125,7 @@ Keep the validated post-Phase 4 baseline and merged purchasing records foundatio
 - Added Manager/Admin purchasing UI coverage for creating purchase orders, reviewing line details, recording receiving quantities, saving vendor invoice/landed-cost details, and archive/unarchive review.
 - Added a schema migration for the new purchasing records tables.
 - Added validation for duplicate purchase-order numbers and duplicate part lines.
+- Purchase-order submit now rejects non-draft orders with a validation error instead of silently leaving the order unchanged.
 - Explicitly kept advanced inventory, warehouse/truck inventory, inventory ledgers, replenishment automation, recommendation logic, AI/scoring, and auth model changes out of scope.
 
 ## Validation Requirements Before Merge
