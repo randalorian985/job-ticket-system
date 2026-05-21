@@ -106,6 +106,6 @@ npm test
 ## Purchasing Records and Vendor Cost Tracking
 Manager/Admin users can now use `/manage/purchasing` for the second purchasing slice: creating dedicated purchase orders, submitting them for vendor fulfillment, recording receiving quantities, tracking vendor invoice status/numbers/dates, and capturing freight/tax/other landed costs. These workflows use dedicated `/api/purchase-orders` DTO contracts and preserve Manager/Admin authorization boundaries.
 
-Receive requests are hardened so duplicate `LineId` entries are rejected and a line's recorded received quantity cannot be reduced once it has been saved.
+Receive requests are hardened so duplicate `LineId` entries are rejected and a line's recorded received quantity cannot be reduced once it has been saved. Submit requests are draft-only; resubmitting a non-draft purchase order now returns a validation error instead of silently leaving the order unchanged.
 
 This slice remains cost-record focused. It intentionally does not add advanced inventory, warehouse/truck stock workflows, transaction ledgers, replenishment automation, recommendation logic, AI/scoring, or auth model changes.
