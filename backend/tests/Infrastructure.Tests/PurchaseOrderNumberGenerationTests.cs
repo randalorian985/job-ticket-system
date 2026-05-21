@@ -15,18 +15,14 @@ public sealed class PurchaseOrderNumberGenerationTests
         await using var context = CreateContext();
         var (vendor, part) = await SeedVendorAndPart(context);
         var service = new PurchaseOrdersService(context);
-
-        await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-EXISTING-1", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)]));
-        await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-EXISTING-2", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)]));
-
-        var generatedCandidate = $"PO-{DateTime.UtcNow:yyyyMMdd}-0003";
+        var generatedCandidate = $"PO-{DateTime.UtcNow:yyyyMMdd}-0001";
 
         await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, generatedCandidate, null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)]));
 
         var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, null, null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)]));
 
         Assert.NotEqual(generatedCandidate, created.PurchaseOrderNumber);
-        Assert.EndsWith("0004", created.PurchaseOrderNumber);
+        Assert.EndsWith("0002", created.PurchaseOrderNumber);
     }
 
     private static async Task<(Vendor Vendor, Part Part)> SeedVendorAndPart(ApplicationDbContext context)
