@@ -424,7 +424,17 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     private async Task<string> GeneratePurchaseOrderNumber(CancellationToken cancellationToken)
     {
         var datePrefix = $"PO-{DateTime.UtcNow:yyyyMMdd}";
-        var nextNumber = await dbContext.PurchaseOrders.IgnoreQueryFilters().CountAsync(cancellationToken) + 1;
+        var existingPurchaseOrderNumbers = await dbContext.PurchaseOrders
+            .IgnoreQueryFilters()
+            .Where(x => x.PurchaseOrderNumber.StartsWith(datePrefix))
+            .Select(x => x.PurchaseOrderNumber)
+            .ToListAsync(cancellationToken);
+
+        var nextNumber = existingPurchaseOrderNumbers
+            .Select(x => x.Split('-', StringSplitOptions.RemoveEmptyEntries).LastOrDefault())
+            .Select(x => int.TryParse(x, out var sequence) ? sequence : 0)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
 
         while (true)
         {
