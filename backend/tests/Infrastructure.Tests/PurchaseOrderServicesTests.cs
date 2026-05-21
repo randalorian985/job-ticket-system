@@ -52,6 +52,20 @@ public sealed class PurchaseOrderServicesTests
     }
 
     [Fact]
+    public async Task Purchase_order_submit_rejects_non_draft_orders()
+    {
+        await using var context = CreateContext();
+        var (vendor, part) = await SeedVendorAndPart(context);
+        var service = new PurchaseOrdersService(context);
+        var created = await service.CreateAsync(new CreatePurchaseOrderDto(vendor.Id, "PO-SUBMIT-ONCE", null, null, null, [new PurchaseOrderLineRequestDto(part.Id, 2m, 10m)]));
+        await service.SubmitAsync(created.Id);
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.SubmitAsync(created.Id));
+
+        Assert.Equal("Only draft purchase orders can be submitted.", exception.Message);
+    }
+
+    [Fact]
     public async Task Purchase_order_receive_rejects_no_op_receipt_updates()
     {
         await using var context = CreateContext();

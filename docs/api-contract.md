@@ -299,7 +299,7 @@ Request fields:
 Updates purchase-order number, expected date, vendor invoice number/date/status, landed-cost fields (`freightCost`, `taxAmount`, `otherLandedCost`, `landedCostNotes`), notes, and line cost/quantity details where allowed. Received purchase orders cannot add/remove lines through this endpoint.
 
 ### Workflow actions
-- `POST /api/purchase-orders/{id}/submit`: moves a draft PO to submitted.
+- `POST /api/purchase-orders/{id}/submit`: moves a draft PO to submitted and returns `400 Bad Request` when the purchase order has no active lines or is not currently in `Draft` status.
 - `POST /api/purchase-orders/{id}/receive`: records received quantities per line; does not adjust part inventory quantities.
   - Request must include at least one line.
   - Duplicate `LineId` entries are rejected.
