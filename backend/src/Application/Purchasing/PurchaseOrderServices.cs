@@ -314,16 +314,17 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     private async Task EnsurePurchaseOrderNumberIsUnique(string purchaseOrderNumber, Guid? currentPurchaseOrderId, CancellationToken cancellationToken)
     {
         var normalizedPurchaseOrderNumber = NormalizePurchaseOrderNumber(purchaseOrderNumber);
+        var duplicateExists = await PurchaseOrderNumberExists(normalizedPurchaseOrderNumber, currentPurchaseOrderId, cancellationToken);
+        if (duplicateExists) throw new ValidationException("PurchaseOrderNumber must be unique.");
+    }
 
-        var duplicateExists = await dbContext.PurchaseOrders
+    private Task<bool> PurchaseOrderNumberExists(string normalizedPurchaseOrderNumber, Guid? currentPurchaseOrderId, CancellationToken cancellationToken) =>
+        dbContext.PurchaseOrders
             .IgnoreQueryFilters()
             .AnyAsync(
                 x => x.PurchaseOrderNumber.Trim().ToUpper() == normalizedPurchaseOrderNumber
                      && (!currentPurchaseOrderId.HasValue || x.Id != currentPurchaseOrderId.Value),
                 cancellationToken);
-
-        if (duplicateExists) throw new ValidationException("PurchaseOrderNumber must be unique.");
-    }
 
     private async Task ValidateParts(IEnumerable<Guid> partIds, CancellationToken cancellationToken)
     {
@@ -422,8 +423,15 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
 
     private async Task<string> GeneratePurchaseOrderNumber(CancellationToken cancellationToken)
     {
-        var count = await dbContext.PurchaseOrders.IgnoreQueryFilters().CountAsync(cancellationToken) + 1;
-        return $"PO-{DateTime.UtcNow:yyyyMMdd}-{count:0000}";
+        var datePrefix = $"PO-{DateTime.UtcNow:yyyyMMdd}";
+        var nextNumber = await dbContext.PurchaseOrders.IgnoreQueryFilters().CountAsync(cancellationToken) + 1;
+
+        while (true)
+        {
+            var candidate = $"{datePrefix}-{nextNumber:0000}";
+            if (!await PurchaseOrderNumberExists(candidate, null, cancellationToken)) return candidate;
+            nextNumber++;
+        }
     }
 
     private static decimal ValidateNonNegative(decimal value, string fieldName)
