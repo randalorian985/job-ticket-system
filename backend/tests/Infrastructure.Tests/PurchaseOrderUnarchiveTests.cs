@@ -10,7 +10,7 @@ namespace JobTicketSystem.Infrastructure.Tests;
 public sealed class PurchaseOrderUnarchiveTests
 {
     [Fact]
-    public async Task Unarchive_rejects_purchase_order_number_collision()
+    public async Task Create_rejects_purchase_order_number_used_by_archived_order()
     {
         await using var context = CreateContext();
         var (vendor, part) = await SeedVendorAndPart(context);
@@ -26,15 +26,13 @@ public sealed class PurchaseOrderUnarchiveTests
 
         await service.ArchiveAsync(archived.Id);
 
-        await service.CreateAsync(new CreatePurchaseOrderDto(
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateAsync(new CreatePurchaseOrderDto(
             vendor.Id,
             "PO-ARCHIVE",
             null,
             null,
             null,
-            [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)]));
-
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UnarchiveAsync(archived.Id));
+            [new PurchaseOrderLineRequestDto(part.Id, 1m, 10m)])));
 
         Assert.Equal("PurchaseOrderNumber must be unique.", exception.Message);
     }
