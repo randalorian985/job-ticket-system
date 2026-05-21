@@ -261,6 +261,9 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     {
         var entity = await dbContext.PurchaseOrders.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return false;
+
+        await EnsurePurchaseOrderNumberIsUnique(entity.PurchaseOrderNumber, entity.Id, cancellationToken);
+
         entity.IsDeleted = false;
         entity.DeletedAtUtc = null;
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -368,7 +371,6 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         }
     }
 
-    // Centralized lifecycle guards keep status transition rules readable and avoid scattered enum checks.
     private static void EnsureCanUpdate(PurchaseOrderStatus status)
     {
         if (status is PurchaseOrderStatus.Cancelled or PurchaseOrderStatus.Closed) throw new ValidationException("Closed or cancelled purchase orders cannot be updated.");
