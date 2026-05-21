@@ -108,9 +108,9 @@ public sealed class PurchaseOrdersController(IPurchaseOrdersService service) : C
         {
             return await service.UnarchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
         }
-        catch (Exception exception)
+        catch (ValidationException exception)
         {
-            return HandleValidation(exception);
+            return BadRequest(new { error = exception.Message });
         }
     }
 
