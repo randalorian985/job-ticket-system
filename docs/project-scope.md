@@ -176,6 +176,7 @@ Scope boundaries retained:
 - APIs use request/response DTOs and do not expose EF entities.
 - Purchase orders preserve soft-delete/archive behavior.
 - Manager/Admin authorization remains required for purchasing endpoints and UI routes.
+- Purchase-order submit transitions are draft-only; resubmitting a non-draft order returns a validation failure instead of silently leaving the order unchanged.
 - No enum renumbering or auth weakening is included.
 - Receiving records vendor fulfillment progress only; it does not update inventory quantities or create inventory ledgers.
 - Receive requests reject duplicate `LineId` entries and do not allow recorded received quantities to decrease once saved.
