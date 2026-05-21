@@ -1,0 +1,54 @@
+name: Validate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Guard against accidental file truncation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          failed=0
+
+          while IFS=$'\t' read -r additions deletions path; do
+            if [[ "$deletions" == "-" ]]; then
+              continue
+            fi
+
+            if [[ "$path" == backend/src/Application/*Service*.cs && "$deletions" -gt 100 ]]; then
+              echo "::error file=$path::Application service change deletes $deletions lines. Restore the full file and submit a minimal diff."
+              failed=1
+            fi
+
+            if [[ "$path" == *.cs && "$deletions" -gt 300 ]]; then
+              echo "::error file=$path::C# change deletes $deletions lines. This may be an accidental truncation."
+              failed=1
+            fi
+          done < <(git diff --numstat origin/main...HEAD)
+
+          exit "$failed"
+
+      - name: Restore backend dependencies
+        run: dotnet restore backend/src/Api/Api.csproj
+
+      - name: Build backend
+        run: dotnet build backend/src/Api/Api.csproj --configuration Release --no-restore
+
+      - name: Test backend
+        run: dotnet test backend/tests/Infrastructure.Tests/Infrastructure.Tests.csproj --configuration Release
