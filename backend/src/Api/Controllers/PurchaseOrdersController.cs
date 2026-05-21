@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Purchasing;
 using JobTicketSystem.Domain.Enums;
@@ -115,10 +116,12 @@ public sealed class PurchaseOrdersController(IPurchaseOrdersService service) : C
 
     private ActionResult HandleValidation(Exception exception)
     {
-        return exception switch
+        if (exception is ValidationException)
         {
-            ValidationException => BadRequest(new { error = exception.Message }),
-            _ => throw exception
-        };
+            return BadRequest(new { error = exception.Message });
+        }
+
+        ExceptionDispatchInfo.Capture(exception).Throw();
+        return StatusCode(500);
     }
 }
