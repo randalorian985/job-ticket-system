@@ -101,12 +101,16 @@ describe('PurchasingWorkbenchPage', () => {
 
     await screen.findByText('PO-1001')
 
+    const quantityInput = screen.getByRole('spinbutton', { name: 'Quantity ordered' })
+    await user.clear(quantityInput)
+    await user.type(quantityInput, '6')
+
     const createButton = screen.getByRole('button', { name: 'Create purchase order' })
     await user.click(createButton)
 
     await waitFor(() => expect(purchasingApi.createPurchaseOrder).toHaveBeenCalledWith(expect.objectContaining({
       vendorId: 'vendor-a',
-      lines: [expect.objectContaining({ partId: 'part-a', quantityOrdered: 4, unitCost: 12 })]
+      lines: [expect.objectContaining({ partId: 'part-a', quantityOrdered: 6, unitCost: 12 })]
     })), { timeout: 3000 })
   })
 
