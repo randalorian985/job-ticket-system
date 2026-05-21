@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using JobTicketSystem.Application.MasterData;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,13 @@ public abstract class MasterDataControllerBase : ControllerBase
         return exception switch
         {
             ValidationException => BadRequest(new { error = exception.Message }),
-            _ => throw exception
+            _ => Rethrow(exception)
         };
+    }
+
+    private static ActionResult Rethrow(Exception exception)
+    {
+        ExceptionDispatchInfo.Capture(exception).Throw();
+        throw new UnreachableException();
     }
 }
