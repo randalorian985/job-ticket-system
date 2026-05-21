@@ -51,4 +51,4 @@ jobs:
         run: dotnet build backend/src/Api/Api.csproj --configuration Release --no-restore
 
       - name: Test backend
-        run: dotnet test backend/tests/Infrastructure.Tests/Infrastructure.Tests.csproj --configuration Release --no-build
+        run: dotnet test backend/tests/Infrastructure.Tests/Infrastructure.Tests.csproj --configuration Release
