@@ -21,6 +21,6 @@ public abstract class MasterDataControllerBase : ControllerBase
     private static ActionResult Rethrow(Exception exception)
     {
         ExceptionDispatchInfo.Capture(exception).Throw();
-        throw new UnreachableException();
+        throw new InvalidOperationException("Exception dispatch did not throw.");
     }
 }
