@@ -17,7 +17,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Parts purchase/vendor cost tracking Phase 2 on top of the implemented post-Phase 4 baseline, including both the Manager/Admin purchasing workbench and the dedicated purchase-order, receiving, vendor invoice tracking, landed-cost, and purchase-order close workflows.
+Post-purchasing stabilization roadmap control on top of the implemented post-Phase 4 baseline. The Manager/Admin purchasing workbench, dedicated purchase-order workflow, close workflow, and closed-order receiving-action hardening are merged; the next gate is to explicitly scope the first Advanced Inventory slice before any inventory implementation begins.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
 
