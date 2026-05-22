@@ -89,7 +89,7 @@ npm test
 
 - Phase 3D update: Admin user management now has a safer list/create/edit/deactivate/reset-password workflow with loading, empty, success, error, validation, and confirmation states. Manager/Admin route boundaries remain unchanged, with `/manage/users` Admin-only and employee workflow routing preserved.
 
-- Purchasing update: Manager/Admin `/manage/purchasing` now includes both the reorder-focused workbench over existing parts/vendor/category/stock data and the dedicated purchasing records workflow for creating purchase orders, recording receiving progress, tracking vendor invoice details, and capturing landed costs through `/api/purchase-orders`. Advanced inventory, inventory ledgers, replenishment automation, and recommendation logic remain deferred.
+- Purchasing update: Manager/Admin `/manage/purchasing` now includes both the reorder-focused workbench over existing parts/vendor/category/stock data and the dedicated purchasing records workflow for creating purchase orders, recording receiving progress, tracking vendor invoice details, capturing landed costs, and closing fully received or invoiced purchase orders through `/api/purchase-orders`. Advanced inventory, inventory ledgers, replenishment automation, and recommendation logic remain deferred.
 
 - Post-merge roadmap reset: [docs/post-merge-roadmap-reset.md](docs/post-merge-roadmap-reset.md) records the 2026-05-06 post-merge validation reset. Backend/frontend validation passed on local `HEAD` `adfcf80084d7865bf67922c008ea20ab223f7086`, GitHub REST confirmed remote `main` at the same SHA, and direct `git fetch origin` remains a non-blocking HTTP 403 environment warning.
 
@@ -104,8 +104,8 @@ npm test
 - Phase 4B update: Pilot workflow polish is implemented with manager/admin job list filters, dashboard summary counts, print-friendly job review, the merged reports export polish follow-up, and aligned router future-flag test harnesses for the current frontend baseline.
 
 ## Purchasing Records and Vendor Cost Tracking
-Manager/Admin users can now use `/manage/purchasing` for the second purchasing slice: creating dedicated purchase orders, submitting them for vendor fulfillment, recording receiving quantities, tracking vendor invoice status/numbers/dates, and capturing freight/tax/other landed costs. These workflows use dedicated `/api/purchase-orders` DTO contracts and preserve Manager/Admin authorization boundaries.
+Manager/Admin users can now use `/manage/purchasing` for the second purchasing slice: creating dedicated purchase orders, submitting them for vendor fulfillment, recording receiving quantities, tracking vendor invoice status/numbers/dates, capturing freight/tax/other landed costs, and closing fully received or invoiced purchase orders once all active lines are fully received. These workflows use dedicated `/api/purchase-orders` DTO contracts and preserve Manager/Admin authorization boundaries.
 
-Receive requests are hardened so duplicate `LineId` entries are rejected and a line's recorded received quantity cannot be reduced once it has been saved. Submit requests are draft-only; resubmitting a non-draft purchase order now returns a validation error instead of silently leaving the order unchanged.
+Receive requests are hardened so duplicate `LineId` entries are rejected and a line's recorded received quantity cannot be reduced once it has been saved. Submit requests are draft-only; resubmitting a non-draft purchase order now returns a validation error instead of silently leaving the order unchanged. Close requests require `Received` or `Invoiced` status plus fully received active lines.
 
 This slice remains cost-record focused. It intentionally does not add advanced inventory, warehouse/truck stock workflows, transaction ledgers, replenishment automation, recommendation logic, AI/scoring, or auth model changes.
