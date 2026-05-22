@@ -97,6 +97,20 @@ public sealed class PurchaseOrdersController(IPurchaseOrdersService service) : C
         }
     }
 
+    [HttpPost("{id:guid}/close")]
+    public async Task<ActionResult<PurchaseOrderDto>> CloseAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var updated = await service.CloseAsync(id, cancellationToken);
+            return updated is null ? NotFound() : Ok(updated);
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
     [HttpPost("{id:guid}/archive")]
     public async Task<ActionResult> ArchiveAsync(Guid id, CancellationToken cancellationToken = default)
         => await service.ArchiveAsync(id, cancellationToken) ? NoContent() : NotFound();
