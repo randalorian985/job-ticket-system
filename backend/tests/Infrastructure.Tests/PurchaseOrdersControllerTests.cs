@@ -67,6 +67,17 @@ public sealed class PurchaseOrdersControllerTests
     }
 
     [Fact]
+    public async Task Close_returns_bad_request_when_validation_fails()
+    {
+        var controller = CreateController(service =>
+            service.CloseAsyncHandler = (_, _) => Task.FromException<PurchaseOrderDto?>(new ValidationException(ValidationMessage)));
+
+        var result = await controller.CloseAsync(Guid.NewGuid());
+
+        AssertBadRequest(result);
+    }
+
+    [Fact]
     public async Task Submit_preserves_non_validation_failures()
     {
         var controller = CreateController(service =>
@@ -157,6 +168,9 @@ public sealed class PurchaseOrdersControllerTests
         public Func<Guid, CancellationToken, Task<PurchaseOrderDto?>> CancelAsyncHandler { get; set; } =
             (_, _) => Task.FromResult<PurchaseOrderDto?>(null);
 
+        public Func<Guid, CancellationToken, Task<PurchaseOrderDto?>> CloseAsyncHandler { get; set; } =
+            (_, _) => Task.FromResult<PurchaseOrderDto?>(null);
+
         public Func<Guid, CancellationToken, Task<bool>> UnarchiveAsyncHandler { get; set; } =
             (_, _) => Task.FromResult(false);
 
@@ -180,6 +194,9 @@ public sealed class PurchaseOrdersControllerTests
 
         public Task<PurchaseOrderDto?> CancelAsync(Guid id, CancellationToken cancellationToken = default) =>
             CancelAsyncHandler(id, cancellationToken);
+
+        public Task<PurchaseOrderDto?> CloseAsync(Guid id, CancellationToken cancellationToken = default) =>
+            CloseAsyncHandler(id, cancellationToken);
 
         public Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(false);
