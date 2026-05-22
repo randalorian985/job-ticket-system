@@ -306,6 +306,7 @@ Updates purchase-order number, expected date, vendor invoice number/date/status,
   - A line's recorded received quantity cannot decrease once it has been saved.
   - `receivedQuantity` cannot exceed `quantityOrdered`.
 - `POST /api/purchase-orders/{id}/cancel`: cancels draft/submitted purchase orders when not received/invoiced/closed.
+- `POST /api/purchase-orders/{id}/close`: closes a purchase order only when it is already in `Received` or `Invoiced` status, has at least one active line, and every active line is fully received.
 - `POST /api/purchase-orders/{id}/archive`: soft-archives a purchase order.
 - `POST /api/purchase-orders/{id}/unarchive`: restores a soft-archived purchase order; returns `400 Bad Request` when restore validation fails, including purchase-order-number uniqueness collisions, and `404 Not Found` when the target purchase order does not exist.
 
