@@ -17,9 +17,18 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Post-purchasing stabilization roadmap control on top of the implemented post-Phase 4 baseline. The Manager/Admin purchasing workbench, dedicated purchase-order workflow, close workflow, and closed-order receiving-action hardening are merged; the next gate is to explicitly scope the first Advanced Inventory slice before any inventory implementation begins.
+Advanced Inventory Phase 1 is now scoped as the next approved implementation slice on top of the implemented post-Phase 4 baseline. The merged Manager/Admin purchasing workbench, dedicated purchase-order workflow, close workflow, and closed-order receiving-action hardening remain the stable baseline; the next lane is a warehouse-first Manager/Admin inventory foundation covering managed stock locations, receiving-posted inventory movements, manual stock adjustments, and transaction-history-backed on-hand visibility.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
+
+## Advanced Inventory Phase 1 (Next Approved Slice, Not Yet Implemented)
+- Manager/Admin only.
+- Adds managed warehouse or storeroom stock locations for inventory visibility.
+- Adds inventory transaction persistence plus DTO/API/UI coverage for purchase-order receiving posted into stock.
+- Adds inventory transaction persistence plus DTO/API/UI coverage for manual stock adjustments with required reasons.
+- Uses persisted inventory history to support on-hand visibility instead of relying on ad hoc mutable stock behavior.
+- Requires tests, docs alignment, and any necessary migration while preserving thin controllers, application-service business logic, DTO-only APIs, and existing auth boundaries.
+- Does not yet include truck inventory, cross-location transfers, replenishment automation, pick/reserve/issue workflows, compatibility recommendations, or AI/scoring.
 
 ## Public Platform Metadata
 - `GET /api/system/info` exposes service name, `/api` base path, `/health` endpoint path, hosting environment name, and API assembly version.
@@ -141,11 +150,11 @@ This phase adds foundational security controls without replacing existing workfl
 
 ## Deferred Scope Confirmation (Current)
 The following remain deferred and are not implemented as active business domains in this phase:
-- Advanced inventory workflows.
-- Warehouse or truck inventory workflows.
-- Inventory transaction ledgers.
-- Replenishment automation.
-- Parts compatibility recommendation engine.
+- truck inventory workflows;
+- cross-location inventory transfers;
+- replenishment automation;
+- pick/reserve/issue workflow automation;
+- parts compatibility recommendation engine;
 - AI/scoring-based part recommendations.
 
 - Phase 3B delivered: complete Manager/Admin master-data maintenance workflows (customers, locations, equipment, vendors, part categories, parts), including validation/error paths and archived-record restore flows, while excluding purchasing/inventory intelligence domains.
@@ -184,9 +193,8 @@ Scope boundaries retained:
 - Receive requests reject duplicate `LineId` entries and do not allow recorded received quantities to decrease once saved.
 
 Still out of scope:
-- advanced inventory;
-- warehouse or truck inventory workflows;
-- inventory transaction ledgers;
+- truck inventory workflows;
+- cross-location inventory transfers;
 - replenishment automation;
 - recommendation logic;
 - AI/scoring.
