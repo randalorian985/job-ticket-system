@@ -17,7 +17,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 - Complex SLA engine
 
 ## Current Phase
-Parts purchase/vendor cost tracking Phase 2 on top of the implemented post-Phase 4 baseline, including both the Manager/Admin purchasing workbench and the dedicated purchase-order, receiving, vendor invoice tracking, and landed-cost workflows.
+Parts purchase/vendor cost tracking Phase 2 on top of the implemented post-Phase 4 baseline, including both the Manager/Admin purchasing workbench and the dedicated purchase-order, receiving, vendor invoice tracking, landed-cost, and purchase-order close workflows.
 
 Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
 
@@ -169,7 +169,8 @@ Phase 2 adds dedicated purchasing records and a Manager/Admin workflow for:
 - purchase orders;
 - receiving quantities against purchase-order lines;
 - vendor invoice number/date/status tracking;
-- landed-cost recording for freight, tax, other landed costs, and notes.
+- landed-cost recording for freight, tax, other landed costs, and notes;
+- close transitions for fully received or invoiced purchase orders.
 
 Scope boundaries retained:
 - Controllers stay thin and delegate business rules to application services.
@@ -177,6 +178,7 @@ Scope boundaries retained:
 - Purchase orders preserve soft-delete/archive behavior.
 - Manager/Admin authorization remains required for purchasing endpoints and UI routes.
 - Purchase-order submit transitions are draft-only; resubmitting a non-draft order returns a validation failure instead of silently leaving the order unchanged.
+- Purchase-order close transitions are allowed only from `Received` or `Invoiced` status and require all active lines to be fully received.
 - No enum renumbering or auth weakening is included.
 - Receiving records vendor fulfillment progress only; it does not update inventory quantities or create inventory ledgers.
 - Receive requests reject duplicate `LineId` entries and do not allow recorded received quantities to decrease once saved.
