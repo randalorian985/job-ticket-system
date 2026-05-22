@@ -15,6 +15,7 @@ export const purchasingApi = {
   submitPurchaseOrder: (id: string) => apiRequest<PurchaseOrderDto>(`/api/purchase-orders/${id}/submit`, { method: 'POST' }),
   receivePurchaseOrder: (id: string, payload: ReceivePurchaseOrderDto) => apiRequest<PurchaseOrderDto>(`/api/purchase-orders/${id}/receive`, { method: 'POST', body: JSON.stringify(payload) }),
   cancelPurchaseOrder: (id: string) => apiRequest<PurchaseOrderDto>(`/api/purchase-orders/${id}/cancel`, { method: 'POST' }),
+  closePurchaseOrder: (id: string) => apiRequest<PurchaseOrderDto>(`/api/purchase-orders/${id}/close`, { method: 'POST' }),
   archivePurchaseOrder: (id: string) => apiRequest<void>(`/api/purchase-orders/${id}/archive`, { method: 'POST' }),
   unarchivePurchaseOrder: (id: string) => apiRequest<void>(`/api/purchase-orders/${id}/unarchive`, { method: 'POST' })
 }

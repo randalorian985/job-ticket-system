@@ -23,7 +23,7 @@ Interpretation as of **May 17, 2026**:
 - Phase 4A pilot readiness is implemented as opt-in local/demo seed data, a pilot runbook, and automated end-to-end workflow validation.
 - Phase 4B pilot workflow polish is implemented as bounded frontend usability improvements for existing manager/admin job workflows.
 - Parts Purchase / Vendor Cost Tracking Phase 1 is implemented as a Manager/Admin `/manage/purchasing` workbench over existing parts, vendors, categories, unit-cost, quantity-on-hand, and reorder-threshold data.
-- Parts Purchase / Vendor Cost Tracking Phase 2 is implemented with dedicated purchase-order records, receiving quantities, vendor invoice tracking, landed-cost recording, Manager/Admin API/UI coverage, migration, docs, and tests.
+- Parts Purchase / Vendor Cost Tracking Phase 2 is implemented with dedicated purchase-order records, receiving quantities, vendor invoice tracking, landed-cost recording, Manager/Admin API/UI coverage, migration, docs, tests, and bounded close-workflow validation.
 - The next roadmap gate is stabilization and validation of the purchasing records foundation before any advanced inventory, transaction-ledger, replenishment automation, recommendation, or AI/scoring work begins.
 
 ## Completed Scope
@@ -41,7 +41,7 @@ Interpretation as of **May 17, 2026**:
 - Job ticket file upload/list/download/archive workflows.
 - Reporting foundation endpoints (invoice-ready summaries, cost/labor/parts rollups, service history).
 - Initial purchasing visibility over existing vendor, cost, stock-on-hand, and reorder-threshold part data.
-- Dedicated purchasing records for purchase orders, purchase-order lines, receiving progress, vendor invoice tracking, and landed-cost recording.
+- Dedicated purchasing records for purchase orders, purchase-order lines, receiving progress, vendor invoice tracking, landed-cost recording, and bounded close transitions.
 
 ### Frontend delivered
 - Employee routes and workflows (`/login`, `/jobs`, `/jobs/:jobTicketId`).
@@ -53,7 +53,7 @@ Interpretation as of **May 17, 2026**:
 - Manager/Admin Phase 4B pilot workflow polish for job list filters, dashboard summary counts, and print-friendly job review.
 - Shared router-aware future-flag test harness coverage for the current React Router baseline.
 - Manager/Admin purchasing workbench for reorder-focused review, vendor/category/status filtering, and CSV export from loaded rows.
-- Manager/Admin purchasing records workflow for creating purchase orders, reviewing line details, recording receiving quantities, saving vendor invoice details, recording landed costs, and archive/unarchive review.
+- Manager/Admin purchasing records workflow for creating purchase orders, reviewing line details, recording receiving quantities, saving vendor invoice details, recording landed costs, closing eligible purchase orders, and archive/unarchive review.
 
 ## Deferred Scope (Still Deferred)
 The following remain deferred and must not be partially introduced outside the approved phase order:
@@ -120,12 +120,13 @@ Keep the validated post-Phase 4 baseline and merged purchasing records foundatio
 
 ## Parts Purchase / Vendor Cost Tracking Phase 2 (Implemented)
 - Added dedicated purchase-order and purchase-order-line persistence for vendor purchasing records.
-- Added Manager/Admin API coverage for list/detail/create/update/submit/receive/cancel/archive/unarchive purchase-order workflows.
+- Added Manager/Admin API coverage for list/detail/create/update/submit/receive/cancel/close/archive/unarchive purchase-order workflows.
 - Added vendor invoice tracking fields and landed-cost recording fields for freight, tax, other landed costs, and landed-cost notes.
 - Added Manager/Admin purchasing UI coverage for creating purchase orders, reviewing line details, recording receiving quantities, saving vendor invoice/landed-cost details, and archive/unarchive review.
 - Added a schema migration for the new purchasing records tables.
 - Added validation for duplicate purchase-order numbers and duplicate part lines.
 - Purchase-order submit now rejects non-draft orders with a validation error instead of silently leaving the order unchanged.
+- Purchase-order close now requires `Received` or `Invoiced` status plus fully received active lines before the order can move to `Closed`.
 - Explicitly kept advanced inventory, warehouse/truck inventory, inventory ledgers, replenishment automation, recommendation logic, AI/scoring, and auth model changes out of scope.
 
 ## Validation Requirements Before Merge

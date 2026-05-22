@@ -24,6 +24,7 @@ public interface IPurchaseOrdersService
     Task<PurchaseOrderDto?> SubmitAsync(Guid id, CancellationToken cancellationToken = default);
     Task<PurchaseOrderDto?> ReceiveAsync(Guid id, ReceivePurchaseOrderDto request, CancellationToken cancellationToken = default);
     Task<PurchaseOrderDto?> CancelAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<PurchaseOrderDto?> CloseAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> UnarchiveAsync(Guid id, CancellationToken cancellationToken = default);
 }
@@ -248,6 +249,21 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
         return await GetAsync(id, cancellationToken);
     }
 
+    public async Task<PurchaseOrderDto?> CloseAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.PurchaseOrders.Include(x => x.Lines).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null) return null;
+        EnsureCanClose(entity.Status);
+
+        var activeLines = entity.Lines.Where(x => !x.IsDeleted).ToList();
+        if (!activeLines.Any()) throw new ValidationException("A purchase order must have at least one active line before close.");
+        if (activeLines.Any(x => x.QuantityReceived < x.QuantityOrdered)) throw new ValidationException("Purchase orders cannot be closed until all lines are fully received.");
+
+        entity.Status = PurchaseOrderStatus.Closed;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetAsync(id, cancellationToken);
+    }
+
     public async Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.PurchaseOrders.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -391,6 +407,11 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
     private static void EnsureCanCancel(PurchaseOrderStatus status)
     {
         if (HasReceiptInvoiceOrCloseActivity(status)) throw new ValidationException("Purchase orders with receipt, invoice, or close activity cannot be cancelled.");
+    }
+
+    private static void EnsureCanClose(PurchaseOrderStatus status)
+    {
+        if (status is not (PurchaseOrderStatus.Received or PurchaseOrderStatus.Invoiced)) throw new ValidationException("Only received or invoiced purchase orders can be closed.");
     }
 
     private static bool HasReceiptInvoiceOrCloseActivity(PurchaseOrderStatus status) =>

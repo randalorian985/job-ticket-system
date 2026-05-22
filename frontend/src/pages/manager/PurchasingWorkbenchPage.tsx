@@ -169,6 +169,18 @@ export function PurchasingWorkbenchPage() {
     }
   }
 
+  const closeSelected = async () => {
+    if (!selectedOrder) return
+    try {
+      await purchasingApi.closePurchaseOrder(selectedOrder.id)
+      await refresh()
+      await loadOrder(selectedOrder.id)
+      setError(null)
+    } catch (exception) {
+      setError(exception instanceof Error ? exception.message : 'Unable to close purchase order.')
+    }
+  }
+
   const submitInvoice = async (event: FormEvent) => {
     event.preventDefault()
     if (!selectedOrder) return
@@ -211,7 +223,7 @@ export function PurchasingWorkbenchPage() {
     <section className="stack">
       <article className="card">
         <h2>Purchasing Workbench</h2>
-        <p className="muted">Manager/Admin workflow for purchase orders, receiving, vendor invoice tracking, and landed-cost recording. This phase records purchasing costs without adding warehouse, truck inventory, recommendations, or transaction-ledger workflows.</p>
+        <p className="muted">Manager/Admin workflow for purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording. This phase records purchasing costs without adding warehouse, truck inventory, recommendations, or transaction-ledger workflows.</p>
         {error ? <p role="alert" className="error">{error}</p> : null}
       </article>
 
@@ -296,6 +308,7 @@ export function PurchasingWorkbenchPage() {
           <div className="inline-links">
             {selectedOrder.status === 1 ? <button type="button" onClick={submitOrder}>Submit PO</button> : null}
             {selectedOrder.status !== 1 && selectedOrder.status !== 7 ? <button type="button" onClick={submitReceive}>Save receiving</button> : null}
+            {!selectedOrder.isArchived && (selectedOrder.status === 4 || selectedOrder.status === 5) ? <button type="button" onClick={closeSelected}>Close PO</button> : null}
             <button type="button" onClick={archiveSelected}>{selectedOrder.isArchived ? 'Unarchive' : 'Archive'}</button>
           </div>
 

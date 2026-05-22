@@ -16,6 +16,7 @@ vi.mock('../../api/masterDataApi', () => ({
 vi.mock('../../api/purchasingApi', () => ({
   purchasingApi: {
     archivePurchaseOrder: vi.fn(),
+    closePurchaseOrder: vi.fn(),
     createPurchaseOrder: vi.fn(),
     getPurchaseOrder: vi.fn(),
     listPurchaseOrders: vi.fn(),
@@ -88,7 +89,7 @@ describe('PurchasingWorkbenchPage', () => {
     renderWithRouter(<PurchasingWorkbenchPage />)
 
     expect(await screen.findByText('Purchasing Workbench')).toBeInTheDocument()
-    expect(screen.getByText(/purchase orders, receiving, vendor invoice tracking, and landed-cost recording/i)).toBeInTheDocument()
+    expect(screen.getByText(/purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording/i)).toBeInTheDocument()
     expect(screen.getByText('PO-1001')).toBeInTheDocument()
     expect(screen.getByText(/replenishment automation or recommendation scoring/i)).toBeInTheDocument()
     expect(screen.getByText(/SEAL-1 · Seal Kit: Out of stock/i)).toBeInTheDocument()
@@ -144,6 +145,34 @@ describe('PurchasingWorkbenchPage', () => {
       freightCost: 7,
       lines: [expect.objectContaining({ partId: 'part-a' })]
     })))
+  })
+
+  it('allows eligible purchase orders to be closed from detail review', async () => {
+    vi.mocked(purchasingApi.getPurchaseOrder).mockResolvedValue({
+      ...purchaseOrder,
+      status: 4,
+      quantityReceived: 4,
+      lines: [{
+        ...purchaseOrder.lines[0],
+        quantityReceived: 4
+      }]
+    } as any)
+    vi.mocked(purchasingApi.closePurchaseOrder).mockResolvedValue({
+      ...purchaseOrder,
+      status: 6,
+      quantityReceived: 4,
+      lines: [{
+        ...purchaseOrder.lines[0],
+        quantityReceived: 4
+      }]
+    } as any)
+    const user = userEvent.setup()
+    renderWithRouter(<PurchasingWorkbenchPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Review' }))
+    await user.click(await screen.findByRole('button', { name: 'Close PO' }))
+
+    await waitFor(() => expect(purchasingApi.closePurchaseOrder).toHaveBeenCalledWith('po-a'))
   })
 
   it('keeps archived purchase orders reviewable and supports unarchive from detail', async () => {
