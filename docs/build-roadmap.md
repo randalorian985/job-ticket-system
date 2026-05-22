@@ -7,12 +7,12 @@ Baseline reviewed state: [Scope Code Review and Stabilization Audit (2026-05-06)
 
 Post-merge reset state: [Post-Merge Roadmap Reset After Phase 3C/3D Validation (2026-05-06)](./post-merge-roadmap-reset.md).
 
-Latest purchasing milestone: PR #88 merged Parts Purchase / Vendor Cost Tracking Phase 2 on 2026-05-17.
+Latest purchasing stabilization milestone: PR #135 merged the closed-order receiving-action guardrail on 2026-05-22.
 
 ## Current Phase
-**Post-Phase 2 purchasing stabilization and roadmap control.**
+**Post-purchasing stabilization roadmap reset and explicit Advanced Inventory entry planning.**
 
-Interpretation as of **May 17, 2026**:
+Interpretation as of **May 22, 2026**:
 - Core backend/API workflows are implemented and validated.
 - Employee mobile workflow is implemented and validated.
 - Manager/Admin Phases 1 and 2 are implemented.
@@ -24,7 +24,8 @@ Interpretation as of **May 17, 2026**:
 - Phase 4B pilot workflow polish is implemented as bounded frontend usability improvements for existing manager/admin job workflows.
 - Parts Purchase / Vendor Cost Tracking Phase 1 is implemented as a Manager/Admin `/manage/purchasing` workbench over existing parts, vendors, categories, unit-cost, quantity-on-hand, and reorder-threshold data.
 - Parts Purchase / Vendor Cost Tracking Phase 2 is implemented with dedicated purchase-order records, receiving quantities, vendor invoice tracking, landed-cost recording, Manager/Admin API/UI coverage, migration, docs, tests, and bounded close-workflow validation.
-- The next roadmap gate is stabilization and validation of the purchasing records foundation before any advanced inventory, transaction-ledger, replenishment automation, recommendation, or AI/scoring work begins.
+- The bounded purchasing stabilization follow-ups on submit-state discipline, close-transition discipline, and closed-order UI action gating are merged on `main`.
+- The current roadmap gate is to explicitly scope the first Advanced Inventory slice before any inventory implementation begins. Recommendation and AI/scoring work remain deferred.
 
 ## Completed Scope
 ### Foundation and architecture
@@ -76,14 +77,14 @@ From the reviewed live baseline:
 1. **Remote git transport warning:** direct `git fetch`/`git ls-remote` can still return GitHub HTTP 403 from some workspaces, so clone/fetch failures remain environment limitations rather than product-code findings.
 2. **npm environment warning:** npm can emit `Unknown env config "http-proxy"`; it is warning-level when frontend install/build/test still pass.
 3. **Router future config discipline:** app and test harnesses share the same router future configuration; future frontend tests should keep using that shared path instead of reintroducing ad hoc router wrappers.
-4. **Purchasing phase discipline:** keep the purchasing records foundation stable and cost-record focused before any separate advanced inventory or recommendation phase is approved.
+4. **Advanced Inventory entry discipline:** purchasing stabilization is complete enough to move planning forward, but inventory implementation should begin only in an explicitly scoped next PR and must still keep recommendation and AI/scoring work deferred.
 
 ## Immediate Hygiene Item
-Keep the validated post-Phase 4 baseline and merged purchasing records foundation intact while expanding only approved purchasing stabilization scope. The 2026-05-06 remote-provenance merge-readiness pass is documented in [Remote Provenance Merge-Readiness Validation](./remote-provenance-merge-readiness.md), and the follow-up roadmap reset is documented in [Post-Merge Roadmap Reset After Phase 3C/3D Validation](./post-merge-roadmap-reset.md).
+Treat the purchasing records baseline and its merged stabilization follow-ups as complete on `main` unless a concrete defect appears. Use the next PR to make the first Advanced Inventory slice explicit before implementation work begins, rather than reopening already-merged purchasing stabilization by default.
 
 ## Recommended Feature Order
-1. Stabilize Parts Purchase / Vendor Cost Tracking Phase 2 with bounded docs, validation, and merge-readiness polish on the purchase-order workflow.
-2. Add Advanced Inventory workflows only after the purchasing records phase is stable and explicitly scoped.
+1. Advance roadmap control by explicitly scoping the first Advanced Inventory workflow slice from the stable purchasing baseline.
+2. Implement Advanced Inventory workflows only after that scope is documented and approved.
 3. Re-assess Parts Compatibility Recommendation Engine entry only after purchasing and inventory foundations are complete.
 4. Keep AI/scoring-based recommendation logic deferred until explicitly approved after the compatibility and inventory foundations are mature.
 
@@ -152,7 +153,7 @@ Merge-readiness requires:
 Concise readiness statement:
 - The live baseline is complete through Phase 4B and Parts Purchase / Vendor Cost Tracking Phase 2.
 - Phase 3A, 3B, 3C, 3D, 4A, and 4B slices remain complete on the current control baseline.
-- Proceed next with bounded purchasing-record stabilization before advanced inventory or recommendation work.
+- Proceed next with one roadmap-control or feature PR that explicitly scopes the first Advanced Inventory slice from latest `main`; do not reopen purchasing stabilization without a concrete defect.
 - Continue to enforce no-auth-weakening and no-enum-renumbering constraints.
 - Add new migrations only when a later approved phase explicitly requires schema changes.
 
