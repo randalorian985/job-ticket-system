@@ -78,6 +78,17 @@ public sealed class PurchaseOrdersControllerTests
     }
 
     [Fact]
+    public async Task Close_preserves_non_validation_failures()
+    {
+        var controller = CreateController(service =>
+            service.CloseAsyncHandler = (_, _) => Task.FromException<PurchaseOrderDto?>(new InvalidOperationException("database offline")));
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => controller.CloseAsync(Guid.NewGuid()));
+
+        Assert.Equal("database offline", exception.Message);
+    }
+
+    [Fact]
     public async Task Submit_preserves_non_validation_failures()
     {
         var controller = CreateController(service =>
