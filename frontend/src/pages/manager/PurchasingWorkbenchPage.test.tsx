@@ -147,8 +147,8 @@ describe('PurchasingWorkbenchPage', () => {
     })))
   })
 
-  it('allows eligible purchase orders to be closed from detail review', async () => {
-    vi.mocked(purchasingApi.getPurchaseOrder).mockResolvedValue({
+  it('hides receiving after closing an eligible purchase order', async () => {
+    const receivedOrder = {
       ...purchaseOrder,
       status: 4,
       quantityReceived: 4,
@@ -156,23 +156,27 @@ describe('PurchasingWorkbenchPage', () => {
         ...purchaseOrder.lines[0],
         quantityReceived: 4
       }]
-    } as any)
-    vi.mocked(purchasingApi.closePurchaseOrder).mockResolvedValue({
-      ...purchaseOrder,
-      status: 6,
-      quantityReceived: 4,
-      lines: [{
-        ...purchaseOrder.lines[0],
-        quantityReceived: 4
-      }]
-    } as any)
+    }
+    const closedOrder = {
+      ...receivedOrder,
+      status: 6
+    }
+
+    vi.mocked(purchasingApi.getPurchaseOrder)
+      .mockResolvedValueOnce(receivedOrder as any)
+      .mockResolvedValueOnce(closedOrder as any)
+    vi.mocked(purchasingApi.closePurchaseOrder).mockResolvedValue(closedOrder as any)
+
     const user = userEvent.setup()
     renderWithRouter(<PurchasingWorkbenchPage />)
 
     await user.click(await screen.findByRole('button', { name: 'Review' }))
+    expect(await screen.findByRole('button', { name: 'Save receiving' })).toBeInTheDocument()
+
     await user.click(await screen.findByRole('button', { name: 'Close PO' }))
 
     await waitFor(() => expect(purchasingApi.closePurchaseOrder).toHaveBeenCalledWith('po-a'))
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Save receiving' })).not.toBeInTheDocument())
   })
 
   it('keeps archived purchase orders reviewable and supports unarchive from detail', async () => {

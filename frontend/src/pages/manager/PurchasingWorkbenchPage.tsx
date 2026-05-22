@@ -307,7 +307,7 @@ export function PurchasingWorkbenchPage() {
           </div>
           <div className="inline-links">
             {selectedOrder.status === 1 ? <button type="button" onClick={submitOrder}>Submit PO</button> : null}
-            {selectedOrder.status !== 1 && selectedOrder.status !== 7 ? <button type="button" onClick={submitReceive}>Save receiving</button> : null}
+            {selectedOrder.status !== 1 && selectedOrder.status !== 6 && selectedOrder.status !== 7 ? <button type="button" onClick={submitReceive}>Save receiving</button> : null}
             {!selectedOrder.isArchived && (selectedOrder.status === 4 || selectedOrder.status === 5) ? <button type="button" onClick={closeSelected}>Close PO</button> : null}
             <button type="button" onClick={archiveSelected}>{selectedOrder.isArchived ? 'Unarchive' : 'Archive'}</button>
           </div>
