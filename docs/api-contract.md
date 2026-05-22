@@ -57,12 +57,13 @@
 - Manager/Admin `/manage/purchasing` includes both the reorder-focused workbench that derives rows from existing parts/vendor/category APIs and the dedicated purchase-order workflow backed by `/api/purchase-orders`.
 
 ### Deferred Future Features (Not Implemented)
-- Advanced inventory management workflows.
-- Warehouse/truck inventory workflows.
-- Inventory transaction ledgers.
-- Replenishment automation.
-- Parts compatibility recommendation engine.
-- AI/scoring-based part recommendations.
+- No `/api/inventory*` endpoints are implemented on `main` yet.
+- The next approved inventory slice is a warehouse-first Manager/Admin foundation for managed stock locations, receipt-posted inventory transactions, manual stock adjustments, and inventory-history-backed on-hand visibility.
+- Truck inventory workflows remain deferred.
+- Cross-location inventory transfers remain deferred.
+- Replenishment automation remains deferred.
+- Parts compatibility recommendation engine remains deferred.
+- AI/scoring-based part recommendations remain deferred.
 
 Parts usage history is a visibility-only workflow and must not be interpreted as a compatibility recommendation engine.
 
