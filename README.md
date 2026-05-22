@@ -2,7 +2,7 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This repository is on a **validated post-Phase 4 baseline** with the core backend, employee workflow, Manager/Admin phases 1-3D, Phase 4A local pilot readiness, Phase 4B pilot workflow polish, and Parts Purchase / Vendor Cost Tracking Phase 2 now implemented. Current follow-up work should stay focused on stabilizing and documenting the purchasing records baseline without jumping ahead into advanced inventory or recommendation logic.
+This repository is on a **validated post-Phase 4 baseline** with the core backend, employee workflow, Manager/Admin phases 1-3D, Phase 4A local pilot readiness, Phase 4B pilot workflow polish, and Parts Purchase / Vendor Cost Tracking Phase 2 now implemented. The purchasing records baseline and its close-workflow stabilization follow-ups are now merged; current follow-up work should stay in roadmap-control mode by explicitly scoping the first Advanced Inventory phase before any inventory implementation begins, while recommendation logic remains deferred.
 
 ## Project Navigation
 - **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)
