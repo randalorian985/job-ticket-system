@@ -2,7 +2,7 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This repository is on a **validated post-Phase 4 baseline** with the core backend, employee workflow, Manager/Admin phases 1-3D, Phase 4A local pilot readiness, Phase 4B pilot workflow polish, and Parts Purchase / Vendor Cost Tracking Phase 2 now implemented. The purchasing records baseline and its close-workflow stabilization follow-ups are now merged; current follow-up work should stay in roadmap-control mode by explicitly scoping the first Advanced Inventory phase before any inventory implementation begins, while recommendation logic remains deferred.
+This repository is on a **validated post-Phase 4 baseline** with the core backend, employee workflow, Manager/Admin phases 1-3D, Phase 4A local pilot readiness, Phase 4B pilot workflow polish, and Parts Purchase / Vendor Cost Tracking Phase 2 now implemented. The purchasing records baseline and its close-workflow stabilization follow-ups are now merged; the next approved workstream is a warehouse-first Advanced Inventory Phase 1 that adds stock-location foundations, receiving-posted inventory movements, and manual stock-adjustment history without branching into truck inventory, replenishment automation, or recommendation logic.
 
 ## Project Navigation
 - **Project control center / roadmap:** [docs/build-roadmap.md](docs/build-roadmap.md)
@@ -109,3 +109,6 @@ Manager/Admin users can now use `/manage/purchasing` for the second purchasing s
 Receive requests are hardened so duplicate `LineId` entries are rejected and a line's recorded received quantity cannot be reduced once it has been saved. Submit requests are draft-only; resubmitting a non-draft purchase order now returns a validation error instead of silently leaving the order unchanged. Close requests require `Received` or `Invoiced` status plus fully received active lines.
 
 This slice remains cost-record focused. It intentionally does not add advanced inventory, warehouse/truck stock workflows, transaction ledgers, replenishment automation, recommendation logic, AI/scoring, or auth model changes.
+
+## Advanced Inventory Next Slice
+The next approved slice is **Advanced Inventory Phase 1**, a warehouse-first Manager/Admin workflow over the merged purchasing baseline. It is scoped to managed stock locations, receiving-posted inventory movements, manual stock adjustments, and inventory-history-backed on-hand visibility. It intentionally does not yet add truck inventory, inter-location transfers, replenishment automation, picking/reservations, compatibility recommendations, or AI/scoring.
