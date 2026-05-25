@@ -120,38 +120,50 @@ public sealed class InventoryService(ApplicationDbContext dbContext) : IInventor
 
     public async Task<IReadOnlyList<InventoryStockSummaryDto>> ListStockSummaryAsync(Guid? stockLocationId = null, Guid? partId = null, CancellationToken cancellationToken = default)
     {
-        var query = dbContext.InventoryTransactions
-            .Include(x => x.StockLocation)
-            .Include(x => x.Part)
-            .AsQueryable();
+        var groupedQuery = dbContext.InventoryTransactions.AsQueryable();
 
         if (stockLocationId.HasValue)
         {
-            query = query.Where(x => x.StockLocationId == stockLocationId.Value);
+            groupedQuery = groupedQuery.Where(x => x.StockLocationId == stockLocationId.Value);
         }
 
         if (partId.HasValue)
         {
-            query = query.Where(x => x.PartId == partId.Value);
+            groupedQuery = groupedQuery.Where(x => x.PartId == partId.Value);
         }
 
-        return await query
+        var summaryQuery = groupedQuery
             .GroupBy(x => new
             {
                 x.StockLocationId,
-                StockLocationName = x.StockLocation.Name,
-                x.PartId,
-                x.Part.PartNumber,
-                PartName = x.Part.Name
+                x.PartId
             })
-            .Select(group => new InventoryStockSummaryDto(
+            .Select(group => new
+            {
                 group.Key.StockLocationId,
-                group.Key.StockLocationName,
                 group.Key.PartId,
-                group.Key.PartNumber,
-                group.Key.PartName,
-                group.Sum(item => item.QuantityDelta),
-                group.Max(item => (DateTime?)item.OccurredAtUtc)))
+                QuantityOnHand = group.Sum(item => item.QuantityDelta),
+                LastTransactionAtUtc = group.Max(item => (DateTime?)item.OccurredAtUtc)
+            });
+
+        return await summaryQuery
+            .Join(
+                dbContext.StockLocations,
+                summary => summary.StockLocationId,
+                stockLocation => stockLocation.Id,
+                (summary, stockLocation) => new { summary, stockLocation })
+            .Join(
+                dbContext.Parts,
+                joined => joined.summary.PartId,
+                part => part.Id,
+                (joined, part) => new InventoryStockSummaryDto(
+                    joined.summary.StockLocationId,
+                    joined.stockLocation.Name,
+                    joined.summary.PartId,
+                    part.PartNumber,
+                    part.Name,
+                    joined.summary.QuantityOnHand,
+                    joined.summary.LastTransactionAtUtc))
             .OrderBy(x => x.StockLocationName)
             .ThenBy(x => x.PartNumber)
             .ToListAsync(cancellationToken);
