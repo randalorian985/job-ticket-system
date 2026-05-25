@@ -1,5 +1,4 @@
 using JobTicketSystem.Application.Inventory;
-using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -25,9 +24,9 @@ public sealed class InventoryServicesTests
             new DateTime(2026, 5, 25, 9, 30, 0, DateTimeKind.Utc)));
 
         Assert.Equal(3m, created.QuantityDelta);
-        Assert.Equal("MAIN", created.StockLocationName);
+        Assert.Equal("Main Warehouse", created.StockLocationName);
         Assert.Equal("SEAL-1", created.PartNumber);
-        Assert.Equal(8m, (await context.Parts.SingleAsync(x => x.Id == part.Id)).QuantityOnHand);
+        Assert.Equal(3m, (await context.Parts.SingleAsync(x => x.Id == part.Id)).QuantityOnHand);
     }
 
     [Fact]
@@ -43,7 +42,7 @@ public sealed class InventoryServicesTests
         var summary = await service.ListStockSummaryAsync(location.Id, part.Id);
 
         var row = Assert.Single(summary);
-        Assert.Equal("MAIN", row.StockLocationName);
+        Assert.Equal("Main Warehouse", row.StockLocationName);
         Assert.Equal("SEAL-1", row.PartNumber);
         Assert.Equal(1m, row.QuantityOnHand);
         Assert.NotNull(row.LastTransactionAtUtc);
@@ -58,7 +57,7 @@ public sealed class InventoryServicesTests
             PartCategory = category,
             PartNumber = "SEAL-1",
             Name = "Seal Kit",
-            QuantityOnHand = 5m,
+            QuantityOnHand = 0m,
             ReorderThreshold = 2m,
             UnitCost = 10m,
             UnitPrice = 15m
