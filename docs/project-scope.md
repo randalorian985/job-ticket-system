@@ -1,200 +1,68 @@
 # Project Scope
 
 ## Goal
-Build a Job Ticket Management System that allows teams to submit, assign, track, and resolve job tickets.
+Build a Job Ticket Management System that allows teams to submit, assign, track, and resolve job tickets while preserving clean API boundaries, role-based authorization, and reviewable workflow slices.
 
-## In Scope (Initial Direction)
-- Ticket creation and lifecycle states
-- Assignment workflow
-- Basic prioritization and categorization
-- Status tracking and audit timestamps
-- API-first backend with React frontend
+## Current Control State
+- `main` remains complete through the validated post-Phase-4 baseline and Parts Purchase / Vendor Cost Tracking Phase 2.
+- This branch is the active **Advanced Inventory Phase 1** draft and is no longer a planning-only checkpoint.
+- The active lane remains warehouse-first and Manager/Admin-only.
+- Employee workflow and existing Manager/Admin workflow must continue working while this branch evolves.
 
-## Out of Scope (for this scaffold)
-- Advanced analytics and forecasting reports
-- Notifications integrations
-- SSO/enterprise identity setup
-- Complex SLA engine
+Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
 
-## Current Phase
-Advanced Inventory Phase 1 is now scoped as the next approved implementation slice on top of the implemented post-Phase 4 baseline. The merged Manager/Admin purchasing workbench, dedicated purchase-order workflow, close workflow, and closed-order receiving-action hardening remain the stable baseline; the next lane is a warehouse-first Manager/Admin inventory foundation covering managed stock locations, receiving-posted inventory movements, manual stock adjustments, and transaction-history-backed on-hand visibility.
+## Advanced Inventory Phase 1 On This Branch
+### Already implemented in this draft
+- Managed stock locations with soft-delete/archive behavior.
+- Inventory transaction persistence for the new inventory foundation.
+- Manager/Admin-only DTO/API coverage for:
+  - stock-location list/detail/create/update/archive/unarchive;
+  - stock summary reads;
+  - recent inventory transaction reads;
+  - manual stock adjustments with required reasons.
+- Transaction-history-backed on-hand visibility for the new inventory endpoints.
+- A schema migration for the new stock-location and inventory-transaction tables.
+- Focused backend inventory service regression coverage.
 
-Current roadmap sequencing is managed in [docs/build-roadmap.md](./build-roadmap.md).
+### Still required before this phase is complete
+- Post purchase-order receiving into inventory transactions so receipt activity updates inventory history.
+- Add Manager/Admin UI coverage for the warehouse-first workflow.
+- Keep the source-of-truth docs aligned with the implemented branch behavior.
+- Run the standard backend/frontend validation commands in a checkout-capable environment.
 
-## Advanced Inventory Phase 1 (Next Approved Slice, Not Yet Implemented)
-- Manager/Admin only.
-- Adds managed warehouse or storeroom stock locations for inventory visibility.
-- Adds inventory transaction persistence plus DTO/API/UI coverage for purchase-order receiving posted into stock.
-- Adds inventory transaction persistence plus DTO/API/UI coverage for manual stock adjustments with required reasons.
-- Uses persisted inventory history to support on-hand visibility instead of relying on ad hoc mutable stock behavior.
-- Requires tests, docs alignment, and any necessary migration while preserving thin controllers, application-service business logic, DTO-only APIs, and existing auth boundaries.
-- Does not yet include truck inventory, cross-location transfers, replenishment automation, pick/reserve/issue workflows, compatibility recommendations, or AI/scoring.
-
-## Public Platform Metadata
-- `GET /api/system/info` exposes service name, `/api` base path, `/health` endpoint path, hosting environment name, and API assembly version.
-- This endpoint is unauthenticated by design so deployment checks and the frontend shell can verify API compatibility before user login.
-- It does not expose business records, user details, secrets, connection strings, or storage paths.
-
-## Frontend Workflow Status
-- React Employee Mobile Workflow is implemented with login, auth state, assigned-job list/detail, clock in/out with GPS, work-note submission, part-used submission, and file/photo upload screens.
-
-## Current Job Ticket Workflow (API-First Foundation)
-- Create job tickets with required requesting account (`CustomerId`), service location (`ServiceLocationId`), and billing party (`BillingPartyCustomerId`).
-- Optional equipment linkage with validation to ensure equipment belongs to the selected service location.
-- Update core job metadata (title/description, priority, status, requested/scheduled/due/completed dates, billing contact, notes, manager, PO number).
-- Change status independently through a dedicated status endpoint with completed-date conventions.
-- Archive tickets using soft-delete semantics with a required archive reason.
-- Assign and unassign employees with duplicate-assignment prevention.
-- Add and list non-time-tracking work notes (work entries), with invalid work-entry enum values rejected before persistence.
-- Track parts used on job tickets with immutable pricing snapshots and optional inventory decrement/restore behavior; pricing snapshots remain Manager/Admin-visible and are omitted from assigned-employee job-part API responses.
-- Approve, reject (with reason), update, and archive job part usage entries through dedicated workflow endpoints.
-- Upload and manage job ticket files/photos with soft-archive behavior and optional linkage to equipment/work entries.
-- Persist safe file metadata in SQL while storing file content through a pluggable storage provider abstraction (local provider in this phase); API file DTOs do not expose provider storage keys or local paths.
-- Record audit logs for create, update, status changes, archive, assignment changes, and work entry additions.
-  - Includes job part add/update/archive/approve/reject and job file upload/update/archive actions.
-
-## Core Account and Location Definitions
-- **Customer / Requesting Account**: The account that requests a job ticket to be created. This account is not always the same as the billing party.
-- **Service Location**: The physical work site where service occurs. A service location stores company and site naming, on-site contact details, address fields, access instructions, safety requirements, and additional site notes.
-- **Billing Party**: The customer/account that is financially responsible for invoice payment for a specific job ticket. Billing party can differ from the requesting account.
-- **Equipment Owner**: The customer/account that owns a piece of equipment. Equipment ownership can differ from the billing party.
-- **Equipment Responsible Billing Party**: The customer/account responsible for billing tied to equipment-level service responsibility. This party can differ from the equipment owner.
-
-## Time Tracking Workflow (Current API Foundation)
-- Employees clock in/out against job tickets with required GPS coordinates and optional location accuracy metadata.
-- Clock-in validation requires active employee records, active job tickets, and active assignment to the ticket.
-- Employees are prevented from having multiple open time entries and cannot close entries belonging to other employees.
-- Clock-out calculates tracked duration (`TotalMinutes`, `LaborHours`, `BillableHours`) and records work summary notes through job work entries.
-- Clock-in now captures immutable labor-rate snapshots (`CostRateSnapshot`, `BillRateSnapshot`) used by reporting to keep historical totals stable; legacy rows without snapshots fall back to current employee rates.
-- Managers can approve, reject (with required reason), and adjust time entries through dedicated workflow endpoints.
-- Adjustments preserve original values and new values in `TimeEntryAdjustment` records for auditability.
-- Audit logs capture clock-in, clock-out, approval, rejection, and adjustment actions.
-- Authentication and role-based authorization are active using JWT bearer tokens.
-- Employee access is assignment-scoped for job-specific workflows.
-- Manager/Admin approval and archive workflows are policy-protected for time and part approvals.
-
-## Parts Usage History Visibility
-- Manager/Admin users can review historical job-part usage from `/manage/parts-usage-history`.
-- The workflow is read-only visibility into existing job part records and supports direct filters for equipment and part.
-- Wording must remain cautious: previously used on this equipment, commonly used with this model, technician-confirmed, possible match based on similar jobs, and needs verification.
-- This workflow does not claim guaranteed compatibility and does not automatically recommend parts.
-- Existing soft-delete/archive behavior remains in force; archived records are excluded from history results.
-
-## Future Parts Compatibility Engine Data Capture
-- This phase adds **structured compatibility data capture only** for equipment and job-ticket-part history.
-- Equipment records now support manufacturer, model number, serial number, equipment type, unit number, and year attributes.
-- Job ticket part records can optionally capture component category, failure/repair details, technician notes, installation/removal timestamps, success outcome, and compatibility notes.
-- Job ticket parts can optionally link to a specific equipment record and to another job ticket part record that replaced it.
-- This phase **does not** implement compatibility recommendations, AI/ML behavior, or automated part suggestions.
-
-## Reporting Foundation (Current API Foundation)
-- Added read-only reporting endpoints for invoice-ready summaries, job cost summaries, jobs ready to invoice, labor rollups, parts rollups, and customer/equipment service history.
-- Reporting calculations are constrained to approved labor and approved job parts by default.
-- Labor totals support separate employee cost and bill rates when present.
-- Parts totals use immutable job-part snapshot pricing to preserve financial history.
-- This phase does not create invoices, process payments, or add authentication/UI flows.
-- File/photo upload currently supports local development storage and intentionally defers cloud storage providers (Azure Blob Storage/S3) to a later phase.
-
-## Authentication & Role Enforcement Phase
-
-This phase adds foundational security controls without replacing existing workflows:
-
-- JWT bearer token validation now re-checks the token subject against active employee status to block archived/inactive accounts immediately on protected requests.
-- Local username/email + password auth with hashed passwords.
-- JWT bearer token issuance for API clients.
-- Role enforcement for `Admin`, `Manager`, `Employee`.
-- Assignment-aware authorization for employee access to job-specific actions (jobs, time tracking, files, and parts workflows).
-- Admin user management endpoints for CRUD/archive/reset-password.
-- No external SSO/OAuth, password reset workflow, or email verification in this phase.
-
-## Manager/Admin UI Phase 1 (Implemented)
-- Protected manager/admin shell route (`/manage`) with dashboard navigation for operational sections.
-- Read-first list/detail visibility for job tickets, including assignments, work entries, time entries, parts, and file/photo metadata.
-- Read-first operational lists for customers, service locations, equipment, parts, vendors, and part categories.
-- Manager/admin approval screens for time entries and job parts using existing approval endpoints.
-- Manager/admin reports index view with direct access to existing reporting endpoints and snapshot-first labor reporting note.
-- Admin-only user list route (`/manage/users`) isolated from manager users.
-- Employee mobile workflow routes remain active (`/login`, `/jobs`, `/jobs/:jobTicketId`).
-- Deferred domains remain unchanged: parts purchase/vendor cost tracking, advanced inventory, and parts compatibility recommendation engine are not implemented in this phase.
-- Deferred domains also include AI/scoring-based part recommendations.
-
-## Manager/Admin UI Phase 2 (Implemented)
-- Job ticket detail now supports manager/admin assignment management (assign/unassign with duplicate prevention UX and refresh after mutation).
-- Manager/admin job ticket create route is available at `/manage/job-tickets/new` and edit workflows are available from the ticket detail screen.
-- Job ticket status/archive flows include explicit enum-value labels, confirmation prompts, and error/success messaging.
-- Reports view now supports query filters (date range, customer, employee, status), export-friendly table rendering, and client-side CSV export from loaded data.
-- Manager/admin master-data pages now include targeted create/edit/archive/unarchive forms for customers, service locations, equipment, vendors, part categories, and parts, with archived-record visibility scoped to the manager/admin workflow.
-- Admin-only users page now includes targeted create/edit/archive/reset-password operations via existing `/api/users` endpoints.
-- Employee route tree (`/jobs`, `/jobs/:jobTicketId`) remains unchanged.
-- Deferred domains remain unchanged and unimplemented: parts purchase/vendor cost tracking, advanced inventory, compatibility recommendation engine.
-- Deferred domains also include AI/scoring-based part recommendations.
-
-## Manager/Admin UI Phase 3A (Implemented Slice)
-- Manager/admin job-ticket archive action now uses an explicit in-page confirmation flow before executing the archive API request.
-- Archive outcomes now provide focused user-facing success and failure messaging tied to the confirmation result.
-- Existing `/manage` role boundaries, route structure, and API usage patterns remain unchanged in this slice.
-
-## Phase 4A Local Pilot Readiness
-- Local-only pilot seed data is available through explicit `PilotDemoSeed` configuration.
-- Seeded records support representative employee, manager, admin, master-data, job-ticket, labor, parts, and reporting walkthroughs.
-- The pilot seed path is disabled by default, idempotent, and intended for disposable local/demo databases only.
-- End-to-end validation covers employee assigned-job visibility, clock in/out, work notes, part usage, manager approvals, and reporting visibility.
-- Phase 4A does not add production seed data, dedicated purchasing records, advanced inventory intelligence, compatibility recommendations, or invoice/payment processing.
-
-## Manager/Admin Purchasing Workbench (Implemented Slice)
-- Manager/Admin users can open `/manage/purchasing` for reorder-focused purchasing visibility built on existing master-data records.
-- The workbench uses current part, vendor, category, unit-cost, quantity-on-hand, and reorder-threshold fields to surface out-of-stock, below-threshold, at-threshold, and healthy parts.
-- The workflow supports search plus vendor, category, and stock-status filters and client-side CSV export from already loaded rows.
-- This first purchasing slice established reorder visibility before dedicated purchasing records were added.
-- Existing soft-delete/archive behavior and Manager/Admin-only route boundaries remain in force.
-
-## Deferred Scope Confirmation (Current)
-The following remain deferred and are not implemented as active business domains in this phase:
+### Explicitly out of scope
 - truck inventory workflows;
-- cross-location inventory transfers;
+- cross-location transfers;
 - replenishment automation;
 - pick/reserve/issue workflow automation;
-- parts compatibility recommendation engine;
-- AI/scoring-based part recommendations.
+- compatibility recommendations;
+- AI/scoring-based recommendation logic;
+- auth model changes.
 
-- Phase 3B delivered: complete Manager/Admin master-data maintenance workflows (customers, locations, equipment, vendors, part categories, parts), including validation/error paths and archived-record restore flows, while excluding purchasing/inventory intelligence domains.
+## Implemented Baseline That Must Stay Stable
+- Auth, JWT token revalidation, and role enforcement for `Admin`, `Manager`, and `Employee`.
+- Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, and files/photos.
+- Manager/Admin job-ticket workflow, assignment management, archive/status UX, and reporting hub.
+- Manager/Admin master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
+- Manager/Admin Admin-only user management workflow at `/manage/users`.
+- Parts usage history visibility with cautious non-recommendation wording.
+- Purchasing workbench plus dedicated purchase-order workflow, receiving progress, vendor invoice tracking, landed-cost recording, close validation, and archive/unarchive behavior.
 
-## Manager/Admin UI Phase 3C (Implemented)
-- Scope bounded to manager/admin reporting polish and export ergonomics only.
-- Added a Manager/Admin reports hub covering invoice-ready summary, job cost summary, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history.
-- Added supported report filter coverage and clearer labor-rate Snapshot/Fallback labeling in reports UI.
-- Added export-friendly table formatting with raw numeric CSV values, UTC lifecycle date columns for job rollups, empty/loading/error states, detail links where existing Manager/Admin routes support them, and client-side CSV export from loaded report data.
-- No backend reporting rule changes, deferred domain implementation, migration, or auth/route model change in this slice.
+## Architectural And Safety Rules
+- Keep controllers thin.
+- Keep business logic in application services.
+- Use DTOs for API requests and responses.
+- Do not expose EF entities directly from APIs.
+- Preserve soft-delete/archive behavior instead of hard delete.
+- Do not weaken authorization.
+- Do not renumber backend enums.
+- Do not edit historical migrations unless explicitly required.
 
-## Manager/Admin UI Phase 3D (Implemented)
-- Scope bounded to Admin user-management polish, Manager/Admin UX hardening, route-boundary clarity, tests, and documentation sync.
-- Admin-only `/manage/users` now presents a clearer user list with role and active/inactive status display, create/edit forms, loading/empty/success/error states, and field validation.
-- Deactivate, reset-password, and role-change actions require explicit confirmation before invoking existing `/api/users` endpoints.
-- Manager users remain blocked from `/manage/users`; Employee users remain blocked from `/manage`; Manager/Admin users remain blocked from employee-only `/jobs` routes.
-- No backend contract changes, migrations, enum changes, authorization weakening, password hash exposure, or deferred-domain implementation were added.
-
-## Parts Purchase / Vendor Cost Tracking Phase 2 Scope
-Phase 2 adds dedicated purchasing records and a Manager/Admin workflow for:
-- purchase orders;
-- receiving quantities against purchase-order lines;
-- vendor invoice number/date/status tracking;
-- landed-cost recording for freight, tax, other landed costs, and notes;
-- close transitions for fully received or invoiced purchase orders.
-
-Scope boundaries retained:
-- Controllers stay thin and delegate business rules to application services.
-- APIs use request/response DTOs and do not expose EF entities.
-- Purchase orders preserve soft-delete/archive behavior.
-- Manager/Admin authorization remains required for purchasing endpoints and UI routes.
-- Purchase-order submit transitions are draft-only; resubmitting a non-draft order returns a validation failure instead of silently leaving the order unchanged.
-- Purchase-order close transitions are allowed only from `Received` or `Invoiced` status and require all active lines to be fully received.
-- No enum renumbering or auth weakening is included.
-- Receiving records vendor fulfillment progress only; it does not update inventory quantities or create inventory ledgers.
-- Receive requests reject duplicate `LineId` entries and do not allow recorded received quantities to decrease once saved.
-
-Still out of scope:
+## Deferred Scope Confirmation
+The following remain deferred and must not be partially introduced by this branch:
 - truck inventory workflows;
 - cross-location inventory transfers;
 - replenishment automation;
-- recommendation logic;
-- AI/scoring.
+- pick/reserve/issue automation;
+- parts compatibility recommendation engine;
+- AI/scoring-based part recommendations.
