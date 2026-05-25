@@ -136,13 +136,20 @@ public sealed class InventoryService(ApplicationDbContext dbContext) : IInventor
         }
 
         return await query
-            .GroupBy(x => new { x.StockLocationId, x.StockLocation.Name, x.PartId, x.Part.PartNumber, x.Part.Name })
+            .GroupBy(x => new
+            {
+                x.StockLocationId,
+                StockLocationName = x.StockLocation.Name,
+                x.PartId,
+                x.Part.PartNumber,
+                PartName = x.Part.Name
+            })
             .Select(group => new InventoryStockSummaryDto(
                 group.Key.StockLocationId,
-                group.Key.Name,
+                group.Key.StockLocationName,
                 group.Key.PartId,
                 group.Key.PartNumber,
-                group.Key.Name1,
+                group.Key.PartName,
                 group.Sum(item => item.QuantityDelta),
                 group.Max(item => (DateTime?)item.OccurredAtUtc)))
             .OrderBy(x => x.StockLocationName)
@@ -215,13 +222,13 @@ public sealed class InventoryService(ApplicationDbContext dbContext) : IInventor
         await RecalculatePartQuantityOnHandAsync(request.PartId, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return (await dbContext.InventoryTransactions
+        return await dbContext.InventoryTransactions
             .Include(x => x.StockLocation)
             .Include(x => x.Part)
             .Include(x => x.PurchaseOrder)
             .Where(x => x.Id == entity.Id)
             .Select(MapTransaction)
-            .SingleAsync(cancellationToken));
+            .SingleAsync(cancellationToken);
     }
 
     private async Task EnsureStockLocationCodeUniqueAsync(string code, Guid? currentId, CancellationToken cancellationToken)
