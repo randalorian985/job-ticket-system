@@ -29,13 +29,14 @@ This lane is already past the planning-only checkpoint. The backend inventory fo
 - Managed stock locations.
 - Inventory transaction persistence.
 - Manager/Admin inventory API surface for stock locations, stock summary, recent transactions, and manual adjustments.
+- Manager/Admin UI coverage for the warehouse-first inventory workflow.
 - Transaction-history-backed stock visibility for the new inventory endpoints.
 - Purchase-order receipt posting into inventory transactions and on-hand quantity updates.
 - One inventory migration.
 - Focused backend inventory service tests.
+- Focused frontend inventory workflow tests.
 
 ### Still required before this phase is complete
-- Add Manager/Admin UI coverage for the warehouse-first inventory workflow.
 - Keep README, roadmap, scope, and API docs aligned with implemented inventory behavior.
 - Run the standard backend and frontend validation commands in a checkout-capable environment for future inventory follow-ups.
 

@@ -20,19 +20,20 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
   - stock summary reads;
   - recent inventory transaction reads;
   - manual stock adjustments with required reasons.
+- Manager/Admin UI coverage for stock-location management, stock visibility, recent transaction review, and manual adjustments.
 - Transaction-history-backed on-hand visibility for the new inventory endpoints.
 - Purchase-order receipt posting into inventory transactions and on-hand quantity updates.
 - A schema migration for the new stock-location and inventory-transaction tables.
 - Focused backend inventory service regression coverage.
+- Focused frontend inventory workflow regression coverage.
 
 ### Still required before this phase is complete
-- Add Manager/Admin UI coverage for the warehouse-first workflow.
 - Keep the source-of-truth docs aligned with implemented inventory behavior.
 - Run the standard backend/frontend validation commands in a checkout-capable environment for future inventory follow-ups.
 
 ### Explicitly out of scope
 - truck inventory workflows;
-- cross-location transfers;
+- cross-location inventory transfers;
 - replenishment automation;
 - pick/reserve/issue workflow automation;
 - compatibility recommendations;

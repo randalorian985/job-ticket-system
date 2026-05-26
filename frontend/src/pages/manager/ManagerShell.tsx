@@ -17,6 +17,7 @@ export function ManagerShell() {
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/service-locations">Service Locations</NavLink>
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/equipment">Equipment</NavLink>
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/parts">Parts</NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/inventory">Inventory</NavLink>
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/purchasing">Purchasing</NavLink>
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/parts-usage-history">Parts Usage History</NavLink>
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/time-approval">Time Approval</NavLink>
