@@ -31,8 +31,6 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<InvoiceSummary> InvoiceSummaries => Set<InvoiceSummary>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
-    public DbSet<InventoryLocation> InventoryLocations => Set<InventoryLocation>();
-    public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
