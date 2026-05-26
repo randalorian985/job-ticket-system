@@ -5,14 +5,14 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 
 ## Current Control State
 - `main` remains complete through the validated post-Phase-4 baseline and Parts Purchase / Vendor Cost Tracking Phase 2.
-- This branch is the active **Advanced Inventory Phase 1** draft and is no longer a planning-only checkpoint.
+- `main` is now in the active **Advanced Inventory Phase 1** implementation lane rather than a planning-only checkpoint.
 - The active lane remains warehouse-first and Manager/Admin-only.
-- Employee workflow and existing Manager/Admin workflow must continue working while this branch evolves.
+- Employee workflow and existing Manager/Admin workflow must continue working while this lane evolves.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
 
-## Advanced Inventory Phase 1 On This Branch
-### Already implemented in this draft
+## Advanced Inventory Phase 1 On Main
+### Already implemented
 - Managed stock locations with soft-delete/archive behavior.
 - Inventory transaction persistence for the new inventory foundation.
 - Manager/Admin-only DTO/API coverage for:
@@ -21,14 +21,14 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
   - recent inventory transaction reads;
   - manual stock adjustments with required reasons.
 - Transaction-history-backed on-hand visibility for the new inventory endpoints.
+- Purchase-order receipt posting into inventory transactions and on-hand quantity updates.
 - A schema migration for the new stock-location and inventory-transaction tables.
 - Focused backend inventory service regression coverage.
 
 ### Still required before this phase is complete
-- Post purchase-order receiving into inventory transactions so receipt activity updates inventory history.
 - Add Manager/Admin UI coverage for the warehouse-first workflow.
-- Keep the source-of-truth docs aligned with the implemented branch behavior.
-- Run the standard backend/frontend validation commands in a checkout-capable environment.
+- Keep the source-of-truth docs aligned with implemented inventory behavior.
+- Run the standard backend/frontend validation commands in a checkout-capable environment for future inventory follow-ups.
 
 ### Explicitly out of scope
 - truck inventory workflows;
@@ -46,7 +46,7 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 - Manager/Admin master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
 - Manager/Admin Admin-only user management workflow at `/manage/users`.
 - Parts usage history visibility with cautious non-recommendation wording.
-- Purchasing workbench plus dedicated purchase-order workflow, receiving progress, vendor invoice tracking, landed-cost recording, close validation, and archive/unarchive behavior.
+- Purchasing workbench plus dedicated purchase-order workflow, receiving progress, vendor invoice tracking, landed-cost recording, close validation, archive/unarchive behavior, and inventory-linked receipt posting.
 
 ## Architectural And Safety Rules
 - Keep controllers thin.
@@ -59,7 +59,7 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 - Do not edit historical migrations unless explicitly required.
 
 ## Deferred Scope Confirmation
-The following remain deferred and must not be partially introduced by this branch:
+The following remain deferred and must not be partially introduced by this lane:
 - truck inventory workflows;
 - cross-location inventory transfers;
 - replenishment automation;
