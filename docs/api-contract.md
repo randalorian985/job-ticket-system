@@ -1,4 +1,4 @@
-# API Contract (Current Branch State)
+# API Contract (Current Main State)
 
 ## Base URL
 `/api`
@@ -14,7 +14,7 @@
   - Returns service name, API base path, health endpoint path, environment name, and assembly version.
 
 ## API Group Status
-### Implemented and active on this branch
+### Implemented and active on `main`
 - Health (`/health`)
 - System metadata (`/api/system/info`)
 - Authentication (`/api/auth/*`)
@@ -28,11 +28,11 @@
 - Inventory foundation (`/api/inventory/*`)
 
 ### Inventory UI status
-- The inventory backend foundation is implemented on this branch.
-- Manager/Admin inventory UI coverage is still pending on this same PR.
-- Purchase-order receiving still does not create receipt inventory transactions on this branch yet.
+- The inventory backend foundation is implemented on `main`.
+- Purchase-order receiving now creates receipt inventory transactions on `main`.
+- Manager/Admin inventory UI coverage is still pending in Advanced Inventory Phase 1.
 
-## Inventory (Current Branch Foundation)
+## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.
 
 ### Stock locations
@@ -92,14 +92,14 @@ All inventory endpoints require the existing `ManagerOrAdmin` authorization poli
 - `InventoryTransactionType` is appended only:
   - `1=Receipt`
   - `2=ManualAdjustment`
-- This branch currently creates `ManualAdjustment` transactions only. Receipt transactions remain pending until purchase-order receiving is posted into inventory.
+- `main` now creates both `Receipt` and `ManualAdjustment` transactions.
 
-## Purchase Orders (Current Branch Notes)
-- `POST /api/purchase-orders/{id}/receive` still records vendor receiving progress only on this branch.
+## Purchase Orders (Current Main Notes)
+- `POST /api/purchase-orders/{id}/receive` records vendor receiving progress.
+- Receipt increases now post `InventoryTransaction` entries tied to the purchase order and update `Part.QuantityOnHand`.
 - Duplicate `LineId` entries are rejected.
 - A line's recorded received quantity cannot decrease once saved.
 - `receivedQuantity` cannot exceed `quantityOrdered`.
-- Receipt-posted inventory transactions are still pending on this PR and are not implemented yet.
 
 ## Existing Platform Contracts That Remain In Force
 - Manager/Admin `/manage/purchasing` still uses the dedicated purchase-order workflow and the reorder-focused workbench.

@@ -2,32 +2,27 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
-This branch is not on the pre-inventory baseline anymore. It is the active **Advanced Inventory Phase 1** draft and already adds the first backend inventory foundation on top of the validated post-Phase-4 and post-purchasing baseline.
-
-## Current Branch State
-- Core backend/API workflows remain implemented and validated on the baseline.
+## Current Project State
+- Core backend/API workflows remain implemented and validated.
 - Employee mobile workflow remains implemented.
 - Manager/Admin Phases 1-3D and Phase 4A/4B remain implemented.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented.
-- This draft branch now adds Manager/Admin inventory backend foundations for stock locations, inventory transactions, stock summary reads, recent transaction history, and manual stock adjustments.
-- This branch also adds the first inventory schema migration and focused backend inventory service tests.
-- Purchase-order receiving still does **not** post receipt transactions into inventory on this branch yet.
-- Manager/Admin inventory UI coverage is still pending on this branch.
+- Advanced Inventory Phase 1 is the current active lane on `main`.
 
-## What This Draft Already Implements
+## What Main Already Implements
 - `StockLocation` persistence with soft-delete/archive behavior.
 - `InventoryTransaction` persistence with appended enum values only (`Receipt=1`, `ManualAdjustment=2`).
 - Manager/Admin-only `/api/inventory` endpoints for stock locations, stock summary, recent transactions, and manual adjustments.
 - Transaction-history-backed stock visibility for the new inventory endpoints.
 - Manual adjustments that require a reason and recalculate `Part.QuantityOnHand` from persisted inventory history for the affected part.
+- Purchase-order receiving that now posts receipt transactions into the inventory history and updates on-hand quantity.
 
-## What Must Still Land On This Same PR Before Merge
-- Post purchase-order receiving into inventory transactions so receipt activity updates the new inventory history.
+## What Still Remains In Advanced Inventory Phase 1
 - Add Manager/Admin UI coverage for the warehouse-first inventory workflow.
-- Keep `README.md`, `docs/build-roadmap.md`, `docs/project-scope.md`, and `docs/api-contract.md` aligned with the implemented branch behavior.
-- Run the standard backend and frontend validation commands in a checkout-capable environment.
+- Keep source-of-truth docs aligned as the inventory lane advances.
+- Run the standard backend and frontend validation commands in a checkout-capable environment for future inventory follow-ups.
 
-## Scope Rails For This Branch
+## Scope Rails For The Current Inventory Lane
 - No truck inventory.
 - No cross-location transfers.
 - No replenishment automation.
