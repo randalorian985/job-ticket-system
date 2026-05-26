@@ -7,7 +7,8 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Employee mobile workflow remains implemented.
 - Manager/Admin Phases 1-3D and Phase 4A/4B remain implemented.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented.
-- Advanced Inventory Phase 1 is the current active lane on `main`.
+- Advanced Inventory Phase 1 is now implemented on `main`.
+- No newer implementation lane is approved on `main` until the roadmap explicitly selects and documents it.
 
 ## What Main Already Implements
 - `StockLocation` persistence with soft-delete/archive behavior.
@@ -18,11 +19,12 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Manual adjustments that require a reason and recalculate `Part.QuantityOnHand` from persisted inventory history for the affected part.
 - Purchase-order receiving that now posts receipt transactions into the inventory history and updates on-hand quantity.
 
-## What Still Remains In Advanced Inventory Phase 1
-- Keep source-of-truth docs aligned as the inventory lane advances.
-- Run the standard backend and frontend validation commands in a checkout-capable environment for future inventory follow-ups.
+## Roadmap Checkpoint After Advanced Inventory Phase 1
+- Keep source-of-truth docs aligned for later inventory follow-ups.
+- Run the standard backend and frontend validation commands in a checkout-capable environment for future follow-ups.
+- Select and document the next approved implementation lane before opening another feature PR.
 
-## Scope Rails For The Current Inventory Lane
+## Scope Rails For The Current Inventory Baseline
 - No truck inventory.
 - No cross-location transfers.
 - No replenishment automation.
