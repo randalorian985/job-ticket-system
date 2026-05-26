@@ -724,62 +724,76 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("FailureDescription")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("FailureReason")
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("InstalledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsBillable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("IsWarrantyReturn")
-                        .HasColumnType("bit");
-
                     b.Property<Guid>("JobTicketId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("ManagerReviewed")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("NeededByUtc")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<Guid>("PartId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("PartMatchesEquipment")
-                        .HasColumnType("bit");
 
                     b.Property<decimal>("Quantity")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<string>("QuantityUnit")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<DateTime?>("RejectedAtUtc")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("RejectedReason")
+                    b.Property<Guid?>("RejectedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RejectionReason")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime?>("RemovedAtUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("RemovedByEmployeeId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("RepairDescription")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<Guid?>("ReplacedByJobTicketPartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("RequiresManagerReview")
-                        .HasColumnType("bit");
+                    b.Property<decimal>("SalePriceSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TechnicianNotes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<decimal>("UnitCostSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool?>("WasSuccessful")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -787,13 +801,21 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ApprovalStatus");
 
+                    b.HasIndex("ComponentCategory");
+
                     b.HasIndex("EquipmentId");
+
+                    b.HasIndex("InstalledAtUtc");
 
                     b.HasIndex("JobTicketId");
 
                     b.HasIndex("PartId");
 
                     b.HasIndex("ReplacedByJobTicketPartId");
+
+                    b.HasIndex("WasSuccessful");
+
+                    b.HasIndex("JobTicketId", "ApprovalStatus");
 
                     b.ToTable("JobTicketParts");
                 });
