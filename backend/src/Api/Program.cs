@@ -5,7 +5,6 @@ using JobTicketSystem.Api.Pilot;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Application.JobTickets;
-using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Pilot;
 using JobTicketSystem.Application.Reporting;
@@ -87,7 +86,6 @@ builder.Services.AddScoped<IJobTicketFilesService, JobTicketFilesService>();
 builder.Services.AddScoped<ITimeEntriesService, TimeEntriesService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IPurchaseOrdersService, PurchaseOrdersService>();
-builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IPilotDemoSeedService, PilotDemoSeedService>();
 builder.Services.AddHostedService<PilotDemoSeedHostedService>();
 
