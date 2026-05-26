@@ -31,6 +31,7 @@
 - The inventory backend foundation is implemented on `main`.
 - Purchase-order receiving now creates receipt inventory transactions on `main`.
 - Manager/Admin inventory UI coverage is implemented on `main`.
+- No transfer workflow is implemented on `main` yet.
 
 ## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.
@@ -101,9 +102,14 @@ All inventory endpoints require the existing `ManagerOrAdmin` authorization poli
 - A line's recorded received quantity cannot decrease once saved.
 - `receivedQuantity` cannot exceed `quantityOrdered`.
 
+## Approved Next Lane (Not Yet Implemented On Main)
+- Advanced Inventory Phase 2 is approved as a Manager/Admin-only warehouse transfer workflow between existing stock locations.
+- No transfer endpoints are implemented on `main` yet; this contract should only expand when that lane lands.
+- Truck inventory, replenishment, pick/reserve/issue automation, compatibility recommendations, and AI/scoring remain deferred.
+
 ## Existing Platform Contracts That Remain In Force
 - Manager/Admin `/manage/purchasing` still uses the dedicated purchase-order workflow and the reorder-focused workbench.
 - Parts usage history remains a visibility-only workflow and must not be interpreted as a compatibility recommendation engine.
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
-- Deferred domains remain deferred: truck inventory, transfers, replenishment, compatibility recommendations, and AI/scoring.
+- Deferred domains remain deferred beyond the approved next transfer lane: truck inventory, replenishment, compatibility recommendations, and AI/scoring.
