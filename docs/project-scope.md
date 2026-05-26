@@ -5,14 +5,14 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 
 ## Current Control State
 - `main` remains complete through the validated post-Phase-4 baseline and Parts Purchase / Vendor Cost Tracking Phase 2.
-- `main` is now in the active **Advanced Inventory Phase 1** implementation lane rather than a planning-only checkpoint.
-- The active lane remains warehouse-first and Manager/Admin-only.
-- Employee workflow and existing Manager/Admin workflow must continue working while this lane evolves.
+- Advanced Inventory Phase 1 is now implemented on `main` rather than still being an in-progress lane.
+- No newer implementation lane is approved on `main` until the roadmap explicitly selects and documents it.
+- Employee workflow and existing Manager/Admin workflow must continue working while future phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
 
 ## Advanced Inventory Phase 1 On Main
-### Already implemented
+### Implemented
 - Managed stock locations with soft-delete/archive behavior.
 - Inventory transaction persistence for the new inventory foundation.
 - Manager/Admin-only DTO/API coverage for:
@@ -27,9 +27,10 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 - Focused backend inventory service regression coverage.
 - Focused frontend inventory workflow regression coverage.
 
-### Still required before this phase is complete
+## Post-Phase Checkpoint
 - Keep the source-of-truth docs aligned with implemented inventory behavior.
 - Run the standard backend/frontend validation commands in a checkout-capable environment for future inventory follow-ups.
+- Select and document the next approved implementation lane before starting another feature PR.
 
 ### Explicitly out of scope
 - truck inventory workflows;
