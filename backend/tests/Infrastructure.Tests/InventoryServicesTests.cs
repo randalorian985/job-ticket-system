@@ -1,5 +1,6 @@
 using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Domain.Entities;
+using JobTicketSystem.Domain.Enums;
 using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -46,6 +47,85 @@ public sealed class InventoryServicesTests
         Assert.Equal("SEAL-1", row.PartNumber);
         Assert.Equal(1m, row.QuantityOnHand);
         Assert.NotNull(row.LastTransactionAtUtc);
+    }
+
+    [Fact]
+    public async Task Warehouse_transfer_creates_offsetting_transactions_and_updates_location_stock()
+    {
+        await using var context = CreateContext();
+        var (sourceLocation, part) = await SeedLocationAndPartAsync(context);
+        var destinationLocation = new StockLocation { Name = "Overflow Cage", Code = "OVR", Description = "Secondary stock room" };
+        context.StockLocations.Add(destinationLocation);
+        await context.SaveChangesAsync();
+
+        var service = new InventoryService(context);
+        await service.CreateManualAdjustmentAsync(new CreateManualInventoryAdjustmentDto(sourceLocation.Id, part.Id, 5m, "Opening count", null, null));
+
+        var transfer = await service.CreateTransferAsync(new CreateInventoryTransferDto(
+            sourceLocation.Id,
+            destinationLocation.Id,
+            part.Id,
+            2m,
+            "Rebalance stock",
+            "Needed for west aisle",
+            new DateTime(2026, 5, 26, 14, 0, 0, DateTimeKind.Utc)));
+
+        Assert.Equal(2m, transfer.Quantity);
+        Assert.Equal("Main Warehouse", transfer.SourceStockLocationName);
+        Assert.Equal("Overflow Cage", transfer.DestinationStockLocationName);
+        Assert.Equal(5m, (await context.Parts.SingleAsync(x => x.Id == part.Id)).QuantityOnHand);
+
+        var summary = await service.ListStockSummaryAsync(partId: part.Id);
+        Assert.Contains(summary, row => row.StockLocationId == sourceLocation.Id && row.QuantityOnHand == 3m);
+        Assert.Contains(summary, row => row.StockLocationId == destinationLocation.Id && row.QuantityOnHand == 2m);
+
+        var transactions = await service.ListTransactionsAsync(partId: part.Id, limit: 10);
+        Assert.Contains(transactions, row => row.Id == transfer.SourceTransactionId && row.TransactionType == InventoryTransactionType.Transfer && row.QuantityDelta == -2m && row.Notes == "To Overflow Cage (OVR). Needed for west aisle");
+        Assert.Contains(transactions, row => row.Id == transfer.DestinationTransactionId && row.TransactionType == InventoryTransactionType.Transfer && row.QuantityDelta == 2m && row.Notes == "From Main Warehouse (MAIN). Needed for west aisle");
+    }
+
+    [Fact]
+    public async Task Warehouse_transfer_rejects_same_source_and_destination_location()
+    {
+        await using var context = CreateContext();
+        var (location, part) = await SeedLocationAndPartAsync(context);
+        var service = new InventoryService(context);
+        await service.CreateManualAdjustmentAsync(new CreateManualInventoryAdjustmentDto(location.Id, part.Id, 2m, "Opening count", null, null));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateTransferAsync(new CreateInventoryTransferDto(
+            location.Id,
+            location.Id,
+            part.Id,
+            1m,
+            "Rebalance stock",
+            null,
+            null)));
+
+        Assert.Equal("Source and destination stock locations must be different.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Warehouse_transfer_rejects_quantity_above_available_source_stock()
+    {
+        await using var context = CreateContext();
+        var (sourceLocation, part) = await SeedLocationAndPartAsync(context);
+        var destinationLocation = new StockLocation { Name = "Overflow Cage", Code = "OVR", Description = "Secondary stock room" };
+        context.StockLocations.Add(destinationLocation);
+        await context.SaveChangesAsync();
+
+        var service = new InventoryService(context);
+        await service.CreateManualAdjustmentAsync(new CreateManualInventoryAdjustmentDto(sourceLocation.Id, part.Id, 1m, "Opening count", null, null));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateTransferAsync(new CreateInventoryTransferDto(
+            sourceLocation.Id,
+            destinationLocation.Id,
+            part.Id,
+            2m,
+            "Rebalance stock",
+            null,
+            null)));
+
+        Assert.Equal("Transfer quantity exceeds available stock at the source location.", exception.Message);
     }
 
     private static async Task<(StockLocation Location, Part Part)> SeedLocationAndPartAsync(ApplicationDbContext context)
