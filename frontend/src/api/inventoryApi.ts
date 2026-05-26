@@ -56,6 +56,32 @@ export type CreateManualInventoryAdjustmentDto = {
   occurredAtUtc?: string | null
 }
 
+export type CreateInventoryTransferDto = {
+  sourceStockLocationId: string
+  destinationStockLocationId: string
+  partId: string
+  quantity: number
+  reason: string
+  notes?: string | null
+  occurredAtUtc?: string | null
+}
+
+export type InventoryTransferDto = {
+  sourceTransactionId: string
+  destinationTransactionId: string
+  sourceStockLocationId: string
+  sourceStockLocationName: string
+  destinationStockLocationId: string
+  destinationStockLocationName: string
+  partId: string
+  partNumber: string
+  partName: string
+  quantity: number
+  occurredAtUtc: string
+  reason: string
+  notes?: string | null
+}
+
 type StockLocationQuery = {
   offset?: number
   limit?: number
@@ -91,5 +117,6 @@ export const inventoryApi = {
   unarchiveStockLocation: (id: string) => apiRequest<void>(`/api/inventory/stock-locations/${id}/unarchive`, { method: 'POST' }),
   listStockSummary: (query: InventoryQuery = {}) => apiRequest<InventoryStockSummaryDto[]>(`/api/inventory/stock${toQuery(query)}`),
   listTransactions: (query: InventoryQuery = {}) => apiRequest<InventoryTransactionDto[]>(`/api/inventory/transactions${toQuery(query)}`),
-  createManualAdjustment: (payload: CreateManualInventoryAdjustmentDto) => apiRequest<InventoryTransactionDto>('/api/inventory/adjustments', { method: 'POST', body: JSON.stringify(payload) })
+  createManualAdjustment: (payload: CreateManualInventoryAdjustmentDto) => apiRequest<InventoryTransactionDto>('/api/inventory/adjustments', { method: 'POST', body: JSON.stringify(payload) }),
+  createTransfer: (payload: CreateInventoryTransferDto) => apiRequest<InventoryTransferDto>('/api/inventory/transfers', { method: 'POST', body: JSON.stringify(payload) })
 }
