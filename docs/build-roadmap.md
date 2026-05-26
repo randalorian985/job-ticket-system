@@ -9,10 +9,10 @@ Use this roadmap together with:
 - [docs/api-contract.md](./api-contract.md)
 - [docs/development-setup.md](./development-setup.md)
 
-## Current Active Lane
-There is one active lane on `main`: **Advanced Inventory Phase 1**.
+## Current Roadmap Checkpoint
+There is no new implementation lane approved on `main` yet.
 
-This lane is already past the planning-only checkpoint. The backend inventory foundation is merged, purchase-order receipt posting into inventory is merged, and the next work should stay inside the same phase until it is cleanly completed.
+**Advanced Inventory Phase 1 is complete on `main`.** The backend inventory foundation, purchase-order receipt posting, and Manager/Admin inventory UI coverage are all merged. Before any new implementation work begins, the next approved slice must be explicitly chosen and documented here.
 
 ## Baseline Completed Before This Lane
 - Core backend/API workflows.
@@ -24,8 +24,8 @@ This lane is already past the planning-only checkpoint. The backend inventory fo
 - Parts Purchase / Vendor Cost Tracking Phase 2.
 - Purchasing stabilization follow-ups for submit-state discipline, close-transition discipline, and closed-order receiving-action gating.
 
-## Advanced Inventory Phase 1 Status On Main
-### Already implemented
+## Advanced Inventory Phase 1 Completed On Main
+### Implemented
 - Managed stock locations.
 - Inventory transaction persistence.
 - Manager/Admin inventory API surface for stock locations, stock summary, recent transactions, and manual adjustments.
@@ -36,11 +36,12 @@ This lane is already past the planning-only checkpoint. The backend inventory fo
 - Focused backend inventory service tests.
 - Focused frontend inventory workflow tests.
 
-### Still required before this phase is complete
+## Checkpoint Requirements After This Phase
 - Keep README, roadmap, scope, and API docs aligned with implemented inventory behavior.
 - Run the standard backend and frontend validation commands in a checkout-capable environment for future inventory follow-ups.
+- Do not open another implementation PR until the next approved slice is explicitly selected and documented here.
 
-## Scope Rails For The Active Lane
+## Scope Rails For The Current Inventory Baseline
 - Keep the work Manager/Admin-only.
 - Keep controllers thin and business rules in application services.
 - Use DTO APIs only.
@@ -78,5 +79,5 @@ Merge readiness requires:
 - docs aligned to implemented behavior;
 - no deferred-domain drift.
 
-## What Comes Next After This Phase
-Only after Advanced Inventory Phase 1 is complete should the next inventory extension be chosen. Do not branch into truck inventory, transfer workflows, or recommendation work before the warehouse-first foundation and its Manager/Admin workflow land cleanly.
+## What Comes Next
+The next implementation lane must be explicitly selected and documented before new feature work begins. Until that happens, do not branch into truck inventory, transfer workflows, replenishment automation, pick/reserve/issue automation, or recommendation work.
