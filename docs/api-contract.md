@@ -27,10 +27,10 @@
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory foundation (`/api/inventory/*`)
 
-### Inventory UI status
+### Inventory workflow status
 - The inventory backend foundation is implemented on `main`.
 - Purchase-order receiving now creates receipt inventory transactions on `main`.
-- Manager/Admin inventory UI coverage is still pending in Advanced Inventory Phase 1.
+- Manager/Admin inventory UI coverage is implemented on `main`.
 
 ## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.
