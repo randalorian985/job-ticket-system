@@ -18,6 +18,8 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<Vendor> Vendors => Set<Vendor>();
     public DbSet<PartCategory> PartCategories => Set<PartCategory>();
     public DbSet<Part> Parts => Set<Part>();
+    public DbSet<StockLocation> StockLocations => Set<StockLocation>();
+    public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
     public DbSet<JobTicket> JobTickets => Set<JobTicket>();
     public DbSet<JobTicketEmployee> JobTicketEmployees => Set<JobTicketEmployee>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();

@@ -3,6 +3,7 @@ using System.Text.Json;
 using JobTicketSystem.Api.Auth;
 using JobTicketSystem.Api.Pilot;
 using JobTicketSystem.Application.Auth;
+using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Application.MasterData;
@@ -75,6 +76,7 @@ builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IVendorsService, VendorsService>();
 builder.Services.AddScoped<IPartCategoriesService, PartCategoriesService>();
 builder.Services.AddScoped<IPartsService, PartsService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IJobTicketsService, JobTicketsService>();
 builder.Services.AddScoped<IPartsUsageHistoryService, PartsUsageHistoryService>();
 var storageRoot = builder.Configuration.GetValue<string>("FileStorage:RootPath")
