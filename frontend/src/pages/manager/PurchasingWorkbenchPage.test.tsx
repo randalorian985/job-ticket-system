@@ -103,8 +103,8 @@ describe('PurchasingWorkbenchPage', () => {
     await screen.findByText('PO-1001')
 
     const quantityInput = screen.getByRole('spinbutton', { name: 'Quantity ordered' })
-    await user.clear(quantityInput)
-    await user.type(quantityInput, '6')
+    await user.click(quantityInput)
+    await user.keyboard('{Control>}a{/Control}6')
 
     const createButton = screen.getByRole('button', { name: 'Create purchase order' })
     await user.click(createButton)
