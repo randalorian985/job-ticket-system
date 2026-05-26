@@ -6,7 +6,7 @@ Build a Job Ticket Management System that allows teams to submit, assign, track,
 ## Current Control State
 - `main` remains complete through the validated post-Phase-4 baseline and Parts Purchase / Vendor Cost Tracking Phase 2.
 - Advanced Inventory Phase 1 is now implemented on `main` rather than still being an in-progress lane.
-- No newer implementation lane is approved on `main` until the roadmap explicitly selects and documents it.
+- Advanced Inventory Phase 2 is now the next approved lane on `main`.
 - Employee workflow and existing Manager/Admin workflow must continue working while future phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
@@ -27,14 +27,14 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 - Focused backend inventory service regression coverage.
 - Focused frontend inventory workflow regression coverage.
 
-## Post-Phase Checkpoint
-- Keep the source-of-truth docs aligned with implemented inventory behavior.
-- Run the standard backend/frontend validation commands in a checkout-capable environment for future inventory follow-ups.
-- Select and document the next approved implementation lane before starting another feature PR.
+## Approved Next Lane: Advanced Inventory Phase 2
+- Manager/Admin-only warehouse transfer workflow between existing active stock locations.
+- Transfer validation and inventory-history visibility built on the current inventory foundation.
+- Focused backend/frontend tests and source-of-truth docs updates before merge.
 
-### Explicitly out of scope
+### Explicitly out of scope for this lane
 - truck inventory workflows;
-- cross-location inventory transfers;
+- transfer workflows outside the bounded warehouse-to-warehouse Manager/Admin lane;
 - replenishment automation;
 - pick/reserve/issue workflow automation;
 - compatibility recommendations;
@@ -63,7 +63,7 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 ## Deferred Scope Confirmation
 The following remain deferred and must not be partially introduced by this lane:
 - truck inventory workflows;
-- cross-location inventory transfers;
+- transfer workflows outside the bounded warehouse-to-warehouse Manager/Admin lane;
 - replenishment automation;
 - pick/reserve/issue automation;
 - parts compatibility recommendation engine;
