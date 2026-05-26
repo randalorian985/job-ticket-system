@@ -107,7 +107,7 @@ describe('InventoryPage', () => {
     expect(await screen.findByText('Inventory Operations')).toBeInTheDocument()
     expect(screen.getByText(/warehouse-first manager\/admin workflow/i)).toBeInTheDocument()
     expect(screen.getByText(/Deferred: truck inventory, transfers outside this warehouse-to-warehouse lane/i)).toBeInTheDocument()
-    expect(screen.getByText('Warehouse transfer')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Warehouse transfer' })).toBeInTheDocument()
     expect(screen.getByText('To Overflow Cage (WH2). Needed for west aisle')).toBeInTheDocument()
   })
 
