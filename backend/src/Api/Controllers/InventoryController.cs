@@ -98,4 +98,18 @@ public sealed class InventoryController(IInventoryService service) : ControllerB
             return BadRequest(new { error = exception.Message });
         }
     }
+
+    [HttpPost("transfers")]
+    public async Task<ActionResult<InventoryTransferDto>> CreateTransferAsync([FromBody] CreateInventoryTransferDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var created = await service.CreateTransferAsync(request, cancellationToken);
+            return Created($"{Request.Path}/{created.SourceTransactionId}", created);
+        }
+        catch (ValidationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
 }
