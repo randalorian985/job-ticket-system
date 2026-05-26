@@ -7,25 +7,19 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Employee mobile workflow remains implemented.
 - Manager/Admin Phases 1-3D and Phase 4A/4B remain implemented.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented.
-- Advanced Inventory Phase 1 is now implemented on `main`.
-- Advanced Inventory Phase 2 is now the next approved lane on `main`.
+- Advanced Inventory Phase 1 and Phase 2 are now implemented in the current inventory baseline.
 
-## What Main Already Implements
+## What The Current Inventory Baseline Implements
 - `StockLocation` persistence with soft-delete/archive behavior.
-- `InventoryTransaction` persistence with appended enum values only (`Receipt=1`, `ManualAdjustment=2`).
-- Manager/Admin-only `/api/inventory` endpoints for stock locations, stock summary, recent transactions, and manual adjustments.
-- Manager/Admin `/manage/inventory` workflow for stock-location management, stock visibility, recent transactions, and manual adjustments.
+- `InventoryTransaction` persistence with appended enum values only (`Receipt=1`, `ManualAdjustment=2`, `Transfer=3`).
+- Manager/Admin-only `/api/inventory` endpoints for stock locations, stock summary, recent transactions, manual adjustments, and warehouse transfers.
+- Manager/Admin `/manage/inventory` workflow for stock-location management, stock visibility, warehouse transfers, recent transaction review, and manual adjustments.
 - Transaction-history-backed stock visibility for the new inventory endpoints.
 - Manual adjustments that require a reason and recalculate `Part.QuantityOnHand` from persisted inventory history for the affected part.
-- Purchase-order receiving that now posts receipt transactions into the inventory history and updates on-hand quantity.
+- Purchase-order receiving that posts receipt transactions into the inventory history and updates on-hand quantity.
+- Warehouse-to-warehouse transfers between existing active stock locations with available-stock protection and transfer-history visibility.
 
-## Approved Next Lane: Advanced Inventory Phase 2
-- Manager/Admin-only warehouse transfer workflow built on the existing stock-location and inventory-history foundation.
-- Transfer creation and validation between existing active stock locations.
-- Inventory-history and stock-visibility updates that keep transfer activity reviewable.
-- Focused backend and frontend tests plus aligned source-of-truth docs before merge.
-
-## Scope Rails For The Current Inventory Baseline
+## Current Inventory Scope Rails
 - No truck inventory.
 - No transfer workflows outside the bounded warehouse-to-warehouse Manager/Admin lane.
 - No replenishment automation.
