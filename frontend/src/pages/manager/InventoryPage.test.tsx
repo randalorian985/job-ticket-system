@@ -98,7 +98,7 @@ describe('InventoryPage', () => {
     expect(screen.getByText(/warehouse-first manager\/admin workflow/i)).toBeInTheDocument()
     expect(screen.getByText(/Deferred: truck inventory, cross-location transfers/i)).toBeInTheDocument()
     expect(screen.getByText('WH1')).toBeInTheDocument()
-    expect(screen.getByText(/BELT-1 · Drive Belt/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/BELT-1 · Drive Belt/i).length).toBeGreaterThan(0)
     expect(screen.getByText('Cycle count')).toBeInTheDocument()
   })
 
