@@ -13,12 +13,12 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - `StockLocation` persistence with soft-delete/archive behavior.
 - `InventoryTransaction` persistence with appended enum values only (`Receipt=1`, `ManualAdjustment=2`).
 - Manager/Admin-only `/api/inventory` endpoints for stock locations, stock summary, recent transactions, and manual adjustments.
+- Manager/Admin `/manage/inventory` workflow for stock-location management, stock visibility, recent transactions, and manual adjustments.
 - Transaction-history-backed stock visibility for the new inventory endpoints.
 - Manual adjustments that require a reason and recalculate `Part.QuantityOnHand` from persisted inventory history for the affected part.
 - Purchase-order receiving that now posts receipt transactions into the inventory history and updates on-hand quantity.
 
 ## What Still Remains In Advanced Inventory Phase 1
-- Add Manager/Admin UI coverage for the warehouse-first inventory workflow.
 - Keep source-of-truth docs aligned as the inventory lane advances.
 - Run the standard backend and frontend validation commands in a checkout-capable environment for future inventory follow-ups.
 
