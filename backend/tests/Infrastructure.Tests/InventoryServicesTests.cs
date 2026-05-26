@@ -1,3 +1,4 @@
+using FluentValidation;
 using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
