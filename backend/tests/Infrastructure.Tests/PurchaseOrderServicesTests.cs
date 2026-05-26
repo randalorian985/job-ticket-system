@@ -11,7 +11,7 @@ namespace JobTicketSystem.Infrastructure.Tests;
 public sealed class PurchaseOrderServicesTests
 {
     [Fact]
-    public async Task Purchase_order_create_submit_receive_and_invoice_costs_are_tracked_without_inventory_adjustment()
+    public async Task Purchase_order_create_submit_receive_and_invoice_costs_post_inventory_history_and_on_hand()
     {
         await using var context = CreateContext();
         var (vendor, part) = await SeedVendorAndPart(context);
@@ -48,7 +48,8 @@ public sealed class PurchaseOrderServicesTests
         Assert.Equal("INV-77", updated!.VendorInvoiceNumber);
         Assert.Equal(50m, updated.InvoiceSubtotal);
         Assert.Equal(12m, updated.LandedCostTotal);
-        Assert.Equal(5m, (await context.Parts.SingleAsync(x => x.Id == part.Id)).QuantityOnHand);
+        Assert.Equal(9m, (await context.Parts.SingleAsync(x => x.Id == part.Id)).QuantityOnHand);
+        Assert.Single(await context.InventoryTransactions.Where(x => x.PurchaseOrderId == created.Id).ToListAsync());
     }
 
     [Fact]
