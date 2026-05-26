@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../api/httpClient'
 import {
   inventoryApi,
+  type CreateInventoryTransferDto,
   type CreateManualInventoryAdjustmentDto,
   type InventoryStockSummaryDto,
   type InventoryTransactionDto,
@@ -25,11 +26,21 @@ type AdjustmentFormState = {
   notes: string
 }
 
+type TransferFormState = {
+  sourceStockLocationId: string
+  destinationStockLocationId: string
+  partId: string
+  quantity: string
+  reason: string
+  notes: string
+}
+
 const quantityFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 })
 
 const transactionTypeLabels: Record<number, string> = {
   1: 'Receipt',
-  2: 'Manual adjustment'
+  2: 'Manual adjustment',
+  3: 'Warehouse transfer'
 }
 
 function formatDateTime(value?: string | null) {
@@ -65,6 +76,14 @@ export function InventoryPage() {
   const [selectedPartId, setSelectedPartId] = useState('')
   const [locationForm, setLocationForm] = useState<StockLocationFormState>({ name: '', code: '', description: '' })
   const [adjustmentForm, setAdjustmentForm] = useState<AdjustmentFormState>({ stockLocationId: '', partId: '', quantityDelta: '0', reason: '', notes: '' })
+  const [transferForm, setTransferForm] = useState<TransferFormState>({
+    sourceStockLocationId: '',
+    destinationStockLocationId: '',
+    partId: '',
+    quantity: '0',
+    reason: '',
+    notes: ''
+  })
 
   const activeStockLocations = useMemo(() => stockLocations.filter((location) => !location.isArchived), [stockLocations])
   const activeParts = useMemo(() => parts.filter((part) => !part.isArchived), [parts])
@@ -90,11 +109,18 @@ export function InventoryPage() {
     setTransactions(transactionList)
 
     const firstActiveLocation = locationList.find((location) => !location.isArchived)
+    const secondActiveLocation = locationList.find((location) => !location.isArchived && location.id !== firstActiveLocation?.id)
     const firstActivePart = partList.find((part) => !part.isArchived)
 
     setAdjustmentForm((current) => ({
       ...current,
       stockLocationId: current.stockLocationId || firstActiveLocation?.id || '',
+      partId: current.partId || firstActivePart?.id || ''
+    }))
+    setTransferForm((current) => ({
+      ...current,
+      sourceStockLocationId: current.sourceStockLocationId || firstActiveLocation?.id || '',
+      destinationStockLocationId: current.destinationStockLocationId || secondActiveLocation?.id || '',
       partId: current.partId || firstActivePart?.id || ''
     }))
     setError(null)
@@ -162,6 +188,26 @@ export function InventoryPage() {
     }
   }
 
+  const submitTransfer = async (event: FormEvent) => {
+    event.preventDefault()
+    try {
+      const payload: CreateInventoryTransferDto = {
+        sourceStockLocationId: transferForm.sourceStockLocationId,
+        destinationStockLocationId: transferForm.destinationStockLocationId,
+        partId: transferForm.partId,
+        quantity: Number(transferForm.quantity),
+        reason: transferForm.reason,
+        notes: transferForm.notes || null,
+        occurredAtUtc: new Date().toISOString()
+      }
+      await inventoryApi.createTransfer(payload)
+      setTransferForm((current) => ({ ...current, quantity: '0', reason: '', notes: '' }))
+      await refresh()
+    } catch (requestError) {
+      setError(getInventoryErrorMessage(requestError, 'Unable to post warehouse transfer.'))
+    }
+  }
+
   if (isLoading) {
     return <section className="card"><p>Loading inventory workflow…</p></section>
   }
@@ -171,8 +217,8 @@ export function InventoryPage() {
       <article className="card stack">
         <div>
           <h2>Inventory Operations</h2>
-          <p className="muted">Warehouse-first Manager/Admin workflow for stock-location management, stock visibility, recent transaction review, and manual adjustments.</p>
-          <p className="muted">Deferred: truck inventory, cross-location transfers, replenishment automation, pick or reserve automation, compatibility recommendations, and AI/scoring.</p>
+          <p className="muted">Warehouse-first Manager/Admin workflow for stock-location management, stock visibility, warehouse transfers, recent transaction review, and manual adjustments.</p>
+          <p className="muted">Deferred: truck inventory, transfers outside this warehouse-to-warehouse lane, replenishment automation, pick or reserve automation, compatibility recommendations, and AI/scoring.</p>
         </div>
         <Errorable error={error} />
         <form className="row" onSubmit={submitFilters} aria-label="inventory filters">
@@ -251,10 +297,51 @@ export function InventoryPage() {
       </article>
 
       <article className="card stack">
+        <h3>Warehouse transfer</h3>
+        <p className="muted">Move stock between existing active warehouse locations while keeping transfer activity visible in the shared inventory history.</p>
+        <form className="form-grid" onSubmit={submitTransfer}>
+          <label>Source stock location
+            <select aria-label="Transfer source location" required value={transferForm.sourceStockLocationId} onChange={(event) => setTransferForm({ ...transferForm, sourceStockLocationId: event.target.value })}>
+              <option value="">Select source stock location</option>
+              {activeStockLocations.map((location) => (
+                <option key={location.id} value={location.id}>{location.code} · {location.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>Destination stock location
+            <select aria-label="Transfer destination location" required value={transferForm.destinationStockLocationId} onChange={(event) => setTransferForm({ ...transferForm, destinationStockLocationId: event.target.value })}>
+              <option value="">Select destination stock location</option>
+              {activeStockLocations.map((location) => (
+                <option key={location.id} value={location.id}>{location.code} · {location.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>Part
+            <select aria-label="Transfer part" required value={transferForm.partId} onChange={(event) => setTransferForm({ ...transferForm, partId: event.target.value })}>
+              <option value="">Select part</option>
+              {activeParts.map((part) => (
+                <option key={part.id} value={part.id}>{part.partNumber} · {part.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>Quantity
+            <input aria-label="Transfer quantity" required step="0.0001" min="0.0001" type="number" value={transferForm.quantity} onChange={(event) => setTransferForm({ ...transferForm, quantity: event.target.value })} />
+          </label>
+          <label>Reason
+            <input aria-label="Transfer reason" required value={transferForm.reason} onChange={(event) => setTransferForm({ ...transferForm, reason: event.target.value })} />
+          </label>
+          <label>Notes
+            <textarea aria-label="Transfer notes" value={transferForm.notes} onChange={(event) => setTransferForm({ ...transferForm, notes: event.target.value })} />
+          </label>
+          <button type="submit">Post transfer</button>
+        </form>
+      </article>
+
+      <article className="card stack">
         <h3>Recent transactions</h3>
         <div className="table-wrapper">
           <table>
-            <thead><tr><th>When</th><th>Location</th><th>Part</th><th>Type</th><th>Quantity</th><th>Reason</th><th>Purchase order</th></tr></thead>
+            <thead><tr><th>When</th><th>Location</th><th>Part</th><th>Type</th><th>Quantity</th><th>Reason</th><th>Notes</th><th>Purchase order</th></tr></thead>
             <tbody>
               {transactions.map((transaction) => (
                 <tr key={transaction.id}>
@@ -264,6 +351,7 @@ export function InventoryPage() {
                   <td>{transactionTypeLabels[transaction.transactionType] ?? `Type ${transaction.transactionType}`}</td>
                   <td>{quantityFormatter.format(transaction.quantityDelta)}</td>
                   <td>{transaction.reason}</td>
+                  <td>{transaction.notes ?? '—'}</td>
                   <td>{transaction.purchaseOrderNumber ?? '—'}</td>
                 </tr>
               ))}
