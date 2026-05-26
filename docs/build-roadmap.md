@@ -10,9 +10,9 @@ Use this roadmap together with:
 - [docs/development-setup.md](./development-setup.md)
 
 ## Current Roadmap Checkpoint
-There is no new implementation lane approved on `main` yet.
+There is one approved next implementation lane on `main`: **Advanced Inventory Phase 2**.
 
-**Advanced Inventory Phase 1 is complete on `main`.** The backend inventory foundation, purchase-order receipt posting, and Manager/Admin inventory UI coverage are all merged. Before any new implementation work begins, the next approved slice must be explicitly chosen and documented here.
+**Advanced Inventory Phase 1 is complete on `main`.** The backend inventory foundation, purchase-order receipt posting, and Manager/Admin inventory UI coverage are all merged. The next approved slice should stay bounded to a Manager/Admin warehouse transfer workflow built on the existing stock-location and inventory-history foundation.
 
 ## Baseline Completed Before This Lane
 - Core backend/API workflows.
@@ -36,10 +36,21 @@ There is no new implementation lane approved on `main` yet.
 - Focused backend inventory service tests.
 - Focused frontend inventory workflow tests.
 
-## Checkpoint Requirements After This Phase
-- Keep README, roadmap, scope, and API docs aligned with implemented inventory behavior.
-- Run the standard backend and frontend validation commands in a checkout-capable environment for future inventory follow-ups.
-- Do not open another implementation PR until the next approved slice is explicitly selected and documented here.
+## Advanced Inventory Phase 2 Approved Next
+### Planned scope
+- Manager/Admin-only warehouse transfer workflow between existing active stock locations.
+- Transfer validation for source and destination selection, positive quantity, available-stock protection, and same-location rejection.
+- Inventory-history visibility for transfer activity within the existing stock and transaction views.
+- Focused backend and frontend regression coverage.
+- Source-of-truth docs aligned to the implemented behavior before merge.
+
+### Explicitly not included in this lane
+- truck inventory;
+- transfer workflows outside the bounded warehouse-to-warehouse Manager/Admin lane;
+- replenishment automation;
+- pick/reserve/issue automation;
+- compatibility recommendations;
+- AI/scoring.
 
 ## Scope Rails For The Current Inventory Baseline
 - Keep the work Manager/Admin-only.
@@ -52,9 +63,8 @@ There is no new implementation lane approved on `main` yet.
 - Do not edit old migrations.
 - Keep one active PR at a time.
 
-## Explicitly Deferred
+## Explicitly Deferred Beyond This Lane
 - truck inventory;
-- cross-location transfers;
 - replenishment automation;
 - pick/reserve/issue automation;
 - compatibility recommendations;
@@ -80,4 +90,4 @@ Merge readiness requires:
 - no deferred-domain drift.
 
 ## What Comes Next
-The next implementation lane must be explicitly selected and documented before new feature work begins. Until that happens, do not branch into truck inventory, transfer workflows, replenishment automation, pick/reserve/issue automation, or recommendation work.
+Open exactly one PR from latest `main` for Advanced Inventory Phase 2. Do not branch into truck inventory, replenishment automation, pick/reserve/issue automation, or recommendation work before the bounded warehouse transfer workflow is merged and the roadmap is updated again.
