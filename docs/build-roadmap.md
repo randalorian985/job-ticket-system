@@ -190,3 +190,6 @@ Concise readiness statement:
 - Manager/Admin dashboard now shows a small operational job summary from existing job list data: open, assigned, in-progress, waiting-on-parts, completed/review-ready, and invoice-ready counts.
 - Manager/Admin job detail now presents clearer job review sections for labor/work, time, parts usage, files/photos, status/priority, and browser print support with print-only CSS behavior.
 - No backend contracts, authorization policies, enum numeric values, migrations, production seeding, server-side exports, or deferred product domains were added in this phase.
+
+## Inventory Phase 1 implemented
+Warehouse-first managed stock locations, PO receipt inventory transactions, manual manager/admin adjustments, and inventory history-backed on-hand visibility are now implemented.

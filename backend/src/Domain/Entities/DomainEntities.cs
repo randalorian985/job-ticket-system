@@ -138,8 +138,32 @@ public sealed class Part : SoftDeletableEntity
     public decimal UnitPrice { get; set; }
     public decimal QuantityOnHand { get; set; }
     public decimal ReorderThreshold { get; set; }
+    public ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
     public ICollection<JobTicketPart> JobTicketParts { get; set; } = new List<JobTicketPart>();
     public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = new List<PurchaseOrderLine>();
+}
+
+public sealed class InventoryLocation : SoftDeletableEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsDefault { get; set; }
+    public ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
+}
+
+public sealed class InventoryTransaction : AuditableEntity
+{
+    public Guid PartId { get; set; }
+    public Part Part { get; set; } = null!;
+    public Guid InventoryLocationId { get; set; }
+    public InventoryLocation InventoryLocation { get; set; } = null!;
+    public string TransactionType { get; set; } = string.Empty;
+    public decimal QuantityDelta { get; set; }
+    public decimal QuantityAfter { get; set; }
+    public Guid? PurchaseOrderId { get; set; }
+    public PurchaseOrder? PurchaseOrder { get; set; }
+    public string Reason { get; set; } = string.Empty;
 }
 
 public sealed class PurchaseOrder : SoftDeletableEntity

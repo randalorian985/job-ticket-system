@@ -198,3 +198,6 @@ Still out of scope:
 - replenishment automation;
 - recommendation logic;
 - AI/scoring.
+
+## Inventory Phase 1 implemented
+Warehouse-first managed stock locations, PO receipt inventory transactions, manual manager/admin adjustments, and inventory history-backed on-hand visibility are now implemented.

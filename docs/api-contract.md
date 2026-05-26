@@ -314,3 +314,6 @@ Updates purchase-order number, expected date, vendor invoice number/date/status,
 Enums are appended only:
 - `PurchaseOrderStatus`: `1=Draft`, `2=Submitted`, `3=PartiallyReceived`, `4=Received`, `5=Invoiced`, `6=Closed`, `7=Cancelled`.
 - `VendorInvoiceStatus`: `1=Pending`, `2=Matched`, `3=Approved`, `4=Paid`, `5=Void`.
+
+## Inventory Phase 1 implemented
+Warehouse-first managed stock locations, PO receipt inventory transactions, manual manager/admin adjustments, and inventory history-backed on-hand visibility are now implemented.

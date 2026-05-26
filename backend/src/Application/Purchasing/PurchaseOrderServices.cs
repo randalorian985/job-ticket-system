@@ -223,8 +223,34 @@ public sealed class PurchaseOrdersService(ApplicationDbContext dbContext) : IPur
             var receivedQuantity = ValidateNonNegative(received.ReceivedQuantity, nameof(received.ReceivedQuantity));
             if (receivedQuantity < line.QuantityReceived) throw new ValidationException("Received quantity cannot decrease once inventory is received.");
             if (receivedQuantity > line.QuantityReceived) receivedAnyQuantity = true;
+            var delta = receivedQuantity - line.QuantityReceived;
             line.QuantityReceived = receivedQuantity;
             if (line.QuantityReceived > line.QuantityOrdered) throw new ValidationException("Received quantity cannot exceed ordered quantity.");
+            if (delta > 0)
+            {
+                var defaultLocation = await dbContext.InventoryLocations.OrderByDescending(x => x.IsDefault).ThenBy(x => x.Code).FirstOrDefaultAsync(cancellationToken);
+                if (defaultLocation is null)
+                {
+                    defaultLocation = new InventoryLocation { Name = "Main Warehouse", Code = "WH-MAIN", IsDefault = true };
+                    dbContext.InventoryLocations.Add(defaultLocation);
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                var currentOnHand = await dbContext.InventoryTransactions
+                    .Where(x => x.PartId == line.PartId && x.InventoryLocationId == defaultLocation.Id)
+                    .SumAsync(x => x.QuantityDelta, cancellationToken);
+                dbContext.InventoryTransactions.Add(new InventoryTransaction
+                {
+                    PartId = line.PartId,
+                    InventoryLocationId = defaultLocation.Id,
+                    QuantityDelta = delta,
+                    QuantityAfter = currentOnHand + delta,
+                    PurchaseOrderId = entity.Id,
+                    TransactionType = "PurchaseOrderReceipt",
+                    Reason = $"PO {entity.PurchaseOrderNumber} receipt"
+                });
+                var part = await dbContext.Parts.SingleAsync(x => x.Id == line.PartId, cancellationToken);
+                part.QuantityOnHand += delta;
+            }
         }
 
         if (!receivedAnyQuantity) throw new ValidationException("At least one received quantity must increase.");

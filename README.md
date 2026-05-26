@@ -112,3 +112,6 @@ This slice remains cost-record focused. It intentionally does not add advanced i
 
 ## Advanced Inventory Next Slice
 The next approved slice is **Advanced Inventory Phase 1**, a warehouse-first Manager/Admin workflow over the merged purchasing baseline. It is scoped to managed stock locations, receiving-posted inventory movements, manual stock adjustments, and inventory-history-backed on-hand visibility. It intentionally does not yet add truck inventory, inter-location transfers, replenishment automation, picking/reservations, compatibility recommendations, or AI/scoring.
+
+## Inventory Phase 1 implemented
+Warehouse-first managed stock locations, PO receipt inventory transactions, manual manager/admin adjustments, and inventory history-backed on-hand visibility are now implemented.
