@@ -12,6 +12,8 @@ public sealed record UpdateStockLocationDto(string Name, string Code, string? De
 public sealed record InventoryStockSummaryDto(Guid StockLocationId, string StockLocationName, Guid PartId, string PartNumber, string PartName, decimal QuantityOnHand, DateTime? LastTransactionAtUtc);
 public sealed record InventoryTransactionDto(Guid Id, Guid StockLocationId, string StockLocationName, Guid PartId, string PartNumber, string PartName, InventoryTransactionType TransactionType, decimal QuantityDelta, DateTime OccurredAtUtc, string Reason, string? Notes, string? PurchaseOrderNumber);
 public sealed record CreateManualInventoryAdjustmentDto(Guid StockLocationId, Guid PartId, decimal QuantityDelta, string Reason, string? Notes, DateTime? OccurredAtUtc);
+public sealed record CreateInventoryTransferDto(Guid SourceStockLocationId, Guid DestinationStockLocationId, Guid PartId, decimal Quantity, string Reason, string? Notes, DateTime? OccurredAtUtc);
+public sealed record InventoryTransferDto(Guid SourceTransactionId, Guid DestinationTransactionId, Guid SourceStockLocationId, string SourceStockLocationName, Guid DestinationStockLocationId, string DestinationStockLocationName, Guid PartId, string PartNumber, string PartName, decimal Quantity, DateTime OccurredAtUtc, string Reason, string? Notes);
 
 public interface IInventoryService
 {
@@ -24,6 +26,7 @@ public interface IInventoryService
     Task<IReadOnlyList<InventoryStockSummaryDto>> ListStockSummaryAsync(Guid? stockLocationId = null, Guid? partId = null, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<InventoryTransactionDto>> ListTransactionsAsync(Guid? stockLocationId = null, Guid? partId = null, int limit = 100, CancellationToken cancellationToken = default);
     Task<InventoryTransactionDto> CreateManualAdjustmentAsync(CreateManualInventoryAdjustmentDto request, CancellationToken cancellationToken = default);
+    Task<InventoryTransferDto> CreateTransferAsync(CreateInventoryTransferDto request, CancellationToken cancellationToken = default);
 }
 
 public sealed class InventoryService(ApplicationDbContext dbContext) : IInventoryService
@@ -243,6 +246,90 @@ public sealed class InventoryService(ApplicationDbContext dbContext) : IInventor
             .SingleAsync(cancellationToken);
     }
 
+    public async Task<InventoryTransferDto> CreateTransferAsync(CreateInventoryTransferDto request, CancellationToken cancellationToken = default)
+    {
+        if (request.SourceStockLocationId == Guid.Empty)
+        {
+            throw new ValidationException("SourceStockLocationId is required.");
+        }
+
+        if (request.DestinationStockLocationId == Guid.Empty)
+        {
+            throw new ValidationException("DestinationStockLocationId is required.");
+        }
+
+        if (request.SourceStockLocationId == request.DestinationStockLocationId)
+        {
+            throw new ValidationException("Source and destination stock locations must be different.");
+        }
+
+        if (request.PartId == Guid.Empty)
+        {
+            throw new ValidationException("PartId is required.");
+        }
+
+        if (request.Quantity <= 0)
+        {
+            throw new ValidationException("Quantity must be greater than zero.");
+        }
+
+        ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
+
+        var sourceLocation = await GetActiveStockLocationAsync(request.SourceStockLocationId, "SourceStockLocationId", cancellationToken);
+        var destinationLocation = await GetActiveStockLocationAsync(request.DestinationStockLocationId, "DestinationStockLocationId", cancellationToken);
+        var part = await GetActivePartAsync(request.PartId, cancellationToken);
+        var availableQuantity = await GetStockQuantityAtLocationAsync(sourceLocation.Id, part.Id, cancellationToken);
+
+        if (availableQuantity < request.Quantity)
+        {
+            throw new ValidationException("Transfer quantity exceeds available stock at the source location.");
+        }
+
+        var occurredAtUtc = ToUtcOrNow(request.OccurredAtUtc);
+        var reason = request.Reason.Trim();
+        var userNotes = ValidationHelpers.NullIfWhitespace(request.Notes);
+
+        var sourceTransaction = new InventoryTransaction
+        {
+            StockLocationId = sourceLocation.Id,
+            PartId = part.Id,
+            TransactionType = InventoryTransactionType.Transfer,
+            QuantityDelta = -request.Quantity,
+            Reason = reason,
+            Notes = BuildTransferNotes("To", destinationLocation, userNotes),
+            OccurredAtUtc = occurredAtUtc
+        };
+
+        var destinationTransaction = new InventoryTransaction
+        {
+            StockLocationId = destinationLocation.Id,
+            PartId = part.Id,
+            TransactionType = InventoryTransactionType.Transfer,
+            QuantityDelta = request.Quantity,
+            Reason = reason,
+            Notes = BuildTransferNotes("From", sourceLocation, userNotes),
+            OccurredAtUtc = occurredAtUtc
+        };
+
+        dbContext.InventoryTransactions.AddRange(sourceTransaction, destinationTransaction);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return new InventoryTransferDto(
+            sourceTransaction.Id,
+            destinationTransaction.Id,
+            sourceLocation.Id,
+            sourceLocation.Name,
+            destinationLocation.Id,
+            destinationLocation.Name,
+            part.Id,
+            part.PartNumber,
+            part.Name,
+            request.Quantity,
+            occurredAtUtc,
+            reason,
+            userNotes);
+    }
+
     private async Task EnsureStockLocationCodeUniqueAsync(string code, Guid? currentId, CancellationToken cancellationToken)
     {
         var exists = await dbContext.StockLocations.IgnoreQueryFilters().AnyAsync(
@@ -273,6 +360,34 @@ public sealed class InventoryService(ApplicationDbContext dbContext) : IInventor
         }
     }
 
+    private async Task<StockLocation> GetActiveStockLocationAsync(Guid id, string propertyName, CancellationToken cancellationToken)
+    {
+        var entity = await dbContext.StockLocations.SingleOrDefaultAsync(x => x.Id == id && x.IsActive, cancellationToken);
+        if (entity is null)
+        {
+            throw new ValidationException($"{propertyName} does not reference an active stock location.");
+        }
+
+        return entity;
+    }
+
+    private async Task<Part> GetActivePartAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await dbContext.Parts.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null)
+        {
+            throw new ValidationException("PartId does not reference an active part.");
+        }
+
+        return entity;
+    }
+
+    private async Task<decimal> GetStockQuantityAtLocationAsync(Guid stockLocationId, Guid partId, CancellationToken cancellationToken)
+        => (await dbContext.InventoryTransactions
+            .Where(x => x.StockLocationId == stockLocationId && x.PartId == partId)
+            .Select(x => (decimal?)x.QuantityDelta)
+            .SumAsync(cancellationToken)) ?? 0m;
+
     private async Task RecalculatePartQuantityOnHandAsync(Guid partId, CancellationToken cancellationToken)
     {
         var part = await dbContext.Parts.SingleAsync(x => x.Id == partId, cancellationToken);
@@ -283,6 +398,12 @@ public sealed class InventoryService(ApplicationDbContext dbContext) : IInventor
 
     private static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();
     private static DateTime ToUtcOrNow(DateTime? value) => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : DateTime.UtcNow;
+
+    private static string BuildTransferNotes(string direction, StockLocation relatedLocation, string? userNotes)
+    {
+        var transferNote = $"{direction} {relatedLocation.Name} ({relatedLocation.Code}).";
+        return string.IsNullOrWhiteSpace(userNotes) ? transferNote : $"{transferNote} {userNotes}";
+    }
 
     private static readonly System.Linq.Expressions.Expression<Func<StockLocation, StockLocationDto>> MapStockLocation = x =>
         new StockLocationDto(x.Id, x.Name, x.Code, x.Description, x.IsActive, x.IsDeleted);
