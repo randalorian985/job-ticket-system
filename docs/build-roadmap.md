@@ -39,11 +39,12 @@ Do not steer the project toward a general ERP build-out.
 - Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, and purchase-order receipt posting.
 
 ## Approved Next Lane
-Open exactly one PR from latest `main` for a job-ticket-first workflow follow-up.
+Open exactly one PR from latest `main` for manager job-ticket information capture and review polish.
 
 ### Planned scope for the next lane
 - strengthen core job-ticket workflows rather than extending purchasing or inventory;
-- focus on assignment clarity, job information completeness, parts-on-ticket workflow quality, time-tracking usability, or closely related stabilization;
+- focus this slice on richer manager capture and review of job type, scheduling, billing contact context, purchase-order references, and operational notes;
+- keep the work inside the existing manager create/edit/detail workflow rather than introducing new domains;
 - include focused tests and source-of-truth docs updates before merge.
 
 ### Explicitly not included in the next lane
