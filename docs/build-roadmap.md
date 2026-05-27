@@ -10,11 +10,24 @@ Use this roadmap together with:
 - [docs/development-setup.md](./development-setup.md)
 
 ## Current Roadmap Checkpoint
-There is one approved next implementation lane on `main`: **Advanced Inventory Phase 2**.
+The project has been explicitly re-centered on the original job-ticket system scope.
 
-**Advanced Inventory Phase 1 is complete on `main`.** The backend inventory foundation, purchase-order receipt posting, and Manager/Admin inventory UI coverage are all merged. The next approved slice should stay bounded to a Manager/Admin warehouse transfer workflow built on the existing stock-location and inventory-history foundation.
+There is no approved inventory-expansion lane on `main` at this time.
 
-## Baseline Completed Before This Lane
+Supporting purchasing and inventory work already merged on `main` remains part of the implemented baseline, but it should not drive the next roadmap phase unless the scope is deliberately expanded again later.
+
+## Product Boundary We Are Protecting
+Keep the platform focused on:
+- job ticket creation and editing;
+- mechanic assignment workflows;
+- job information capture and status flow;
+- parts added and tracked on tickets;
+- time tracking and related reporting;
+- Manager/Admin workflows that directly support the above.
+
+Do not steer the project toward a general ERP build-out.
+
+## Implemented Baseline That Remains On Main
 - Core backend/API workflows.
 - Employee mobile workflow.
 - Manager/Admin Phases 1-3D.
@@ -23,37 +36,27 @@ There is one approved next implementation lane on `main`: **Advanced Inventory P
 - Parts Purchase / Vendor Cost Tracking Phase 1.
 - Parts Purchase / Vendor Cost Tracking Phase 2.
 - Purchasing stabilization follow-ups for submit-state discipline, close-transition discipline, and closed-order receiving-action gating.
+- Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, and purchase-order receipt posting.
 
-## Advanced Inventory Phase 1 Completed On Main
-### Implemented
-- Managed stock locations.
-- Inventory transaction persistence.
-- Manager/Admin inventory API surface for stock locations, stock summary, recent transactions, and manual adjustments.
-- Manager/Admin UI coverage for the warehouse-first inventory workflow.
-- Transaction-history-backed stock visibility for the new inventory endpoints.
-- Purchase-order receipt posting into inventory transactions and on-hand quantity updates.
-- One inventory migration.
-- Focused backend inventory service tests.
-- Focused frontend inventory workflow tests.
+## Approved Next Lane
+Open exactly one PR from latest `main` for a job-ticket-first workflow follow-up.
 
-## Advanced Inventory Phase 2 Approved Next
-### Planned scope
-- Manager/Admin-only warehouse transfer workflow between existing active stock locations.
-- Transfer validation for source and destination selection, positive quantity, available-stock protection, and same-location rejection.
-- Inventory-history visibility for transfer activity within the existing stock and transaction views.
-- Focused backend and frontend regression coverage.
-- Source-of-truth docs aligned to the implemented behavior before merge.
+### Planned scope for the next lane
+- strengthen core job-ticket workflows rather than extending purchasing or inventory;
+- focus on assignment clarity, job information completeness, parts-on-ticket workflow quality, time-tracking usability, or closely related stabilization;
+- include focused tests and source-of-truth docs updates before merge.
 
-### Explicitly not included in this lane
+### Explicitly not included in the next lane
+- warehouse transfer workflows;
 - truck inventory;
-- transfer workflows outside the bounded warehouse-to-warehouse Manager/Admin lane;
 - replenishment automation;
 - pick/reserve/issue automation;
 - compatibility recommendations;
-- AI/scoring.
+- AI/scoring;
+- broad ERP-style operational expansion.
 
-## Scope Rails For The Current Inventory Baseline
-- Keep the work Manager/Admin-only.
+## Scope Rails
+- Keep the work job-ticket-first.
 - Keep controllers thin and business rules in application services.
 - Use DTO APIs only.
 - Preserve soft-delete/archive behavior.
@@ -62,13 +65,6 @@ There is one approved next implementation lane on `main`: **Advanced Inventory P
 - Do not renumber enums.
 - Do not edit old migrations.
 - Keep one active PR at a time.
-
-## Explicitly Deferred Beyond This Lane
-- truck inventory;
-- replenishment automation;
-- pick/reserve/issue automation;
-- compatibility recommendations;
-- AI/scoring.
 
 ## Validation Requirements Before Merge
 Run in a checkout-capable environment:
@@ -87,7 +83,12 @@ Merge readiness requires:
 - passing frontend build;
 - passing backend and frontend tests, or a clearly documented environment limitation;
 - docs aligned to implemented behavior;
-- no deferred-domain drift.
+- no scope drift back into deferred domains.
 
-## What Comes Next
-Open exactly one PR from latest `main` for Advanced Inventory Phase 2. Do not branch into truck inventory, replenishment automation, pick/reserve/issue automation, or recommendation work before the bounded warehouse transfer workflow is merged and the roadmap is updated again.
+## Deferred Until Explicitly Re-Approved
+- new inventory expansion beyond the already-merged support baseline;
+- truck inventory;
+- replenishment automation;
+- pick/reserve/issue automation;
+- compatibility recommendations;
+- AI/scoring.
