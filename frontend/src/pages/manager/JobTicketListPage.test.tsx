@@ -9,7 +9,8 @@ import { JobTicketListPage } from './JobTicketListPage'
 
 vi.mock('../../api/jobTicketsApi', () => ({
   jobTicketsApi: {
-    listAll: vi.fn()
+    listAll: vi.fn(),
+    listAssignments: vi.fn()
   }
 }))
 
@@ -32,6 +33,17 @@ describe('Manager list pages', () => {
       { id: 's-1', locationName: 'HQ' },
       { id: 's-2', locationName: 'Field Shop' }
     ] as any)
+    vi.mocked(jobTicketsApi.listAssignments).mockImplementation(async (jobTicketId: string) => {
+      if (jobTicketId === 'job-1') {
+        return [{ employeeId: 'e-1', assignedAtUtc: '2026-05-12T08:00:00Z', isLead: true }] as any
+      }
+
+      if (jobTicketId === 'job-2') {
+        return [{ employeeId: 'e-2', assignedAtUtc: '2026-05-12T08:30:00Z', isLead: false }] as any
+      }
+
+      return [] as any
+    })
   })
 
   const renderPage = () => {
@@ -42,7 +54,7 @@ describe('Manager list pages', () => {
     )
   }
 
-  it('renders manager job ticket list with loading state and readable labels', async () => {
+  it('renders manager job ticket list with loading state, readable labels, and dispatch ownership cues', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix unit', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' }
     ] as any)
@@ -53,9 +65,10 @@ describe('Manager list pages', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
+    expect(screen.getByText('Dispatch 1 assigned · Lead e-1')).toBeInTheDocument()
   })
 
-  it('shows queue summary counts for active, urgent, waiting, and unscheduled work', async () => {
+  it('shows queue summary counts for active, urgent, waiting, unscheduled, unassigned, and needs-lead work', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
@@ -68,6 +81,8 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Urgent active')).toBeInTheDocument()
     expect(screen.getByText('Waiting')).toBeInTheDocument()
     expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
+    expect(screen.getByText('Unassigned active')).toBeInTheDocument()
+    expect(screen.getByText('Needs lead')).toBeInTheDocument()
   })
 
   it('filters by search text, status, priority, and customer, then resets filters', async () => {
