@@ -31,6 +31,7 @@
 - Manager/Admin create and update flows already support operational fields such as `jobType`, `purchaseOrderNumber`, `billingContactName`, `billingContactPhone`, `billingContactEmail`, `internalNotes`, `customerFacingNotes`, `requestedAtUtc`, `scheduledStartAtUtc`, and `dueAtUtc`.
 - `equipmentId` remains optional, but when supplied it must belong to the selected `serviceLocationId`.
 - Manager/Admin list and detail views use the existing assignment endpoints to surface assigned-employee counts, lead-tech visibility, and dispatch-readiness cues without changing the API surface.
+- Manager/Admin detail/edit surfaces now provide inline status transition review, disable no-op status submissions, surface API validation messages, and keep archive confirmation explicit as a soft-delete/archive workflow rather than hard delete.
 - Job-ticket-first UI work should keep those existing fields visible and editable rather than introducing a separate workflow for the same context.
 
 ## Current Scope Interpretation
