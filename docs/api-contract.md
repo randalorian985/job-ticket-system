@@ -27,11 +27,11 @@
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory foundation (`/api/inventory/*`)
 
-### Inventory workflow status
-- The inventory backend foundation is implemented on `main`.
-- Purchase-order receiving now creates receipt inventory transactions on `main`.
-- Manager/Admin inventory UI coverage is implemented on `main`.
-- No transfer workflow is implemented on `main` yet.
+## Current Scope Interpretation
+- The product is being steered as a job-ticket-first platform.
+- Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
+- No transfer endpoints are implemented on `main`.
+- No inventory-expansion API lane is currently approved.
 
 ## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.
@@ -102,14 +102,18 @@ All inventory endpoints require the existing `ManagerOrAdmin` authorization poli
 - A line's recorded received quantity cannot decrease once saved.
 - `receivedQuantity` cannot exceed `quantityOrdered`.
 
-## Approved Next Lane (Not Yet Implemented On Main)
-- Advanced Inventory Phase 2 is approved as a Manager/Admin-only warehouse transfer workflow between existing stock locations.
-- No transfer endpoints are implemented on `main` yet; this contract should only expand when that lane lands.
-- Truck inventory, replenishment, pick/reserve/issue automation, compatibility recommendations, and AI/scoring remain deferred.
+## API Growth Boundary
+Until scope is explicitly expanded again, API growth should stay centered on:
+- job-ticket workflows;
+- time-entry workflows;
+- parts-on-ticket workflows;
+- Manager/Admin behavior that directly supports job-ticket operations.
+
+Do not expand the API surface into transfer workflows, truck inventory, replenishment automation, pick/reserve/issue automation, compatibility recommendations, or AI/scoring under the current roadmap.
 
 ## Existing Platform Contracts That Remain In Force
 - Manager/Admin `/manage/purchasing` still uses the dedicated purchase-order workflow and the reorder-focused workbench.
 - Parts usage history remains a visibility-only workflow and must not be interpreted as a compatibility recommendation engine.
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
-- Deferred domains remain deferred beyond the approved next transfer lane: truck inventory, replenishment, compatibility recommendations, and AI/scoring.
+- Deferred domains remain deferred: inventory expansion beyond the current support baseline, truck inventory, replenishment, compatibility recommendations, and AI/scoring.

@@ -2,37 +2,39 @@
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.
 
+## Product Direction
+The project is centered on the original job-ticket workflow:
+- assign mechanics to tickets;
+- capture job information;
+- add parts to tickets;
+- track time;
+- support Manager/Admin coordination, reporting, and user management around that workflow.
+
 ## Current Project State
 - Core backend/API workflows remain implemented and validated.
 - Employee mobile workflow remains implemented.
 - Manager/Admin Phases 1-3D and Phase 4A/4B remain implemented.
-- Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented.
-- Advanced Inventory Phase 1 is now implemented on `main`.
-- Advanced Inventory Phase 2 is now the next approved lane on `main`.
+- Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
+- Limited inventory foundation work is already present on `main` as supporting infrastructure.
+- No further inventory expansion is currently approved as the active product lane.
+- The roadmap is re-centered on job-ticket-first follow-up work.
 
 ## What Main Already Implements
-- `StockLocation` persistence with soft-delete/archive behavior.
-- `InventoryTransaction` persistence with appended enum values only (`Receipt=1`, `ManualAdjustment=2`).
-- Manager/Admin-only `/api/inventory` endpoints for stock locations, stock summary, recent transactions, and manual adjustments.
-- Manager/Admin `/manage/inventory` workflow for stock-location management, stock visibility, recent transactions, and manual adjustments.
-- Transaction-history-backed stock visibility for the new inventory endpoints.
-- Manual adjustments that require a reason and recalculate `Part.QuantityOnHand` from persisted inventory history for the affected part.
-- Purchase-order receiving that now posts receipt transactions into the inventory history and updates on-hand quantity.
+- Job-ticket creation, assignment, execution, reporting, and related Manager/Admin workflows.
+- Employee mobile job workflow with GPS time tracking, work notes, part usage, and files/photos.
+- Master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
+- Admin-only user management at `/manage/users`.
+- Parts usage history visibility with cautious, non-recommendation wording.
+- Purchase-order and vendor-cost workflows already merged on `main`.
+- Supporting inventory foundation already merged on `main` for stock locations, inventory history, stock visibility, and manual adjustments.
 
-## Approved Next Lane: Advanced Inventory Phase 2
-- Manager/Admin-only warehouse transfer workflow built on the existing stock-location and inventory-history foundation.
-- Transfer creation and validation between existing active stock locations.
-- Inventory-history and stock-visibility updates that keep transfer activity reviewable.
-- Focused backend and frontend tests plus aligned source-of-truth docs before merge.
+## Scope Boundary
+Supporting purchasing and inventory capabilities already exist on `main`, but they are not the product's primary growth path.
 
-## Scope Rails For The Current Inventory Baseline
-- No truck inventory.
-- No transfer workflows outside the bounded warehouse-to-warehouse Manager/Admin lane.
-- No replenishment automation.
-- No pick/reserve/issue automation.
-- No compatibility recommendation engine.
-- No AI/scoring-based recommendation logic.
-- No auth weakening, enum renumbering, or historical migration edits.
+Current roadmap discipline:
+- keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, and related Manager/Admin usability;
+- do not treat the project as a general ERP build-out;
+- do not resume inventory expansion without an explicit future scope decision.
 
 ## Project Navigation
 - Project control center: [docs/build-roadmap.md](docs/build-roadmap.md)
