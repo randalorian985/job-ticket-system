@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../api/filesApi'
@@ -43,7 +43,7 @@ describe('JobTicketDetailPage', () => {
       internalNotes: 'Manager-only note',
       customerFacingNotes: 'Call before arrival.'
     } as any)
-    vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([{ employeeId: 'e1', isLead: false }] as any)
+    vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([{ employeeId: 'e1', assignedAtUtc: '2026-04-01T08:15:00Z', isLead: true }] as any)
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([{ id: 'w1', performedAtUtc: '2026-04-01T12:00:00Z', notes: 'Replaced belt' }] as any)
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 1, notes: 'Pilot stock' }] as any)
     vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', laborHours: 1.5, billableHours: 1, approvalStatus: 0, workSummary: 'Checked motor' }] as any)
@@ -74,6 +74,8 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('PO-44')).toBeInTheDocument()
     expect(screen.getByText('Casey Customer')).toBeInTheDocument()
     expect(screen.getByText('casey@example.com')).toBeInTheDocument()
+    expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
+    expect(screen.getAllByText('e1').length).toBeGreaterThan(0)
     expect(screen.getByText('Manager-only note')).toBeInTheDocument()
     expect(screen.getByText('Call before arrival.')).toBeInTheDocument()
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
@@ -84,7 +86,41 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('photo.jpg')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('assignment employee'), { target: { value: 'e2' } })
     fireEvent.click(screen.getByText('Assign Employee'))
-    expect(jobTicketsApi.addAssignment).toHaveBeenCalled()
+    await waitFor(() => expect(jobTicketsApi.addAssignment).toHaveBeenCalledWith('j1', { employeeId: 'e2', isLead: false }))
+  })
+
+  it('warns when dispatch coverage is incomplete', async () => {
+    vi.mocked(jobTicketsApi.get).mockResolvedValue({
+      id: 'j1',
+      ticketNumber: 'JT-1',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      billingPartyCustomerId: 'c1',
+      title: 'Issue',
+      priority: 2,
+      status: 2,
+      scheduledStartAtUtc: null
+    } as any)
+    vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('Needs attention')).toBeInTheDocument()
+    expect(screen.getByText('No employees are assigned.')).toBeInTheDocument()
+    expect(screen.getByText('No lead tech is marked.')).toBeInTheDocument()
+    expect(screen.getByText('No scheduled start is set.')).toBeInTheDocument()
+  })
+
+  it('prevents adding a second lead without clearing the current one first', async () => {
+    renderPage()
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('assignment employee'), { target: { value: 'e2' } })
+    fireEvent.click(screen.getByLabelText('Lead Tech'))
+    fireEvent.click(screen.getByText('Assign Employee'))
+
+    expect(await screen.findByText('A lead tech is already assigned. Remove the current lead before setting a new lead.')).toBeInTheDocument()
+    expect(jobTicketsApi.addAssignment).not.toHaveBeenCalled()
   })
 
   it('prints the browser job review page without adding server exports', async () => {
