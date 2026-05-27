@@ -70,6 +70,27 @@ export function JobTicketDetailPage() {
     () => Object.fromEntries(equipment.map((item) => [item.id, item])),
     [equipment],
   );
+  const leadAssignment = useMemo(
+    () => assignments.find((item) => item.isLead) ?? null,
+    [assignments],
+  );
+  const dispatchWarnings = useMemo(() => {
+    const warnings: string[] = [];
+
+    if (!assignments.length) {
+      warnings.push("No employees are assigned.");
+    }
+
+    if (!leadAssignment) {
+      warnings.push("No lead tech is marked.");
+    }
+
+    if (!job?.scheduledStartAtUtc) {
+      warnings.push("No scheduled start is set.");
+    }
+
+    return warnings;
+  }, [assignments, job?.scheduledStartAtUtc, leadAssignment]);
 
   const load = async () => {
     if (!jobTicketId) return;
@@ -184,9 +205,22 @@ export function JobTicketDetailPage() {
 
   const onAddAssignment = async (event: FormEvent) => {
     event.preventDefault();
-    if (!jobTicketId || !assignmentEmployeeId) return;
+    if (!jobTicketId) return;
+    if (!assignmentEmployeeId) {
+      setError("Select an employee before assigning.");
+      setMessage(null);
+      return;
+    }
     if (assignments.some((x) => x.employeeId === assignmentEmployeeId)) {
       setError("Employee is already assigned.");
+      setMessage(null);
+      return;
+    }
+    if (isLeadAssignment && leadAssignment) {
+      setError(
+        "A lead tech is already assigned. Remove the current lead before setting a new lead.",
+      );
+      setMessage(null);
       return;
     }
     try {
@@ -302,6 +336,29 @@ export function JobTicketDetailPage() {
               <strong>{formatDate(job.completedAtUtc)}</strong>
             </div>
           </div>
+          <div className="review-grid" aria-label="assignment ownership summary">
+            <div>
+              <span className="muted">Lead Tech</span>
+              <strong>{leadAssignment ? leadAssignment.employeeId : "Needs assignment"}</strong>
+            </div>
+            <div>
+              <span className="muted">Assigned Employees</span>
+              <strong>{assignments.length}</strong>
+            </div>
+            <div>
+              <span className="muted">Dispatch Status</span>
+              <strong>{dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review"}</strong>
+            </div>
+          </div>
+          {dispatchWarnings.length ? (
+            <ul className="muted" aria-label="dispatch warnings">
+              {dispatchWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">Lead tech, schedule, and assigned-employee signals are all present.</p>
+          )}
           <div className="review-grid" aria-label="job dispatch details">
             <div>
               <span className="muted">Customer</span>
@@ -430,12 +487,16 @@ export function JobTicketDetailPage() {
       ) : null}
 
       <article className="card stack">
-        <h3>Assigned Employees</h3>
+        <div className="row">
+          <h3>Assigned Employees</h3>
+          <span className="muted">Current lead: {leadAssignment ? leadAssignment.employeeId : "Needs assignment"}</span>
+        </div>
         {assignments.length ? (
           <ul>
             {assignments.map((item) => (
               <li key={item.employeeId}>
-                {item.employeeId} {item.isLead ? "(Lead)" : ""}{" "}
+                <strong>{item.employeeId}</strong> {item.isLead ? "(Lead Tech)" : ""}
+                <div className="muted">Assigned {formatDate(item.assignedAtUtc)}</div>
                 <button
                   className="no-print"
                   onClick={() => onRemoveAssignment(item.employeeId)}
@@ -478,7 +539,7 @@ export function JobTicketDetailPage() {
               checked={isLeadAssignment}
               onChange={(e) => setIsLeadAssignment(e.target.checked)}
             />
-            Lead
+            Lead Tech
           </label>
           <button type="submit">Assign Employee</button>
         </form>
