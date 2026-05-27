@@ -21,7 +21,28 @@ describe('JobTicketDetailPage', () => {
   const setupBaseMocks = () => {
     vi.spyOn(window, 'print').mockImplementation(() => undefined)
     vi.mocked(useAuth).mockReturnValue({ user: { role: 'Manager' } } as any)
-    vi.mocked(jobTicketsApi.get).mockResolvedValue({ id: 'j1', ticketNumber: 'JT-1', customerId: 'c1', serviceLocationId: 's1', billingPartyCustomerId: 'c1', title: 'Issue', priority: 2, status: 3 } as any)
+    vi.mocked(jobTicketsApi.get).mockResolvedValue({
+      id: 'j1',
+      ticketNumber: 'JT-1',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      billingPartyCustomerId: 'c1',
+      equipmentId: 'eq1',
+      title: 'Issue',
+      description: 'Replace leaking hose and confirm restart.',
+      jobType: 'Repair',
+      priority: 2,
+      status: 3,
+      requestedAtUtc: '2026-04-01T08:00:00Z',
+      scheduledStartAtUtc: '2026-04-02T09:30:00Z',
+      dueAtUtc: '2026-04-03T17:00:00Z',
+      purchaseOrderNumber: 'PO-44',
+      billingContactName: 'Casey Customer',
+      billingContactPhone: '555-0100',
+      billingContactEmail: 'casey@example.com',
+      internalNotes: 'Manager-only note',
+      customerFacingNotes: 'Call before arrival.'
+    } as any)
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([{ employeeId: 'e1', isLead: false }] as any)
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([{ id: 'w1', performedAtUtc: '2026-04-01T12:00:00Z', notes: 'Replaced belt' }] as any)
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 1, notes: 'Pilot stock' }] as any)
@@ -29,7 +50,7 @@ describe('JobTicketDetailPage', () => {
     vi.mocked(filesApi.list).mockResolvedValue([{ id: 'f1', jobTicketId: 'j1', originalFileName: 'photo.jpg' }] as any)
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's1', locationName: 'HQ' }] as any)
-    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Truck 7' }] as any)
   }
 
   beforeEach(() => {
@@ -45,10 +66,16 @@ describe('JobTicketDetailPage', () => {
     render(<MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
   }
 
-  it('renders assignment, review sections, and status/archive actions', async () => {
+  it('renders richer dispatch, billing, and review details alongside actions', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('Repair')).toBeInTheDocument()
+    expect(screen.getByText('PO-44')).toBeInTheDocument()
+    expect(screen.getByText('Casey Customer')).toBeInTheDocument()
+    expect(screen.getByText('casey@example.com')).toBeInTheDocument()
+    expect(screen.getByText('Manager-only note')).toBeInTheDocument()
+    expect(screen.getByText('Call before arrival.')).toBeInTheDocument()
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
     expect(screen.getByText(/Replaced belt/)).toBeInTheDocument()
     expect(screen.getByText('Parts Usage')).toBeInTheDocument()
