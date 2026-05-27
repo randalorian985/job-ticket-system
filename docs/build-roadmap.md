@@ -45,6 +45,7 @@ Open exactly one PR from latest `main` for assignment clarity and dispatch workf
 ### Planned scope for the next lane
 - strengthen core job-ticket workflows rather than extending purchasing or inventory;
 - focus this slice on clearer assignment ownership, lead-tech visibility, dispatch reviewability, and closely related validation or UX hardening;
+- surface assigned-employee counts, lead-tech ownership, and dispatch-readiness cues inside the existing manager job-ticket list, detail, and assignment workflow surfaces;
 - keep the work inside the existing manager job-ticket list, detail, and assignment workflow surfaces rather than introducing new domains;
 - include focused tests and source-of-truth docs updates before merge.
 
