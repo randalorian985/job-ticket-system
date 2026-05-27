@@ -27,6 +27,11 @@
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory foundation (`/api/inventory/*`)
 
+## Job Tickets (Current Main Notes)
+- Manager/Admin create and update flows already support operational fields such as `jobType`, `purchaseOrderNumber`, `billingContactName`, `billingContactPhone`, `billingContactEmail`, `internalNotes`, `customerFacingNotes`, `requestedAtUtc`, `scheduledStartAtUtc`, and `dueAtUtc`.
+- `equipmentId` remains optional, but when supplied it must belong to the selected `serviceLocationId`.
+- Job-ticket-first UI work should keep those existing fields visible and editable rather than introducing a separate workflow for the same context.
+
 ## Current Scope Interpretation
 - The product is being steered as a job-ticket-first platform.
 - Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
