@@ -24,8 +24,8 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 ## Implemented Baseline That Must Stay Stable
 - Auth, JWT token revalidation, and role enforcement for `Admin`, `Manager`, and `Employee`.
 - Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, and files/photos.
-- Manager/Admin job-ticket workflow, assignment management, archive/status UX, and reporting hub.
-- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, and lead-tech/assignment review cues.
+- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, and inline status/archive review feedback.
+- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, lead-tech/assignment review cues, and clearer status-change confirmation.
 - Manager/Admin master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
 - Manager/Admin Admin-only user management workflow at `/manage/users`.
 - Parts usage history visibility with cautious non-recommendation wording.
