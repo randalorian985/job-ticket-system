@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import type { CreateJobTicketDto, CustomerDto, EquipmentDto, ServiceLocationDto } from '../../types'
 import { priorityOptions, jobStatusOptions } from './managerDisplay'
 
@@ -20,6 +20,33 @@ export function JobTicketEditorForm({ initial, customers, serviceLocations, equi
     [serviceLocations, form.customerId]
   )
 
+  const filteredEquipment = useMemo(
+    () => equipment.filter((item) => {
+      if (form.serviceLocationId) {
+        return item.serviceLocationId === form.serviceLocationId
+      }
+
+      if (form.customerId) {
+        return item.customerId === form.customerId
+      }
+
+      return true
+    }),
+    [equipment, form.customerId, form.serviceLocationId]
+  )
+
+  useEffect(() => {
+    if (form.serviceLocationId && !filteredLocations.some((item) => item.id === form.serviceLocationId)) {
+      setForm((prev) => ({ ...prev, serviceLocationId: '', equipmentId: null }))
+    }
+  }, [filteredLocations, form.serviceLocationId])
+
+  useEffect(() => {
+    if (form.equipmentId && !filteredEquipment.some((item) => item.id === form.equipmentId)) {
+      setForm((prev) => ({ ...prev, equipmentId: null }))
+    }
+  }, [filteredEquipment, form.equipmentId])
+
   const update = <K extends keyof CreateJobTicketDto>(key: K, value: CreateJobTicketDto[K]) => setForm((prev) => ({ ...prev, [key]: value }))
 
   const submit = async (event: FormEvent) => {
@@ -28,6 +55,7 @@ export function JobTicketEditorForm({ initial, customers, serviceLocations, equi
       setError('Customer, location, billing party, and title are required.')
       return
     }
+
     setError(null)
     await onSubmit({ ...form, title: form.title.trim() })
   }
@@ -36,13 +64,18 @@ export function JobTicketEditorForm({ initial, customers, serviceLocations, equi
     <form onSubmit={submit} className="stack">
       {error ? <p className="error">{error}</p> : null}
       <label>Title<input value={form.title} onChange={(e) => update('title', e.target.value)} /></label>
+      <label>Job Type<input value={form.jobType ?? ''} onChange={(e) => update('jobType', e.target.value || null)} placeholder="Repair, inspection, warranty, install" /></label>
       <label>Customer<select value={form.customerId} onChange={(e) => update('customerId', e.target.value)}><option value="">Select customer</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
       <label>Service Location<select value={form.serviceLocationId} onChange={(e) => update('serviceLocationId', e.target.value)}><option value="">Select location</option>{filteredLocations.map((c) => <option key={c.id} value={c.id}>{c.locationName}</option>)}</select></label>
       <label>Billing Party<select value={form.billingPartyCustomerId} onChange={(e) => update('billingPartyCustomerId', e.target.value)}><option value="">Select billing party</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-      <label>Equipment<select value={form.equipmentId ?? ''} onChange={(e) => update('equipmentId', e.target.value || null)}><option value="">None</option>{equipment.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+      <label>Equipment<select value={form.equipmentId ?? ''} onChange={(e) => update('equipmentId', e.target.value || null)}><option value="">None</option>{filteredEquipment.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
       <label>Priority<select value={form.priority} onChange={(e) => update('priority', Number(e.target.value))}>{priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
       <label>Status<select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>{jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
       <label>Description<textarea value={form.description ?? ''} onChange={(e) => update('description', e.target.value || null)} /></label>
+      <label>Purchase Order Number<input value={form.purchaseOrderNumber ?? ''} onChange={(e) => update('purchaseOrderNumber', e.target.value || null)} placeholder="Customer or internal PO reference" /></label>
+      <label>Billing Contact Name<input value={form.billingContactName ?? ''} onChange={(e) => update('billingContactName', e.target.value || null)} /></label>
+      <label>Billing Contact Phone<input value={form.billingContactPhone ?? ''} onChange={(e) => update('billingContactPhone', e.target.value || null)} /></label>
+      <label>Billing Contact Email<input type="email" value={form.billingContactEmail ?? ''} onChange={(e) => update('billingContactEmail', e.target.value || null)} /></label>
       <label>Internal Notes<textarea value={form.internalNotes ?? ''} onChange={(e) => update('internalNotes', e.target.value || null)} /></label>
       <label>Customer Notes<textarea value={form.customerFacingNotes ?? ''} onChange={(e) => update('customerFacingNotes', e.target.value || null)} /></label>
       <label>Requested (UTC)<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
