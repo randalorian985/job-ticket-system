@@ -91,6 +91,81 @@ export function JobTicketDetailPage() {
 
     return warnings;
   }, [assignments, job?.scheduledStartAtUtc, leadAssignment]);
+  const statusReview = useMemo(() => {
+    const nextStatus = Number(statusValue);
+    const currentLabel = job ? getJobTicketStatusLabel(job.status) : "—";
+    const nextLabel = getJobTicketStatusLabel(nextStatus);
+    const warnings: string[] = [];
+    const hasChange = Boolean(job) && nextStatus !== job.status;
+
+    let summary = hasChange
+      ? `This change will move the ticket from ${currentLabel} to ${nextLabel}.`
+      : `Choose a different status when you are ready to move this ticket out of ${currentLabel}.`;
+
+    if (job) {
+      switch (nextStatus) {
+        case 3:
+          if (!assignments.length) {
+            warnings.push("Assigned status usually needs at least one employee assignment.");
+          }
+          if (!leadAssignment) {
+            warnings.push("Assigned status is clearer once a lead tech is marked.");
+          }
+          break;
+        case 4:
+          if (!assignments.length) {
+            warnings.push("In Progress works best after at least one employee is assigned.");
+          }
+          if (!leadAssignment) {
+            warnings.push("Mark a lead tech before field work begins so dispatch ownership is clear.");
+          }
+          if (!job.scheduledStartAtUtc) {
+            warnings.push("Set a scheduled start before field work begins.");
+          }
+          break;
+        case 5:
+        case 6:
+          if (!assignments.length) {
+            warnings.push("Waiting statuses are easier to review when an owner is assigned.");
+          }
+          break;
+        case 7:
+          if (!entries.length && !timeEntries.length && !parts.length) {
+            warnings.push("This ticket does not yet show labor, work-entry, or parts activity.");
+          }
+          break;
+        case 9:
+          warnings.push("Invoice status should follow completed work and billing review.");
+          break;
+        case 10:
+          warnings.push("Reviewed is the final closeout state after invoice review.");
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (hasChange && !warnings.length) {
+      summary = `${summary} Current dispatch and history cues do not show any obvious blockers.`;
+    }
+
+    return {
+      currentLabel,
+      nextLabel,
+      hasChange,
+      summary,
+      warnings,
+    };
+  }, [assignments.length, entries.length, job, leadAssignment, parts.length, statusValue, timeEntries.length]);
+  const archiveReviewWarnings = useMemo(() => {
+    const warnings = dispatchWarnings.map((warning) => `Before archiving: ${warning}`);
+
+    if (job && ![7, 8, 9, 10].includes(job.status)) {
+      warnings.unshift(`This ticket is currently ${getJobTicketStatusLabel(job.status)}.`);
+    }
+
+    return warnings;
+  }, [dispatchWarnings, job]);
 
   const load = async () => {
     if (!jobTicketId) return;
@@ -157,7 +232,13 @@ export function JobTicketDetailPage() {
 
   const onStatusChange = async (event: FormEvent) => {
     event.preventDefault();
-    if (!jobTicketId || !window.confirm("Confirm status update?")) return;
+    if (!jobTicketId) return;
+    if (!statusReview.hasChange) {
+      setError("Select a different status before applying an update.");
+      setMessage(null);
+      return;
+    }
+
     try {
       await jobTicketsApi.changeStatus(jobTicketId, {
         status: Number(statusValue),
@@ -165,8 +246,12 @@ export function JobTicketDetailPage() {
       setError(null);
       setMessage("Status updated.");
       await load();
-    } catch {
-      setError("Unable to update status.");
+    } catch (requestError) {
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to update status.",
+      );
       setMessage(null);
     }
   };
@@ -181,6 +266,7 @@ export function JobTicketDetailPage() {
     }
     setArchiveConfirmationOpen(true);
     setError(null);
+    setMessage(null);
   };
 
   const onArchiveConfirm = async () => {
@@ -195,8 +281,12 @@ export function JobTicketDetailPage() {
       setArchiveConfirmationOpen(false);
       setArchiveReason("");
       await load();
-    } catch {
-      setError("Unable to archive ticket.");
+    } catch (requestError) {
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to archive ticket.",
+      );
       setMessage(null);
     } finally {
       setIsArchiving(false);
@@ -250,8 +340,12 @@ export function JobTicketDetailPage() {
       setError(null);
       setMessage("Assignment removed.");
       await load();
-    } catch {
-      setError("Unable to remove assignment.");
+    } catch (requestError) {
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to remove assignment.",
+      );
       setMessage(null);
     }
   };
@@ -419,7 +513,11 @@ export function JobTicketDetailPage() {
           </div>
           <button
             className="no-print"
-            onClick={() => setEditMode((prev) => !prev)}
+            onClick={() => {
+              setEditMode((prev) => !prev);
+              setError(null);
+              setMessage(null);
+            }}
           >
             {editMode ? "Cancel Edit" : "Edit Ticket"}
           </button>
@@ -432,39 +530,113 @@ export function JobTicketDetailPage() {
               submitLabel="Save Ticket"
               onSubmit={async (payload) => {
                 if (!jobTicketId) return;
-                await jobTicketsApi.update(jobTicketId, payload);
-                setEditMode(false);
-                setMessage("Ticket updated.");
-                await load();
+
+                try {
+                  await jobTicketsApi.update(jobTicketId, payload);
+                  setEditMode(false);
+                  setError(null);
+                  setMessage("Ticket updated.");
+                  await load();
+                } catch (requestError) {
+                  setError(
+                    requestError instanceof ApiError
+                      ? requestError.message
+                      : "Unable to update ticket.",
+                  );
+                  setMessage(null);
+                }
               }}
             />
           ) : null}
-          <form onSubmit={onStatusChange} className="row no-print">
-            <select
-              value={statusValue}
-              onChange={(e) => setStatusValue(e.target.value)}
-              aria-label="status value"
-            >
-              {jobStatusOptions.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-            <button type="submit">Update Status</button>
-          </form>
-          <form onSubmit={onArchiveRequest} className="stack no-print">
-            <input
-              value={archiveReason}
-              onChange={(e) => setArchiveReason(e.target.value)}
-              placeholder="Archive reason"
-            />
-            <button type="submit">Archive Ticket</button>
-          </form>
+          <section className="stack no-print" aria-label="status workflow review">
+            <h3>Status Review</h3>
+            <div className="review-grid">
+              <div>
+                <span className="muted">Current Status</span>
+                <strong>{statusReview.currentLabel}</strong>
+              </div>
+              <div>
+                <span className="muted">Selected Status</span>
+                <strong>{statusReview.nextLabel}</strong>
+              </div>
+              <div>
+                <span className="muted">Dispatch Readiness</span>
+                <strong>{dispatchWarnings.length ? "Needs attention" : "Ready"}</strong>
+              </div>
+            </div>
+            <p className="muted">{statusReview.summary}</p>
+            {statusReview.warnings.length ? (
+              <ul className="muted" aria-label="status review warnings">
+                {statusReview.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            ) : null}
+            <form onSubmit={onStatusChange} className="stack">
+              <label className="stack">
+                Next Status
+                <select
+                  value={statusValue}
+                  onChange={(event) => setStatusValue(event.target.value)}
+                >
+                  {jobStatusOptions.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit" disabled={!statusReview.hasChange}>
+                {statusReview.hasChange ? `Update to ${statusReview.nextLabel}` : "Choose a new status"}
+              </button>
+            </form>
+          </section>
+          <section className="stack no-print" aria-label="archive workflow review">
+            <h3>Archive Review</h3>
+            <p className="muted">Archive keeps this ticket available for reporting and history. It does not hard delete the record.</p>
+            {archiveReviewWarnings.length ? (
+              <ul className="muted" aria-label="archive review warnings">
+                {archiveReviewWarnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">This ticket looks ready for archive review if work is complete.</p>
+            )}
+            <form onSubmit={onArchiveRequest} className="stack">
+              <label className="stack">
+                Archive Reason
+                <input
+                  value={archiveReason}
+                  onChange={(event) => {
+                    setArchiveReason(event.target.value);
+                    if (archiveConfirmationOpen) {
+                      setArchiveConfirmationOpen(false);
+                    }
+                  }}
+                  placeholder="Archive reason"
+                />
+              </label>
+              <button type="submit">Review Archive</button>
+            </form>
+          </section>
           {archiveConfirmationOpen ? (
-            <section className="card stack" aria-label="archive confirmation">
+            <section className="stack" aria-label="archive confirmation">
               <p>Confirm archive for this job ticket?</p>
-              <p className="muted">Reason: {archiveReason.trim()}</p>
+              <div className="review-grid">
+                <div>
+                  <span className="muted">Current Status</span>
+                  <strong>{getJobTicketStatusLabel(job.status)}</strong>
+                </div>
+                <div>
+                  <span className="muted">Assigned Employees</span>
+                  <strong>{assignments.length}</strong>
+                </div>
+                <div>
+                  <span className="muted">Archive Reason</span>
+                  <strong>{archiveReason.trim()}</strong>
+                </div>
+              </div>
               <div className="row">
                 <button
                   type="button"
