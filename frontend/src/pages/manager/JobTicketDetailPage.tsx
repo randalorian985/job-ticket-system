@@ -31,6 +31,8 @@ import {
 } from "./managerDisplay";
 import { JobTicketEditorForm } from "./JobTicketEditorForm";
 
+const displayValue = (value?: string | null) => value?.trim() ? value : "—";
+
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
   const { user } = useAuth();
@@ -284,34 +286,80 @@ export function JobTicketDetailPage() {
               <strong>{getJobTicketPriorityLabel(job.priority)}</strong>
             </div>
             <div>
+              <span className="muted">Requested</span>
+              <strong>{formatDate(job.requestedAtUtc)}</strong>
+            </div>
+            <div>
               <span className="muted">Scheduled</span>
               <strong>{formatDate(job.scheduledStartAtUtc)}</strong>
+            </div>
+            <div>
+              <span className="muted">Due</span>
+              <strong>{formatDate(job.dueAtUtc)}</strong>
             </div>
             <div>
               <span className="muted">Completed</span>
               <strong>{formatDate(job.completedAtUtc)}</strong>
             </div>
           </div>
-          <p className="muted">
-            Customer: {customersById[job.customerId]?.name ?? job.customerId}
-          </p>
-          <p className="muted">
-            Service Location:{" "}
-            {locationsById[job.serviceLocationId]?.locationName ??
-              job.serviceLocationId}
-          </p>
-          <p className="muted">
-            Billing Party:{" "}
-            {customersById[job.billingPartyCustomerId]?.name ??
-              job.billingPartyCustomerId}
-          </p>
-          <p className="muted">
-            Equipment:{" "}
-            {job.equipmentId
-              ? (equipmentById[job.equipmentId]?.name ?? job.equipmentId)
-              : "—"}
-          </p>
-          <p>{job.description ?? "No work description."}</p>
+          <div className="review-grid" aria-label="job dispatch details">
+            <div>
+              <span className="muted">Customer</span>
+              <strong>{customersById[job.customerId]?.name ?? job.customerId}</strong>
+            </div>
+            <div>
+              <span className="muted">Service Location</span>
+              <strong>{locationsById[job.serviceLocationId]?.locationName ?? job.serviceLocationId}</strong>
+            </div>
+            <div>
+              <span className="muted">Billing Party</span>
+              <strong>{customersById[job.billingPartyCustomerId]?.name ?? job.billingPartyCustomerId}</strong>
+            </div>
+            <div>
+              <span className="muted">Equipment</span>
+              <strong>{job.equipmentId ? (equipmentById[job.equipmentId]?.name ?? job.equipmentId) : "—"}</strong>
+            </div>
+            <div>
+              <span className="muted">Job Type</span>
+              <strong>{displayValue(job.jobType)}</strong>
+            </div>
+            <div>
+              <span className="muted">Purchase Order</span>
+              <strong>{displayValue(job.purchaseOrderNumber)}</strong>
+            </div>
+          </div>
+          <div className="review-grid" aria-label="billing contact details">
+            <div>
+              <span className="muted">Billing Contact</span>
+              <strong>{displayValue(job.billingContactName)}</strong>
+            </div>
+            <div>
+              <span className="muted">Billing Phone</span>
+              <strong>{displayValue(job.billingContactPhone)}</strong>
+            </div>
+            <div>
+              <span className="muted">Billing Email</span>
+              <strong>{displayValue(job.billingContactEmail)}</strong>
+            </div>
+            <div>
+              <span className="muted">Archive Reason</span>
+              <strong>{displayValue(job.archiveReason)}</strong>
+            </div>
+          </div>
+          <div>
+            <h3>Description</h3>
+            <p>{job.description ?? "No work description."}</p>
+          </div>
+          <div className="review-grid" aria-label="job notes">
+            <div>
+              <span className="muted">Internal Notes</span>
+              <p>{displayValue(job.internalNotes)}</p>
+            </div>
+            <div>
+              <span className="muted">Customer Notes</span>
+              <p>{displayValue(job.customerFacingNotes)}</p>
+            </div>
+          </div>
           <button
             className="no-print"
             onClick={() => setEditMode((prev) => !prev)}

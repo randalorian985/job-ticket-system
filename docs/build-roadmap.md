@@ -33,17 +33,19 @@ Do not steer the project toward a general ERP build-out.
 - Manager/Admin Phases 1-3D.
 - Phase 4A pilot readiness.
 - Phase 4B pilot workflow polish.
+- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, and operational notes.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
 - Parts Purchase / Vendor Cost Tracking Phase 2.
 - Purchasing stabilization follow-ups for submit-state discipline, close-transition discipline, and closed-order receiving-action gating.
 - Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, and purchase-order receipt posting.
 
 ## Approved Next Lane
-Open exactly one PR from latest `main` for a job-ticket-first workflow follow-up.
+Open exactly one PR from latest `main` for assignment clarity and dispatch workflow polish.
 
 ### Planned scope for the next lane
 - strengthen core job-ticket workflows rather than extending purchasing or inventory;
-- focus on assignment clarity, job information completeness, parts-on-ticket workflow quality, time-tracking usability, or closely related stabilization;
+- focus this slice on clearer assignment ownership, lead-tech visibility, dispatch reviewability, and closely related validation or UX hardening;
+- keep the work inside the existing manager job-ticket list, detail, and assignment workflow surfaces rather than introducing new domains;
 - include focused tests and source-of-truth docs updates before merge.
 
 ### Explicitly not included in the next lane
