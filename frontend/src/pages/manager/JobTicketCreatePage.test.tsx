@@ -9,12 +9,15 @@ vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { create: vi.fn() } }
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn() } }))
 
 describe('JobTicketCreatePage', () => {
-  it('renders manager create form', async () => {
+  it('renders manager create form with richer job information fields', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
     render(<MemoryRouter future={routerFuture}><JobTicketCreatePage /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Create Job Ticket' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Job Type')).toBeInTheDocument()
+    expect(screen.getByLabelText('Purchase Order Number')).toBeInTheDocument()
+    expect(screen.getByLabelText('Billing Contact Name')).toBeInTheDocument()
     expect(screen.getByText('Create Ticket')).toBeInTheDocument()
   })
 })
