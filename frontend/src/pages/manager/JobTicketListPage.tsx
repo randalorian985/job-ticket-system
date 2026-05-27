@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { ApiError } from '../../api/httpClient'
-import type { CustomerDto, JobTicketListItemDto, ServiceLocationDto } from '../../types'
+import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto } from '../../types'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from '../employee/jobDisplay'
 import { formatDate, jobStatusOptions, priorityOptions } from './managerDisplay'
 
@@ -13,6 +13,7 @@ const waitingStatusValues = new Set([5, 6])
 
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
+  const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
   const [customers, setCustomers] = useState<Record<string, CustomerDto>>({})
   const [locations, setLocations] = useState<Record<string, ServiceLocationDto>>({})
   const [statusFilter, setStatusFilter] = useState(allFilterValue)
@@ -23,23 +24,53 @@ export function JobTicketListPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setIsLoading(true)
-    Promise.all([jobTicketsApi.listAll(), masterDataApi.listCustomers(), masterDataApi.listServiceLocations()])
-      .then(([tickets, customersResponse, locationsResponse]) => {
+    let isCancelled = false
+
+    const load = async () => {
+      setIsLoading(true)
+
+      try {
+        const [tickets, customersResponse, locationsResponse] = await Promise.all([
+          jobTicketsApi.listAll(),
+          masterDataApi.listCustomers(),
+          masterDataApi.listServiceLocations()
+        ])
+
+        const assignmentEntries = await Promise.all(
+          tickets.map(async (ticket) => [
+            ticket.id,
+            await jobTicketsApi.listAssignments(ticket.id).catch(() => [])
+          ] as const)
+        )
+
+        if (isCancelled) {
+          return
+        }
+
         setJobs(tickets)
+        setAssignmentMap(Object.fromEntries(assignmentEntries))
         setCustomers(Object.fromEntries(customersResponse.map((item) => [item.id, item])))
         setLocations(Object.fromEntries(locationsResponse.map((item) => [item.id, item])))
         setError(null)
-      })
-      .catch((requestError) => {
+      } catch (requestError) {
         if (requestError instanceof ApiError && (requestError.status === 401 || requestError.status === 403)) {
           setError('You do not have permission to load this manager view.')
           return
         }
 
         setError('Unable to load manager job tickets.')
-      })
-      .finally(() => setIsLoading(false))
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    load()
+
+    return () => {
+      isCancelled = true
+    }
   }, [])
 
   const customerOptions = useMemo(
@@ -68,14 +99,18 @@ export function JobTicketListPage() {
     const urgentJobs = filteredJobs.filter((job) => job.priority === 4 && activeStatusValues.has(job.status))
     const waitingJobs = filteredJobs.filter((job) => waitingStatusValues.has(job.status))
     const unscheduledJobs = activeJobs.filter((job) => !job.scheduledStartAtUtc)
+    const unassignedJobs = activeJobs.filter((job) => !(assignmentMap[job.id]?.length))
+    const needsLeadJobs = activeJobs.filter((job) => !(assignmentMap[job.id] ?? []).some((assignment) => assignment.isLead))
 
     return {
       activeCount: activeJobs.length,
       urgentCount: urgentJobs.length,
       waitingCount: waitingJobs.length,
-      unscheduledCount: unscheduledJobs.length
+      unscheduledCount: unscheduledJobs.length,
+      unassignedCount: unassignedJobs.length,
+      needsLeadCount: needsLeadJobs.length
     }
-  }, [filteredJobs])
+  }, [assignmentMap, filteredJobs])
 
   const hasActiveFilters = statusFilter !== allFilterValue || priorityFilter !== allFilterValue || customerFilter !== allFilterValue || Boolean(searchText.trim())
 
@@ -89,7 +124,7 @@ export function JobTicketListPage() {
   return (
     <section className="card stack">
       <div className="row"><h2>Job Tickets</h2><Link to="/manage/job-tickets/new">Create Ticket</Link></div>
-      <p className="muted">Search and filter the current manager job list using existing ticket data.</p>
+      <p className="muted">Search and filter the current manager job list using existing ticket and assignment data.</p>
 
       {!isLoading && !error && jobs.length ? (
         <section className="summary-grid" aria-label="queue summary">
@@ -97,6 +132,8 @@ export function JobTicketListPage() {
           <div className="summary-card"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong><span className="muted">Urgent priority tickets still active.</span></div>
           <div className="summary-card"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong><span className="muted">Waiting on parts or customer.</span></div>
           <div className="summary-card"><span>Unscheduled active</span><strong>{triageSummary.unscheduledCount}</strong><span className="muted">Active tickets without a start time.</span></div>
+          <div className="summary-card"><span>Unassigned active</span><strong>{triageSummary.unassignedCount}</strong><span className="muted">Active tickets that still need an assigned tech.</span></div>
+          <div className="summary-card"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong><span className="muted">Active tickets without a lead tech flag.</span></div>
         </section>
       ) : null}
 
@@ -138,16 +175,24 @@ export function JobTicketListPage() {
         <>
           <p className="muted">Showing {filteredJobs.length} of {jobs.length} tickets.</p>
           <ul className="review-list">
-            {filteredJobs.map((job) => (
-              <li key={job.id}>
-                <Link to={`/manage/job-tickets/${job.id}`}>{job.ticketNumber}</Link> · {getJobTicketStatusLabel(job.status)} · {getJobTicketPriorityLabel(job.priority)}
-                <div>{job.title}</div>
-                <div className="muted">
-                  {customers[job.customerId]?.name ?? job.customerId} / {locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId}
-                </div>
-                <div className="muted">Created {formatDate(job.requestedAtUtc)} · Scheduled {formatDate(job.scheduledStartAtUtc)} · Completed {formatDate(job.completedAtUtc)}</div>
-              </li>
-            ))}
+            {filteredJobs.map((job) => {
+              const assignments = assignmentMap[job.id] ?? []
+              const leadAssignments = assignments.filter((item) => item.isLead)
+              const leadSummary = leadAssignments.length ? leadAssignments.map((item) => item.employeeId).join(', ') : 'Needs lead'
+              const assignmentSummary = assignments.length ? `${assignments.length} assigned` : 'Unassigned'
+
+              return (
+                <li key={job.id}>
+                  <Link to={`/manage/job-tickets/${job.id}`}>{job.ticketNumber}</Link> · {getJobTicketStatusLabel(job.status)} · {getJobTicketPriorityLabel(job.priority)}
+                  <div>{job.title}</div>
+                  <div className="muted">
+                    {customers[job.customerId]?.name ?? job.customerId} / {locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId}
+                  </div>
+                  <div className="muted">Dispatch {assignmentSummary} · Lead {leadSummary}</div>
+                  <div className="muted">Created {formatDate(job.requestedAtUtc)} · Scheduled {formatDate(job.scheduledStartAtUtc)} · Completed {formatDate(job.completedAtUtc)}</div>
+                </li>
+              )
+            })}
           </ul>
         </>
       ) : null}
