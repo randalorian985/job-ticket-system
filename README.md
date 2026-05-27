@@ -21,6 +21,7 @@ The project is centered on the original job-ticket workflow:
 
 ## What Main Already Implements
 - Job-ticket creation, assignment, execution, reporting, and related Manager/Admin workflows.
+- Manager/Admin job-ticket create/edit/detail coverage for scheduling, billing context, purchase-order references, and operational notes.
 - Employee mobile job workflow with GPS time tracking, work notes, part usage, and files/photos.
 - Master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
 - Admin-only user management at `/manage/users`.
