@@ -2,13 +2,14 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../api/filesApi'
+import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
-import { JobTicketDetailPage } from './JobTicketDetailPage'
 import { routerFuture } from '../../routes/routerFuture'
+import { JobTicketDetailPage } from './JobTicketDetailPage'
 
 vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn() } }))
@@ -66,7 +67,7 @@ describe('JobTicketDetailPage', () => {
     render(<MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
   }
 
-  it('renders richer dispatch, billing, and review details alongside actions', async () => {
+  it('renders richer dispatch, billing, status review, and archive review details alongside actions', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
@@ -75,6 +76,9 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('Casey Customer')).toBeInTheDocument()
     expect(screen.getByText('casey@example.com')).toBeInTheDocument()
     expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
+    expect(screen.getByText('Status Review')).toBeInTheDocument()
+    expect(screen.getByText('Archive Review')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
     expect(screen.getAllByText('e1').length).toBeGreaterThan(0)
     expect(screen.getByText('Manager-only note')).toBeInTheDocument()
     expect(screen.getByText('Call before arrival.')).toBeInTheDocument()
@@ -105,7 +109,7 @@ describe('JobTicketDetailPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText('Needs attention')).toBeInTheDocument()
+    await screen.findAllByText('Needs attention')
     expect(screen.getByText('No employees are assigned.')).toBeInTheDocument()
     expect(screen.getByText('No lead tech is marked.')).toBeInTheDocument()
     expect(screen.getByText('No scheduled start is set.')).toBeInTheDocument()
@@ -123,6 +127,29 @@ describe('JobTicketDetailPage', () => {
     expect(jobTicketsApi.addAssignment).not.toHaveBeenCalled()
   })
 
+  it('shows status review guidance, enables updates for a real change, and calls the API', async () => {
+    renderPage()
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '4' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Update to In Progress' }))
+
+    await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('j1', { status: 4 }))
+    expect(await screen.findByText('Status updated.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
+  })
+
+  it('surfaces API validation feedback when a status update is rejected', async () => {
+    vi.mocked(jobTicketsApi.changeStatus).mockRejectedValue(new ApiError('Status change blocked', 400, undefined))
+    renderPage()
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '9' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Update to Invoiced' }))
+
+    expect(await screen.findByText('Status change blocked')).toBeInTheDocument()
+  })
+
   it('prints the browser job review page without adding server exports', async () => {
     renderPage()
 
@@ -136,8 +163,8 @@ describe('JobTicketDetailPage', () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByPlaceholderText('Archive reason'), { target: { value: 'Duplicate ticket' } })
-    fireEvent.click(screen.getByText('Archive Ticket'))
+    fireEvent.change(screen.getByLabelText('Archive Reason'), { target: { value: 'Duplicate ticket' } })
+    fireEvent.click(screen.getByText('Review Archive'))
 
     expect(screen.getByLabelText('archive confirmation')).toBeInTheDocument()
     expect(jobTicketsApi.archive).not.toHaveBeenCalled()
@@ -151,22 +178,22 @@ describe('JobTicketDetailPage', () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByPlaceholderText('Archive reason'), { target: { value: 'Completed and closed' } })
-    fireEvent.click(screen.getByText('Archive Ticket'))
+    fireEvent.change(screen.getByLabelText('Archive Reason'), { target: { value: 'Completed and closed' } })
+    fireEvent.click(screen.getByText('Review Archive'))
     fireEvent.click(screen.getByText('Confirm Archive'))
 
     expect(await screen.findByText('Ticket archived.')).toBeInTheDocument()
   })
 
-  it('shows error feedback after archive confirmation fails', async () => {
-    vi.mocked(jobTicketsApi.archive).mockRejectedValue(new Error('request failed'))
+  it('shows API validation feedback after archive confirmation fails', async () => {
+    vi.mocked(jobTicketsApi.archive).mockRejectedValue(new ApiError('Archive blocked', 400, undefined))
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByPlaceholderText('Archive reason'), { target: { value: 'Invalid closure' } })
-    fireEvent.click(screen.getByText('Archive Ticket'))
+    fireEvent.change(screen.getByLabelText('Archive Reason'), { target: { value: 'Invalid closure' } })
+    fireEvent.click(screen.getByText('Review Archive'))
     fireEvent.click(screen.getByText('Confirm Archive'))
 
-    expect(await screen.findByText('Unable to archive ticket.')).toBeInTheDocument()
+    expect(await screen.findByText('Archive blocked')).toBeInTheDocument()
   })
 })
