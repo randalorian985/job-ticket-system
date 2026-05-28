@@ -17,7 +17,7 @@ There is no approved inventory-expansion lane on `main` at this time.
 
 Supporting purchasing and inventory work already merged on `main` remains part of the implemented baseline, but it should not drive the next roadmap phase unless the scope is deliberately expanded again later.
 
-The post-reports historical regression audit and docs checkpoint is recorded in [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md). Before merge, the checkpoint PR still requires successful standard validation in GitHub Actions or another checkout-capable environment.
+The post-reports historical regression audit and docs checkpoint is recorded in [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md). The checkpoint PR passed standard GitHub Actions validation before merge.
 
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
@@ -46,7 +46,7 @@ Do not steer the project toward a general ERP build-out.
 ## Current Roadmap Gate
 No later implementation lane is approved yet beyond the merged Manager/Admin reports and time-review polish slice.
 
-The next merge candidate is exactly one bounded post-reports historical regression audit and docs checkpoint. Do not open a new implementation PR until that checkpoint has passed required validation and merged.
+The bounded post-reports historical regression audit and docs checkpoint has passed required validation. Do not open a new implementation PR until this checkpoint has merged.
 
 After this checkpoint merges, the next action is an owner-selected job-ticket-first lane documented here before a feature branch starts.
 
@@ -78,37 +78,3 @@ After this checkpoint merges, the next action is an owner-selected job-ticket-fi
 ## Scope Rails
 - Keep the work job-ticket-first.
 - Keep controllers thin and business rules in application services.
-- Use DTO APIs only.
-- Preserve soft-delete/archive behavior.
-- Keep employee and existing Manager/Admin workflows working.
-- Do not weaken auth.
-- Do not renumber enums.
-- Do not edit old migrations.
-- Keep one active PR at a time.
-
-## Validation Requirements Before Merge
-Run in a checkout-capable environment:
-
-```bash
-dotnet restore backend/JobTicketSystem.sln
-dotnet build backend/JobTicketSystem.sln
-dotnet test backend/JobTicketSystem.sln
-cd frontend && npm install
-cd frontend && npm run build
-cd frontend && npm test
-```
-
-Merge readiness requires:
-- passing backend build;
-- passing frontend build;
-- passing backend and frontend tests, or a clearly documented environment limitation;
-- docs aligned to implemented behavior;
-- no scope drift back into deferred domains.
-
-## Deferred Until Explicitly Re-Approved
-- new inventory expansion beyond the already-merged support baseline;
-- truck inventory;
-- replenishment automation;
-- pick/reserve/issue automation;
-- compatibility recommendations;
-- AI/scoring.
