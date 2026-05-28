@@ -17,9 +17,9 @@ The project is centered on the original job-ticket workflow:
 - Manager/Admin reports and time-review polish are now implemented on top of the existing reporting and approval surfaces.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
+- The post-reports historical regression audit and docs checkpoint is complete and validated.
 - No further inventory expansion is currently approved as the active product lane.
 - No later implementation lane is approved yet beyond the merged reports and time-review polish slice.
-- The next scheduled work is a post-reports historical regression audit and docs checkpoint before any new feature lane is selected.
 
 ## What Main Already Implements
 - Job-ticket creation, assignment, execution, reporting, and related Manager/Admin workflows.
@@ -39,7 +39,7 @@ Supporting purchasing and inventory capabilities already exist on `main`, but th
 Current roadmap discipline:
 - keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, and related Manager/Admin usability;
 - keep reports and time-review polish working as part of the existing job-ticket-first reporting workflow;
-- use the next checkpoint for historical regression review and docs alignment rather than a new domain expansion;
+- use the completed checkpoint for historical regression review and docs alignment rather than a new domain expansion;
 - do not treat the project as a general ERP build-out;
 - do not resume inventory expansion without an explicit future scope decision.
 

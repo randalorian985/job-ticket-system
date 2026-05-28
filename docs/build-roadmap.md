@@ -17,6 +17,8 @@ There is no approved inventory-expansion lane on `main` at this time.
 
 Supporting purchasing and inventory work already merged on `main` remains part of the implemented baseline, but it should not drive the next roadmap phase unless the scope is deliberately expanded again later.
 
+The post-reports historical regression audit and docs checkpoint is recorded in [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md). The checkpoint passed standard GitHub Actions validation.
+
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
 - job ticket creation and editing;
@@ -44,13 +46,15 @@ Do not steer the project toward a general ERP build-out.
 ## Current Roadmap Gate
 No later implementation lane is approved yet beyond the merged Manager/Admin reports and time-review polish slice.
 
-Before selecting another implementation lane, complete exactly one bounded post-reports historical regression audit and docs checkpoint.
+The bounded post-reports historical regression audit and docs checkpoint is complete and validated.
 
-### Planned scope for the next checkpoint
-- re-audit the known historical bug list against the current `main` baseline;
-- verify auth, `/health`, employee workflow, Manager/Admin route boundaries, `/manage/users` Admin-only access, and reports/time-review baseline behavior;
-- confirm `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, and `docs/historical-bug-regression-audit.md` still match the implemented state;
-- keep the work stabilization/docs-focused unless a narrow regression fix is clearly required.
+The next action is an owner-selected job-ticket-first lane documented here before a feature branch starts.
+
+### Scope confirmed by the checkpoint
+- known historical bug list re-audited against the current `main` baseline;
+- auth, `/health`, employee workflow, Manager/Admin route boundaries, `/manage/users` Admin-only access, and reports/time-review baseline behavior checked against existing regression coverage;
+- `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, and `docs/historical-bug-regression-audit.md` aligned to the implemented state;
+- no runtime behavior, API behavior, schema, migration, enum, auth, purchasing, inventory, recommendation, or AI/scoring changes included.
 
 ### Scope that remains protected after this checkpoint
 - keep new work job-ticket-first unless the owner deliberately expands scope again;
