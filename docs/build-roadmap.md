@@ -34,31 +34,31 @@ Do not steer the project toward a general ERP build-out.
 - Phase 4A pilot readiness.
 - Phase 4B pilot workflow polish.
 - Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, and status/archive review clarity.
+- Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
 - Parts Purchase / Vendor Cost Tracking Phase 2.
 - Purchasing stabilization follow-ups for submit-state discipline, close-transition discipline, and closed-order receiving-action gating.
 - Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, and purchase-order receipt posting.
 
 ## Current Roadmap Gate
-Open exactly one implementation PR from latest `main` for Manager/Admin reports and time-review polish.
+No later implementation lane is approved yet beyond the merged Manager/Admin reports and time-review polish slice.
 
-### Planned scope for the next lane
-- keep the work job-ticket-first and centered on existing reporting and time-entry workflows;
-- improve Manager/Admin report filters, loaded-data review clarity, and export-friendly table presentation;
-- add client-side CSV export from already-loaded report data where practical rather than inventing a new backend export domain;
-- tighten labor snapshot labels and related time-review wording so existing invoice-ready reporting is easier to interpret;
-- include focused tests plus aligned updates to `README.md`, `docs/project-scope.md`, and `docs/api-contract.md` before merge.
+Open a new implementation PR only after the next job-ticket-first lane is explicitly selected and documented here.
 
-### Explicitly not included in the next lane
+### Scope that remains protected after this checkpoint
+- keep new work job-ticket-first unless the owner deliberately expands scope again;
+- prefer coherent workflow slices or clearly necessary stabilization follow-ups;
+- keep the current report review filters, CSV export, and time-review workspace working;
+- continue avoiding purchasing or inventory expansion as the default next move.
+
+### Explicitly still not approved
 - warehouse transfer workflows;
 - truck inventory;
 - replenishment automation;
 - pick/reserve/issue automation;
 - compatibility recommendations;
 - AI/scoring;
-- broad ERP-style operational expansion;
-- auth changes;
-- historical migration edits, even if a future approved schema change becomes necessary.
+- broad ERP-style operational expansion.
 
 ### Migration rule for future approved schema changes
 - if a future approved task truly needs a schema or index change, add a new forward migration;

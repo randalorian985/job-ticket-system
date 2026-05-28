@@ -17,7 +17,8 @@ That means the core scope is:
 - `main` remains complete through the validated post-Phase-4 baseline plus the already-merged purchasing and inventory support baseline.
 - The project is now explicitly re-centered on job-ticket-first scope.
 - No inventory-expansion lane is currently approved on `main`.
-- The next approved implementation lane is Manager/Admin reports and time-review polish.
+- Manager/Admin reports and time-review polish are now part of the implemented baseline.
+- No later implementation lane is currently approved on `main` beyond that merged reports/time-review slice.
 - Employee workflow and existing Manager/Admin workflow must continue working while future job-ticket-centric phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
@@ -25,8 +26,9 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 ## Implemented Baseline That Must Stay Stable
 - Auth, JWT token revalidation, and role enforcement for `Admin`, `Manager`, and `Employee`.
 - Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, and files/photos.
-- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, and inline status/archive review feedback.
+- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, and time-review approval workspace.
 - Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, lead-tech/assignment review cues, and clearer status-change confirmation.
+- Manager/Admin reporting filters, export-friendly loaded tables, client-side CSV export from loaded report data, visible review context, and snapshot-first labor labels.
 - Manager/Admin master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
 - Manager/Admin Admin-only user management workflow at `/manage/users`.
 - Parts usage history visibility with cautious non-recommendation wording.
@@ -44,7 +46,7 @@ New work should stay centered on the job-ticket product surface:
 
 Supporting purchasing and inventory code already exists on `main`, but further expansion in those domains is not the active product direction.
 
-The currently approved next lane is Manager/Admin reports and time-review polish, with emphasis on filters, export-friendly presentation, client-side CSV export from loaded data where practical, and clearer labor-snapshot wording inside existing reporting surfaces.
+Reports and time-review polish are now part of the protected baseline: loaded-row filters, export-friendly review tables, visible-row CSV export, and clearer labor-snapshot wording should remain intact while later job-ticket-first phases are chosen.
 
 ## Not Approved Right Now
 The following are not approved as current implementation lanes:
