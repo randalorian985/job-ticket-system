@@ -58,7 +58,11 @@ Open exactly one implementation PR from latest `main` for Manager/Admin reports 
 - AI/scoring;
 - broad ERP-style operational expansion;
 - auth changes;
-- historical migration edits unless a schema change is truly required.
+- historical migration edits, even if a future approved schema change becomes necessary.
+
+### Migration rule for future approved schema changes
+- if a future approved task truly needs a schema or index change, add a new forward migration;
+- do not rewrite or delete historical migrations.
 
 ## Scope Rails
 - Keep the work job-ticket-first.
