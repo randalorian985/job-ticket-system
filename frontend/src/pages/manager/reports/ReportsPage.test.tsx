@@ -23,7 +23,7 @@ beforeEach(() => {
 })
 
 describe('ReportsPage', () => {
-  it('renders scan-friendly report rows and exports already-loaded raw CSV values', async () => {
+  it('renders scan-friendly report rows, resets filters, and exports already-loaded raw CSV values', async () => {
     vi.mocked(reportsApi.getLaborByJob).mockResolvedValue([
       {
         jobTicketId: 'job-1',
@@ -39,22 +39,28 @@ describe('ReportsPage', () => {
 
     renderWithRouter(<ReportsPage />)
 
+    fireEvent.change(screen.getByLabelText('Employee id'), { target: { value: 'emp-7' } })
+    fireEvent.change(screen.getByLabelText('Limit'), { target: { value: '75' } })
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Job' }))
 
     expect(await screen.findByRole('link', { name: 'JT-2026-000123' })).toHaveAttribute('href', '/manage/job-tickets/job-1')
-    expect(screen.getByRole('columnheader', { name: 'Labor Billable (Snapshot/Fallback)' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Labor Billable (Snapshot-first)' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '$300.00' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Completed (UTC)' })).toBeInTheDocument()
-    expect(screen.getByRole('cell', { name: '2026-05-01' })).toBeInTheDocument()
-    expect(screen.getByRole('cell', { name: '2026-05-02' })).toBeInTheDocument()
+    expect(screen.getByText(/Loaded report review:/)).toHaveTextContent('Employee: emp-7')
+    expect(screen.getByText(/Loaded report review:/)).toHaveTextContent('Limit: 75')
 
     const exportLink = screen.getByRole('link', { name: 'Export loaded rows as CSV' })
     const href = exportLink.getAttribute('href') ?? ''
     const csv = decodeURIComponent(href.replace('data:text/csv;charset=utf-8,', ''))
 
-    expect(csv).toContain('Labor Billable (Snapshot/Fallback)')
+    expect(csv).toContain('Labor Billable (Snapshot-first)')
     expect(csv).toContain('JT-2026-000123,Acme Service,2.5,125,300,2026-05-01,2026-05-02')
     expect(csv).not.toContain('$300.00')
-    await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledWith({ offset: 0, limit: 50 }))
+    await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledWith({ offset: 0, limit: 75, employeeId: 'emp-7' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }))
+    expect(screen.getByLabelText('Employee id')).toHaveValue('')
+    expect(screen.getByLabelText('Limit')).toHaveValue(50)
+    expect(screen.getByText('Select a report')).toBeInTheDocument()
   })
 })

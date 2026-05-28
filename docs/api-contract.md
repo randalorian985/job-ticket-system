@@ -34,10 +34,14 @@
 - Manager/Admin detail/edit surfaces now provide inline status transition review, disable no-op status submissions, surface API validation messages, and keep archive confirmation explicit as a soft-delete/archive workflow rather than hard delete.
 - Job-ticket-first UI work should keep those existing fields visible and editable rather than introducing a separate workflow for the same context.
 
+## Reporting And Time Review (Current Main Notes)
+- Existing `/api/reports/*` endpoints remain the reporting API surface. Reports polish stays client-side by improving loaded-row review context, filter reset behavior, export-friendly table presentation, and CSV export from already-loaded rows.
+- Manager/Admin reporting surfaces now label labor money columns as snapshot-first to clarify that approved time-entry snapshots are used before any legacy fallback rate behavior.
+- Manager/Admin time review still uses existing `/api/time-entries/job/{jobTicketId}`, `/api/time-entries/{id}/approve`, and `/api/time-entries/{id}/reject` endpoints. The polish layer is UI-only: visible-row filters, summary counts, export-friendly loaded tables, and visible-row CSV export on top of the loaded job slice.
+
 ## Current Scope Interpretation
 - The product is being steered as a job-ticket-first platform.
 - Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
-- The next approved lane is Manager/Admin reports and time-review polish, and it should prefer existing reporting and time-entry contracts unless a clearly necessary API change is documented.
 - No transfer endpoints are implemented on `main`.
 - No inventory-expansion API lane is currently approved.
 

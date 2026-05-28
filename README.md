@@ -14,14 +14,17 @@ The project is centered on the original job-ticket workflow:
 - Core backend/API workflows remain implemented and validated.
 - Employee mobile workflow remains implemented.
 - Manager/Admin Phases 1-3D and Phase 4A/4B remain implemented.
+- Manager/Admin reports and time-review polish are now implemented on top of the existing reporting and approval surfaces.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - No further inventory expansion is currently approved as the active product lane.
-- The next approved lane is Manager/Admin reports and time-review polish.
+- No later implementation lane is approved yet beyond the merged reports and time-review polish slice.
 
 ## What Main Already Implements
 - Job-ticket creation, assignment, execution, reporting, and related Manager/Admin workflows.
 - Manager/Admin job-ticket create/edit/detail coverage for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, and clearer status/archive review actions.
+- Manager/Admin reporting filters, loaded-row review context, snapshot-first labor labels, export-friendly report tables, and client-side CSV export from loaded report data.
+- Manager/Admin time review with export-friendly loaded rows, visible-slice filters, summary counts, and CSV export for loaded time-entry review.
 - Employee mobile job workflow with GPS time tracking, work notes, part usage, and files/photos.
 - Master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
 - Admin-only user management at `/manage/users`.
@@ -34,7 +37,7 @@ Supporting purchasing and inventory capabilities already exist on `main`, but th
 
 Current roadmap discipline:
 - keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, and related Manager/Admin usability;
-- use the next lane for reporting and time-review polish on top of existing workflows, not for a new operational domain;
+- keep reports and time-review polish working as part of the existing job-ticket-first reporting workflow;
 - do not treat the project as a general ERP build-out;
 - do not resume inventory expansion without an explicit future scope decision.
 
