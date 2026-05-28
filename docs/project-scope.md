@@ -18,9 +18,9 @@ That means the core scope is:
 - The project is now explicitly re-centered on job-ticket-first scope.
 - No inventory-expansion lane is currently approved on `main`.
 - Manager/Admin reports and time-review polish are now part of the implemented baseline.
-- The post-reports historical regression audit and docs checkpoint is the current merge candidate and must pass standard validation before merge.
+- The post-reports historical regression audit and docs checkpoint is complete and validated.
 - No later implementation lane is currently approved on `main` beyond the merged reports/time-review slice.
-- After the audit checkpoint merges, the next implementation lane should be selected and documented as one job-ticket-first workflow before a feature PR starts.
+- The next implementation lane should be selected and documented as one job-ticket-first workflow before a feature PR starts.
 - Employee workflow and existing Manager/Admin workflow must continue working while future job-ticket-centric phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
@@ -50,7 +50,7 @@ Supporting purchasing and inventory code already exists on `main`, but further e
 
 Reports and time-review polish are now part of the protected baseline: loaded-row filters, export-friendly review tables, visible-row CSV export, and clearer labor-snapshot wording should remain intact while later job-ticket-first phases are chosen.
 
-The current checkpoint re-audits auth, routing, employee workflow, Manager/Admin workflow, reports/time-review behavior, and the known historical bug list. It does not approve another feature lane by itself.
+The completed checkpoint re-audited auth, routing, employee workflow, Manager/Admin workflow, reports/time-review behavior, and the known historical bug list. It does not approve another feature lane by itself.
 
 ## Not Approved Right Now
 The following are not approved as current implementation lanes:
