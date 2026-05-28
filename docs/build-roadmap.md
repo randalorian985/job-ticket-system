@@ -17,7 +17,7 @@ There is no approved inventory-expansion lane on `main` at this time.
 
 Supporting purchasing and inventory work already merged on `main` remains part of the implemented baseline, but it should not drive the next roadmap phase unless the scope is deliberately expanded again later.
 
-The post-reports historical regression audit and docs checkpoint is recorded in [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md). The checkpoint PR passed standard GitHub Actions validation before merge.
+The post-reports historical regression audit and docs checkpoint is recorded in [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md). The checkpoint passed standard GitHub Actions validation.
 
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
@@ -46,9 +46,9 @@ Do not steer the project toward a general ERP build-out.
 ## Current Roadmap Gate
 No later implementation lane is approved yet beyond the merged Manager/Admin reports and time-review polish slice.
 
-The bounded post-reports historical regression audit and docs checkpoint has passed required validation. Do not open a new implementation PR until this checkpoint has merged.
+The bounded post-reports historical regression audit and docs checkpoint is complete and validated.
 
-After this checkpoint merges, the next action is an owner-selected job-ticket-first lane documented here before a feature branch starts.
+The next action is an owner-selected job-ticket-first lane documented here before a feature branch starts.
 
 ### Scope confirmed by the checkpoint
 - known historical bug list re-audited against the current `main` baseline;
