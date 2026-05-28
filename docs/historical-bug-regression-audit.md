@@ -19,8 +19,8 @@ That next audit should explicitly re-check:
 - snapshot-first labor reporting and the new reports/time-review baseline;
 - docs alignment across `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, and this audit log.
 
-Environment note for this checkpoint:
-- This scheduled environment can inspect GitHub state and update repository files, but it still does not have a checkout-capable local repository copy, so the next full audit should run in a validation-capable environment before merge.
+Validation expectation for this checkpoint:
+- The audit PR should run the standard backend and frontend validation commands before merge. If a specific environment cannot run them, record that limitation in the PR summary and rely on successful GitHub validation before any merge recommendation.
 
 ---
 
