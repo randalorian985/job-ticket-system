@@ -109,7 +109,7 @@ describe('JobTicketDetailPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText('Needs attention')).toBeInTheDocument()
+    await screen.findAllByText('Needs attention')
     expect(screen.getByText('No employees are assigned.')).toBeInTheDocument()
     expect(screen.getByText('No lead tech is marked.')).toBeInTheDocument()
     expect(screen.getByText('No scheduled start is set.')).toBeInTheDocument()
@@ -135,7 +135,8 @@ describe('JobTicketDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Update to In Progress' }))
 
     await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('j1', { status: 4 }))
-    expect(screen.getByText('This change will move the ticket from Assigned to In Progress. Current dispatch and history cues do not show any obvious blockers.')).toBeInTheDocument()
+    expect(await screen.findByText('Status updated.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
   })
 
   it('surfaces API validation feedback when a status update is rejected', async () => {
