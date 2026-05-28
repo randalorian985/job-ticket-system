@@ -1,5 +1,29 @@
 # Historical Bug Regression Audit
 
+Date: 2026-05-28 (UTC)
+
+## Current Checkpoint Status
+The last full completed historical regression audit remains the 2026-05-06 pass documented below.
+
+Since then, the implemented baseline has moved forward through additional Manager/Admin job-ticket workflow polish, reports/time-review polish, and recent docs synchronization. Before another feature lane is approved, the next scheduled checkpoint is a bounded post-reports regression audit and docs sync.
+
+That next audit should explicitly re-check:
+- file/photo upload `201 Created` and safe `Location` behavior;
+- auth/login/token revalidation for inactive, archived, and deleted users;
+- employee workflow route and API boundaries;
+- Manager/Admin route boundaries, including `/manage` and Admin-only `/manage/users`;
+- time-entry approval/rejection protections;
+- parts approval protections and employee-safe parts visibility;
+- explicit numeric status/priority/invoice display mappings;
+- `/health` unauthenticated JSON contract;
+- snapshot-first labor reporting and the new reports/time-review baseline;
+- docs alignment across `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, and this audit log.
+
+Validation expectation for this checkpoint:
+- The audit PR should run the standard backend and frontend validation commands before merge. If a specific environment cannot run them, record that limitation in the PR summary and rely on successful GitHub validation before any merge recommendation.
+
+---
+
 Date: 2026-05-06 (UTC)
 
 ## Scope and Method
