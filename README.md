@@ -17,7 +17,7 @@ The project is centered on the original job-ticket workflow:
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - No further inventory expansion is currently approved as the active product lane.
-- The roadmap is re-centered on job-ticket-first follow-up work.
+- The next approved lane is Manager/Admin reports and time-review polish.
 
 ## What Main Already Implements
 - Job-ticket creation, assignment, execution, reporting, and related Manager/Admin workflows.
@@ -34,6 +34,7 @@ Supporting purchasing and inventory capabilities already exist on `main`, but th
 
 Current roadmap discipline:
 - keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, and related Manager/Admin usability;
+- use the next lane for reporting and time-review polish on top of existing workflows, not for a new operational domain;
 - do not treat the project as a general ERP build-out;
 - do not resume inventory expansion without an explicit future scope decision.
 
