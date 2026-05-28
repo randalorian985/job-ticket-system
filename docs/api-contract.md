@@ -37,6 +37,7 @@
 ## Current Scope Interpretation
 - The product is being steered as a job-ticket-first platform.
 - Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
+- The next approved lane is Manager/Admin reports and time-review polish, and it should prefer existing reporting and time-entry contracts unless a clearly necessary API change is documented.
 - No transfer endpoints are implemented on `main`.
 - No inventory-expansion API lane is currently approved.
 
