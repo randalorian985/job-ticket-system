@@ -21,10 +21,11 @@ Current evidence from latest `main`:
 - `frontend/src/routes/__tests__/AppRouter.auth.test.tsx` still covers unauthenticated redirects, employee workflow routing, employee denial from `/manage` and `/manage/reports`, Manager/Admin routing to the manager shell, Manager denial from `/manage/users`, Manager/Admin denial from employee-only routes, and Admin access to `/manage/users`.
 - `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, and `docs/build-roadmap.md` consistently describe the job-ticket-first product boundary, the merged reports/time-review baseline, current purchasing/inventory support baseline, and the fact that no later implementation lane is approved yet.
 
-Environment constraints:
+Environment and validation evidence:
 - This scheduled workspace could not clone the public GitHub repository because the outbound GitHub tunnel returned HTTP 403.
-- The checkpoint therefore records remote file inspection evidence through the GitHub connector, but it could not run local backend or frontend validation commands in this workspace.
-- Before merge, the standard validation commands still need to pass in GitHub Actions or another checkout-capable environment.
+- The checkpoint therefore records remote file inspection evidence through the GitHub connector rather than local file-system inspection.
+- GitHub Actions validation passed for PR head commit `2ed015f9e7d78559c9c1239b9b945dba40769f7f` on May 28, 2026.
+- The passing `Validate` workflow included backend restore, backend build, backend test, frontend dependency install, frontend build, and frontend test steps.
 
 ## Status Matrix (Post-Reports Checkpoint)
 
@@ -35,7 +36,7 @@ Environment constraints:
 | C. Job parts | Protected by tests | Employee approval bypass protection remains covered by integration tests. |
 | D. Frontend enum/display | No new regression found in docs review | No enum renumbering or display-contract change was introduced by this checkpoint. |
 | E. Auth/routing | Protected by tests | `/manage`, `/manage/reports`, `/manage/users`, employee-only routes, root redirects, and unknown-route behavior remain covered in router tests. |
-| F. Environment/dependencies | Validation pending | Checkout was blocked in this scheduled workspace; GitHub or another checkout-capable environment must run standard validation before merge. |
+| F. Environment/dependencies | Validation passed in CI | GitHub Actions validation passed backend restore/build/test and frontend install/build/test for the checkpoint PR. |
 | G. Health endpoint | Protected by tests | `/health` remains documented as public and covered by `HealthIntegrationTests`. |
 | H. Password/auth hardening | Protected by tests | Malformed hash, inactive login rejection, and inactive-token revalidation remain covered. |
 | I. Reporting/labor | Protected by tests | Snapshot-first labor calculations, approved-only totals, and lifecycle date fields remain covered after reports/time-review polish. |
@@ -45,10 +46,9 @@ Environment constraints:
 | M. Documentation discipline | Updated in this checkpoint | Core docs are aligned around the completed audit checkpoint and paused roadmap state. |
 
 ## Follow-Up Needed
-1. Require successful GitHub validation before merge because this scheduled workspace could not run the standard commands locally.
-2. After this checkpoint merges, select and document exactly one next job-ticket-first implementation lane before opening another feature PR.
+1. After this checkpoint merges, select and document exactly one next job-ticket-first implementation lane before opening another feature PR.
 
-## Validation Commands Required Before Merge
+## Validation Commands Covered By GitHub Actions
 
 ```bash
 dotnet restore backend/JobTicketSystem.sln
@@ -98,7 +98,7 @@ Environment constraints:
 | H. Password/auth hardening | Fixed | Malformed hash fail-closed, inactive-user rejection, and token revalidation protections remain covered. |
 | I. Reporting/labor | Fixed | Snapshot-first reporting behavior remains intact with documented legacy fallback coverage. |
 | J. Master data archive/unarchive | Fixed | Soft-delete restore dependency validation remains enforced for equipment/parts relationships. |
-| K. Manager/Admin UI | Fixed | Manager/Admin shell and route protections remain intact; admin-only sections remain protected; invalid Admin user create/update/reset-password payloads now return controlled 400 responses. |
+| K. Manager/Admin UI | Fixed | Manager/Admin shell and route protections remain intact; admin-only sections remain protected; invalid Admin user create/update/reset-password payloads now return controlled `400 Bad Request` responses. |
 | L. Deferred scope | Open-deferred | Deferred domains still not implemented, by design. |
 | M. Documentation discipline | Fixed | Core docs remain aligned after this sync pass. |
 
