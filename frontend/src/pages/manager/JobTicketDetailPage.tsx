@@ -93,10 +93,11 @@ export function JobTicketDetailPage() {
   }, [assignments, job?.scheduledStartAtUtc, leadAssignment]);
   const statusReview = useMemo(() => {
     const nextStatus = Number(statusValue);
-    const currentLabel = job ? getJobTicketStatusLabel(job.status) : "—";
+    const currentStatus = job?.status ?? null;
+    const currentLabel = currentStatus !== null ? getJobTicketStatusLabel(currentStatus) : "—";
     const nextLabel = getJobTicketStatusLabel(nextStatus);
     const warnings: string[] = [];
-    const hasChange = Boolean(job) && nextStatus !== job.status;
+    const hasChange = currentStatus !== null && nextStatus !== currentStatus;
 
     let summary = hasChange
       ? `This change will move the ticket from ${currentLabel} to ${nextLabel}.`
