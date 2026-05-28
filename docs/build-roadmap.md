@@ -8,6 +8,7 @@ Use this roadmap together with:
 - [docs/project-scope.md](./project-scope.md)
 - [docs/api-contract.md](./api-contract.md)
 - [docs/development-setup.md](./development-setup.md)
+- [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md)
 
 ## Current Roadmap Checkpoint
 The project has been explicitly re-centered on the original job-ticket system scope.
@@ -43,7 +44,13 @@ Do not steer the project toward a general ERP build-out.
 ## Current Roadmap Gate
 No later implementation lane is approved yet beyond the merged Manager/Admin reports and time-review polish slice.
 
-Open a new implementation PR only after the next job-ticket-first lane is explicitly selected and documented here.
+Before selecting another implementation lane, complete exactly one bounded post-reports historical regression audit and docs checkpoint.
+
+### Planned scope for the next checkpoint
+- re-audit the known historical bug list against the current `main` baseline;
+- verify auth, `/health`, employee workflow, Manager/Admin route boundaries, `/manage/users` Admin-only access, and reports/time-review baseline behavior;
+- confirm `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, and `docs/historical-bug-regression-audit.md` still match the implemented state;
+- keep the work stabilization/docs-focused unless a narrow regression fix is clearly required.
 
 ### Scope that remains protected after this checkpoint
 - keep new work job-ticket-first unless the owner deliberately expands scope again;
