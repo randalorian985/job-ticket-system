@@ -40,24 +40,29 @@ Do not steer the project toward a general ERP build-out.
 - Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, and purchase-order receipt posting.
 
 ## Current Roadmap Gate
-No later implementation lane is approved yet beyond the merged Manager/Admin status and archive workflow polish slice.
+Open exactly one implementation PR from latest `main` for Manager/Admin reports and time-review polish.
 
-Open a new implementation PR only after the next roadmap item is explicitly selected and documented here.
+### Planned scope for the next lane
+- keep the work job-ticket-first and centered on existing reporting and time-entry workflows;
+- improve Manager/Admin report filters, loaded-data review clarity, and export-friendly table presentation;
+- add client-side CSV export from already-loaded report data where practical rather than inventing a new backend export domain;
+- tighten labor snapshot labels and related time-review wording so existing invoice-ready reporting is easier to interpret;
+- include focused tests plus aligned updates to `README.md`, `docs/project-scope.md`, and `docs/api-contract.md` before merge.
 
-### Scope that remains protected after this checkpoint
-- keep new work job-ticket-first unless the owner deliberately expands scope again;
-- prefer coherent workflow slices or clearly necessary stabilization follow-ups;
-- keep clearer status-change reviewability, archive confirmation, and validation/error UX intact on the existing manager job-ticket surfaces;
-- continue avoiding purchasing or inventory expansion as the default next move.
-
-### Explicitly still not approved
+### Explicitly not included in the next lane
 - warehouse transfer workflows;
 - truck inventory;
 - replenishment automation;
 - pick/reserve/issue automation;
 - compatibility recommendations;
 - AI/scoring;
-- broad ERP-style operational expansion.
+- broad ERP-style operational expansion;
+- auth changes;
+- historical migration edits, even if a future approved schema change becomes necessary.
+
+### Migration rule for future approved schema changes
+- if a future approved task truly needs a schema or index change, add a new forward migration;
+- do not rewrite or delete historical migrations.
 
 ## Scope Rails
 - Keep the work job-ticket-first.

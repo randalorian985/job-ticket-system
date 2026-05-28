@@ -17,6 +17,7 @@ That means the core scope is:
 - `main` remains complete through the validated post-Phase-4 baseline plus the already-merged purchasing and inventory support baseline.
 - The project is now explicitly re-centered on job-ticket-first scope.
 - No inventory-expansion lane is currently approved on `main`.
+- The next approved implementation lane is Manager/Admin reports and time-review polish.
 - Employee workflow and existing Manager/Admin workflow must continue working while future job-ticket-centric phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
@@ -42,6 +43,8 @@ New work should stay centered on the job-ticket product surface:
 - targeted stabilization that protects those workflows.
 
 Supporting purchasing and inventory code already exists on `main`, but further expansion in those domains is not the active product direction.
+
+The currently approved next lane is Manager/Admin reports and time-review polish, with emphasis on filters, export-friendly presentation, client-side CSV export from loaded data where practical, and clearer labor-snapshot wording inside existing reporting surfaces.
 
 ## Not Approved Right Now
 The following are not approved as current implementation lanes:
