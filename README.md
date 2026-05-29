@@ -19,7 +19,7 @@ The project is centered on the original job-ticket workflow:
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
 - No further inventory expansion is currently approved as the active product lane.
-- No later implementation lane is approved yet beyond the merged reports and time-review polish slice.
+- The next approved implementation lane is Job Ticket Closeout & Invoice-Readiness Workflow Polish.
 
 ## What Main Already Implements
 - Job-ticket creation, assignment, execution, reporting, and related Manager/Admin workflows.
@@ -37,9 +37,10 @@ The project is centered on the original job-ticket workflow:
 Supporting purchasing and inventory capabilities already exist on `main`, but they are not the product's primary growth path.
 
 Current roadmap discipline:
-- keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, and related Manager/Admin usability;
+- keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, closeout readiness, and related Manager/Admin usability;
 - keep reports and time-review polish working as part of the existing job-ticket-first reporting workflow;
 - use the completed checkpoint for historical regression review and docs alignment rather than a new domain expansion;
+- treat invoice-readiness as operational handoff review, not accounting, payment tracking, or invoice generation;
 - do not treat the project as a general ERP build-out;
 - do not resume inventory expansion without an explicit future scope decision.
 
