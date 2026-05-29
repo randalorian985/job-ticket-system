@@ -21,6 +21,8 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
+Job Ticket Dispatch & Assignment Readiness Polish is the next selected job-ticket-first implementation lane. This roadmap/organization checkpoint documents the lane only; implementation should happen in one separate feature PR after this update merges.
+
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
 - job ticket creation and editing;
@@ -51,7 +53,43 @@ The Job Ticket Closeout & Invoice-Readiness Workflow Polish slice is implemented
 
 The bounded post-reports historical regression audit and docs checkpoint is complete and validated.
 
-No later implementation lane is approved yet beyond the closeout/readiness workflow polish slice. Select and document exactly one next job-ticket-first lane before starting another feature PR.
+The next selected implementation lane is Job Ticket Dispatch & Assignment Readiness Polish. Start that implementation only after this roadmap/organization PR merges, and keep it to one coherent job-ticket-first feature PR.
+
+### Selected next implementation lane
+Job Ticket Dispatch & Assignment Readiness Polish should improve how Manager/Admin users prepare a job ticket for field execution and how employees understand assignment context.
+
+Allowed implementation scope:
+- clearer Manager/Admin assignment review and dispatch-readiness cues;
+- clearer visibility for assigned employees, lead technician context, schedule timing, due dates, customer, service location, and equipment context;
+- validation and error UX around assignment, schedule, and required job-ticket context;
+- job-ticket detail/list/edit polish that helps managers see whether a ticket is ready to dispatch;
+- employee-facing context improvements for assigned jobs using existing job-ticket, assignment, schedule, customer, service-location, equipment, notes, parts, files/photos, and time-entry data;
+- focused tests and docs updates.
+
+Expected implementation posture:
+- prefer existing APIs when they already expose the required job-ticket and assignment context;
+- if API changes are needed, keep them narrow, DTO-based, job-ticket-first, and documented in [docs/api-contract.md](./api-contract.md);
+- keep controllers thin and business logic in application services;
+- preserve Manager/Admin and Employee route boundaries;
+- preserve soft-delete/archive behavior;
+- keep reports, time-review polish, closeout readiness, purchasing support, and inventory foundation behavior stable.
+
+Not included in this lane:
+- accounting workflows;
+- invoice generation or invoice posting;
+- payment tracking;
+- purchasing expansion;
+- inventory expansion;
+- warehouse transfer workflows;
+- truck inventory;
+- replenishment automation;
+- pick/reserve/issue automation;
+- compatibility recommendations;
+- AI/scoring;
+- broad ERP-style expansion;
+- auth model changes;
+- backend enum renumbering;
+- historical migration edits.
 
 ### Completed closeout/readiness implementation lane
 Job Ticket Closeout & Invoice-Readiness Workflow Polish helps Manager/Admin users review whether a job ticket is ready for invoice handoff without implementing accounting or invoice generation.
@@ -95,6 +133,8 @@ Not included in the implementation PR:
 ### Explicitly still not approved
 - accounting or invoice generation;
 - payment tracking;
+- purchasing expansion;
+- inventory expansion;
 - warehouse transfer workflows;
 - truck inventory;
 - replenishment automation;
