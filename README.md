@@ -20,7 +20,7 @@ The project is centered on the original job-ticket workflow:
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
 - No further inventory expansion is currently approved as the active product lane.
-- No later implementation lane is approved yet beyond the closeout/readiness workflow polish slice.
+- The next selected job-ticket-first implementation lane is Job Ticket Dispatch & Assignment Readiness Polish, documented in [docs/build-roadmap.md](docs/build-roadmap.md). Implementation should happen in a separate feature PR after this roadmap/organization update merges.
 
 ## What Main Already Implements
 - Job-ticket creation, assignment, execution, reporting, closeout readiness, and related Manager/Admin workflows.
@@ -39,6 +39,7 @@ Supporting purchasing and inventory capabilities already exist on `main`, but th
 
 Current roadmap discipline:
 - keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, closeout readiness, and related Manager/Admin usability;
+- use Job Ticket Dispatch & Assignment Readiness Polish as the next selected implementation lane, focused on clearer assignment, dispatch, schedule, and readiness review around existing job-ticket data;
 - keep reports, time-review polish, and closeout readiness working as part of the existing job-ticket-first reporting and review workflow;
 - use the completed checkpoint for historical regression review and docs alignment rather than a new domain expansion;
 - treat invoice-readiness as operational handoff review, not accounting, payment tracking, or invoice generation;

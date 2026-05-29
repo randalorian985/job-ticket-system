@@ -44,10 +44,11 @@
 ## Current Scope Interpretation
 - The product is being steered as a job-ticket-first platform.
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented in the Manager/Admin job review surface using existing APIs.
+- Job Ticket Dispatch & Assignment Readiness Polish is the selected next implementation lane. It should prefer existing job-ticket and assignment APIs; any API changes must be narrow, DTO-based, job-ticket-first, and documented here.
 - Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
 - No transfer endpoints are implemented on `main`.
 - No inventory-expansion API lane is currently approved.
-- This implementation does not change API behavior or add endpoint scope.
+- This roadmap/organization update does not change API behavior or add endpoint scope.
 
 ## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.
@@ -121,12 +122,13 @@ All inventory endpoints require the existing `ManagerOrAdmin` authorization poli
 ## API Growth Boundary
 Until scope is explicitly expanded again, API growth should stay centered on:
 - job-ticket workflows;
+- job-ticket dispatch and assignment readiness;
 - job-ticket closeout and invoice-readiness review;
 - time-entry workflows;
 - parts-on-ticket workflows;
 - Manager/Admin behavior that directly supports job-ticket operations.
 
-The implemented closeout/readiness lane does not approve accounting, invoice generation, payment tracking, purchasing expansion, or inventory expansion APIs. Future API changes must be justified by a newly approved job-ticket-first workflow and documented here.
+The selected dispatch/assignment readiness lane does not approve accounting, invoice generation, payment tracking, purchasing expansion, or inventory expansion APIs. Future API changes must be justified by that approved job-ticket-first workflow, kept narrow, and documented here.
 
 Do not expand the API surface into transfer workflows, truck inventory, replenishment automation, pick/reserve/issue automation, compatibility recommendations, or AI/scoring under the current roadmap.
 
