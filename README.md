@@ -8,22 +8,23 @@ The project is centered on the original job-ticket workflow:
 - capture job information;
 - add parts to tickets;
 - track time;
-- support Manager/Admin coordination, reporting, and user management around that workflow.
+- support Manager/Admin coordination, reporting, closeout readiness, and user management around that workflow.
 
 ## Current Project State
 - Core backend/API workflows remain implemented and validated.
 - Employee mobile workflow remains implemented.
 - Manager/Admin Phases 1-3D and Phase 4A/4B remain implemented.
-- Manager/Admin reports and time-review polish are now implemented on top of the existing reporting and approval surfaces.
+- Manager/Admin reports and time-review polish are implemented on top of the existing reporting and approval surfaces.
+- Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented in the Manager/Admin job review packet without adding accounting, payment tracking, or invoice generation.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
 - No further inventory expansion is currently approved as the active product lane.
-- The next approved implementation lane is Job Ticket Closeout & Invoice-Readiness Workflow Polish.
+- No later implementation lane is approved yet beyond the closeout/readiness workflow polish slice.
 
 ## What Main Already Implements
-- Job-ticket creation, assignment, execution, reporting, and related Manager/Admin workflows.
-- Manager/Admin job-ticket create/edit/detail coverage for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, and clearer status/archive review actions.
+- Job-ticket creation, assignment, execution, reporting, closeout readiness, and related Manager/Admin workflows.
+- Manager/Admin job-ticket create/edit/detail coverage for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, invoice-readiness cues, and clearer status/archive review actions.
 - Manager/Admin reporting filters, loaded-row review context, snapshot-first labor labels, export-friendly report tables, and client-side CSV export from loaded report data.
 - Manager/Admin time review with export-friendly loaded rows, visible-slice filters, summary counts, and CSV export for loaded time-entry review.
 - Employee mobile job workflow with GPS time tracking, work notes, part usage, and files/photos.
@@ -38,7 +39,7 @@ Supporting purchasing and inventory capabilities already exist on `main`, but th
 
 Current roadmap discipline:
 - keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, closeout readiness, and related Manager/Admin usability;
-- keep reports and time-review polish working as part of the existing job-ticket-first reporting workflow;
+- keep reports, time-review polish, and closeout readiness working as part of the existing job-ticket-first reporting and review workflow;
 - use the completed checkpoint for historical regression review and docs alignment rather than a new domain expansion;
 - treat invoice-readiness as operational handoff review, not accounting, payment tracking, or invoice generation;
 - do not treat the project as a general ERP build-out;
