@@ -28,6 +28,7 @@ import {
   formatDate,
   getApprovalLabel,
   jobStatusOptions,
+  JOB_PART_APPROVAL_STATUS,
   TIME_ENTRY_APPROVAL_STATUS,
 } from "./managerDisplay";
 import { JobTicketEditorForm } from "./JobTicketEditorForm";
@@ -94,6 +95,18 @@ export function JobTicketDetailPage() {
   }, [assignments, job?.scheduledStartAtUtc, leadAssignment]);
   const closeoutReview = useMemo(() => {
     const warnings: string[] = [];
+    const approvedClosedTimeEntries = timeEntries.filter(
+      (entry) => entry.approvalStatus === TIME_ENTRY_APPROVAL_STATUS.Approved && Boolean(entry.endedAtUtc),
+    );
+    const hasUnapprovedTimeEntries = timeEntries.some(
+      (entry) => entry.approvalStatus !== TIME_ENTRY_APPROVAL_STATUS.Approved,
+    );
+    const hasOpenApprovedTimeEntries = timeEntries.some(
+      (entry) => entry.approvalStatus === TIME_ENTRY_APPROVAL_STATUS.Approved && !entry.endedAtUtc,
+    );
+    const approvedParts = parts.filter(
+      (part) => part.approvalStatus === JOB_PART_APPROVAL_STATUS.Approved,
+    );
     const checks = [
       {
         label: "Customer and location",
@@ -131,18 +144,22 @@ export function JobTicketDetailPage() {
       },
       {
         label: "Time approval review",
-        isReady: Boolean(timeEntries.length && timeEntries.every((entry) => entry.approvalStatus === 1)),
+        isReady: Boolean(timeEntries.length && approvedClosedTimeEntries.length === timeEntries.length),
         detail: timeEntries.length
-          ? timeEntries.every((entry) => entry.approvalStatus === 1)
-            ? "All loaded time entries are approved."
-            : "Some loaded time entries still need approval review."
+          ? hasUnapprovedTimeEntries
+            ? "Some loaded time entries still need approval review."
+            : hasOpenApprovedTimeEntries
+              ? "Approved time entries must be clocked out before invoice handoff."
+              : "All loaded time entries are approved and clocked out."
           : "No time entries are loaded for approval review.",
       },
       {
         label: "Parts usage review",
-        isReady: Boolean(parts.length),
+        isReady: Boolean(approvedParts.length),
         detail: parts.length
-          ? "Parts usage is available for invoice review."
+          ? approvedParts.length
+            ? "Approved parts usage is available for invoice review."
+            : "Parts are recorded, but none are approved for invoice review."
           : "No parts usage is recorded; confirm that no parts were needed.",
       },
       {
@@ -179,7 +196,7 @@ export function JobTicketDetailPage() {
       readyCount: checks.filter((check) => check.isReady).length,
       warnings,
     };
-  }, [entries.length, files.length, job, parts.length, timeEntries]);
+  }, [entries.length, files.length, job, parts, timeEntries]);
   const statusReview = useMemo(() => {
     const nextStatus = Number(statusValue);
     const currentStatus = job?.status ?? null;
@@ -348,7 +365,7 @@ export function JobTicketDetailPage() {
     }
   };
 
-  const onArchiveRequest = (event: FormEvent) => {
+  const onArchiveRequest = async (event: FormEvent) => {
     event.preventDefault();
     if (!jobTicketId) return;
     if (!archiveReason.trim()) {
