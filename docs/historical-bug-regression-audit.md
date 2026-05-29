@@ -46,7 +46,8 @@ Environment and validation evidence:
 | M. Documentation discipline | Updated in this checkpoint | Core docs are aligned around the completed audit checkpoint and paused roadmap state. |
 
 ## Follow-Up Needed
-1. After this checkpoint merges, select and document exactly one next job-ticket-first implementation lane before opening another feature PR.
+1. The next lane-selection follow-up is Job Ticket Closeout & Invoice-Readiness Workflow Polish, documented as a job-ticket-first implementation lane in the roadmap and scope docs.
+2. After that roadmap-selection PR merges and validates, open exactly one implementation PR for that closeout/readiness lane.
 
 ## Validation Commands Covered By GitHub Actions
 

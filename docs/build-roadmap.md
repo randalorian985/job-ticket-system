@@ -19,6 +19,8 @@ Supporting purchasing and inventory work already merged on `main` remains part o
 
 The post-reports historical regression audit and docs checkpoint is recorded in [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md). The checkpoint passed standard GitHub Actions validation.
 
+The next approved implementation lane is Job Ticket Closeout & Invoice-Readiness Workflow Polish.
+
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
 - job ticket creation and editing;
@@ -44,11 +46,38 @@ Do not steer the project toward a general ERP build-out.
 - Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, and purchase-order receipt posting.
 
 ## Current Roadmap Gate
-No later implementation lane is approved yet beyond the merged Manager/Admin reports and time-review polish slice.
+The next approved job-ticket-first implementation lane is Job Ticket Closeout & Invoice-Readiness Workflow Polish.
 
 The bounded post-reports historical regression audit and docs checkpoint is complete and validated.
 
-The next action is an owner-selected job-ticket-first lane documented here before a feature branch starts.
+The next feature PR should implement only this approved closeout and invoice-readiness workflow slice, after this roadmap-selection PR is merged and validated.
+
+### Approved next implementation lane
+Job Ticket Closeout & Invoice-Readiness Workflow Polish should help Manager/Admin users review whether a job ticket is ready for invoice handoff without implementing accounting or invoice generation.
+
+Included in the later implementation PR:
+- Manager/Admin review of job ticket readiness for invoicing;
+- clearer closeout cues for labor, parts, files/photos, notes, status, and customer/equipment context;
+- validation and error UX around missing closeout information;
+- export and report wording that remains invoice-ready, not accounting or invoice generation;
+- focused tests for the closeout/readiness workflow and regression-prone route/auth boundaries;
+- README, API contract, scope, and roadmap updates that match implemented behavior.
+
+Not included in the later implementation PR:
+- accounting workflows;
+- invoice generation or invoice posting;
+- payment tracking;
+- purchasing expansion;
+- inventory expansion;
+- warehouse transfer workflows;
+- truck inventory;
+- replenishment automation;
+- pick/reserve/issue automation;
+- compatibility recommendations;
+- AI/scoring;
+- auth model changes;
+- backend enum renumbering;
+- historical migration edits.
 
 ### Scope confirmed by the checkpoint
 - known historical bug list re-audited against the current `main` baseline;
@@ -63,6 +92,8 @@ The next action is an owner-selected job-ticket-first lane documented here befor
 - continue avoiding purchasing or inventory expansion as the default next move.
 
 ### Explicitly still not approved
+- accounting or invoice generation;
+- payment tracking;
 - warehouse transfer workflows;
 - truck inventory;
 - replenishment automation;
@@ -106,6 +137,7 @@ Merge readiness requires:
 - no scope drift back into deferred domains.
 
 ## Deferred Until Explicitly Re-Approved
+- accounting or invoice generation;
 - new inventory expansion beyond the already-merged support baseline;
 - truck inventory;
 - replenishment automation;
