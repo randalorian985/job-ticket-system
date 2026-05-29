@@ -19,7 +19,7 @@ Supporting purchasing and inventory work already merged on `main` remains part o
 
 The post-reports historical regression audit and docs checkpoint is recorded in [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md). The checkpoint passed standard GitHub Actions validation.
 
-The next approved implementation lane is Job Ticket Closeout & Invoice-Readiness Workflow Polish.
+Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
@@ -38,7 +38,8 @@ Do not steer the project toward a general ERP build-out.
 - Manager/Admin Phases 1-3D.
 - Phase 4A pilot readiness.
 - Phase 4B pilot workflow polish.
-- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, and status/archive review clarity.
+- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, invoice-readiness cues, and status/archive review clarity.
+- Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
 - Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
 - Parts Purchase / Vendor Cost Tracking Phase 2.
@@ -46,24 +47,24 @@ Do not steer the project toward a general ERP build-out.
 - Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, and purchase-order receipt posting.
 
 ## Current Roadmap Gate
-The next approved job-ticket-first implementation lane is Job Ticket Closeout & Invoice-Readiness Workflow Polish.
+The Job Ticket Closeout & Invoice-Readiness Workflow Polish slice is implemented using existing Manager/Admin job-ticket review data and APIs.
 
 The bounded post-reports historical regression audit and docs checkpoint is complete and validated.
 
-The next feature PR should implement only this approved closeout and invoice-readiness workflow slice, after this roadmap-selection PR is merged and validated.
+No later implementation lane is approved yet beyond the closeout/readiness workflow polish slice. Select and document exactly one next job-ticket-first lane before starting another feature PR.
 
-### Approved next implementation lane
-Job Ticket Closeout & Invoice-Readiness Workflow Polish should help Manager/Admin users review whether a job ticket is ready for invoice handoff without implementing accounting or invoice generation.
+### Completed closeout/readiness implementation lane
+Job Ticket Closeout & Invoice-Readiness Workflow Polish helps Manager/Admin users review whether a job ticket is ready for invoice handoff without implementing accounting or invoice generation.
 
-Included in the later implementation PR:
+Included in the implementation PR:
 - Manager/Admin review of job ticket readiness for invoicing;
-- clearer closeout cues for labor, parts, files/photos, notes, status, and customer/equipment context;
-- validation and error UX around missing closeout information;
+- clearer closeout cues for labor, time approvals, parts, files/photos, notes, status, and customer/equipment context;
+- invoice/readiness status warnings around missing closeout information;
 - export and report wording that remains invoice-ready, not accounting or invoice generation;
-- focused tests for the closeout/readiness workflow and regression-prone route/auth boundaries;
+- focused tests for the closeout/readiness workflow;
 - README, API contract, scope, and roadmap updates that match implemented behavior.
 
-Not included in the later implementation PR:
+Not included in the implementation PR:
 - accounting workflows;
 - invoice generation or invoice posting;
 - payment tracking;
@@ -88,7 +89,7 @@ Not included in the later implementation PR:
 ### Scope that remains protected after this checkpoint
 - keep new work job-ticket-first unless the owner deliberately expands scope again;
 - prefer coherent workflow slices or clearly necessary stabilization follow-ups;
-- keep the current report review filters, CSV export, and time-review workspace working;
+- keep the current report review filters, CSV export, time-review workspace, and closeout/readiness review working;
 - continue avoiding purchasing or inventory expansion as the default next move.
 
 ### Explicitly still not approved

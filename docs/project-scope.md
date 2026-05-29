@@ -17,19 +17,20 @@ That means the core scope is:
 - `main` remains complete through the validated post-Phase-4 baseline plus the already-merged purchasing and inventory support baseline.
 - The project is now explicitly re-centered on job-ticket-first scope.
 - No inventory-expansion lane is currently approved on `main`.
-- Manager/Admin reports and time-review polish are now part of the implemented baseline.
+- Manager/Admin reports and time-review polish are part of the implemented baseline.
+- Job Ticket Closeout & Invoice-Readiness Workflow Polish is part of the implemented Manager/Admin job review baseline.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
-- The next approved implementation lane is Job Ticket Closeout & Invoice-Readiness Workflow Polish.
-- The next implementation PR should stay within that one job-ticket-first workflow slice.
-- Employee workflow and existing Manager/Admin workflow must continue working while the closeout/readiness lane is built.
+- No later implementation lane is currently approved beyond the closeout/readiness workflow polish slice.
+- The next implementation lane should be selected and documented as one job-ticket-first workflow before another feature PR starts.
+- Employee workflow and existing Manager/Admin workflow must continue working while future job-ticket-centric phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
 
 ## Implemented Baseline That Must Stay Stable
 - Auth, JWT token revalidation, and role enforcement for `Admin`, `Manager`, and `Employee`.
 - Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, and files/photos.
-- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, and time-review approval workspace.
-- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, lead-tech/assignment review cues, and clearer status-change confirmation.
+- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, closeout/invoice-readiness review, and time-review approval workspace.
+- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, lead-tech/assignment review cues, invoice-readiness cues, and clearer status-change confirmation.
 - Manager/Admin reporting filters, export-friendly loaded tables, client-side CSV export from loaded report data, visible review context, and snapshot-first labor labels.
 - Manager/Admin master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
 - Manager/Admin Admin-only user management workflow at `/manage/users`.
@@ -49,21 +50,23 @@ New work should stay centered on the job-ticket product surface:
 
 Supporting purchasing and inventory code already exists on `main`, but further expansion in those domains is not the active product direction.
 
-Reports and time-review polish are now part of the protected baseline: loaded-row filters, export-friendly review tables, visible-row CSV export, and clearer labor-snapshot wording should remain intact while the closeout/readiness lane is built.
+Reports and time-review polish are part of the protected baseline: loaded-row filters, export-friendly review tables, visible-row CSV export, and clearer labor-snapshot wording should remain intact after the closeout/readiness lane.
+
+Closeout and invoice-readiness polish is operational review only. It helps Manager/Admin users identify whether the existing ticket record has labor, time-approval, parts, file/photo, note, status, and billing-handoff context before invoice handoff. It does not create invoices, post accounting entries, or track payments.
 
 The completed checkpoint re-audited auth, routing, employee workflow, Manager/Admin workflow, reports/time-review behavior, and the known historical bug list. It does not approve domain expansion by itself.
 
-## Approved Next Lane
-Job Ticket Closeout & Invoice-Readiness Workflow Polish is approved as the next implementation lane.
+## Completed Closeout And Readiness Lane
+Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
-The lane may include:
+The lane includes:
 - Manager/Admin review of job ticket readiness for invoicing;
 - clearer closeout cues for labor, parts, files/photos, notes, status, and customer/equipment context;
-- validation and error UX around missing closeout information;
-- export and report wording that remains invoice-ready and operational;
-- focused tests and docs updates in the implementation PR.
+- status-review warnings when invoice/readiness transitions still have open closeout items;
+- operational wording that remains invoice-ready without accounting, invoice generation, or payment tracking;
+- focused frontend tests and docs updates.
 
-The lane must not implement accounting, invoice generation, payment tracking, purchasing expansion, inventory expansion, compatibility recommendations, AI/scoring, or broad ERP behavior.
+The lane does not implement accounting, invoice generation, payment tracking, purchasing expansion, inventory expansion, compatibility recommendations, AI/scoring, or broad ERP behavior.
 
 ## Not Approved Right Now
 The following are not approved as current implementation lanes:

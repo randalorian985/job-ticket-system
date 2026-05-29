@@ -1,14 +1,25 @@
 export const formatDate = (value?: string | null) => (value ? new Date(value).toLocaleString() : '—')
 
+export const TIME_ENTRY_APPROVAL_STATUS = {
+  Pending: 1,
+  Approved: 2,
+  Rejected: 3,
+} as const
+
+export const JOB_PART_APPROVAL_STATUS = {
+  ...TIME_ENTRY_APPROVAL_STATUS,
+  Invoiced: 4,
+} as const
+
 export const getApprovalLabel = (value: number) => {
   switch (value) {
-    case 1:
+    case TIME_ENTRY_APPROVAL_STATUS.Pending:
       return 'Pending'
-    case 2:
+    case TIME_ENTRY_APPROVAL_STATUS.Approved:
       return 'Approved'
-    case 3:
+    case TIME_ENTRY_APPROVAL_STATUS.Rejected:
       return 'Rejected'
-    case 4:
+    case JOB_PART_APPROVAL_STATUS.Invoiced:
       return 'Invoiced'
     default:
       return 'Unknown'

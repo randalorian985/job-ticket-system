@@ -47,7 +47,7 @@ describe('JobTicketDetailPage', () => {
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([{ employeeId: 'e1', assignedAtUtc: '2026-04-01T08:15:00Z', isLead: true }] as any)
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([{ id: 'w1', performedAtUtc: '2026-04-01T12:00:00Z', notes: 'Replaced belt' }] as any)
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 1, notes: 'Pilot stock' }] as any)
-    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', laborHours: 1.5, billableHours: 1, approvalStatus: 0, workSummary: 'Checked motor' }] as any)
+    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
     vi.mocked(filesApi.list).mockResolvedValue([{ id: 'f1', jobTicketId: 'j1', originalFileName: 'photo.jpg' }] as any)
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's1', locationName: 'HQ' }] as any)
@@ -67,7 +67,7 @@ describe('JobTicketDetailPage', () => {
     render(<MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
   }
 
-  it('renders richer dispatch, billing, status review, and archive review details alongside actions', async () => {
+  it('renders richer dispatch, billing, status review, closeout readiness, and archive review details alongside actions', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
@@ -76,6 +76,12 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('Casey Customer')).toBeInTheDocument()
     expect(screen.getByText('casey@example.com')).toBeInTheDocument()
     expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
+    expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
+    expect(screen.getByText('Needs closeout review')).toBeInTheDocument()
+    expect(screen.getByText('7 / 9')).toBeInTheDocument()
+    expect(screen.getByText('This is an operational closeout review for invoice handoff. It does not create invoices, post accounting entries, or track payments.')).toBeInTheDocument()
+    expect(screen.getByText('Some loaded time entries still need approval review.')).toBeInTheDocument()
+    expect(screen.getByText('Move the ticket to Completed before invoice handoff review.')).toBeInTheDocument()
     expect(screen.getByText('Status Review')).toBeInTheDocument()
     expect(screen.getByText('Archive Review')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
@@ -91,6 +97,32 @@ describe('JobTicketDetailPage', () => {
     fireEvent.change(screen.getByLabelText('assignment employee'), { target: { value: 'e2' } })
     fireEvent.click(screen.getByText('Assign Employee'))
     await waitFor(() => expect(jobTicketsApi.addAssignment).toHaveBeenCalledWith('j1', { employeeId: 'e2', isLead: false }))
+  })
+
+  it('shows invoice handoff readiness when closeout signals are complete', async () => {
+    vi.mocked(jobTicketsApi.get).mockResolvedValue({
+      id: 'j1',
+      ticketNumber: 'JT-1',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      billingPartyCustomerId: 'c1',
+      equipmentId: 'eq1',
+      title: 'Issue',
+      description: 'Replace leaking hose and confirm restart.',
+      priority: 2,
+      status: 7,
+      scheduledStartAtUtc: '2026-04-02T09:30:00Z',
+      purchaseOrderNumber: 'PO-44',
+      customerFacingNotes: 'Work complete.'
+    } as any)
+    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', laborHours: 1.5, billableHours: 1, approvalStatus: 2, workSummary: 'Checked motor' }] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('Ready for invoice handoff')).toBeInTheDocument()
+    expect(screen.getByText('9 / 9')).toBeInTheDocument()
+    expect(screen.getByText('Labor, time approval, parts, files/photos, notes, and billing handoff context are ready for invoice review.')).toBeInTheDocument()
   })
 
   it('warns when dispatch coverage is incomplete', async () => {
@@ -137,6 +169,16 @@ describe('JobTicketDetailPage', () => {
     await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('j1', { status: 4 }))
     expect(await screen.findByText('Status updated.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
+  })
+
+  it('feeds closeout warnings into invoice status review', async () => {
+    renderPage()
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '9' } })
+
+    expect(screen.getByText('Invoice readiness: Some loaded time entries still need approval review.')).toBeInTheDocument()
+    expect(screen.getByText('Invoice readiness: Move the ticket to Completed before invoice handoff review.')).toBeInTheDocument()
   })
 
   it('surfaces API validation feedback when a status update is rejected', async () => {
