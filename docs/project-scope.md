@@ -20,8 +20,8 @@ That means the core scope is:
 - Manager/Admin reports and time-review polish are part of the implemented baseline.
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is part of the implemented Manager/Admin job review baseline.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
-- No later implementation lane is currently approved beyond the closeout/readiness workflow polish slice.
-- The next implementation lane should be selected and documented as one job-ticket-first workflow before another feature PR starts.
+- The next selected implementation lane is Job Ticket Dispatch & Assignment Readiness Polish.
+- Implementation of the selected lane should happen in one future feature PR after the roadmap/organization update that documents this lane has merged.
 - Employee workflow and existing Manager/Admin workflow must continue working while future job-ticket-centric phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
@@ -38,10 +38,40 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 - Purchasing workbench plus dedicated purchase-order workflow, receiving progress, vendor invoice tracking, landed-cost recording, close validation, and archive/unarchive behavior.
 - Supporting inventory foundation already merged on `main` for stock locations, inventory history, stock visibility, manual adjustments, and receipt-posted inventory transactions.
 
+## Selected Next Lane
+Job Ticket Dispatch & Assignment Readiness Polish is the selected next job-ticket-first workflow lane.
+
+The lane should improve how Manager/Admin users prepare a job ticket for field execution and how employees understand assignment context, while staying on the existing job-ticket product surface.
+
+Allowed implementation scope for the future feature PR:
+- clearer Manager/Admin assignment review and dispatch-readiness cues;
+- clearer visibility for assigned employees, lead technician context, schedule timing, due dates, customer, service location, and equipment context;
+- validation and error UX around assignment, schedule, and required job-ticket context;
+- job-ticket detail/list/edit polish that helps managers see whether a ticket is ready to dispatch;
+- employee-facing context improvements for assigned jobs when they rely on existing job-ticket, assignment, schedule, customer, service-location, equipment, notes, parts, files/photos, and time-entry data;
+- focused tests and documentation updates for the selected lane.
+
+The lane should not implement:
+- accounting or invoice generation;
+- payment tracking;
+- purchasing expansion;
+- inventory expansion;
+- warehouse transfer workflows;
+- truck inventory;
+- replenishment automation;
+- pick/reserve/issue automation;
+- compatibility recommendations;
+- AI or scoring;
+- broad ERP-style expansion;
+- auth model changes;
+- backend enum renumbering;
+- historical migration edits.
+
 ## Scope Boundary For New Work
 New work should stay centered on the job-ticket product surface:
 - job-ticket workflow polish;
 - assignment workflow clarity;
+- dispatch-readiness and assignment-context review;
 - job information completeness, including scheduling, purchase-order, billing-contact, and note context;
 - closeout and invoice-readiness review for labor, parts, files/photos, notes, status, and customer/equipment context;
 - parts-on-ticket quality;
@@ -72,6 +102,8 @@ The lane does not implement accounting, invoice generation, payment tracking, pu
 The following are not approved as current implementation lanes:
 - accounting or invoice generation;
 - payment tracking;
+- purchasing expansion;
+- inventory expansion;
 - warehouse transfer workflows;
 - truck inventory workflows;
 - replenishment automation;
