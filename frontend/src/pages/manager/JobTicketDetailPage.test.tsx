@@ -115,7 +115,7 @@ describe('JobTicketDetailPage', () => {
       purchaseOrderNumber: 'PO-44',
       customerFacingNotes: 'Work complete.'
     } as any)
-    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', laborHours: 1.5, billableHours: 1, approvalStatus: 2, workSummary: 'Checked motor' }] as any)
+    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
 
     renderPage()
 

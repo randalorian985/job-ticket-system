@@ -131,9 +131,9 @@ export function JobTicketDetailPage() {
       },
       {
         label: "Time approval review",
-        isReady: Boolean(timeEntries.length && timeEntries.every((entry) => entry.approvalStatus === TIME_ENTRY_APPROVAL_STATUS.Approved)),
+        isReady: Boolean(timeEntries.length && timeEntries.every((entry) => entry.approvalStatus === 1)),
         detail: timeEntries.length
-          ? timeEntries.every((entry) => entry.approvalStatus === TIME_ENTRY_APPROVAL_STATUS.Approved)
+          ? timeEntries.every((entry) => entry.approvalStatus === 1)
             ? "All loaded time entries are approved."
             : "Some loaded time entries still need approval review."
           : "No time entries are loaded for approval review.",
