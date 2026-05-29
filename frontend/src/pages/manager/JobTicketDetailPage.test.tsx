@@ -47,7 +47,7 @@ describe('JobTicketDetailPage', () => {
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([{ employeeId: 'e1', assignedAtUtc: '2026-04-01T08:15:00Z', isLead: true }] as any)
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([{ id: 'w1', performedAtUtc: '2026-04-01T12:00:00Z', notes: 'Replaced belt' }] as any)
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 1, notes: 'Pilot stock' }] as any)
-    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
+    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:00:00Z', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
     vi.mocked(filesApi.list).mockResolvedValue([{ id: 'f1', jobTicketId: 'j1', originalFileName: 'photo.jpg' }] as any)
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's1', locationName: 'HQ' }] as any)
@@ -78,9 +78,10 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
     expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
     expect(screen.getByText('Needs closeout review')).toBeInTheDocument()
-    expect(screen.getByText('7 / 9')).toBeInTheDocument()
+    expect(screen.getByText('6 / 9')).toBeInTheDocument()
     expect(screen.getByText('This is an operational closeout review for invoice handoff. It does not create invoices, post accounting entries, or track payments.')).toBeInTheDocument()
     expect(screen.getByText('Some loaded time entries still need approval review.')).toBeInTheDocument()
+    expect(screen.getByText('Parts are recorded, but none are approved for invoice review.')).toBeInTheDocument()
     expect(screen.getByText('Move the ticket to Completed before invoice handoff review.')).toBeInTheDocument()
     expect(screen.getByText('Status Review')).toBeInTheDocument()
     expect(screen.getByText('Archive Review')).toBeInTheDocument()
@@ -115,7 +116,8 @@ describe('JobTicketDetailPage', () => {
       purchaseOrderNumber: 'PO-44',
       customerFacingNotes: 'Work complete.'
     } as any)
-    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 2, notes: 'Approved stock' }] as any)
+    vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:00:00Z', laborHours: 1.5, billableHours: 1, approvalStatus: 2, workSummary: 'Checked motor' }] as any)
 
     renderPage()
 
@@ -178,6 +180,7 @@ describe('JobTicketDetailPage', () => {
     fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '9' } })
 
     expect(screen.getByText('Invoice readiness: Some loaded time entries still need approval review.')).toBeInTheDocument()
+    expect(screen.getByText('Invoice readiness: Parts are recorded, but none are approved for invoice review.')).toBeInTheDocument()
     expect(screen.getByText('Invoice readiness: Move the ticket to Completed before invoice handoff review.')).toBeInTheDocument()
   })
 
