@@ -31,23 +31,23 @@
 - Manager/Admin create and update flows already support operational fields such as `jobType`, `purchaseOrderNumber`, `billingContactName`, `billingContactPhone`, `billingContactEmail`, `internalNotes`, `customerFacingNotes`, `requestedAtUtc`, `scheduledStartAtUtc`, and `dueAtUtc`.
 - `equipmentId` remains optional, but when supplied it must belong to the selected `serviceLocationId`.
 - Manager/Admin list and detail views use the existing assignment endpoints to surface assigned-employee counts, lead-tech visibility, and dispatch-readiness cues without changing the API surface.
-- Manager/Admin detail/edit surfaces now provide inline status transition review, disable no-op status submissions, surface API validation messages, and keep archive confirmation explicit as a soft-delete/archive workflow rather than hard delete.
-- The next approved closeout/readiness lane should preserve these existing job-ticket fields and use them as readiness context where appropriate.
+- Manager/Admin detail/edit surfaces now provide inline status transition review, disable no-op status submissions, surface API validation messages, keep archive confirmation explicit as a soft-delete/archive workflow rather than hard delete, and summarize operational closeout readiness for invoice handoff.
+- Closeout/readiness review uses existing job-ticket, assignment, work-entry, time-entry, parts, file/photo, customer, service-location, and equipment data. It does not add endpoints or change request/response DTOs.
 - Job-ticket-first UI work should keep those existing fields visible and editable rather than introducing a separate workflow for the same context.
 
 ## Reporting And Time Review (Current Main Notes)
 - Existing `/api/reports/*` endpoints remain the reporting API surface. Reports polish stays client-side by improving loaded-row review context, filter reset behavior, export-friendly table presentation, and CSV export from already-loaded rows.
 - Manager/Admin reporting surfaces now label labor money columns as snapshot-first to clarify that approved time-entry snapshots are used before any legacy fallback rate behavior.
 - Manager/Admin time review still uses existing `/api/time-entries/job/{jobTicketId}`, `/api/time-entries/{id}/approve`, and `/api/time-entries/{id}/reject` endpoints. The polish layer is UI-only: visible-row filters, summary counts, export-friendly loaded tables, and visible-row CSV export on top of the loaded job slice.
-- Closeout and invoice-readiness wording may build on existing reporting and time-review data, but it must remain an operational readiness review rather than accounting, payment tracking, or invoice generation.
+- Closeout and invoice-readiness wording builds on existing reporting and time-review data, but remains an operational readiness review rather than accounting, payment tracking, or invoice generation.
 
 ## Current Scope Interpretation
 - The product is being steered as a job-ticket-first platform.
-- The next approved implementation lane is Job Ticket Closeout & Invoice-Readiness Workflow Polish.
+- Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented in the Manager/Admin job review surface using existing APIs.
 - Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
 - No transfer endpoints are implemented on `main`.
 - No inventory-expansion API lane is currently approved.
-- This roadmap-selection update does not change API behavior or add endpoint scope.
+- This implementation does not change API behavior or add endpoint scope.
 
 ## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.
@@ -126,7 +126,7 @@ Until scope is explicitly expanded again, API growth should stay centered on:
 - parts-on-ticket workflows;
 - Manager/Admin behavior that directly supports job-ticket operations.
 
-The approved closeout/readiness lane does not itself approve accounting, invoice generation, payment tracking, purchasing expansion, or inventory expansion APIs. Any API changes in the later implementation PR must be justified by the closeout/readiness workflow and documented here.
+The implemented closeout/readiness lane does not approve accounting, invoice generation, payment tracking, purchasing expansion, or inventory expansion APIs. Future API changes must be justified by a newly approved job-ticket-first workflow and documented here.
 
 Do not expand the API surface into transfer workflows, truck inventory, replenishment automation, pick/reserve/issue automation, compatibility recommendations, or AI/scoring under the current roadmap.
 

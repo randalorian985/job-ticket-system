@@ -91,6 +91,94 @@ export function JobTicketDetailPage() {
 
     return warnings;
   }, [assignments, job?.scheduledStartAtUtc, leadAssignment]);
+  const closeoutReview = useMemo(() => {
+    const warnings: string[] = [];
+    const checks = [
+      {
+        label: "Customer and location",
+        isReady: Boolean(job?.customerId && job?.serviceLocationId),
+        detail: job?.customerId && job?.serviceLocationId
+          ? "Customer and service location are present."
+          : "Customer or service location is missing.",
+      },
+      {
+        label: "Equipment context",
+        isReady: Boolean(job?.equipmentId),
+        detail: job?.equipmentId
+          ? "Equipment is attached for review."
+          : "No equipment is attached; confirm that this ticket does not require equipment context.",
+      },
+      {
+        label: "Billing handoff context",
+        isReady: Boolean(
+          job?.billingPartyCustomerId ||
+          job?.purchaseOrderNumber?.trim() ||
+          job?.billingContactName?.trim() ||
+          job?.billingContactEmail?.trim() ||
+          job?.billingContactPhone?.trim(),
+        ),
+        detail: job?.billingPartyCustomerId || job?.purchaseOrderNumber?.trim() || job?.billingContactName?.trim()
+          ? "Billing party, purchase order, or billing contact context is present."
+          : "Add purchase-order, billing-party, or billing-contact context before invoice handoff.",
+      },
+      {
+        label: "Labor and work notes",
+        isReady: Boolean(entries.length || timeEntries.length),
+        detail: entries.length || timeEntries.length
+          ? "Labor or work-entry activity is present."
+          : "No labor or work-entry activity is recorded.",
+      },
+      {
+        label: "Time approval review",
+        isReady: Boolean(timeEntries.length && timeEntries.every((entry) => entry.approvalStatus === 1)),
+        detail: timeEntries.length
+          ? timeEntries.every((entry) => entry.approvalStatus === 1)
+            ? "All loaded time entries are approved."
+            : "Some loaded time entries still need approval review."
+          : "No time entries are loaded for approval review.",
+      },
+      {
+        label: "Parts usage review",
+        isReady: Boolean(parts.length),
+        detail: parts.length
+          ? "Parts usage is available for invoice review."
+          : "No parts usage is recorded; confirm that no parts were needed.",
+      },
+      {
+        label: "Files and photos",
+        isReady: Boolean(files.length),
+        detail: files.length
+          ? "Files or photos are attached for documentation review."
+          : "No files or photos are attached; confirm that documentation is not required.",
+      },
+      {
+        label: "Closeout notes",
+        isReady: Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim() || job?.internalNotes?.trim()),
+        detail: job?.description?.trim() || job?.customerFacingNotes?.trim() || job?.internalNotes?.trim()
+          ? "Description or closeout notes are present."
+          : "Add closeout notes before invoice handoff.",
+      },
+      {
+        label: "Closeout status",
+        isReady: Boolean(job && [7, 9, 10].includes(job.status)),
+        detail: job && [7, 9, 10].includes(job.status)
+          ? "Ticket status is in a closeout-ready state."
+          : "Move the ticket to Completed before invoice handoff review.",
+      },
+    ];
+
+    checks.forEach((check) => {
+      if (!check.isReady) {
+        warnings.push(check.detail);
+      }
+    });
+
+    return {
+      checks,
+      readyCount: checks.filter((check) => check.isReady).length,
+      warnings,
+    };
+  }, [entries.length, files.length, job, parts.length, timeEntries]);
   const statusReview = useMemo(() => {
     const nextStatus = Number(statusValue);
     const currentStatus = job?.status ?? null;
@@ -136,10 +224,12 @@ export function JobTicketDetailPage() {
           }
           break;
         case 9:
-          warnings.push("Invoice status should follow completed work and billing review.");
-          break;
         case 10:
-          warnings.push("Reviewed is the final closeout state after invoice review.");
+          if (closeoutReview.warnings.length) {
+            warnings.push(
+              ...closeoutReview.warnings.map((warning) => `Invoice readiness: ${warning}`),
+            );
+          }
           break;
         default:
           break;
@@ -157,7 +247,7 @@ export function JobTicketDetailPage() {
       summary,
       warnings,
     };
-  }, [assignments.length, entries.length, job, leadAssignment, parts.length, statusValue, timeEntries.length]);
+  }, [assignments.length, closeoutReview.warnings, entries.length, job, leadAssignment, parts.length, statusValue, timeEntries.length]);
   const archiveReviewWarnings = useMemo(() => {
     const warnings = dispatchWarnings.map((warning) => `Before archiving: ${warning}`);
 
@@ -454,6 +544,35 @@ export function JobTicketDetailPage() {
           ) : (
             <p className="muted">Lead tech, schedule, and assigned-employee signals are all present.</p>
           )}
+          <section className="stack" aria-label="closeout invoice readiness review">
+            <h3>Closeout & Invoice Readiness</h3>
+            <div className="review-grid">
+              <div>
+                <span className="muted">Invoice Readiness</span>
+                <strong>{closeoutReview.warnings.length ? "Needs closeout review" : "Ready for invoice handoff"}</strong>
+              </div>
+              <div>
+                <span className="muted">Readiness Checks</span>
+                <strong>{closeoutReview.readyCount} / {closeoutReview.checks.length}</strong>
+              </div>
+              <div>
+                <span className="muted">Open Items</span>
+                <strong>{closeoutReview.warnings.length}</strong>
+              </div>
+            </div>
+            <p className="muted">
+              This is an operational closeout review for invoice handoff. It does not create invoices, post accounting entries, or track payments.
+            </p>
+            {closeoutReview.warnings.length ? (
+              <ul className="muted" aria-label="invoice readiness warnings">
+                {closeoutReview.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">Labor, time approval, parts, files/photos, notes, and billing handoff context are ready for invoice review.</p>
+            )}
+          </section>
           <div className="review-grid" aria-label="job dispatch details">
             <div>
               <span className="muted">Customer</span>
