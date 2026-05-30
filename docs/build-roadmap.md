@@ -21,7 +21,7 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
-Job Ticket Dispatch & Assignment Readiness Polish is the next selected job-ticket-first implementation lane. This roadmap/organization checkpoint documents the lane only; implementation should happen in one separate feature PR after this update merges.
+Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups and per-ticket readiness cues using existing job-ticket and assignment APIs.
 
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
@@ -40,7 +40,8 @@ Do not steer the project toward a general ERP build-out.
 - Manager/Admin Phases 1-3D.
 - Phase 4A pilot readiness.
 - Phase 4B pilot workflow polish.
-- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, invoice-readiness cues, and status/archive review clarity.
+- Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, invoice-readiness cues, and status/archive review clarity.
+- Manager/Admin job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
 - Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
@@ -53,10 +54,15 @@ The Job Ticket Closeout & Invoice-Readiness Workflow Polish slice is implemented
 
 The bounded post-reports historical regression audit and docs checkpoint is complete and validated.
 
-The next selected implementation lane is Job Ticket Dispatch & Assignment Readiness Polish. Start that implementation only after this roadmap/organization PR merges, and keep it to one coherent job-ticket-first feature PR.
+The selected implementation lane is Job Ticket Dispatch & Assignment Readiness Polish. Keep implementation to coherent job-ticket-first feature PRs and preserve the scope rails below.
 
-### Selected next implementation lane
+### Selected implementation lane
 Job Ticket Dispatch & Assignment Readiness Polish should improve how Manager/Admin users prepare a job ticket for field execution and how employees understand assignment context.
+
+Current implementation in this lane:
+- Manager/Admin job-ticket list summary cards count dispatch-ready active tickets and active tickets that still need assignment, lead-tech, or schedule review;
+- Manager/Admin job-ticket list rows show whether each ticket is ready for dispatch or which dispatch context is missing;
+- this implementation uses existing job-ticket list data and existing assignment endpoints only.
 
 Allowed implementation scope:
 - clearer Manager/Admin assignment review and dispatch-readiness cues;

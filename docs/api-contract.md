@@ -31,6 +31,7 @@
 - Manager/Admin create and update flows already support operational fields such as `jobType`, `purchaseOrderNumber`, `billingContactName`, `billingContactPhone`, `billingContactEmail`, `internalNotes`, `customerFacingNotes`, `requestedAtUtc`, `scheduledStartAtUtc`, and `dueAtUtc`.
 - `equipmentId` remains optional, but when supplied it must belong to the selected `serviceLocationId`.
 - Manager/Admin list and detail views use the existing assignment endpoints to surface assigned-employee counts, lead-tech visibility, and dispatch-readiness cues without changing the API surface.
+- Manager/Admin job-ticket list dispatch-readiness cues are client-side and use existing job-ticket list data plus existing assignment data. Active tickets are treated as dispatch-ready only when assignment, lead-tech, and scheduled-start context are present.
 - Manager/Admin detail/edit surfaces now provide inline status transition review, disable no-op status submissions, surface API validation messages, keep archive confirmation explicit as a soft-delete/archive workflow rather than hard delete, and summarize operational closeout readiness for invoice handoff.
 - Closeout/readiness review uses existing job-ticket, assignment, work-entry, time-entry, parts, file/photo, customer, service-location, and equipment data. It does not add endpoints or change request/response DTOs.
 - Job-ticket-first UI work should keep those existing fields visible and editable rather than introducing a separate workflow for the same context.
@@ -44,11 +45,11 @@
 ## Current Scope Interpretation
 - The product is being steered as a job-ticket-first platform.
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented in the Manager/Admin job review surface using existing APIs.
-- Job Ticket Dispatch & Assignment Readiness Polish is the selected next implementation lane. It should prefer existing job-ticket and assignment APIs; any API changes must be narrow, DTO-based, job-ticket-first, and documented here.
+- Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane. Current dispatch-readiness polish uses existing job-ticket and assignment APIs; any further API changes must be narrow, DTO-based, job-ticket-first, and documented here.
 - Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
 - No transfer endpoints are implemented on `main`.
 - No inventory-expansion API lane is currently approved.
-- This roadmap/organization update does not change API behavior or add endpoint scope.
+- This dispatch-readiness update does not change API behavior or add endpoint scope.
 
 ## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.

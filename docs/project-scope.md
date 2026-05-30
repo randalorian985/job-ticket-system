@@ -19,9 +19,8 @@ That means the core scope is:
 - No inventory-expansion lane is currently approved on `main`.
 - Manager/Admin reports and time-review polish are part of the implemented baseline.
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is part of the implemented Manager/Admin job review baseline.
-- The post-reports historical regression audit and docs checkpoint is complete and validated.
-- The next selected implementation lane is Job Ticket Dispatch & Assignment Readiness Polish.
-- Implementation of the selected lane should happen in one future feature PR after the roadmap/organization update that documents this lane has merged.
+- Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane.
+- Manager/Admin job ticket list dispatch-readiness cues now summarize active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, using existing job-ticket and assignment APIs.
 - Employee workflow and existing Manager/Admin workflow must continue working while future job-ticket-centric phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
@@ -29,8 +28,8 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 ## Implemented Baseline That Must Stay Stable
 - Auth, JWT token revalidation, and role enforcement for `Admin`, `Manager`, and `Employee`.
 - Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, and files/photos.
-- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, closeout/invoice-readiness review, and time-review approval workspace.
-- Manager/Admin job-ticket create/edit/detail support for scheduling, billing context, purchase-order references, operational notes, lead-tech/assignment review cues, invoice-readiness cues, and clearer status-change confirmation.
+- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, closeout/invoice-readiness review, dispatch-readiness list cues, and time-review approval workspace.
+- Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, lead-tech/assignment review cues, invoice-readiness cues, dispatch-readiness rollups, and clearer status-change confirmation.
 - Manager/Admin reporting filters, export-friendly loaded tables, client-side CSV export from loaded report data, visible review context, and snapshot-first labor labels.
 - Manager/Admin master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
 - Manager/Admin Admin-only user management workflow at `/manage/users`.
@@ -39,11 +38,15 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 - Supporting inventory foundation already merged on `main` for stock locations, inventory history, stock visibility, manual adjustments, and receipt-posted inventory transactions.
 
 ## Selected Next Lane
-Job Ticket Dispatch & Assignment Readiness Polish is the selected next job-ticket-first workflow lane.
+Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first workflow lane.
 
 The lane should improve how Manager/Admin users prepare a job ticket for field execution and how employees understand assignment context, while staying on the existing job-ticket product surface.
 
-Allowed implementation scope for the future feature PR:
+Current implementation in this lane:
+- Manager/Admin job-ticket list rollups now count active tickets that are dispatch-ready and active tickets that still need assignment, lead-tech, or schedule review;
+- each Manager/Admin job-ticket list row now names whether dispatch readiness is ready or needs review, using only existing job-ticket and assignment data.
+
+Allowed implementation scope for this lane:
 - clearer Manager/Admin assignment review and dispatch-readiness cues;
 - clearer visibility for assigned employees, lead technician context, schedule timing, due dates, customer, service location, and equipment context;
 - validation and error UX around assignment, schedule, and required job-ticket context;
