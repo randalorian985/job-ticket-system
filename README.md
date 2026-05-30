@@ -16,15 +16,17 @@ The project is centered on the original job-ticket workflow:
 - Manager/Admin Phases 1-3D and Phase 4A/4B remain implemented.
 - Manager/Admin reports and time-review polish are implemented on top of the existing reporting and approval surfaces.
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented in the Manager/Admin job review packet without adding accounting, payment tracking, or invoice generation.
+- Manager/Admin job ticket list dispatch-readiness cues now summarize active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, using existing job-ticket and assignment APIs.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
 - No further inventory expansion is currently approved as the active product lane.
-- The next selected job-ticket-first implementation lane is Job Ticket Dispatch & Assignment Readiness Polish, documented in [docs/build-roadmap.md](docs/build-roadmap.md). Implementation should happen in a separate feature PR after this roadmap/organization update merges.
+- The selected job-ticket-first implementation lane remains Job Ticket Dispatch & Assignment Readiness Polish, documented in [docs/build-roadmap.md](docs/build-roadmap.md).
 
 ## What Main Already Implements
-- Job-ticket creation, assignment, execution, reporting, closeout readiness, and related Manager/Admin workflows.
-- Manager/Admin job-ticket create/edit/detail coverage for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, invoice-readiness cues, and clearer status/archive review actions.
+- Job-ticket creation, assignment, execution, reporting, closeout readiness, dispatch readiness, and related Manager/Admin workflows.
+- Manager/Admin job-ticket create/edit/detail/list coverage for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, invoice-readiness cues, and clearer status/archive review actions.
+- Manager/Admin job ticket list rollups for active, urgent, waiting, unscheduled, unassigned, needs-lead, dispatch-ready, and needs-dispatch-review tickets.
 - Manager/Admin reporting filters, loaded-row review context, snapshot-first labor labels, export-friendly report tables, and client-side CSV export from loaded report data.
 - Manager/Admin time review with export-friendly loaded rows, visible-slice filters, summary counts, and CSV export for loaded time-entry review.
 - Employee mobile job workflow with GPS time tracking, work notes, part usage, and files/photos.
@@ -39,7 +41,7 @@ Supporting purchasing and inventory capabilities already exist on `main`, but th
 
 Current roadmap discipline:
 - keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, closeout readiness, and related Manager/Admin usability;
-- use Job Ticket Dispatch & Assignment Readiness Polish as the next selected implementation lane, focused on clearer assignment, dispatch, schedule, and readiness review around existing job-ticket data;
+- use Job Ticket Dispatch & Assignment Readiness Polish as the selected implementation lane, focused on clearer assignment, dispatch, schedule, and readiness review around existing job-ticket data;
 - keep reports, time-review polish, and closeout readiness working as part of the existing job-ticket-first reporting and review workflow;
 - use the completed checkpoint for historical regression review and docs alignment rather than a new domain expansion;
 - treat invoice-readiness as operational handoff review, not accounting, payment tracking, or invoice generation;
