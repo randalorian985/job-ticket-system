@@ -63,7 +63,7 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list summary cards count dispatch-ready active tickets and active tickets that still need assignment, lead-tech, or schedule review;
 - Manager/Admin job-ticket list rows show whether each ticket is ready for dispatch or which dispatch context is missing;
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
-- Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment, scheduled-start, due-date, and job instruction context are present before dispatch;
+- Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
 - this implementation uses existing job-ticket list data, existing edit DTO fields, and existing assignment endpoints only.
 
 Next coherent implementation slice:
