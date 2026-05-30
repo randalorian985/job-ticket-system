@@ -11,6 +11,54 @@ const allFilterValue = 'all'
 const activeStatusValues = new Set([2, 3, 4, 5, 6])
 const waitingStatusValues = new Set([5, 6])
 
+type DispatchReadiness = {
+  label: string
+  detail: string
+  openItems: number
+  isReady: boolean
+}
+
+const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[]): DispatchReadiness => {
+  if (!activeStatusValues.has(job.status)) {
+    return {
+      label: 'Not active dispatch',
+      detail: 'Ticket is outside the active dispatch queue.',
+      openItems: 0,
+      isReady: false
+    }
+  }
+
+  const openItems: string[] = []
+
+  if (!assignments.length) {
+    openItems.push('assignment')
+  }
+
+  if (!assignments.some((assignment) => assignment.isLead)) {
+    openItems.push('lead tech')
+  }
+
+  if (!job.scheduledStartAtUtc) {
+    openItems.push('scheduled start')
+  }
+
+  if (!openItems.length) {
+    return {
+      label: 'Ready for dispatch',
+      detail: 'Assignment, lead tech, and schedule are present.',
+      openItems: 0,
+      isReady: true
+    }
+  }
+
+  return {
+    label: 'Needs dispatch review',
+    detail: `Missing ${openItems.join(', ')}.`,
+    openItems: openItems.length,
+    isReady: false
+  }
+}
+
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
   const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
@@ -101,6 +149,9 @@ export function JobTicketListPage() {
     const unscheduledJobs = activeJobs.filter((job) => !job.scheduledStartAtUtc)
     const unassignedJobs = activeJobs.filter((job) => !(assignmentMap[job.id]?.length))
     const needsLeadJobs = activeJobs.filter((job) => !(assignmentMap[job.id] ?? []).some((assignment) => assignment.isLead))
+    const activeReadiness = activeJobs.map((job) => getDispatchReadiness(job, assignmentMap[job.id] ?? []))
+    const dispatchReadyJobs = activeReadiness.filter((item) => item.isReady)
+    const needsDispatchReviewJobs = activeReadiness.filter((item) => item.openItems > 0)
 
     return {
       activeCount: activeJobs.length,
@@ -108,7 +159,9 @@ export function JobTicketListPage() {
       waitingCount: waitingJobs.length,
       unscheduledCount: unscheduledJobs.length,
       unassignedCount: unassignedJobs.length,
-      needsLeadCount: needsLeadJobs.length
+      needsLeadCount: needsLeadJobs.length,
+      dispatchReadyCount: dispatchReadyJobs.length,
+      needsDispatchReviewCount: needsDispatchReviewJobs.length
     }
   }, [assignmentMap, filteredJobs])
 
@@ -134,6 +187,8 @@ export function JobTicketListPage() {
           <div className="summary-card"><span>Unscheduled active</span><strong>{triageSummary.unscheduledCount}</strong><span className="muted">Active tickets without a start time.</span></div>
           <div className="summary-card"><span>Unassigned active</span><strong>{triageSummary.unassignedCount}</strong><span className="muted">Active tickets that still need an assigned tech.</span></div>
           <div className="summary-card"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong><span className="muted">Active tickets without a lead tech flag.</span></div>
+          <div className="summary-card"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong><span className="muted">Active tickets with assignment, lead, and schedule.</span></div>
+          <div className="summary-card"><span>Needs dispatch review</span><strong>{triageSummary.needsDispatchReviewCount}</strong><span className="muted">Active tickets missing assignment, lead, or schedule context.</span></div>
         </section>
       ) : null}
 
@@ -180,6 +235,7 @@ export function JobTicketListPage() {
               const leadAssignments = assignments.filter((item) => item.isLead)
               const leadSummary = leadAssignments.length ? leadAssignments.map((item) => item.employeeId).join(', ') : 'Needs lead'
               const assignmentSummary = assignments.length ? `${assignments.length} assigned` : 'Unassigned'
+              const readiness = getDispatchReadiness(job, assignments)
 
               return (
                 <li key={job.id}>
@@ -189,6 +245,7 @@ export function JobTicketListPage() {
                     {customers[job.customerId]?.name ?? job.customerId} / {locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId}
                   </div>
                   <div className="muted">Dispatch {assignmentSummary} · Lead {leadSummary}</div>
+                  <div className="muted">Dispatch readiness: {readiness.label} · {readiness.detail}</div>
                   <div className="muted">Created {formatDate(job.requestedAtUtc)} · Scheduled {formatDate(job.scheduledStartAtUtc)} · Completed {formatDate(job.completedAtUtc)}</div>
                 </li>
               )
