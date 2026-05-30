@@ -18,6 +18,8 @@ type DispatchEditCheck = {
 }
 
 export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditCheck[] {
+  const hasEquipmentContext = Boolean(form.equipmentId)
+
   return [
     {
       label: 'Customer',
@@ -31,8 +33,8 @@ export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditC
     },
     {
       label: 'Equipment context',
-      isReady: Boolean(form.equipmentId),
-      detail: form.equipmentId ? 'Equipment context is selected.' : 'Confirm whether this ticket needs equipment context.'
+      isReady: true,
+      detail: hasEquipmentContext ? 'Equipment context is selected.' : 'No equipment context is selected for this ticket.'
     },
     {
       label: 'Scheduled start',
@@ -133,7 +135,7 @@ export function JobTicketEditorForm({ initial, customers, serviceLocations, equi
             ))}
           </ul>
         ) : (
-          <p className="muted">Customer, location, equipment, schedule, due date, and job instructions are ready for dispatch review.</p>
+          <p className="muted">Customer, location, equipment or no-equipment context, schedule, due date, and job instructions are ready for dispatch review.</p>
         )}
       </section>
       <label>Title<input value={form.title} onChange={(e) => update('title', e.target.value)} /></label>
