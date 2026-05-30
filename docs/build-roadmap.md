@@ -21,7 +21,7 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
-Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, and dispatch-readiness filtering using existing job-ticket and assignment APIs.
+Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, dispatch-readiness filtering, and edit-side dispatch-readiness cues using existing job-ticket and assignment APIs.
 
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
@@ -40,7 +40,7 @@ Do not steer the project toward a general ERP build-out.
 - Manager/Admin Phases 1-3D.
 - Phase 4A pilot readiness.
 - Phase 4B pilot workflow polish.
-- Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, invoice-readiness cues, and status/archive review clarity.
+- Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, edit-side dispatch-readiness cues, invoice-readiness cues, and status/archive review clarity.
 - Manager/Admin job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
 - Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
@@ -63,11 +63,11 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list summary cards count dispatch-ready active tickets and active tickets that still need assignment, lead-tech, or schedule review;
 - Manager/Admin job-ticket list rows show whether each ticket is ready for dispatch or which dispatch context is missing;
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
-- this implementation uses existing job-ticket list data and existing assignment endpoints only.
+- Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment, scheduled-start, due-date, and job instruction context are present before dispatch;
+- this implementation uses existing job-ticket list data, existing edit DTO fields, and existing assignment endpoints only.
 
 Next coherent implementation slice:
-- improve the Manager/Admin job-ticket detail and edit review surface before opening a broader employee-facing dispatch context slice;
-- make the detail view show a compact dispatch-readiness checklist for assignment, lead-tech, scheduled-start, due-date, customer, service-location, and equipment context;
+- finish the Manager/Admin job-ticket detail dispatch-readiness checklist for assignment, lead-tech, scheduled-start, due-date, customer, service-location, and equipment context;
 - keep any edit or status warnings tied to the existing job-ticket fields and assignment endpoints;
 - add focused frontend tests that cover ready and not-ready dispatch-review states;
 - update README, project scope, and API contract only if the implementation changes visible behavior or API expectations.
