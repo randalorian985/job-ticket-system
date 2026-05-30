@@ -65,6 +65,13 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
 - this implementation uses existing job-ticket list data and existing assignment endpoints only.
 
+Next coherent implementation slice:
+- improve the Manager/Admin job-ticket detail and edit review surface before opening a broader employee-facing dispatch context slice;
+- make the detail view show a compact dispatch-readiness checklist for assignment, lead-tech, scheduled-start, due-date, customer, service-location, and equipment context;
+- keep any edit or status warnings tied to the existing job-ticket fields and assignment endpoints;
+- add focused frontend tests that cover ready and not-ready dispatch-review states;
+- update README, project scope, and API contract only if the implementation changes visible behavior or API expectations.
+
 Allowed implementation scope:
 - clearer Manager/Admin assignment review and dispatch-readiness cues;
 - clearer visibility for assigned employees, lead technician context, schedule timing, due dates, customer, service location, and equipment context;
