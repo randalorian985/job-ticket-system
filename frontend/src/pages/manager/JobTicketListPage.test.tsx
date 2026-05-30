@@ -66,9 +66,10 @@ describe('Manager list pages', () => {
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
     expect(screen.getByText('Dispatch 1 assigned · Lead e-1')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing scheduled start.')).toBeInTheDocument()
   })
 
-  it('shows queue summary counts for active, urgent, waiting, unscheduled, unassigned, and needs-lead work', async () => {
+  it('shows queue summary counts for active, urgent, waiting, unscheduled, unassigned, needs-lead, and dispatch readiness work', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
@@ -83,6 +84,19 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
     expect(screen.getByText('Unassigned active')).toBeInTheDocument()
     expect(screen.getByText('Needs lead')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch-ready')).toBeInTheDocument()
+    expect(screen.getByText('Needs dispatch review')).toBeInTheDocument()
+  })
+
+  it('shows ready dispatch context when assignment, lead, and schedule are present', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch readiness: Ready for dispatch · Assignment, lead tech, and schedule are present.')).toBeInTheDocument()
   })
 
   it('filters by search text, status, priority, and customer, then resets filters', async () => {
