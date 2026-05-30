@@ -10,6 +10,12 @@ import { formatDate, jobStatusOptions, priorityOptions } from './managerDisplay'
 const allFilterValue = 'all'
 const activeStatusValues = new Set([2, 3, 4, 5, 6])
 const waitingStatusValues = new Set([5, 6])
+const dispatchReadinessFilterOptions = [
+  { value: allFilterValue, label: 'All dispatch readiness' },
+  { value: 'ready', label: 'Dispatch-ready' },
+  { value: 'needs-review', label: 'Needs dispatch review' },
+  { value: 'not-active', label: 'Not active dispatch' }
+]
 
 type DispatchReadiness = {
   label: string
@@ -67,6 +73,7 @@ export function JobTicketListPage() {
   const [statusFilter, setStatusFilter] = useState(allFilterValue)
   const [priorityFilter, setPriorityFilter] = useState(allFilterValue)
   const [customerFilter, setCustomerFilter] = useState(allFilterValue)
+  const [dispatchReadinessFilter, setDispatchReadinessFilter] = useState(allFilterValue)
   const [searchText, setSearchText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -132,15 +139,20 @@ export function JobTicketListPage() {
     return jobs.filter((job) => {
       const customerName = customers[job.customerId]?.name ?? job.customerId
       const locationName = locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId
+      const readiness = getDispatchReadiness(job, assignmentMap[job.id] ?? [])
       const matchesStatus = statusFilter === allFilterValue || String(job.status) === statusFilter
       const matchesPriority = priorityFilter === allFilterValue || String(job.priority) === priorityFilter
       const matchesCustomer = customerFilter === allFilterValue || job.customerId === customerFilter
+      const matchesDispatchReadiness = dispatchReadinessFilter === allFilterValue ||
+        (dispatchReadinessFilter === 'ready' && readiness.isReady) ||
+        (dispatchReadinessFilter === 'needs-review' && readiness.openItems > 0) ||
+        (dispatchReadinessFilter === 'not-active' && !activeStatusValues.has(job.status))
       const matchesSearch = !normalizedSearch || [job.ticketNumber, job.title, customerName, locationName]
         .some((value) => value.toLocaleLowerCase().includes(normalizedSearch))
 
-      return matchesStatus && matchesPriority && matchesCustomer && matchesSearch
+      return matchesStatus && matchesPriority && matchesCustomer && matchesDispatchReadiness && matchesSearch
     })
-  }, [customerFilter, customers, jobs, locations, priorityFilter, searchText, statusFilter])
+  }, [assignmentMap, customerFilter, customers, dispatchReadinessFilter, jobs, locations, priorityFilter, searchText, statusFilter])
 
   const triageSummary = useMemo(() => {
     const activeJobs = filteredJobs.filter((job) => activeStatusValues.has(job.status))
@@ -165,19 +177,24 @@ export function JobTicketListPage() {
     }
   }, [assignmentMap, filteredJobs])
 
-  const hasActiveFilters = statusFilter !== allFilterValue || priorityFilter !== allFilterValue || customerFilter !== allFilterValue || Boolean(searchText.trim())
+  const hasActiveFilters = statusFilter !== allFilterValue ||
+    priorityFilter !== allFilterValue ||
+    customerFilter !== allFilterValue ||
+    dispatchReadinessFilter !== allFilterValue ||
+    Boolean(searchText.trim())
 
   const resetFilters = () => {
     setStatusFilter(allFilterValue)
     setPriorityFilter(allFilterValue)
     setCustomerFilter(allFilterValue)
+    setDispatchReadinessFilter(allFilterValue)
     setSearchText('')
   }
 
   return (
     <section className="card stack">
       <div className="row"><h2>Job Tickets</h2><Link to="/manage/job-tickets/new">Create Ticket</Link></div>
-      <p className="muted">Search and filter the current manager job list using existing ticket and assignment data.</p>
+      <p className="muted">Search, filter, and isolate dispatch-ready or dispatch-review tickets using existing ticket and assignment data.</p>
 
       {!isLoading && !error && jobs.length ? (
         <section className="summary-grid" aria-label="queue summary">
@@ -216,6 +233,12 @@ export function JobTicketListPage() {
           <select value={customerFilter} onChange={(event) => setCustomerFilter(event.target.value)}>
             <option value={allFilterValue}>All customers</option>
             {customerOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </select>
+        </label>
+        <label className="sr-label">
+          Dispatch readiness
+          <select value={dispatchReadinessFilter} onChange={(event) => setDispatchReadinessFilter(event.target.value)}>
+            {dispatchReadinessFilterOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
         <button type="button" className="secondary-button" onClick={resetFilters} disabled={!hasActiveFilters}>Reset Filters</button>

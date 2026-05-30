@@ -16,7 +16,7 @@ The project is centered on the original job-ticket workflow:
 - Manager/Admin Phases 1-3D and Phase 4A/4B remain implemented.
 - Manager/Admin reports and time-review polish are implemented on top of the existing reporting and approval surfaces.
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented in the Manager/Admin job review packet without adding accounting, payment tracking, or invoice generation.
-- Manager/Admin job ticket list dispatch-readiness cues now summarize active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, using existing job-ticket and assignment APIs.
+- Manager/Admin job ticket list dispatch-readiness cues now summarize active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, and the list can filter by those dispatch-readiness states using existing job-ticket and assignment APIs.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
@@ -26,7 +26,7 @@ The project is centered on the original job-ticket workflow:
 ## What Main Already Implements
 - Job-ticket creation, assignment, execution, reporting, closeout readiness, dispatch readiness, and related Manager/Admin workflows.
 - Manager/Admin job-ticket create/edit/detail/list coverage for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, invoice-readiness cues, and clearer status/archive review actions.
-- Manager/Admin job ticket list rollups for active, urgent, waiting, unscheduled, unassigned, needs-lead, dispatch-ready, and needs-dispatch-review tickets.
+- Manager/Admin job ticket list rollups for active, urgent, waiting, unscheduled, unassigned, needs-lead, dispatch-ready, and needs-dispatch-review tickets, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets.
 - Manager/Admin reporting filters, loaded-row review context, snapshot-first labor labels, export-friendly report tables, and client-side CSV export from loaded report data.
 - Manager/Admin time review with export-friendly loaded rows, visible-slice filters, summary counts, and CSV export for loaded time-entry review.
 - Employee mobile job workflow with GPS time tracking, work notes, part usage, and files/photos.

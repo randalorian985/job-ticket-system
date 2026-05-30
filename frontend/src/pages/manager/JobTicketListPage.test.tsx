@@ -84,8 +84,8 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
     expect(screen.getByText('Unassigned active')).toBeInTheDocument()
     expect(screen.getByText('Needs lead')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch-ready')).toBeInTheDocument()
-    expect(screen.getByText('Needs dispatch review')).toBeInTheDocument()
+    expect(screen.getAllByText('Dispatch-ready').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Needs dispatch review').length).toBeGreaterThan(0)
   })
 
   it('shows ready dispatch context when assignment, lead, and schedule are present', async () => {
@@ -99,9 +99,38 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Dispatch readiness: Ready for dispatch · Assignment, lead tech, and schedule are present.')).toBeInTheDocument()
   })
 
+  it('filters by dispatch readiness from the loaded ticket and assignment data', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Ready compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Needs lead', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
+      { id: 'job-3', ticketNumber: 'JT-3', title: 'Completed ticket', status: 7, priority: 1, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-11T08:00:00Z' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('JT-2')).toBeInTheDocument()
+    expect(screen.getByText('JT-3')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'ready' } })
+    expect(screen.getByText('JT-1')).toBeInTheDocument()
+    expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'needs-review' } })
+    expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
+    expect(screen.getByText('JT-2')).toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'not-active' } })
+    expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
+    expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.getByText('JT-3')).toBeInTheDocument()
+  })
+
   it('filters by search text, status, priority, and customer, then resets filters', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
-      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' },
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2' }
     ] as any)
 
@@ -124,6 +153,7 @@ describe('Manager list pages', () => {
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: '4' } })
     fireEvent.change(screen.getByLabelText('Priority'), { target: { value: '3' } })
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c-1' } })
+    fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'ready' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
 
     fireEvent.click(resetFiltersButton)
