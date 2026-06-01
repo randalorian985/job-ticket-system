@@ -11,6 +11,8 @@ import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from './jobDisplay
 
 const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
 
+const formatOptionalDateTime = (value?: string | null) => (value ? new Date(value).toLocaleString() : 'Not set')
+
 export function JobDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>()
   const navigate = useNavigate()
@@ -45,6 +47,50 @@ export function JobDetailPage() {
     () => partsCatalog.map((part) => ({ value: part.id, label: `${part.partNumber} - ${part.name}` })),
     [partsCatalog]
   )
+
+  const employeeFieldContext = useMemo(() => {
+    const hasJobInstructions = Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim())
+    const checks = [
+      {
+        label: 'Scheduled start',
+        isReady: Boolean(job?.scheduledStartAtUtc),
+        detail: job?.scheduledStartAtUtc
+          ? `Scheduled start: ${formatOptionalDateTime(job.scheduledStartAtUtc)}`
+          : 'No scheduled start is set.'
+      },
+      {
+        label: 'Due date',
+        isReady: Boolean(job?.dueAtUtc),
+        detail: job?.dueAtUtc ? `Due date: ${formatOptionalDateTime(job.dueAtUtc)}` : 'No due date is set.'
+      },
+      {
+        label: 'Customer',
+        isReady: Boolean(job?.customerId),
+        detail: job?.customerId ? `Customer ID: ${job.customerId}` : 'Customer is not selected.'
+      },
+      {
+        label: 'Service location',
+        isReady: Boolean(job?.serviceLocationId),
+        detail: job?.serviceLocationId ? `Service Location ID: ${job.serviceLocationId}` : 'Service location is not selected.'
+      },
+      {
+        label: 'Equipment context',
+        isReady: Boolean(job),
+        detail: job?.equipmentId ? `Equipment ID: ${job.equipmentId}` : 'No equipment is attached for this ticket.'
+      },
+      {
+        label: 'Job instructions',
+        isReady: hasJobInstructions,
+        detail: hasJobInstructions ? 'Job instructions are available.' : 'No job instructions are available yet.'
+      }
+    ]
+
+    return {
+      checks,
+      readyCount: checks.filter((check) => check.isReady).length,
+      warnings: checks.filter((check) => !check.isReady).map((check) => check.detail)
+    }
+  }, [job])
 
   const refreshDetails = async () => {
     if (!jobTicketId || !user) {
@@ -319,6 +365,31 @@ export function JobDetailPage() {
         <p className="muted">Billing Party ID: {job.billingPartyCustomerId}</p>
         <p className="muted">Equipment ID: {job.equipmentId ?? 'None'}</p>
         <p>{job.description ?? 'No description provided.'}</p>
+      </section>
+
+      <section className="card stack" aria-label="field context review">
+        <h2>Field Context</h2>
+        <div className="review-grid">
+          <div>
+            <span className="muted">Context Status</span>
+            <strong>{employeeFieldContext.warnings.length ? 'Needs manager review' : 'Ready for field work review'}</strong>
+          </div>
+          <div>
+            <span className="muted">Context Checks</span>
+            <strong>{employeeFieldContext.readyCount} / {employeeFieldContext.checks.length}</strong>
+          </div>
+          <div>
+            <span className="muted">Open Items</span>
+            <strong>{employeeFieldContext.warnings.length}</strong>
+          </div>
+        </div>
+        <ul className="muted" aria-label="field context checks">
+          {employeeFieldContext.checks.map((check) => (
+            <li key={check.label}>
+              <strong>{check.label}:</strong> {check.detail}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="card stack">
