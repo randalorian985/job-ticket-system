@@ -32,16 +32,15 @@ public sealed class UsersService(ApplicationDbContext dbContext, IAuthService au
         ValidationHelpers.ValidateRequired(request.Password, nameof(request.Password));
 
         var userName = request.UserName.Trim();
-        if (await dbContext.Employees.AnyAsync(x => x.UserName == userName, cancellationToken))
-        {
-            throw new ValidationException("UserName is already in use.");
-        }
+        var email = ValidationHelpers.NullIfWhitespace(request.Email);
+        await EnsureUserNameIsUniqueAsync(userName, null, cancellationToken);
+        await EnsureEmailIsUniqueAsync(email, null, cancellationToken);
 
         var employee = new Employee
         {
             FirstName = request.FirstName.Trim(),
             LastName = request.LastName.Trim(),
-            Email = ValidationHelpers.NullIfWhitespace(request.Email),
+            Email = email,
             UserName = userName,
             PasswordHash = authService.HashPassword(request.Password),
             Role = request.Role,
@@ -65,16 +64,15 @@ public sealed class UsersService(ApplicationDbContext dbContext, IAuthService au
         ValidateUserFields(request.UserName, request.FirstName, request.LastName);
         ValidateRole(request.Role);
 
-        if (!string.Equals(employee.UserName, request.UserName, StringComparison.OrdinalIgnoreCase)
-            && await dbContext.Employees.AnyAsync(x => x.UserName == request.UserName && x.Id != id, cancellationToken))
-        {
-            throw new ValidationException("UserName is already in use.");
-        }
+        var userName = request.UserName.Trim();
+        var email = ValidationHelpers.NullIfWhitespace(request.Email);
+        await EnsureUserNameIsUniqueAsync(userName, id, cancellationToken);
+        await EnsureEmailIsUniqueAsync(email, id, cancellationToken);
 
         employee.FirstName = request.FirstName.Trim();
         employee.LastName = request.LastName.Trim();
-        employee.Email = ValidationHelpers.NullIfWhitespace(request.Email);
-        employee.UserName = request.UserName.Trim();
+        employee.Email = email;
+        employee.UserName = userName;
         employee.Role = request.Role;
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -109,6 +107,37 @@ public sealed class UsersService(ApplicationDbContext dbContext, IAuthService au
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return MapUser.Compile().Invoke(employee);
+    }
+
+    private async Task EnsureUserNameIsUniqueAsync(string userName, Guid? currentEmployeeId, CancellationToken cancellationToken)
+    {
+        var normalizedUserName = userName.ToUpperInvariant();
+        var exists = await dbContext.Employees.AnyAsync(
+            x => x.UserName != null && x.UserName.ToUpper() == normalizedUserName && (!currentEmployeeId.HasValue || x.Id != currentEmployeeId.Value),
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ValidationException("UserName is already in use.");
+        }
+    }
+
+    private async Task EnsureEmailIsUniqueAsync(string? email, Guid? currentEmployeeId, CancellationToken cancellationToken)
+    {
+        if (email is null)
+        {
+            return;
+        }
+
+        var normalizedEmail = email.ToUpperInvariant();
+        var exists = await dbContext.Employees.AnyAsync(
+            x => x.Email != null && x.Email.ToUpper() == normalizedEmail && (!currentEmployeeId.HasValue || x.Id != currentEmployeeId.Value),
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ValidationException("Email is already in use.");
+        }
     }
 
     private static void ValidateUserFields(string userName, string firstName, string lastName)
