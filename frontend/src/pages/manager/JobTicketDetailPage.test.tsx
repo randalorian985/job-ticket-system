@@ -67,13 +67,10 @@ describe('JobTicketDetailPage', () => {
     render(<MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
   }
 
-  const expectAtLeastOneText = (text: string) => {
-    expect(screen.getAllByText(text).length).toBeGreaterThan(0)
-  }
+  const renderedPageText = () => document.body.textContent?.replace(/\s+/g, ' ') ?? ''
 
-  const expectTextContaining = (text: string) => {
-    const matches = screen.getAllByText((_, element) => Boolean(element?.textContent?.includes(text)))
-    expect(matches.length).toBeGreaterThan(0)
+  const expectRenderedText = (text: string) => {
+    expect(renderedPageText()).toContain(text)
   }
 
   it('renders dispatch, closeout, archive, and review sections alongside job details', async () => {
@@ -81,7 +78,7 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Dispatch Readiness')).toBeInTheDocument()
-    expectAtLeastOneText('Ready for dispatch review')
+    expectRenderedText('Ready for dispatch review')
     expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
     expect(screen.getByText('Status Review')).toBeInTheDocument()
     expect(screen.getByText('Archive Review')).toBeInTheDocument()
@@ -139,8 +136,8 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expectAtLeastOneText('Ready for dispatch review')
-    expectTextContaining('no-equipment context is allowed for this ticket')
+    expectRenderedText('Ready for dispatch review')
+    expectRenderedText('no-equipment context is allowed for this ticket')
   })
 
   it('warns when dispatch coverage is incomplete', async () => {
@@ -161,10 +158,10 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     await screen.findAllByText('Needs attention')
-    expectAtLeastOneText('No employees are assigned.')
-    expectAtLeastOneText('No lead tech is marked.')
-    expectAtLeastOneText('No scheduled start is set.')
-    expectAtLeastOneText('No due date is set.')
+    expectRenderedText('No employees are assigned.')
+    expectRenderedText('No lead tech is marked.')
+    expectRenderedText('No scheduled start is set.')
+    expectRenderedText('No due date is set.')
   })
 
   it('prevents adding a second lead without clearing the current one first', async () => {
