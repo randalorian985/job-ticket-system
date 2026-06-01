@@ -95,6 +95,8 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
             throw new ValidationException("Unsupported content type. Supported types: image/jpeg, image/png, image/webp, application/pdf.");
         }
 
+        await ValidateFileSignatureAsync(contentType, request.Content, cancellationToken);
+
         if (request.UploadedByEmployeeId.HasValue)
         {
             var uploadedByExists = await dbContext.Employees.AnyAsync(x => x.Id == request.UploadedByEmployeeId.Value, cancellationToken);
@@ -254,6 +256,67 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
         {
             throw new ValidationException("Job ticket was not found.");
         }
+    }
+
+    private static async Task ValidateFileSignatureAsync(string contentType, Stream content, CancellationToken cancellationToken)
+    {
+        if (!content.CanSeek)
+        {
+            throw new ValidationException("File content stream must support seeking for validation.");
+        }
+
+        var originalPosition = content.Position;
+        var buffer = new byte[16];
+        var bytesRead = await content.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+        content.Position = originalPosition;
+
+        if (!MatchesSignature(contentType, buffer, bytesRead))
+        {
+            throw new ValidationException("File content does not match the declared content type.");
+        }
+    }
+
+    private static bool MatchesSignature(string contentType, byte[] buffer, int bytesRead)
+    {
+        return contentType.ToLowerInvariant() switch
+        {
+            "application/pdf" => StartsWith(buffer, bytesRead, new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D }),
+            "image/jpeg" => StartsWith(buffer, bytesRead, new byte[] { 0xFF, 0xD8, 0xFF }),
+            "image/png" => StartsWith(buffer, bytesRead, new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }),
+            "image/webp" => IsWebp(buffer, bytesRead),
+            _ => false
+        };
+    }
+
+    private static bool StartsWith(byte[] buffer, int bytesRead, byte[] signature)
+    {
+        if (bytesRead < signature.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < signature.Length; i++)
+        {
+            if (buffer[i] != signature[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsWebp(byte[] buffer, int bytesRead)
+    {
+        return bytesRead >= 12
+            && buffer[0] == 0x52
+            && buffer[1] == 0x49
+            && buffer[2] == 0x46
+            && buffer[3] == 0x46
+            && buffer[8] == 0x57
+            && buffer[9] == 0x45
+            && buffer[10] == 0x42
+            && buffer[11] == 0x50;
     }
 
     private void AddAudit(Guid fileId, AuditActionType actionType, string? oldValuesJson, string? newValuesJson)
