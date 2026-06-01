@@ -141,7 +141,9 @@ describe('JobDetailPage', () => {
     const fieldContext = screen.getByLabelText('field context review')
     expect(within(fieldContext).getByText('Ready for field work review')).toBeInTheDocument()
     expect(within(fieldContext).getByText('6 / 6')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('Field context is complete for assigned work.')).toBeInTheDocument()
     expect(within(fieldContext).getByText('Job instructions are available.')).toBeInTheDocument()
+    expect(screen.getByText('Field context is ready for clock-in.')).toBeInTheDocument()
   })
 
   it('shows clock-out state, upload UI, and missing field context review', async () => {
@@ -206,9 +208,11 @@ describe('JobDetailPage', () => {
     const fieldContext = screen.getByLabelText('field context review')
     expect(within(fieldContext).getByText('Needs manager review')).toBeInTheDocument()
     expect(within(fieldContext).getByText('3 / 6')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('Review open field context with a manager before starting field work.')).toBeInTheDocument()
     expect(within(fieldContext).getByText('No scheduled start is set.')).toBeInTheDocument()
     expect(within(fieldContext).getByText('No due date is set.')).toBeInTheDocument()
     expect(within(fieldContext).getByText('No job instructions are available yet.')).toBeInTheDocument()
+    expect(screen.getByText('Field context needs manager review before starting new work.')).toBeInTheDocument()
 
     const invoiceAttachment = screen.getByLabelText('Invoice attachment')
     expect(invoiceAttachment).toHaveAttribute('type', 'checkbox')

@@ -84,11 +84,15 @@ export function JobDetailPage() {
         detail: hasJobInstructions ? 'Job instructions are available.' : 'No job instructions are available yet.'
       }
     ]
+    const warnings = checks.filter((check) => !check.isReady).map((check) => check.detail)
 
     return {
       checks,
-      readyCount: checks.filter((check) => check.isReady).length,
-      warnings: checks.filter((check) => !check.isReady).map((check) => check.detail)
+      readyCount: checks.length - warnings.length,
+      warnings,
+      guidance: warnings.length
+        ? 'Review open field context with a manager before starting field work.'
+        : 'Field context is complete for assigned work.'
     }
   }, [job])
 
@@ -383,6 +387,7 @@ export function JobDetailPage() {
             <strong>{employeeFieldContext.warnings.length}</strong>
           </div>
         </div>
+        <p className="muted">{employeeFieldContext.guidance}</p>
         <ul className="muted" aria-label="field context checks">
           {employeeFieldContext.checks.map((check) => (
             <li key={check.label}>
@@ -395,6 +400,11 @@ export function JobDetailPage() {
       <section className="card stack">
         <h2>Clock In / Clock Out</h2>
         <p className="muted">Open entry: {openEntry ? `Started ${new Date(openEntry.startedAtUtc).toLocaleString()}` : 'No open entry'}</p>
+        <p className="muted">
+          {employeeFieldContext.warnings.length
+            ? 'Field context needs manager review before starting new work.'
+            : 'Field context is ready for clock-in.'}
+        </p>
 
         <label>
           Clock note (optional)
