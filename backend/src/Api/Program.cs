@@ -76,7 +76,7 @@ builder.Services.AddScoped<IVendorsService, VendorsService>();
 builder.Services.AddScoped<IPartCategoriesService, PartCategoriesService>();
 builder.Services.AddScoped<IPartsService, PartsService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
-builder.Services.AddScoped<IJobTicketsService, JobTicketsService>();
+builder.Services.AddScoped<IJobTicketsService, JobTicketAssignmentValidatingService>();
 builder.Services.AddScoped<IPartsUsageHistoryService, PartsUsageHistoryService>();
 var storageRoot = builder.Configuration.GetValue<string>("FileStorage:RootPath")
     ?? Path.Combine(builder.Environment.ContentRootPath, "storage");
