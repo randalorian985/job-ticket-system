@@ -23,6 +23,39 @@ public sealed class JwtSettings
     public int ExpirationMinutes { get; init; } = 120;
 }
 
+public static class JwtSettingsValidator
+{
+    private const int MinimumSigningKeyBytes = 32;
+
+    public static void Validate(JwtSettings settings)
+    {
+        if (string.IsNullOrWhiteSpace(settings.Issuer))
+        {
+            throw new InvalidOperationException("Jwt:Issuer must be configured.");
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.Audience))
+        {
+            throw new InvalidOperationException("Jwt:Audience must be configured.");
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.SigningKey))
+        {
+            throw new InvalidOperationException("Jwt:SigningKey must be configured.");
+        }
+
+        if (Encoding.UTF8.GetByteCount(settings.SigningKey) < MinimumSigningKeyBytes)
+        {
+            throw new InvalidOperationException($"Jwt:SigningKey must be at least {MinimumSigningKeyBytes} bytes for HMAC-SHA256.");
+        }
+
+        if (settings.ExpirationMinutes <= 0)
+        {
+            throw new InvalidOperationException("Jwt:ExpirationMinutes must be greater than zero.");
+        }
+    }
+}
+
 public interface IJwtTokenService
 {
     AuthLoginResponseDto CreateToken(AuthLoginResultDto login);
