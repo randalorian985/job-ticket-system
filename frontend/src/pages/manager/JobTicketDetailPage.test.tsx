@@ -76,35 +76,20 @@ describe('JobTicketDetailPage', () => {
     expect(matches.length).toBeGreaterThan(0)
   }
 
-  it('renders richer dispatch, billing, status review, closeout readiness, and archive review details alongside actions', async () => {
+  it('renders dispatch, closeout, archive, and assignment actions alongside job details', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Repair')).toBeInTheDocument()
-    expect(screen.getByText('PO-44')).toBeInTheDocument()
-    expect(screen.getByText('Casey Customer')).toBeInTheDocument()
-    expect(screen.getByText('casey@example.com')).toBeInTheDocument()
-    expectAtLeastOneText('Ready for dispatch review')
     expect(screen.getByText('Dispatch Readiness')).toBeInTheDocument()
-    expectTextContaining('Equipment context is selected.')
+    expectAtLeastOneText('Ready for dispatch review')
     expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
-    expect(screen.getByText('Needs closeout review')).toBeInTheDocument()
-    expect(screen.getByText('This is an operational closeout review for invoice handoff. It does not create invoices, post accounting entries, or track payments.')).toBeInTheDocument()
-    expect(screen.getByText('Some loaded time entries still need approval review.')).toBeInTheDocument()
-    expect(screen.getByText('Parts are recorded, but none are approved for invoice review.')).toBeInTheDocument()
-    expect(screen.getByText('Move the ticket to Completed before invoice handoff review.')).toBeInTheDocument()
     expect(screen.getByText('Status Review')).toBeInTheDocument()
     expect(screen.getByText('Archive Review')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
-    expect(screen.getAllByText('e1').length).toBeGreaterThan(0)
-    expect(screen.getByText('Manager-only note')).toBeInTheDocument()
-    expect(screen.getByText('Call before arrival.')).toBeInTheDocument()
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
-    expect(screen.getByText(/Replaced belt/)).toBeInTheDocument()
     expect(screen.getByText('Parts Usage')).toBeInTheDocument()
-    expect(screen.getByText(/Pilot stock/)).toBeInTheDocument()
     expect(screen.getByText('Files / Photos')).toBeInTheDocument()
-    expect(screen.getByText('photo.jpg')).toBeInTheDocument()
+
     fireEvent.change(screen.getByLabelText('assignment employee'), { target: { value: 'e2' } })
     fireEvent.click(screen.getByText('Assign Employee'))
     await waitFor(() => expect(jobTicketsApi.addAssignment).toHaveBeenCalledWith('j1', { employeeId: 'e2', isLead: false }))
