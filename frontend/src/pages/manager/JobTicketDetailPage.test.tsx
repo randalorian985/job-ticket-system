@@ -76,6 +76,9 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('Casey Customer')).toBeInTheDocument()
     expect(screen.getByText('casey@example.com')).toBeInTheDocument()
     expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch Readiness')).toBeInTheDocument()
+    expect(screen.getByText('7 / 7')).toBeInTheDocument()
+    expect(screen.getByText(/Equipment context is selected./)).toBeInTheDocument()
     expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
     expect(screen.getByText('Needs closeout review')).toBeInTheDocument()
     expect(screen.getByText('6 / 9')).toBeInTheDocument()
@@ -127,6 +130,33 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('Labor, time approval, parts, files/photos, notes, and billing handoff context are ready for invoice review.')).toBeInTheDocument()
   })
 
+  it('treats no-equipment detail context as dispatch-ready when the other dispatch signals are complete', async () => {
+    vi.mocked(jobTicketsApi.get).mockResolvedValue({
+      id: 'j1',
+      ticketNumber: 'JT-1',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      billingPartyCustomerId: 'c1',
+      equipmentId: null,
+      title: 'Issue',
+      description: 'Replace leaking hose and confirm restart.',
+      priority: 2,
+      status: 3,
+      requestedAtUtc: '2026-04-01T08:00:00Z',
+      scheduledStartAtUtc: '2026-04-02T09:30:00Z',
+      dueAtUtc: '2026-04-03T17:00:00Z',
+      purchaseOrderNumber: 'PO-44',
+      customerFacingNotes: 'Work complete.'
+    } as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
+    expect(screen.getByText('7 / 7')).toBeInTheDocument()
+    expect(screen.getByText(/No equipment is attached; no-equipment context is allowed for this ticket./)).toBeInTheDocument()
+  })
+
   it('warns when dispatch coverage is incomplete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
@@ -137,16 +167,19 @@ describe('JobTicketDetailPage', () => {
       title: 'Issue',
       priority: 2,
       status: 2,
-      scheduledStartAtUtc: null
+      scheduledStartAtUtc: null,
+      dueAtUtc: null
     } as any)
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([] as any)
 
     renderPage()
 
     await screen.findAllByText('Needs attention')
+    expect(screen.getByText('3 / 7')).toBeInTheDocument()
     expect(screen.getByText('No employees are assigned.')).toBeInTheDocument()
     expect(screen.getByText('No lead tech is marked.')).toBeInTheDocument()
     expect(screen.getByText('No scheduled start is set.')).toBeInTheDocument()
+    expect(screen.getByText('No due date is set.')).toBeInTheDocument()
   })
 
   it('prevents adding a second lead without clearing the current one first', async () => {
