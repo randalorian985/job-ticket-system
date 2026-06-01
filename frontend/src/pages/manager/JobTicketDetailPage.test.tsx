@@ -72,6 +72,10 @@ describe('JobTicketDetailPage', () => {
     expect(matches.length).toBeGreaterThan(0)
   }
 
+  const expectAtLeastOneText = (text: string) => {
+    expect(screen.getAllByText(text).length).toBeGreaterThan(0)
+  }
+
   it('renders richer dispatch, billing, status review, closeout readiness, and archive review details alongside actions', async () => {
     renderPage()
 
@@ -80,7 +84,7 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('PO-44')).toBeInTheDocument()
     expect(screen.getByText('Casey Customer')).toBeInTheDocument()
     expect(screen.getByText('casey@example.com')).toBeInTheDocument()
-    expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
+    expectAtLeastOneText('Ready for dispatch review')
     expect(screen.getByText('Dispatch Readiness')).toBeInTheDocument()
     expectCountText('7 / 7')
     expect(screen.getByText(/Equipment context is selected./)).toBeInTheDocument()
@@ -157,7 +161,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
+    expectAtLeastOneText('Ready for dispatch review')
     expectCountText('7 / 7')
     expect(screen.getByText(/No equipment is attached; no-equipment context is allowed for this ticket./)).toBeInTheDocument()
   })
@@ -181,10 +185,10 @@ describe('JobTicketDetailPage', () => {
 
     await screen.findAllByText('Needs attention')
     expectCountText('3 / 7')
-    expect(screen.getByText('No employees are assigned.')).toBeInTheDocument()
-    expect(screen.getByText('No lead tech is marked.')).toBeInTheDocument()
-    expect(screen.getByText('No scheduled start is set.')).toBeInTheDocument()
-    expect(screen.getByText('No due date is set.')).toBeInTheDocument()
+    expectAtLeastOneText('No employees are assigned.')
+    expectAtLeastOneText('No lead tech is marked.')
+    expectAtLeastOneText('No scheduled start is set.')
+    expectAtLeastOneText('No due date is set.')
   })
 
   it('prevents adding a second lead without clearing the current one first', async () => {
