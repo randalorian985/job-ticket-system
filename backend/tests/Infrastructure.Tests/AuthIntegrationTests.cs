@@ -211,7 +211,7 @@ public sealed class AuthIntegrationTests
         var badClockIn = await client.PostAsJsonAsync("/api/time-entries/clock-in", new ClockInRequestDto(unassigned, employeeId, 30m, -97m, null, "Android", null));
         Assert.Equal(HttpStatusCode.BadRequest, badClockIn.StatusCode);
 
-        var fileContent = new StreamContent(new MemoryStream([1, 2, 3]));
+        var fileContent = new StreamContent(new MemoryStream([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46]));
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
         var form = new MultipartFormDataContent
         {
@@ -245,7 +245,7 @@ public sealed class AuthIntegrationTests
         await client.SetBearerTokenAsync("employee", "EmployeePass!123");
         var assigned = await factory.GetAssignedJobIdAsync();
 
-        using var fileContent = new StreamContent(new MemoryStream([1, 2, 3, 4]));
+        using var fileContent = new StreamContent(new MemoryStream([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46]));
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
         using var form = new MultipartFormDataContent
         {
