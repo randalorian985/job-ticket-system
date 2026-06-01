@@ -76,23 +76,69 @@ export function JobTicketDetailPage() {
     () => assignments.find((item) => item.isLead) ?? null,
     [assignments],
   );
-  const dispatchWarnings = useMemo(() => {
-    const warnings: string[] = [];
+  const dispatchReadiness = useMemo(() => {
+    const checks = [
+      {
+        label: "Assigned employees",
+        isReady: Boolean(assignments.length),
+        detail: assignments.length
+          ? `${assignments.length} employee${assignments.length === 1 ? " is" : "s are"} assigned.`
+          : "No employees are assigned.",
+      },
+      {
+        label: "Lead tech",
+        isReady: Boolean(leadAssignment),
+        detail: leadAssignment
+          ? "Lead tech is marked."
+          : "No lead tech is marked.",
+      },
+      {
+        label: "Scheduled start",
+        isReady: Boolean(job?.scheduledStartAtUtc),
+        detail: job?.scheduledStartAtUtc
+          ? "Scheduled start is set."
+          : "No scheduled start is set.",
+      },
+      {
+        label: "Due date",
+        isReady: Boolean(job?.dueAtUtc),
+        detail: job?.dueAtUtc
+          ? "Due date is set."
+          : "No due date is set.",
+      },
+      {
+        label: "Customer",
+        isReady: Boolean(job?.customerId),
+        detail: job?.customerId
+          ? "Customer is selected."
+          : "No customer is selected.",
+      },
+      {
+        label: "Service location",
+        isReady: Boolean(job?.serviceLocationId),
+        detail: job?.serviceLocationId
+          ? "Service location is selected."
+          : "No service location is selected.",
+      },
+      {
+        label: "Equipment or no-equipment context",
+        isReady: Boolean(job),
+        detail: job?.equipmentId
+          ? "Equipment context is selected."
+          : "No equipment is attached; no-equipment context is allowed for this ticket.",
+      },
+    ];
+    const warnings = checks
+      .filter((check) => !check.isReady)
+      .map((check) => check.detail);
 
-    if (!assignments.length) {
-      warnings.push("No employees are assigned.");
-    }
-
-    if (!leadAssignment) {
-      warnings.push("No lead tech is marked.");
-    }
-
-    if (!job?.scheduledStartAtUtc) {
-      warnings.push("No scheduled start is set.");
-    }
-
-    return warnings;
-  }, [assignments, job?.scheduledStartAtUtc, leadAssignment]);
+    return {
+      checks,
+      readyCount: checks.filter((check) => check.isReady).length,
+      warnings,
+    };
+  }, [assignments.length, job, leadAssignment]);
+  const dispatchWarnings = dispatchReadiness.warnings;
   const closeoutReview = useMemo(() => {
     const warnings: string[] = [];
     const approvedClosedTimeEntries = timeEntries.filter(
@@ -220,14 +266,10 @@ export function JobTicketDetailPage() {
           }
           break;
         case 4:
-          if (!assignments.length) {
-            warnings.push("In Progress works best after at least one employee is assigned.");
-          }
-          if (!leadAssignment) {
-            warnings.push("Mark a lead tech before field work begins so dispatch ownership is clear.");
-          }
-          if (!job.scheduledStartAtUtc) {
-            warnings.push("Set a scheduled start before field work begins.");
+          if (dispatchWarnings.length) {
+            warnings.push(
+              ...dispatchWarnings.map((warning) => `Dispatch readiness: ${warning}`),
+            );
           }
           break;
         case 5:
@@ -265,7 +307,7 @@ export function JobTicketDetailPage() {
       summary,
       warnings,
     };
-  }, [assignments.length, closeoutReview.warnings, entries.length, job, leadAssignment, parts.length, statusValue, timeEntries.length]);
+  }, [assignments.length, closeoutReview.warnings, dispatchWarnings, entries.length, job, leadAssignment, parts.length, statusValue, timeEntries.length]);
   const archiveReviewWarnings = useMemo(() => {
     const warnings = dispatchWarnings.map((warning) => `Before archiving: ${warning}`);
 
@@ -539,6 +581,30 @@ export function JobTicketDetailPage() {
               <strong>{formatDate(job.completedAtUtc)}</strong>
             </div>
           </div>
+          <section className="stack" aria-label="dispatch readiness checklist">
+            <h3>Dispatch Readiness</h3>
+            <div className="review-grid">
+              <div>
+                <span className="muted">Dispatch Status</span>
+                <strong>{dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review"}</strong>
+              </div>
+              <div>
+                <span className="muted">Readiness Checks</span>
+                <strong>{dispatchReadiness.readyCount} / {dispatchReadiness.checks.length}</strong>
+              </div>
+              <div>
+                <span className="muted">Open Items</span>
+                <strong>{dispatchWarnings.length}</strong>
+              </div>
+            </div>
+            <ul className="muted" aria-label="dispatch readiness checks">
+              {dispatchReadiness.checks.map((check) => (
+                <li key={check.label}>
+                  <strong>{check.label}:</strong> {check.detail}
+                </li>
+              ))}
+            </ul>
+          </section>
           <div className="review-grid" aria-label="assignment ownership summary">
             <div>
               <span className="muted">Lead Tech</span>
@@ -560,7 +626,7 @@ export function JobTicketDetailPage() {
               ))}
             </ul>
           ) : (
-            <p className="muted">Lead tech, schedule, and assigned-employee signals are all present.</p>
+            <p className="muted">Assignment, lead tech, schedule, due date, customer, service location, and equipment or no-equipment signals are all present.</p>
           )}
           <section className="stack" aria-label="closeout invoice readiness review">
             <h3>Closeout & Invoice Readiness</h3>
