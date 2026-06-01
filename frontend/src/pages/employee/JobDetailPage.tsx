@@ -355,7 +355,7 @@ export function JobDetailPage() {
   return (
     <main className="mobile-shell">
       <p>
-        <Link to="/jobs">Back to My Jobs</Link>
+        <Link to="/jobs">← Back to My Jobs</Link>
       </p>
       {error ? <p className="error">{error}</p> : null}
 
@@ -516,7 +516,7 @@ export function JobDetailPage() {
         <ul>
           {partsUsed.map((part) => (
             <li key={part.id}>
-              Part ID {part.partId} - Qty {part.quantity} - {part.notes ?? 'No notes'}
+              Part ID {part.partId} · Qty {part.quantity} · {part.notes ?? 'No notes'}
             </li>
           ))}
         </ul>
