@@ -76,14 +76,14 @@ builder.Services.AddScoped<IVendorsService, VendorsService>();
 builder.Services.AddScoped<IPartCategoriesService, PartCategoriesService>();
 builder.Services.AddScoped<IPartsService, PartsService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
-builder.Services.AddScoped<IJobTicketsService, JobTicketsService>();
+builder.Services.AddScoped<IJobTicketsService, JobTicketAssignmentValidatingService>();
 builder.Services.AddScoped<IPartsUsageHistoryService, PartsUsageHistoryService>();
 var storageRoot = builder.Configuration.GetValue<string>("FileStorage:RootPath")
     ?? Path.Combine(builder.Environment.ContentRootPath, "storage");
 builder.Services.AddSingleton(new LocalFileStorageOptions(storageRoot));
 builder.Services.AddScoped<IFileStorageProvider, LocalFileStorageProvider>();
 builder.Services.AddScoped<IJobTicketFilesService, JobTicketFilesService>();
-builder.Services.AddScoped<ITimeEntriesService, TimeEntriesService>();
+builder.Services.AddScoped<ITimeEntriesService, TimeEntryServices>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IPurchaseOrdersService, PurchaseOrdersService>();
 builder.Services.AddScoped<IPilotDemoSeedService, PilotDemoSeedService>();
