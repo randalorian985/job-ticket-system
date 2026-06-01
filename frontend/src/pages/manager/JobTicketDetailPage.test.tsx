@@ -77,7 +77,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch Readiness')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
     expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
     expect(screen.getByText('Status Review')).toBeInTheDocument()
