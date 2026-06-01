@@ -83,7 +83,7 @@ var storageRoot = builder.Configuration.GetValue<string>("FileStorage:RootPath")
 builder.Services.AddSingleton(new LocalFileStorageOptions(storageRoot));
 builder.Services.AddScoped<IFileStorageProvider, LocalFileStorageProvider>();
 builder.Services.AddScoped<IJobTicketFilesService, JobTicketFilesService>();
-builder.Services.AddScoped<ITimeEntriesService, TimeEntryServices>();
+builder.Services.AddScoped<ITimeEntriesService, TimeEntriesService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IPurchaseOrdersService, PurchaseOrdersService>();
 builder.Services.AddScoped<IPilotDemoSeedService, PilotDemoSeedService>();
