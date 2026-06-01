@@ -21,7 +21,7 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
-Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, dispatch-readiness filtering, detail dispatch-readiness checklist cues, and edit-side dispatch-readiness cues using existing job-ticket and assignment APIs.
+Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, dispatch-readiness filtering, detail dispatch-readiness checklist cues, edit-side dispatch-readiness cues, and Employee job-ticket detail field-context cues using existing job-ticket and assignment APIs.
 
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
@@ -42,6 +42,7 @@ Do not steer the project toward a general ERP build-out.
 - Phase 4B pilot workflow polish.
 - Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, edit-side dispatch-readiness cues, detail dispatch-readiness checklist cues, invoice-readiness cues, and status/archive review clarity.
 - Manager/Admin job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets.
+- Employee job-ticket detail field-context cues for schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket detail data.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
 - Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
@@ -65,11 +66,12 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
 - Manager/Admin job-ticket detail surfaces show a dispatch-readiness checklist for assignment, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context;
 - Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
+- Employee job-ticket detail surfaces show field-context cues for scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions;
 - this implementation uses existing job-ticket list/detail data, existing edit DTO fields, and existing assignment endpoints only.
 
 Next coherent implementation slice:
-- after the detail checklist PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap, likely employee-facing assignment context using existing job-ticket fields and assignment endpoints;
-- keep any edit or status warnings tied to the existing job-ticket fields and assignment endpoints;
+- after the employee field-context PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap from the current main branch and active PR state;
+- keep any edit, detail, employee, or status warnings tied to the existing job-ticket fields and assignment endpoints;
 - add focused frontend tests that cover ready and not-ready dispatch-review states;
 - update README, project scope, and API contract only if the implementation changes visible behavior or API expectations.
 
