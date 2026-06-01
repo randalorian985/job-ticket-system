@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -51,7 +51,7 @@ describe('JobDetailPage', () => {
     vi.clearAllMocks()
   })
 
-  it('renders ticket details, work entries, parts, and files', async () => {
+  it('renders ticket details, work entries, parts, files, and ready field context', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: {
         employeeId: 'employee-1',
@@ -76,7 +76,9 @@ describe('JobDetailPage', () => {
       customerId: 'customer-1',
       serviceLocationId: 'location-1',
       billingPartyCustomerId: 'customer-1',
-      equipmentId: 'equipment-1'
+      equipmentId: 'equipment-1',
+      scheduledStartAtUtc: '2026-06-01T15:00:00Z',
+      dueAtUtc: '2026-06-02T20:00:00Z'
     })
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([
       {
@@ -135,9 +137,14 @@ describe('JobDetailPage', () => {
     expect(screen.getByText(/Inspected hydraulic lines/)).toBeInTheDocument()
     expect(screen.getByText(/Part ID part-1/)).toBeInTheDocument()
     expect(screen.getByText(/before.jpg/)).toBeInTheDocument()
+
+    const fieldContext = screen.getByLabelText('field context review')
+    expect(within(fieldContext).getByText('Ready for field work review')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('6 / 6')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('Job instructions are available.')).toBeInTheDocument()
   })
 
-  it('shows clock-out state when there is an open entry and includes upload UI', async () => {
+  it('shows clock-out state, upload UI, and missing field context review', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: {
         employeeId: 'employee-1',
@@ -162,7 +169,10 @@ describe('JobDetailPage', () => {
       serviceLocationId: 'location-1',
       billingPartyCustomerId: 'customer-1',
       equipmentId: null,
-      description: null
+      description: null,
+      scheduledStartAtUtc: null,
+      dueAtUtc: null,
+      customerFacingNotes: null
     })
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
@@ -192,6 +202,13 @@ describe('JobDetailPage', () => {
     expect(screen.getByRole('button', { name: 'Clock Out with GPS' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Upload Photo / File' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument()
+
+    const fieldContext = screen.getByLabelText('field context review')
+    expect(within(fieldContext).getByText('Needs manager review')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('3 / 6')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('No scheduled start is set.')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('No due date is set.')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('No job instructions are available yet.')).toBeInTheDocument()
 
     const invoiceAttachment = screen.getByLabelText('Invoice attachment')
     expect(invoiceAttachment).toHaveAttribute('type', 'checkbox')
