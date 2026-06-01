@@ -79,6 +79,8 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
+    expectRenderedText('Current lead: e1')
+    expectRenderedText('e1 (Lead Tech)')
     expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
     expect(screen.getByText('Status Review')).toBeInTheDocument()
     expect(screen.getByText('Archive Review')).toBeInTheDocument()
@@ -138,6 +140,26 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
     expectRenderedText('no-equipment context is allowed for this ticket')
+  })
+
+  it('shows assigned employee names when admin employee records are loaded', async () => {
+    vi.mocked(useAuth).mockReturnValue({ user: { role: 'Admin' } } as any)
+    vi.mocked(usersApi.list).mockResolvedValue([
+      { id: 'e1', firstName: 'Alex', lastName: 'Rivera', role: 'Employee', isArchived: false },
+      { id: 'e2', firstName: 'Blair', lastName: 'Stone', role: 'Employee', isArchived: false },
+      { id: 'm1', firstName: 'Maya', lastName: 'Manager', role: 'Manager', isArchived: false },
+      { id: 'e3', firstName: 'Old', lastName: 'Worker', role: 'Employee', isArchived: true }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expectRenderedText('Current lead: Alex Rivera')
+    expectRenderedText('Alex Rivera (Lead Tech)')
+    expect(screen.getByRole('option', { name: 'Blair Stone' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Alex Rivera' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Maya Manager' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Old Worker' })).not.toBeInTheDocument()
   })
 
   it('warns when dispatch coverage is incomplete', async () => {
