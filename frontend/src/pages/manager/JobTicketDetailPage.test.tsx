@@ -67,8 +67,9 @@ describe('JobTicketDetailPage', () => {
     render(<MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
   }
 
-  const expectNormalizedText = (text: string) => {
-    expect(screen.getByText((_, element) => element?.textContent?.replace(/\s+/g, ' ').trim() === text)).toBeInTheDocument()
+  const expectCountText = (text: string) => {
+    const matches = screen.getAllByText((_, element) => element?.tagName === 'STRONG' && element.textContent?.replace(/\s+/g, ' ').trim() === text)
+    expect(matches.length).toBeGreaterThan(0)
   }
 
   it('renders richer dispatch, billing, status review, closeout readiness, and archive review details alongside actions', async () => {
@@ -81,11 +82,11 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('casey@example.com')).toBeInTheDocument()
     expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
     expect(screen.getByText('Dispatch Readiness')).toBeInTheDocument()
-    expectNormalizedText('7 / 7')
+    expectCountText('7 / 7')
     expect(screen.getByText(/Equipment context is selected./)).toBeInTheDocument()
     expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
     expect(screen.getByText('Needs closeout review')).toBeInTheDocument()
-    expectNormalizedText('6 / 9')
+    expectCountText('6 / 9')
     expect(screen.getByText('This is an operational closeout review for invoice handoff. It does not create invoices, post accounting entries, or track payments.')).toBeInTheDocument()
     expect(screen.getByText('Some loaded time entries still need approval review.')).toBeInTheDocument()
     expect(screen.getByText('Parts are recorded, but none are approved for invoice review.')).toBeInTheDocument()
@@ -130,7 +131,7 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Ready for invoice handoff')).toBeInTheDocument()
-    expectNormalizedText('9 / 9')
+    expectCountText('9 / 9')
     expect(screen.getByText('Labor, time approval, parts, files/photos, notes, and billing handoff context are ready for invoice review.')).toBeInTheDocument()
   })
 
@@ -157,7 +158,7 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
-    expectNormalizedText('7 / 7')
+    expectCountText('7 / 7')
     expect(screen.getByText(/No equipment is attached; no-equipment context is allowed for this ticket./)).toBeInTheDocument()
   })
 
@@ -179,7 +180,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     await screen.findAllByText('Needs attention')
-    expectNormalizedText('3 / 7')
+    expectCountText('3 / 7')
     expect(screen.getByText('No employees are assigned.')).toBeInTheDocument()
     expect(screen.getByText('No lead tech is marked.')).toBeInTheDocument()
     expect(screen.getByText('No scheduled start is set.')).toBeInTheDocument()
