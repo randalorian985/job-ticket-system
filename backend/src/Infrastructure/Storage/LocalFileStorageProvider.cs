@@ -2,7 +2,7 @@ namespace JobTicketSystem.Infrastructure.Storage;
 
 public sealed class LocalFileStorageProvider(LocalFileStorageOptions options) : IFileStorageProvider
 {
-    private readonly string rootPath = Path.GetFullPath(options.RootPath);
+    private readonly string rootPath = EnsureTrailingDirectorySeparator(Path.GetFullPath(options.RootPath));
 
     public string GenerateStorageKey(Guid jobTicketId, string originalFileName, string extension)
     {
@@ -61,6 +61,13 @@ public sealed class LocalFileStorageProvider(LocalFileStorageOptions options) : 
         }
 
         return fullPath;
+    }
+
+    private static string EnsureTrailingDirectorySeparator(string path)
+    {
+        return Path.EndsInDirectorySeparator(path)
+            ? path
+            : path + Path.DirectorySeparatorChar;
     }
 
     private static string SanitizeExtension(string extension)
