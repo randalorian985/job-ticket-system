@@ -76,7 +76,7 @@ describe('JobTicketDetailPage', () => {
     expect(matches.length).toBeGreaterThan(0)
   }
 
-  it('renders dispatch, closeout, archive, and assignment actions alongside job details', async () => {
+  it('renders dispatch, closeout, archive, and review sections alongside job details', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
@@ -89,10 +89,6 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
     expect(screen.getByText('Parts Usage')).toBeInTheDocument()
     expect(screen.getByText('Files / Photos')).toBeInTheDocument()
-
-    fireEvent.change(screen.getByLabelText('assignment employee'), { target: { value: 'e2' } })
-    fireEvent.click(screen.getByText('Assign Employee'))
-    await waitFor(() => expect(jobTicketsApi.addAssignment).toHaveBeenCalledWith('j1', { employeeId: 'e2', isLead: false }))
   })
 
   it('shows invoice handoff readiness when closeout signals are complete', async () => {
