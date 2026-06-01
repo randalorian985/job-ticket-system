@@ -19,7 +19,7 @@ public sealed class JobTicketFileServicesTests
         var storage = CreateStorageProvider();
         var service = new JobTicketFilesService(context, storage, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
 
-        await using var stream = new MemoryStream([1, 2, 3, 4]);
+        await using var stream = new MemoryStream(CreateJpegBytes());
         var result = await service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
             "photo.jpg",
             "image/jpeg",
@@ -72,6 +72,19 @@ public sealed class JobTicketFileServicesTests
         await using var stream = new MemoryStream([1]);
         await Assert.ThrowsAsync<ValidationException>(() => service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
             "photo.bmp", "image/bmp", stream.Length, stream, null, FileVisibility.Internal, false, null, null, null)));
+    }
+
+    [Fact]
+    public async Task Upload_rejects_content_that_does_not_match_declared_type()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        await using var stream = new MemoryStream([1, 2, 3, 4]);
+        await Assert.ThrowsAsync<ValidationException>(() => service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
+            "photo.jpg", "image/jpeg", stream.Length, stream, null, FileVisibility.Internal, false, null, null, null)));
+        Assert.Empty(context.JobTicketFiles);
     }
 
     [Fact]
@@ -155,7 +168,7 @@ public sealed class JobTicketFileServicesTests
 
     private static async Task<JobTicketFileDto> UploadSimpleAsync(JobTicketFilesService service, Guid jobTicketId, string fileName)
     {
-        await using var stream = new MemoryStream([1, 2, 3]);
+        await using var stream = new MemoryStream(CreateJpegBytes());
         return await service.UploadAsync(jobTicketId, new UploadJobTicketFileDto(
             fileName,
             "image/jpeg",
@@ -168,6 +181,8 @@ public sealed class JobTicketFileServicesTests
             null,
             null));
     }
+
+    private static byte[] CreateJpegBytes() => [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46];
 
     private static LocalFileStorageProvider CreateStorageProvider()
     {
