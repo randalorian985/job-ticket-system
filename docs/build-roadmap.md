@@ -21,7 +21,7 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
-Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, dispatch-readiness filtering, detail dispatch-readiness checklist cues, edit-side dispatch-readiness cues, and Employee job-ticket detail field-context cues and pre-work guidance using existing job-ticket and assignment APIs.
+Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, dispatch-readiness filtering, detail dispatch-readiness checklist cues with named assignment ownership when employee records are loaded, edit-side dispatch-readiness cues, and Employee job-ticket detail field-context cues and pre-work guidance using existing job-ticket and assignment APIs.
 
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
@@ -64,13 +64,13 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list summary cards count dispatch-ready active tickets and active tickets that still need assignment, lead-tech, or schedule review;
 - Manager/Admin job-ticket list rows show whether each ticket is ready for dispatch or which dispatch context is missing;
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
-- Manager/Admin job-ticket detail surfaces show a dispatch-readiness checklist for assignment, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context;
+- Manager/Admin job-ticket detail surfaces show a dispatch-readiness checklist for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names when Admin-loaded employee records are available;
 - Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
 - Employee job-ticket detail surfaces show field-context cues for scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions, plus pre-work guidance when manager review is still needed;
 - this implementation uses existing job-ticket list/detail data, existing edit DTO fields, and existing assignment endpoints only.
 
 Next coherent implementation slice:
-- after the employee field-context warning PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap from the current main branch and active PR state;
+- after the named assignment ownership PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap from the current main branch and active PR state;
 - keep any edit, detail, employee, or status warnings tied to the existing job-ticket fields and assignment endpoints;
 - add focused frontend tests that cover ready and not-ready dispatch-review states;
 - update README, project scope, and API contract only if the implementation changes visible behavior or API expectations.
