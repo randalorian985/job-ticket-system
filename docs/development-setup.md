@@ -47,7 +47,7 @@ For test environment credentials, seeded-data choices, and scheduled-runner work
 
 1. Clone the repository.
 2. Copy `.env.example` to `.env` and adjust values only if your local environment requires it.
-3. Start SQL Server using the Docker walkthrough below.
+3. Choose a SQL Server target and set `ConnectionStrings__DefaultConnection` for that environment.
 4. Restore, build, and test the backend.
 5. Install, build, and test the frontend.
 6. Run database migrations if your database is not already up to date.
@@ -66,13 +66,19 @@ docker compose up -d
 
 `docker info` must succeed before relying on the Docker-backed SQL Server walkthrough. If it fails in a restricted container, rerun this portion on Docker Desktop, a workstation Docker Engine, or a CI/self-hosted runner with full Docker privileges.
 
-Connection details for local development:
+Connection details for the default Docker local development database:
 
 - Host: `localhost`
 - Port: `1433`
 - Username: `sa`
 - Password: `DevPassword123!`
 - Default connection string key: `ConnectionStrings__DefaultConnection`
+
+Default Docker connection string:
+
+```bash
+ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=JobTicketSystem;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True"
+```
 
 Stop the container:
 
@@ -85,6 +91,49 @@ To also remove persisted SQL data:
 ```bash
 docker compose down -v
 ```
+
+## Database connection string options
+
+The API reads its database connection from the ASP.NET Core connection-string key `ConnectionStrings:DefaultConnection`. In shell environments, override it with `ConnectionStrings__DefaultConnection`.
+
+You do not have to use the Docker `localhost,1433` SQL-auth connection string. Use the connection string that matches the SQL Server available to your environment.
+
+### SQL authentication
+
+Use SQL authentication for Docker SQL Server, SQL Server containers, and most isolated CI jobs:
+
+```bash
+ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=JobTicketSystem;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True"
+```
+
+### Windows integrated security
+
+Use integrated security when running the API on Windows as a domain or local Windows account that has database permissions:
+
+```powershell
+$env:ConnectionStrings__DefaultConnection="Server=YOUR-SQL-SERVER;Database=JobTicketSystem;Integrated Security=True;TrustServerCertificate=True"
+dotnet run --project backend/src/Api/Api.csproj
+```
+
+Equivalent SQL Client keywords such as `Trusted_Connection=True` may also be used when supported by the host and driver.
+
+Integrated security depends on the process identity. Grant the Windows account running `dotnet run`, IIS, a Windows Service, or the test runner the required SQL Server permissions before starting the API. It is not a portable substitute for SQL authentication inside Linux containers or hosted CI unless Kerberos/domain integration has been deliberately configured.
+
+### Named SQL Server instance or remote SQL Server
+
+For a named instance or remote server, point the connection string at that server instead of `localhost`:
+
+```bash
+ConnectionStrings__DefaultConnection="Server=YOUR-SQL-SERVER\\SQLEXPRESS;Database=JobTicketSystem;Integrated Security=True;TrustServerCertificate=True"
+```
+
+or:
+
+```bash
+ConnectionStrings__DefaultConnection="Server=tcp:sql.example.local,1433;Database=JobTicketSystem;User Id=jobticket_app;Password=REPLACE_ME;TrustServerCertificate=True"
+```
+
+Keep environment-specific secrets out of committed settings. Prefer environment variables, user secrets, CI secrets, or deployment configuration for shared environments.
 
 ## Database migrations
 
@@ -149,10 +198,11 @@ npm test
 
 ## Manual app startup
 
-Run the backend API from repository root:
+Run the backend API from repository root with the intended database connection string:
 
 ```bash
-dotnet run --project backend/src/Api/Api.csproj
+ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=JobTicketSystem;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True" \
+  dotnet run --project backend/src/Api/Api.csproj
 ```
 
 In a separate terminal, run the frontend:
@@ -180,6 +230,22 @@ Fix:
    ```
 
 3. Ensure the installed version satisfies `backend/global.json` (`8.0.100` with `rollForward: latestFeature`).
+
+### SQL Server login or connection failures
+
+Symptoms:
+
+- `Login failed for user`
+- `A network-related or instance-specific error occurred while establishing a connection to SQL Server`
+- `Cannot open database requested by the login`
+
+Fixes:
+
+1. Confirm `ConnectionStrings__DefaultConnection` points at the intended SQL Server and database.
+2. For Docker SQL Server, confirm the container is healthy and port `1433` is published.
+3. For integrated security, confirm the API process identity has SQL Server login and database permissions.
+4. For named instances, confirm SQL Server Browser/network access or use an explicit host and port.
+5. Avoid committing machine-specific connection strings or passwords.
 
 ### npm registry or network failures
 
