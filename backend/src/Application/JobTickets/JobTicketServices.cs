@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Security;
@@ -123,7 +124,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             };
 
             dbContext.JobTickets.Add(entity);
-            AddAudit(entity.Id, nameof(JobTicket), AuditActionType.Create, null, $"{{\"TicketNumber\":\"{entity.TicketNumber}\"}}");
+            AddAudit(entity.Id, nameof(JobTicket), AuditActionType.Create, null, AuditJson(("TicketNumber", entity.TicketNumber)));
 
             try
             {
@@ -177,7 +178,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             entity.CompletedAtUtc = null;
         }
 
-        AddAudit(entity.Id, nameof(JobTicket), AuditActionType.Update, null, $"{{\"Status\":\"{entity.Status}\"}}");
+        AddAudit(entity.Id, nameof(JobTicket), AuditActionType.Update, null, AuditJson(("Status", entity.Status.ToString())));
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicket.Compile().Invoke(entity);
     }
@@ -199,7 +200,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             entity.CompletedAtUtc = null;
         }
 
-        AddAudit(entity.Id, nameof(JobTicket), AuditActionType.StatusChange, $"{{\"Status\":\"{oldStatus}\"}}", $"{{\"Status\":\"{entity.Status}\"}}");
+        AddAudit(entity.Id, nameof(JobTicket), AuditActionType.StatusChange, AuditJson(("Status", oldStatus.ToString())), AuditJson(("Status", entity.Status.ToString())));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return MapJobTicket.Compile().Invoke(entity);
@@ -222,7 +223,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         entity.DeletedByUserId = SystemUserId;
         entity.ArchiveReason = archiveReason;
 
-        AddAudit(entity.Id, nameof(JobTicket), AuditActionType.Delete, null, $"{{\"ArchiveReason\":\"{archiveReason}\"}}");
+        AddAudit(entity.Id, nameof(JobTicket), AuditActionType.Delete, null, AuditJson(("ArchiveReason", archiveReason)));
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicket.Compile().Invoke(entity);
     }
@@ -265,7 +266,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         };
 
         dbContext.JobTicketEmployees.Add(assignment);
-        AddAudit(jobTicketId, nameof(JobTicketEmployee), AuditActionType.Assignment, null, $"{{\"EmployeeId\":\"{request.EmployeeId}\",\"Operation\":\"Add\"}}");
+        AddAudit(jobTicketId, nameof(JobTicketEmployee), AuditActionType.Assignment, null, AuditJson(("EmployeeId", request.EmployeeId), ("Operation", "Add")));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return new JobTicketAssignmentDto(assignment.JobTicketId, assignment.EmployeeId, assignment.AssignedAtUtc, assignment.IsLead);
@@ -284,7 +285,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         assignment.DeletedAtUtc = DateTime.UtcNow;
         assignment.DeletedByUserId = SystemUserId;
 
-        AddAudit(jobTicketId, nameof(JobTicketEmployee), AuditActionType.Assignment, null, $"{{\"EmployeeId\":\"{employeeId}\",\"Operation\":\"Remove\"}}");
+        AddAudit(jobTicketId, nameof(JobTicketEmployee), AuditActionType.Assignment, null, AuditJson(("EmployeeId", employeeId), ("Operation", "Remove")));
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -326,7 +327,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         };
 
         dbContext.JobWorkEntries.Add(entry);
-        AddAudit(jobTicketId, nameof(JobWorkEntry), AuditActionType.Create, null, $"{{\"EntryType\":\"{entry.EntryType}\"}}");
+        AddAudit(jobTicketId, nameof(JobWorkEntry), AuditActionType.Create, null, AuditJson(("EntryType", entry.EntryType.ToString())));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return new JobWorkEntryDto(entry.Id, entry.JobTicketId, entry.EmployeeId, entry.EntryType, entry.Notes, entry.PerformedAtUtc);
@@ -400,7 +401,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             part.QuantityOnHand -= request.Quantity;
         }
 
-        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Create, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"PartId\":\"{request.PartId}\",\"Quantity\":{request.Quantity}}}");
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Create, null, AuditJson(("JobTicketPartId", entry.Id), ("PartId", request.PartId), ("Quantity", request.Quantity)));
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
@@ -408,20 +409,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
     public async Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
-
-        if (request.ApprovalStatus.HasValue)
-        {
-            EnsureManagerOrAdmin();
-            if (!Enum.IsDefined(request.ApprovalStatus.Value))
-            {
-                throw new ValidationException("ApprovalStatus is not a valid job part approval status.");
-            }
-        }
-
-        if (request.AllowManagerOverride && !currentUserContext.IsManager)
-        {
-            throw new ValidationException("Only managers or admins can apply manager override.");
-        }
+        ValidatePartUpdatePermissions(request);
 
         var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
         if (entry is null) return null;
@@ -430,7 +418,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         ValidatePositiveQuantity(request.Quantity);
         await ValidatePartCompatibilityReferencesAsync(request.EquipmentId, request.ReplacedByJobTicketPartId, jobTicketId, entry.Id, cancellationToken);
 
-        var oldValues = $"{{\"Quantity\":{entry.Quantity},\"IsBillable\":{entry.IsBillable.ToString().ToLowerInvariant()},\"ApprovalStatus\":\"{entry.ApprovalStatus}\"}}";
+        var oldValues = AuditJson(("Quantity", entry.Quantity), ("IsBillable", entry.IsBillable), ("ApprovalStatus", entry.ApprovalStatus.ToString()));
         entry.Quantity = request.Quantity;
         entry.EquipmentId = request.EquipmentId;
         entry.ComponentCategory = ValidationHelpers.NullIfWhitespace(request.ComponentCategory);
@@ -472,7 +460,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             }
         }
 
-        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Update, oldValues, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"Quantity\":{entry.Quantity},\"IsBillable\":{entry.IsBillable.ToString().ToLowerInvariant()},\"ApprovalStatus\":\"{entry.ApprovalStatus}\"}}");
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Update, oldValues, AuditJson(("JobTicketPartId", entry.Id), ("Quantity", entry.Quantity), ("IsBillable", entry.IsBillable), ("ApprovalStatus", entry.ApprovalStatus.ToString())));
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
@@ -491,7 +479,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         entry.RejectedByUserId = null;
         entry.RejectedAtUtc = null;
 
-        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Approval, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"ApprovalStatus\":\"Approved\"}}");
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Approval, null, AuditJson(("JobTicketPartId", entry.Id), ("ApprovalStatus", "Approved")));
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
@@ -516,7 +504,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         entry.ApprovedByUserId = null;
         entry.ApprovedAtUtc = null;
 
-        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Approval, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"ApprovalStatus\":\"Rejected\"}}");
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Approval, null, AuditJson(("JobTicketPartId", entry.Id), ("ApprovalStatus", "Rejected")));
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
@@ -541,7 +529,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             part.QuantityOnHand += entry.Quantity;
         }
 
-        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Delete, null, $"{{\"JobTicketPartId\":\"{entry.Id}\",\"RestoreInventory\":{request.RestoreInventory.ToString().ToLowerInvariant()}}}");
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Delete, null, AuditJson(("JobTicketPartId", entry.Id), ("RestoreInventory", request.RestoreInventory)));
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
@@ -582,6 +570,23 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         if (quantity <= 0)
         {
             throw new ValidationException("Quantity must be greater than zero.");
+        }
+    }
+
+    private void ValidatePartUpdatePermissions(UpdateJobTicketPartDto request)
+    {
+        if (request.ApprovalStatus.HasValue)
+        {
+            EnsureManagerOrAdmin();
+            if (!Enum.IsDefined(request.ApprovalStatus.Value))
+            {
+                throw new ValidationException("ApprovalStatus is not a valid job part approval status.");
+            }
+        }
+
+        if (request.AllowManagerOverride && !currentUserContext.IsManager)
+        {
+            throw new ValidationException("Only managers or admins can apply manager override.");
         }
     }
 
@@ -704,6 +709,11 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             .Max() + 1;
 
         return $"{prefix}{next:D6}";
+    }
+
+    private static string AuditJson(params (string Name, object? Value)[] values)
+    {
+        return JsonSerializer.Serialize(values.ToDictionary(x => x.Name, x => x.Value));
     }
 
     private void AddAudit(Guid entityId, string entityName, AuditActionType actionType, string? oldValues, string? newValues)
