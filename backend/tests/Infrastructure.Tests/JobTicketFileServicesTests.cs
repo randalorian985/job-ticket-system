@@ -88,6 +88,19 @@ public sealed class JobTicketFileServicesTests
     }
 
     [Fact]
+    public async Task Upload_rejects_extension_that_does_not_match_declared_type()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        await using var stream = new MemoryStream(CreateJpegBytes());
+        await Assert.ThrowsAsync<ValidationException>(() => service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
+            "invoice.pdf", "image/jpeg", stream.Length, stream, null, FileVisibility.Internal, false, null, null, null)));
+        Assert.Empty(context.JobTicketFiles);
+    }
+
+    [Fact]
     public async Task List_excludes_archived_files()
     {
         await using var context = CreateContext();
