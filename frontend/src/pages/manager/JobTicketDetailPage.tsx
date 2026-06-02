@@ -89,19 +89,21 @@ export function JobTicketDetailPage() {
     return name || employeeId;
   };
   const dispatchReadiness = useMemo(() => {
+    const assignedEmployeeNames = assignments.map((item) => getEmployeeDisplayName(item.employeeId));
+    const leadTechName = leadAssignment ? getEmployeeDisplayName(leadAssignment.employeeId) : null;
     const checks = [
       {
         label: "Assigned employees",
         isReady: Boolean(assignments.length),
         detail: assignments.length
-          ? `${assignments.length} employee${assignments.length === 1 ? " is" : "s are"} assigned.`
+          ? `Assigned employees: ${assignedEmployeeNames.join(", ")}.`
           : "No employees are assigned.",
       },
       {
         label: "Lead tech",
         isReady: Boolean(leadAssignment),
-        detail: leadAssignment
-          ? "Lead tech is marked."
+        detail: leadTechName
+          ? `Lead tech is ${leadTechName}.`
           : "No lead tech is marked.",
       },
       {
@@ -149,7 +151,7 @@ export function JobTicketDetailPage() {
       readyCount: checks.filter((check) => check.isReady).length,
       warnings,
     };
-  }, [assignments.length, job, leadAssignment]);
+  }, [assignments, employeesById, job, leadAssignment]);
   const dispatchWarnings = dispatchReadiness.warnings;
   const closeoutReview = useMemo(() => {
     const warnings: string[] = [];
