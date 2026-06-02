@@ -20,6 +20,7 @@ The project is centered on the original job-ticket workflow:
 - Manager/Admin job ticket detail and edit surfaces now show dispatch-readiness cues for assignment, named lead-tech/assigned-employee ownership where available, customer, service location, equipment or no-equipment context, schedule, due date, and job instructions using existing job-ticket fields.
 - Employee job detail now shows field-context review cues and pre-work guidance for assigned work using existing job-ticket detail data for schedule, due date, customer, service location, equipment, and job instructions.
 - Test environments can opt into a lightweight Admin credential bootstrap when full pilot seed data is not desired.
+- Database setup documentation now covers Docker SQL authentication, custom SQL Server connection strings, named instances, and Windows integrated security for local/test environments.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
