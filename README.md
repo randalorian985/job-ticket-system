@@ -19,6 +19,7 @@ The project is centered on the original job-ticket workflow:
 - Manager/Admin job ticket list dispatch-readiness cues now summarize active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, and the list can filter by those dispatch-readiness states using existing job-ticket and assignment APIs.
 - Manager/Admin job ticket detail and edit surfaces now show dispatch-readiness cues for assignment, named lead-tech/assigned-employee ownership where available, customer, service location, equipment or no-equipment context, schedule, due date, and job instructions using existing job-ticket fields.
 - Employee job detail now shows field-context review cues and pre-work guidance for assigned work using existing job-ticket detail data for schedule, due date, customer, service location, equipment, and job instructions.
+- Test environments can opt into a lightweight Admin credential bootstrap when full pilot seed data is not desired.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
 - Limited inventory foundation work is already present on `main` as supporting infrastructure.
 - The post-reports historical regression audit and docs checkpoint is complete and validated.
@@ -56,6 +57,7 @@ Current roadmap discipline:
 - Scope contract: [docs/project-scope.md](docs/project-scope.md)
 - API contract: [docs/api-contract.md](docs/api-contract.md)
 - Development setup and validation: [docs/development-setup.md](docs/development-setup.md)
+- Test environment setup and workarounds: [docs/test-environment-setup.md](docs/test-environment-setup.md)
 - Historical audit log: [docs/historical-bug-regression-audit.md](docs/historical-bug-regression-audit.md)
 - Database design: [docs/database-design.md](docs/database-design.md)
 - Local demo runbook: [docs/local-demo-runbook.md](docs/local-demo-runbook.md)
