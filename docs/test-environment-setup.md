@@ -21,6 +21,40 @@ The base roles are:
 
 Do not rename these roles or introduce new role values for test convenience. Authorization policies depend on these canonical values.
 
+## Database connection string for tests
+
+The API uses `ConnectionStrings:DefaultConnection`; set `ConnectionStrings__DefaultConnection` in shells, CI jobs, and local test scripts.
+
+Use whichever SQL Server authentication mode your test environment supports:
+
+| Environment | Recommended connection style |
+| --- | --- |
+| Docker SQL Server or isolated CI SQL Server | SQL authentication with host, port, user, and password. |
+| Windows workstation SQL Server | Integrated security when the Windows account running the API/test runner has database permissions. |
+| Shared SQL Server | Environment-specific SQL login or integrated security, managed outside committed settings. |
+
+SQL-auth example:
+
+```bash
+ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=JobTicketSystem;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True"
+```
+
+Windows integrated-security example:
+
+```powershell
+$env:ConnectionStrings__DefaultConnection="Server=YOUR-SQL-SERVER;Database=JobTicketSystem;Integrated Security=True;TrustServerCertificate=True"
+```
+
+Named-instance example:
+
+```powershell
+$env:ConnectionStrings__DefaultConnection="Server=YOUR-SQL-SERVER\SQLEXPRESS;Database=JobTicketSystem;Integrated Security=True;TrustServerCertificate=True"
+```
+
+Integrated security is tied to the process identity. Grant the account running `dotnet run`, `dotnet test`, IIS, a Windows Service, or the CI runner the required SQL Server login and database permissions. Linux containers and hosted CI normally need SQL authentication unless Kerberos/domain authentication has been intentionally configured.
+
+Keep shared passwords and machine-specific server names out of committed files. Use environment variables, user secrets, CI secrets, or deployment configuration.
+
 ## Minimal test bootstrap without full seed data
 
 Use `TestBootstrap` when a test or local environment needs a loginable top-level Admin but does not need full pilot demo data.
@@ -36,6 +70,7 @@ Default bootstrap credentials when enabled:
 Enable it only in local or test environments:
 
 ```bash
+ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=JobTicketSystem;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True" \
 TestBootstrap__Enabled=true \
 TestBootstrap__MigrateDatabase=true \
 TestBootstrap__AdminUserName=test.admin \
@@ -43,6 +78,8 @@ TestBootstrap__AdminEmail=test.admin@example.local \
 TestBootstrap__AdminPassword='TestAdmin123!' \
   dotnet run --project backend/src/Api/Api.csproj
 ```
+
+For Windows integrated security, set `ConnectionStrings__DefaultConnection` to the integrated-security form above before enabling `TestBootstrap`.
 
 Recommended use:
 - empty local database smoke tests;
@@ -68,6 +105,15 @@ ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=JobTicketSy
 PilotDemoSeed__Enabled=true \
 PilotDemoSeed__MigrateDatabase=true \
   dotnet run --project backend/src/Api/Api.csproj --urls http://localhost:5000
+```
+
+For a Windows SQL Server using integrated security, replace only the connection-string value:
+
+```powershell
+$env:ConnectionStrings__DefaultConnection="Server=YOUR-SQL-SERVER;Database=JobTicketSystem;Integrated Security=True;TrustServerCertificate=True"
+$env:PilotDemoSeed__Enabled="true"
+$env:PilotDemoSeed__MigrateDatabase="true"
+dotnet run --project backend/src/Api/Api.csproj --urls http://localhost:5000
 ```
 
 Pilot credentials:
@@ -122,6 +168,8 @@ Focused pilot seed validation:
 dotnet test backend/JobTicketSystem.sln --filter PilotDemoSeedTests
 ```
 
+When validation uses a real SQL Server instead of in-memory test factories, set `ConnectionStrings__DefaultConnection` for that test run rather than editing committed settings.
+
 ## Scheduled runner and checkout workarounds
 
 The scheduled ChatGPT runner may be unable to use normal GitHub network paths such as `git clone`, `git fetch`, `curl`, raw GitHub downloads, codeload, or GitHub CLI workflows. When that happens, do not stop at the blocker if a safe workaround exists.
@@ -150,5 +198,7 @@ docker compose up -d
 ```
 
 Then run either the minimal bootstrap or full pilot seed startup command above.
+
+For a non-Docker SQL Server, reset the target database using your normal SQL Server tooling, then rerun migrations or start the API with `TestBootstrap__MigrateDatabase=true` / `PilotDemoSeed__MigrateDatabase=true` as appropriate.
 
 For in-memory integration tests, each test factory should use a unique database name so bootstrap and seed state cannot leak between tests.

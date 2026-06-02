@@ -8,6 +8,7 @@ Use this roadmap together with:
 - [docs/project-scope.md](./project-scope.md)
 - [docs/api-contract.md](./api-contract.md)
 - [docs/development-setup.md](./development-setup.md)
+- [docs/test-environment-setup.md](./test-environment-setup.md)
 - [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md)
 
 ## Current Roadmap Checkpoint
@@ -22,6 +23,8 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
 Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, dispatch-readiness filtering, detail dispatch-readiness checklist cues with named assignment ownership when employee records are loaded, edit-side dispatch-readiness cues, and Employee job-ticket detail field-context cues and pre-work guidance using existing job-ticket and assignment APIs.
+
+Test environment setup is now part of the maintained project baseline: docs cover the opt-in Admin bootstrap for empty local/test databases, full pilot seed setup, scheduled-runner workarounds, Docker SQL authentication, custom SQL Server connection strings, named instances, and Windows integrated security guidance.
 
 ## Product Boundary We Are Protecting
 Keep the platform focused on:
@@ -40,6 +43,7 @@ Do not steer the project toward a general ERP build-out.
 - Manager/Admin Phases 1-3D.
 - Phase 4A pilot readiness.
 - Phase 4B pilot workflow polish.
+- Opt-in local/test Admin bootstrap for empty databases, plus maintained setup docs for test credentials, seeded pilot data, custom connection strings, integrated security, and scheduled-runner workarounds.
 - Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, edit-side dispatch-readiness cues, detail dispatch-readiness checklist cues, invoice-readiness cues, and status/archive review clarity.
 - Manager/Admin job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets.
 - Employee job-ticket detail field-context cues and pre-work guidance for schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket detail data.

@@ -20,6 +20,7 @@ That means the core scope is:
 - Manager/Admin reports and time-review polish are part of the implemented baseline.
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is part of the implemented Manager/Admin job review baseline.
 - Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane.
+- Test environment setup and documentation are maintained as stabilization support for the existing product: empty-database Admin bootstrap, full pilot seed setup, scheduled-runner workarounds, custom connection strings, named SQL Server instances, and Windows integrated security guidance. This does not expand product domain scope.
 - Manager/Admin job ticket list dispatch-readiness cues now summarize active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, and the list can filter by dispatch-readiness state using existing job-ticket and assignment APIs.
 - Manager/Admin job ticket detail readiness cues now summarize assignment ownership, lead tech, customer, service location, equipment or no-equipment context, schedule, and due date using existing job-ticket and assignment data, with employee names shown when loaded.
 - Manager/Admin job ticket edit readiness cues now summarize customer, service location, equipment or no-equipment context, schedule, due date, and job instruction context using existing job-ticket fields.
@@ -30,6 +31,7 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 
 ## Implemented Baseline That Must Stay Stable
 - Auth, JWT token revalidation, and role enforcement for `Admin`, `Manager`, and `Employee`.
+- Local/test environment support for opt-in Admin bootstrap without full seeded data, plus documented seeded pilot setup and database connection-string options.
 - Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, files/photos, assigned-work field context review, and pre-work context guidance.
 - Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, closeout/invoice-readiness review, dispatch-readiness list cues and filters, detail dispatch-readiness checklist cues, edit-side dispatch-readiness cues, and time-review approval workspace.
 - Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, lead-tech/assignment review cues, invoice-readiness cues, dispatch-readiness rollups, and clearer status-change confirmation.
@@ -93,6 +95,8 @@ Supporting purchasing and inventory code already exists on `main`, but further e
 Reports and time-review polish are part of the protected baseline: loaded-row filters, export-friendly review tables, visible-row CSV export, and clearer labor-snapshot wording should remain intact after the closeout/readiness lane.
 
 Closeout and invoice-readiness polish is operational review only. It helps Manager/Admin users identify whether the existing ticket record has labor, time-approval, parts, file/photo, note, status, and billing-handoff context before invoice handoff. It does not create invoices, post accounting entries, or track payments.
+
+Test-environment setup, bootstrap credentials, seeded demo data, and database connection guidance are stabilization support for reliable local/test validation. They do not create production seed data or approve product-domain expansion.
 
 The completed checkpoint re-audited auth, routing, employee workflow, Manager/Admin workflow, reports/time-review behavior, and the known historical bug list. It does not approve domain expansion by itself.
 
