@@ -36,7 +36,7 @@ Use whichever SQL Server authentication mode your test environment supports:
 SQL-auth example:
 
 ```bash
-ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=JobTicketSystem;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True"
+export ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=JobTicketSystem;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True"
 ```
 
 Windows integrated-security example:
