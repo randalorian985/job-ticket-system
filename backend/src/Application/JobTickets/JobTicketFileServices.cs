@@ -95,6 +95,11 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
             throw new ValidationException("Unsupported content type. Supported types: image/jpeg, image/png, image/webp, application/pdf.");
         }
 
+        if (!ContentTypeMatchesExtension(extension, contentType))
+        {
+            throw new ValidationException("File extension must match the declared content type.");
+        }
+
         await ValidateFileSignatureAsync(contentType, request.Content, cancellationToken);
 
         if (request.UploadedByEmployeeId.HasValue)
@@ -274,6 +279,18 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
         {
             throw new ValidationException("File content does not match the declared content type.");
         }
+    }
+
+    private static bool ContentTypeMatchesExtension(string extension, string contentType)
+    {
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => contentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase),
+            ".png" => contentType.Equals("image/png", StringComparison.OrdinalIgnoreCase),
+            ".webp" => contentType.Equals("image/webp", StringComparison.OrdinalIgnoreCase),
+            ".pdf" => contentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase),
+            _ => false
+        };
     }
 
     private static bool MatchesSignature(string contentType, byte[] buffer, int bytesRead)
