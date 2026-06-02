@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using JobTicketSystem.Api.Auth;
 using JobTicketSystem.Api.Pilot;
+using JobTicketSystem.Api.TestEnvironment;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Application.JobTickets;
@@ -70,6 +71,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<ITestEnvironmentBootstrapService, TestEnvironmentBootstrapService>();
 builder.Services.AddScoped<ICustomersService, CustomersService>();
 builder.Services.AddScoped<IServiceLocationsService, ServiceLocationsService>();
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
@@ -88,6 +90,7 @@ builder.Services.AddScoped<ITimeEntriesService, TimeEntriesService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IPurchaseOrdersService, PurchaseOrdersService>();
 builder.Services.AddScoped<IPilotDemoSeedService, PilotDemoSeedService>();
+builder.Services.AddHostedService<TestEnvironmentBootstrapHostedService>();
 builder.Services.AddHostedService<PilotDemoSeedHostedService>();
 
 var app = builder.Build();
