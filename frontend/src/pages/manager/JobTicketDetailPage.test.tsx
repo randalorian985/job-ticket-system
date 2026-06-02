@@ -79,6 +79,8 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
+    expectRenderedText('Assigned employees: e1.')
+    expectRenderedText('Lead tech is e1.')
     expectRenderedText('Current lead: e1')
     expectRenderedText('e1 (Lead Tech)')
     expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
@@ -154,6 +156,8 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expectRenderedText('Assigned employees: Alex Rivera.')
+    expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
     expectRenderedText('Alex Rivera (Lead Tech)')
     expect(screen.getByRole('option', { name: 'Blair Stone' })).toBeInTheDocument()
