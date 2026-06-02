@@ -8,7 +8,9 @@ This workaround gives the runner a checkout-like working tree without requiring 
 
 The `Scheduled Runner Workspace Bundle` GitHub Actions workflow runs inside GitHub, where `actions/checkout` is available. It packages the requested ref, posts a manifest comment, and posts base64 bundle chunks to an issue.
 
-The workflow can be started in either of these ways:
+The workflow starts automatically on every push to `main`, posting a fresh default-branch bundle to issue #166. That means each merged PR should leave the scheduled runner with a current reconstructable workspace even when direct checkout is still blocked.
+
+The workflow can also be started in either of these ways:
 
 - Run the workflow manually and choose the ref and issue number.
 - Comment `/runner-bundle` on a repository issue. The issue-comment trigger is limited to repository owners, members, and collaborators and uses the repository default branch.
@@ -19,13 +21,12 @@ By default, bundle comments are intended for issue #166, the scheduled-runner ch
 
 When direct checkout is blocked and broad source inspection is needed:
 
-1. Trigger the bundle workflow for the latest `main` branch.
-2. Read the newest manifest and all matching `scheduled-runner-bundle` chunk comments through the GitHub connector.
-3. Concatenate chunk payloads in numeric order.
-4. Decode and extract the archive into `/workspace/job-ticket-system`.
-5. Use that extracted tree for local source search, edits, and frontend-only checks where available.
-6. Publish changed files back to a PR branch through GitHub connector object/file operations.
-7. Treat GitHub Actions as the required validation authority, especially because the scheduled runner may not have the .NET SDK.
+1. Read the newest manifest and all matching `scheduled-runner-bundle` chunk comments through the GitHub connector, preferring the latest bundle created after the most recent `main` push.
+2. Concatenate chunk payloads in numeric order.
+3. Decode and extract the archive into `/workspace/job-ticket-system`.
+4. Use that extracted tree for local source search, edits, and frontend-only checks where available.
+5. Publish changed files back to a PR branch through GitHub connector object/file operations.
+6. Treat GitHub Actions as the required validation authority, especially because the scheduled runner may not have the .NET SDK.
 
 Reconstruction commands after chunk payloads have been concatenated into `scheduled-runner-workspace.tar.gz.b64`:
 
