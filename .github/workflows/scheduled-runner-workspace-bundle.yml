@@ -1,0 +1,104 @@
+name: Scheduled Runner Workspace Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag, or commit to bundle.
+        required: false
+        default: main
+      issue_number:
+        description: Issue number where bundle chunks should be posted.
+        required: false
+        default: "166"
+      max_chunk_chars:
+        description: Maximum base64 characters per issue comment chunk.
+        required: false
+        default: "55000"
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  bundle:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' &&
+        !github.event.issue.pull_request &&
+        startsWith(github.event.comment.body, '/runner-bundle') &&
+        (github.event.comment.author_association == 'OWNER' ||
+          github.event.comment.author_association == 'MEMBER' ||
+          github.event.comment.author_association == 'COLLABORATOR'))
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.event.repository.default_branch }}
+      ISSUE_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.issue_number || github.event.issue.number }}
+      MAX_CHUNK_CHARS: ${{ github.event_name == 'workflow_dispatch' && inputs.max_chunk_chars || '55000' }}
+    steps:
+      - name: Checkout requested ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BUNDLE_REF }}
+          fetch-depth: 1
+
+      - name: Build workspace bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sha="$(git rev-parse HEAD)"
+          bundle="/tmp/scheduled-runner-workspace-${sha}.tar.gz"
+          encoded="${bundle}.b64"
+
+          tar \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='frontend/node_modules' \
+            --exclude='backend/**/bin' \
+            --exclude='backend/**/obj' \
+            -czf "$bundle" .
+
+          base64 -w 0 "$bundle" > "$encoded"
+          split -b "$MAX_CHUNK_CHARS" -d -a 4 "$encoded" /tmp/scheduled-runner-bundle-
+
+          total="$(find /tmp -maxdepth 1 -name 'scheduled-runner-bundle-*' -type f | wc -l | tr -d ' ')"
+
+          {
+            echo "<!-- scheduled-runner-bundle-manifest sha=$sha total=$total ref=$BUNDLE_REF -->"
+            echo "Scheduled runner workspace bundle for \`$BUNDLE_REF\` at \`$sha\`."
+            echo
+            echo "Chunks: \`$total\`"
+            echo
+            echo "Reconstruct by concatenating chunk payloads in numeric order, then run:"
+            echo
+            echo '```bash'
+            echo 'base64 -d scheduled-runner-workspace.tar.gz.b64 > scheduled-runner-workspace.tar.gz'
+            echo 'mkdir -p /workspace/job-ticket-system'
+            echo 'tar -xzf scheduled-runner-workspace.tar.gz -C /workspace/job-ticket-system'
+            echo '```'
+          } > /tmp/scheduled-runner-manifest.md
+
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/scheduled-runner-manifest.md
+
+          part=0
+          for chunk in /tmp/scheduled-runner-bundle-*; do
+            part=$((part + 1))
+            body="/tmp/scheduled-runner-comment-${part}.md"
+            {
+              echo "<!-- scheduled-runner-bundle sha=$sha part=$part total=$total ref=$BUNDLE_REF -->"
+              echo "Scheduled runner workspace bundle chunk \`$part\` of \`$total\` for \`$BUNDLE_REF\` at \`$sha\`."
+              echo
+              echo '```text'
+              cat "$chunk"
+              echo
+              echo '```'
+            } > "$body"
+
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$body"
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
