@@ -1,6 +1,9 @@
 name: Scheduled Runner Workspace Bundle
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       ref:
@@ -26,6 +29,7 @@ permissions:
 jobs:
   bundle:
     if: >
+      github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'issue_comment' &&
         !github.event.issue.pull_request &&
@@ -36,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUNDLE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.event.repository.default_branch }}
-      ISSUE_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.issue_number || github.event.issue.number }}
+      ISSUE_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.issue_number || github.event_name == 'issue_comment' && github.event.issue.number || '166' }}
       MAX_CHUNK_CHARS: ${{ github.event_name == 'workflow_dispatch' && inputs.max_chunk_chars || '55000' }}
     steps:
       - name: Checkout requested ref
