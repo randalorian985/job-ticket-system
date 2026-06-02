@@ -41,6 +41,8 @@ Docker client installation is separate from Docker Engine daemon availability. T
 
 For a guided local walkthrough, use [Local Demo Runbook](./local-demo-runbook.md). It covers SQL Server startup, backend validation, public `/health` and `/api/system/info` checks, Vite production-build preview, and the public frontend `/preview` readiness route.
 
+For test environment credentials, seeded-data choices, and scheduled-runner workarounds, use [Test Environment Setup](./test-environment-setup.md).
+
 ## Local setup steps
 
 1. Clone the repository.
@@ -99,6 +101,23 @@ dotnet tool install --global dotnet-ef
 ```
 
 Only add a new migration when a scoped schema or index change is part of the approved work.
+
+## Test login without full seed data
+
+When an empty local/test database needs a loginable top-level Admin but does not need full demo data, enable the lightweight test bootstrap:
+
+```bash
+TestBootstrap__Enabled=true \
+TestBootstrap__MigrateDatabase=true \
+TestBootstrap__AdminUserName=test.admin \
+TestBootstrap__AdminEmail=test.admin@example.local \
+TestBootstrap__AdminPassword='TestAdmin123!' \
+  dotnet run --project backend/src/Api/Api.csproj
+```
+
+The bootstrap creates one active `Admin` employee only when no active Admin exists. It does not create workflow data. Keep it disabled outside local/test environments and rotate the password in shared environments.
+
+For full seeded pilot data and scheduled-runner workaround details, see [Test Environment Setup](./test-environment-setup.md).
 
 ## Backend validation commands
 
