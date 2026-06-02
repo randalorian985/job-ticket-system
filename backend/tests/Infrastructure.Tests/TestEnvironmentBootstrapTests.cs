@@ -35,7 +35,7 @@ public sealed class TestEnvironmentBootstrapTests
         Assert.Equal(EmployeeStatus.Active, admin.Status);
         Assert.NotNull(admin.PasswordHash);
         Assert.DoesNotContain("TestAdmin123!", admin.PasswordHash!);
-        Assert.Equal([SystemRoles.Admin, SystemRoles.Manager, SystemRoles.Employee], SystemRoles.All);
+        Assert.Equal(new[] { SystemRoles.Admin, SystemRoles.Manager, SystemRoles.Employee }, SystemRoles.All);
     }
 
     private sealed class TestBootstrapApiFactory : WebApplicationFactory<Program>
