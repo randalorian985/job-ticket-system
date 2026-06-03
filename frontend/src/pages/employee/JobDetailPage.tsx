@@ -90,6 +90,7 @@ export function JobDetailPage() {
       checks,
       readyCount: checks.length - warnings.length,
       warnings,
+      nextFieldContextFix: warnings[0] ?? 'No field-context blockers are visible from the assigned ticket.',
       guidance: warnings.length
         ? 'Review open field context with a manager before starting field work.'
         : 'Field context is complete for assigned work.'
@@ -385,6 +386,10 @@ export function JobDetailPage() {
           <div>
             <span className="muted">Open Items</span>
             <strong>{employeeFieldContext.warnings.length}</strong>
+          </div>
+          <div>
+            <span className="muted">Next Field Context Fix</span>
+            <strong>{employeeFieldContext.nextFieldContextFix}</strong>
           </div>
         </div>
         <p className="muted">{employeeFieldContext.guidance}</p>
