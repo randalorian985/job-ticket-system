@@ -6,6 +6,24 @@ import { useAuth } from '../../features/auth/AuthContext'
 import type { JobTicketListItemDto } from '../../types'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from './jobDisplay'
 
+function formatOptionalDateTime(value?: string | null) {
+  return value ? new Date(value).toLocaleString() : 'Not set'
+}
+
+function getAssignedJobListFieldContext(job: JobTicketListItemDto) {
+  const warnings = [
+    job.scheduledStartAtUtc ? null : 'No scheduled start is visible from the assigned-jobs list.',
+    job.dueAtUtc ? null : 'No due date is visible from the assigned-jobs list.',
+    job.customerId ? null : 'No customer reference is visible from the assigned-jobs list.',
+    job.serviceLocationId ? null : 'No service-location reference is visible from the assigned-jobs list.'
+  ].filter((item): item is string => Boolean(item))
+
+  return {
+    label: warnings.length ? 'Needs field-context review' : 'Ready for field-context review',
+    nextStep: warnings[0] ?? 'No field-context blockers are visible from the assigned-jobs list.'
+  }
+}
+
 export function MyJobsPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -67,20 +85,27 @@ export function MyJobsPage() {
       {error ? <p className="error">{error}</p> : null}
 
       <section className="stack">
-        {jobs.map((job) => (
-          <article key={job.id} className="card">
-            <h2>{job.ticketNumber}</h2>
-            <p>{job.title}</p>
-            <p className="muted">
-              Status: {getJobTicketStatusLabel(job.status)} | Priority: {getJobTicketPriorityLabel(job.priority)}
-            </p>
-            <p className="muted">Customer ID: {job.customerId}</p>
-            <p className="muted">Service Location ID: {job.serviceLocationId}</p>
-            <p className="muted">Scheduled: {job.scheduledStartAtUtc ? new Date(job.scheduledStartAtUtc).toLocaleString() : 'Not set'}</p>
-            <p className="muted">Equipment: Summary unavailable from assigned-jobs API</p>
-            <Link to={`/jobs/${job.id}`}>Open Job</Link>
-          </article>
-        ))}
+        {jobs.map((job) => {
+          const fieldContext = getAssignedJobListFieldContext(job)
+
+          return (
+            <article key={job.id} className="card">
+              <h2>{job.ticketNumber}</h2>
+              <p>{job.title}</p>
+              <p className="muted">
+                Status: {getJobTicketStatusLabel(job.status)} | Priority: {getJobTicketPriorityLabel(job.priority)}
+              </p>
+              <p className="muted">Customer ID: {job.customerId}</p>
+              <p className="muted">Service Location ID: {job.serviceLocationId}</p>
+              <p className="muted">Scheduled: {formatOptionalDateTime(job.scheduledStartAtUtc)}</p>
+              <p className="muted">Due: {formatOptionalDateTime(job.dueAtUtc)}</p>
+              <p className="muted">Field context: {fieldContext.label}</p>
+              <p className="muted">Next field-context fix: {fieldContext.nextStep}</p>
+              <p className="muted">Equipment: Summary unavailable from assigned-jobs API</p>
+              <Link to={`/jobs/${job.id}`}>Open Job</Link>
+            </article>
+          )
+        })}
 
         {!isLoading && !jobs.length ? <p>No assigned jobs found.</p> : null}
       </section>
