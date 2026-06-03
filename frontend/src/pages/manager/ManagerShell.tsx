@@ -6,11 +6,16 @@ export function ManagerShell() {
   const isAdmin = user?.role === 'Admin'
 
   return (
-    <main className="desktop-shell">
-      <header className="card">
-        <h1>Manager/Admin Console</h1>
-        <p className="muted">{user?.firstName} {user?.lastName} ({user?.role})</p>
-        <div className="inline-links">
+    <main className="desktop-shell manager-shell">
+      <header className="manager-header">
+        <div className="manager-header-main">
+          <div>
+            <h1>Manager/Admin Console</h1>
+            <p className="muted">{user?.firstName} {user?.lastName} ({user?.role})</p>
+          </div>
+          <button className="secondary-button logout-button" onClick={logout}>Logout</button>
+        </div>
+        <nav className="inline-links" aria-label="manager navigation">
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} end to="/manage">Dashboard</NavLink>
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/job-tickets">Job Tickets</NavLink>
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/customers">Customers</NavLink>
@@ -24,8 +29,7 @@ export function ManagerShell() {
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/parts-approval">Parts Approval</NavLink>
           <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/reports">Reports</NavLink>
           {isAdmin ? <NavLink className={({ isActive }) => (isActive ? 'active-nav-link' : undefined)} to="/manage/users">Users</NavLink> : null}
-        </div>
-        <button onClick={logout}>Logout</button>
+        </nav>
       </header>
       <Outlet />
     </main>
