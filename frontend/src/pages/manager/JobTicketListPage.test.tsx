@@ -66,14 +66,14 @@ describe('Manager list pages', () => {
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
     expect(screen.getByText('Dispatch 1 assigned · Lead e-1')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing scheduled start.')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing scheduled start, due date.')).toBeInTheDocument()
   })
 
-  it('shows queue summary counts for active, urgent, waiting, unscheduled, unassigned, needs-lead, and dispatch readiness work', async () => {
+  it('shows queue summary counts for active, urgent, waiting, unscheduled, missing due date, unassigned, needs-lead, and dispatch readiness work', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
-      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null },
-      { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
-      { id: 'job-3', ticketNumber: 'JT-3', title: 'Archive ticket', status: 7, priority: 1, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-11T08:00:00Z' }
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
+      { id: 'job-3', ticketNumber: 'JT-3', title: 'Archive ticket', status: 7, priority: 1, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-11T08:00:00Z', dueAtUtc: '2026-05-14T08:00:00Z' }
     ] as any)
 
     renderPage()
@@ -82,28 +82,40 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Urgent active')).toBeInTheDocument()
     expect(screen.getByText('Waiting')).toBeInTheDocument()
     expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
+    expect(screen.getByText('Missing due date')).toBeInTheDocument()
     expect(screen.getByText('Unassigned active')).toBeInTheDocument()
     expect(screen.getByText('Needs lead')).toBeInTheDocument()
     expect(screen.getAllByText('Dispatch-ready').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Needs dispatch review').length).toBeGreaterThan(0)
   })
 
-  it('shows ready dispatch context when assignment, lead, and schedule are present', async () => {
+  it('shows ready dispatch context when assignment, lead, schedule, and due date are present', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
-      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z' }
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
     ] as any)
 
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch readiness: Ready for dispatch · Assignment, lead tech, and schedule are present.')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch readiness: Ready for dispatch · Assignment, lead tech, schedule, and due date are present.')).toBeInTheDocument()
+  })
+
+  it('shows due-date-missing dispatch review when assignment, lead, and schedule are present', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: null }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing due date.')).toBeInTheDocument()
   })
 
   it('filters by dispatch readiness from the loaded ticket and assignment data', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
-      { id: 'job-1', ticketNumber: 'JT-1', title: 'Ready compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
-      { id: 'job-2', ticketNumber: 'JT-2', title: 'Needs lead', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
-      { id: 'job-3', ticketNumber: 'JT-3', title: 'Completed ticket', status: 7, priority: 1, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-11T08:00:00Z' }
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Ready compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Needs lead', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
+      { id: 'job-3', ticketNumber: 'JT-3', title: 'Completed ticket', status: 7, priority: 1, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-11T08:00:00Z', dueAtUtc: '2026-05-14T08:00:00Z' }
     ] as any)
 
     renderPage()
@@ -130,7 +142,7 @@ describe('Manager list pages', () => {
 
   it('filters by search text, status, priority, and customer, then resets filters', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
-      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z' },
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2' }
     ] as any)
 
