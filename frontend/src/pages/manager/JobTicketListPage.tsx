@@ -276,7 +276,7 @@ export function JobTicketListPage() {
                   </div>
                   <div className="muted">Dispatch {assignmentSummary} · Lead {leadSummary}</div>
                   <div className="muted">Dispatch readiness: {readiness.label} · {readiness.detail}</div>
-                  <div className="muted">Created {formatDate(job.requestedAtUtc)} · Scheduled {formatDate(job.scheduledStartAtUtc)} · Completed {formatDate(job.completedAtUtc)}</div>
+                  <div className="muted">Created {formatDate(job.requestedAtUtc)} · Scheduled {formatDate(job.scheduledStartAtUtc)} · Due {formatDate(job.dueAtUtc)} · Completed {formatDate(job.completedAtUtc)}</div>
                 </li>
               )
             })}
