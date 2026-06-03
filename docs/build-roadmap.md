@@ -45,7 +45,7 @@ Do not steer the project toward a general ERP build-out.
 - Phase 4B pilot workflow polish.
 - Opt-in local/test Admin bootstrap for empty databases, plus maintained setup docs for test credentials, seeded pilot data, custom connection strings, integrated security, and scheduled-runner workarounds.
 - Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, edit-side dispatch-readiness cues, detail dispatch-readiness checklist cues, invoice-readiness cues, and status/archive review clarity.
-- Manager/Admin job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, or schedule context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets.
+- Manager/Admin job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, schedule, or due-date context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets.
 - Employee job-ticket detail field-context cues and pre-work guidance for schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket detail data.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
 - Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
@@ -65,7 +65,7 @@ The selected implementation lane is Job Ticket Dispatch & Assignment Readiness P
 Job Ticket Dispatch & Assignment Readiness Polish should improve how Manager/Admin users prepare a job ticket for field execution and how employees understand assignment context.
 
 Current implementation in this lane:
-- Manager/Admin job-ticket list summary cards count dispatch-ready active tickets and active tickets that still need assignment, lead-tech, or schedule review;
+- Manager/Admin job-ticket list summary cards count dispatch-ready active tickets and active tickets that still need assignment, lead-tech, schedule, or due-date review;
 - Manager/Admin job-ticket list rows show whether each ticket is ready for dispatch or which dispatch context is missing;
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
 - Manager/Admin job-ticket detail surfaces show a dispatch-readiness checklist for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names when Admin-loaded employee records are available;
@@ -74,7 +74,7 @@ Current implementation in this lane:
 - this implementation uses existing job-ticket list/detail data, existing edit DTO fields, and existing assignment endpoints only.
 
 Next coherent implementation slice:
-- after the named assignment ownership PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap from the current main branch and active PR state;
+- after the list due-date readiness PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap from the current main branch and active PR state;
 - keep any edit, detail, employee, or status warnings tied to the existing job-ticket fields and assignment endpoints;
 - add focused frontend tests that cover ready and not-ready dispatch-review states;
 - update README, project scope, and API contract only if the implementation changes visible behavior or API expectations.
