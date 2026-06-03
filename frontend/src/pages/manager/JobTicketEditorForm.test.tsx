@@ -55,6 +55,7 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
     expect(screen.getByLabelText('dispatch edit readiness review')).toBeInTheDocument()
     expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
     expect(screen.getByText('6 / 6')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: No edit-side dispatch blockers are visible from the current ticket fields.')).toBeInTheDocument()
     expect(screen.getByText('Customer, location, equipment or no-equipment context, schedule, due date, and job instructions are ready for dispatch review.')).toBeInTheDocument()
   })
 
@@ -98,16 +99,22 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
 
     expect(screen.getByText('Needs dispatch review')).toBeInTheDocument()
     expect(screen.getByText('3 / 6')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: Set a scheduled start before dispatch.')).toBeInTheDocument()
     expect(screen.getByText('Set a scheduled start before dispatch.')).toBeInTheDocument()
     expect(screen.getByText('Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
     expect(screen.getByText('Add job instructions or notes for field context.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Scheduled Start (UTC)'), { target: { value: '2026-04-02T09:30' } })
+    expect(screen.getByText('Next dispatch fix: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
+
     fireEvent.change(screen.getByLabelText('Due (UTC)'), { target: { value: '2026-04-03T17:00' } })
+    expect(screen.getByText('Next dispatch fix: Add job instructions or notes for field context.')).toBeInTheDocument()
+
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Replace seal and test restart.' } })
 
     expect(screen.getByText('Ready for dispatch review')).toBeInTheDocument()
     expect(screen.getByText('6 / 6')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: No edit-side dispatch blockers are visible from the current ticket fields.')).toBeInTheDocument()
   })
 
   it('keeps the readiness helper explicit and field-based', () => {
