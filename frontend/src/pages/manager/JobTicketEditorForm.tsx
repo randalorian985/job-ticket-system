@@ -65,24 +65,22 @@ export function JobTicketEditorForm({ initial, customers, serviceLocations, equi
     [serviceLocations, form.customerId]
   )
 
-  const filteredEquipment = useMemo(
-    () => equipment.filter((item) => {
-      if (form.serviceLocationId) {
-        return item.serviceLocationId === form.serviceLocationId
-      }
+  const filteredEquipment = useMemo(() => equipment.filter((item) => {
+    if (form.serviceLocationId) {
+      return item.serviceLocationId === form.serviceLocationId
+    }
 
-      if (form.customerId) {
-        return item.customerId === form.customerId
-      }
+    if (form.customerId) {
+      return item.customerId === form.customerId
+    }
 
-      return true
-    }),
-    [equipment, form.customerId, form.serviceLocationId]
-  )
+    return true
+  }), [equipment, form.customerId, form.serviceLocationId])
 
   const dispatchEditChecks = useMemo(() => buildDispatchEditChecks(form), [form])
   const dispatchReadyCount = dispatchEditChecks.filter((check) => check.isReady).length
   const dispatchOpenItems = dispatchEditChecks.filter((check) => !check.isReady)
+  const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'No edit-side dispatch blockers are visible from the current ticket fields.'
 
   useEffect(() => {
     if (form.serviceLocationId && !filteredLocations.some((item) => item.id === form.serviceLocationId)) {
@@ -128,6 +126,7 @@ export function JobTicketEditorForm({ initial, customers, serviceLocations, equi
             <strong>{dispatchOpenItems.length}</strong>
           </div>
         </div>
+        <p className="muted">Next dispatch fix: {nextDispatchFix}</p>
         {dispatchOpenItems.length ? (
           <ul className="muted" aria-label="dispatch edit readiness warnings">
             {dispatchOpenItems.map((check) => (
