@@ -54,7 +54,9 @@ describe('Manager list pages', () => {
     )
   }
 
-  it('renders manager job ticket list with loading state, readable labels, and dispatch ownership cues', async () => {
+  const renderedPageText = () => document.body.textContent?.replace(/\s+/g, ' ') ?? ''
+
+  it('renders manager job ticket list with loading state, readable labels, timing details, and dispatch ownership cues', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix unit', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' }
     ] as any)
@@ -67,6 +69,7 @@ describe('Manager list pages', () => {
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
     expect(screen.getByText('Dispatch 1 assigned · Lead e-1')).toBeInTheDocument()
     expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing scheduled start, due date.')).toBeInTheDocument()
+    expect(renderedPageText()).toContain('Due —')
   })
 
   it('shows queue summary counts for active, urgent, waiting, unscheduled, missing due date, unassigned, needs-lead, and dispatch readiness work', async () => {
