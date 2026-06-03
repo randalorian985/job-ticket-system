@@ -20,6 +20,7 @@ const dispatchReadinessFilterOptions = [
 type DispatchReadiness = {
   label: string
   detail: string
+  nextStep: string
   openItems: number
   isReady: boolean
 }
@@ -29,33 +30,47 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
     return {
       label: 'Not active dispatch',
       detail: 'Ticket is outside the active dispatch queue.',
+      nextStep: 'No dispatch validation is needed until the ticket returns to an active status.',
       openItems: 0,
       isReady: false
     }
   }
 
-  const openItems: string[] = []
+  const openItems: Array<{ label: string, nextStep: string }> = []
 
   if (!assignments.length) {
-    openItems.push('assignment')
+    openItems.push({
+      label: 'assignment',
+      nextStep: 'Assign at least one employee before dispatch.'
+    })
   }
 
   if (!assignments.some((assignment) => assignment.isLead)) {
-    openItems.push('lead tech')
+    openItems.push({
+      label: 'lead tech',
+      nextStep: 'Mark one assigned employee as the lead tech.'
+    })
   }
 
   if (!job.scheduledStartAtUtc) {
-    openItems.push('scheduled start')
+    openItems.push({
+      label: 'scheduled start',
+      nextStep: 'Set a scheduled start time before dispatch.'
+    })
   }
 
   if (!job.dueAtUtc) {
-    openItems.push('due date')
+    openItems.push({
+      label: 'due date',
+      nextStep: 'Add a due date so dispatch can see timing expectations.'
+    })
   }
 
   if (!openItems.length) {
     return {
       label: 'Ready for dispatch',
       detail: 'Assignment, lead tech, schedule, and due date are present.',
+      nextStep: 'No dispatch blockers are visible from the loaded list data.',
       openItems: 0,
       isReady: true
     }
@@ -63,7 +78,8 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
 
   return {
     label: 'Needs dispatch review',
-    detail: `Missing ${openItems.join(', ')}.`,
+    detail: `Missing ${openItems.map((item) => item.label).join(', ')}.`,
+    nextStep: openItems[0].nextStep,
     openItems: openItems.length,
     isReady: false
   }
@@ -276,6 +292,7 @@ export function JobTicketListPage() {
                   </div>
                   <div className="muted">Dispatch {assignmentSummary} · Lead {leadSummary}</div>
                   <div className="muted">Dispatch readiness: {readiness.label} · {readiness.detail}</div>
+                  <div className="muted">Next dispatch fix: {readiness.nextStep}</div>
                   <div className="muted">Created {formatDate(job.requestedAtUtc)} · Scheduled {formatDate(job.scheduledStartAtUtc)} · Due {formatDate(job.dueAtUtc)} · Completed {formatDate(job.completedAtUtc)}</div>
                 </li>
               )
