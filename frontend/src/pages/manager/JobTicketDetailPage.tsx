@@ -153,6 +153,7 @@ export function JobTicketDetailPage() {
     };
   }, [assignments, employeesById, job, leadAssignment]);
   const dispatchWarnings = dispatchReadiness.warnings;
+  const nextDispatchFix = dispatchWarnings[0] ?? "No dispatch blockers found.";
   const closeoutReview = useMemo(() => {
     const warnings: string[] = [];
     const approvedClosedTimeEntries = timeEntries.filter(
@@ -609,6 +610,10 @@ export function JobTicketDetailPage() {
               <div>
                 <span className="muted">Open Items</span>
                 <strong>{dispatchWarnings.length}</strong>
+              </div>
+              <div>
+                <span className="muted">Next Dispatch Fix</span>
+                <strong>{nextDispatchFix}</strong>
               </div>
             </div>
             <ul className="muted" aria-label="dispatch readiness checks">
