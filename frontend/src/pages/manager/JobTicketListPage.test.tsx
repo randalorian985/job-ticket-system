@@ -69,6 +69,7 @@ describe('Manager list pages', () => {
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
     expect(screen.getByText('Dispatch 1 assigned · Lead e-1')).toBeInTheDocument()
     expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing scheduled start, due date.')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: Set a scheduled start time before dispatch.')).toBeInTheDocument()
     expect(renderedPageText()).toContain('Due —')
   })
 
@@ -101,6 +102,7 @@ describe('Manager list pages', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Dispatch readiness: Ready for dispatch · Assignment, lead tech, schedule, and due date are present.')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: No dispatch blockers are visible from the loaded list data.')).toBeInTheDocument()
   })
 
   it('shows due-date-missing dispatch review when assignment, lead, and schedule are present', async () => {
@@ -112,6 +114,19 @@ describe('Manager list pages', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing due date.')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
+  })
+
+  it('shows assignment-first dispatch guidance when no employees are assigned', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-3', ticketNumber: 'JT-3', title: 'Assign field work', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-3')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing assignment, lead tech.')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: Assign at least one employee before dispatch.')).toBeInTheDocument()
   })
 
   it('filters by dispatch readiness from the loaded ticket and assignment data', async () => {
@@ -136,6 +151,7 @@ describe('Manager list pages', () => {
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
     expect(screen.getByText('JT-2')).toBeInTheDocument()
     expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: Mark one assigned employee as the lead tech.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'not-active' } })
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
