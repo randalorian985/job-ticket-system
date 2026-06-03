@@ -48,10 +48,14 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
     openItems.push('scheduled start')
   }
 
+  if (!job.dueAtUtc) {
+    openItems.push('due date')
+  }
+
   if (!openItems.length) {
     return {
       label: 'Ready for dispatch',
-      detail: 'Assignment, lead tech, and schedule are present.',
+      detail: 'Assignment, lead tech, schedule, and due date are present.',
       openItems: 0,
       isReady: true
     }
@@ -159,6 +163,7 @@ export function JobTicketListPage() {
     const urgentJobs = filteredJobs.filter((job) => job.priority === 4 && activeStatusValues.has(job.status))
     const waitingJobs = filteredJobs.filter((job) => waitingStatusValues.has(job.status))
     const unscheduledJobs = activeJobs.filter((job) => !job.scheduledStartAtUtc)
+    const missingDueDateJobs = activeJobs.filter((job) => !job.dueAtUtc)
     const unassignedJobs = activeJobs.filter((job) => !(assignmentMap[job.id]?.length))
     const needsLeadJobs = activeJobs.filter((job) => !(assignmentMap[job.id] ?? []).some((assignment) => assignment.isLead))
     const activeReadiness = activeJobs.map((job) => getDispatchReadiness(job, assignmentMap[job.id] ?? []))
@@ -170,6 +175,7 @@ export function JobTicketListPage() {
       urgentCount: urgentJobs.length,
       waitingCount: waitingJobs.length,
       unscheduledCount: unscheduledJobs.length,
+      missingDueDateCount: missingDueDateJobs.length,
       unassignedCount: unassignedJobs.length,
       needsLeadCount: needsLeadJobs.length,
       dispatchReadyCount: dispatchReadyJobs.length,
@@ -202,10 +208,11 @@ export function JobTicketListPage() {
           <div className="summary-card"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong><span className="muted">Urgent priority tickets still active.</span></div>
           <div className="summary-card"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong><span className="muted">Waiting on parts or customer.</span></div>
           <div className="summary-card"><span>Unscheduled active</span><strong>{triageSummary.unscheduledCount}</strong><span className="muted">Active tickets without a start time.</span></div>
+          <div className="summary-card"><span>Missing due date</span><strong>{triageSummary.missingDueDateCount}</strong><span className="muted">Active tickets without a due date.</span></div>
           <div className="summary-card"><span>Unassigned active</span><strong>{triageSummary.unassignedCount}</strong><span className="muted">Active tickets that still need an assigned tech.</span></div>
           <div className="summary-card"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong><span className="muted">Active tickets without a lead tech flag.</span></div>
-          <div className="summary-card"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong><span className="muted">Active tickets with assignment, lead, and schedule.</span></div>
-          <div className="summary-card"><span>Needs dispatch review</span><strong>{triageSummary.needsDispatchReviewCount}</strong><span className="muted">Active tickets missing assignment, lead, or schedule context.</span></div>
+          <div className="summary-card"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong><span className="muted">Active tickets with assignment, lead, schedule, and due date.</span></div>
+          <div className="summary-card"><span>Needs dispatch review</span><strong>{triageSummary.needsDispatchReviewCount}</strong><span className="muted">Active tickets missing assignment, lead, schedule, or due date context.</span></div>
         </section>
       ) : null}
 
