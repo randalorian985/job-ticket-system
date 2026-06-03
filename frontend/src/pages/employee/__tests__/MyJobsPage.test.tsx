@@ -40,7 +40,9 @@ describe('MyJobsPage', () => {
         status: 4,
         priority: 3,
         customerId: 'customer-1',
-        serviceLocationId: 'location-1'
+        serviceLocationId: 'location-1',
+        scheduledStartAtUtc: '2026-06-01T15:00:00Z',
+        dueAtUtc: '2026-06-02T20:00:00Z'
       },
       {
         id: 'job-2',
@@ -49,7 +51,9 @@ describe('MyJobsPage', () => {
         status: 99,
         priority: 77,
         customerId: 'customer-2',
-        serviceLocationId: 'location-2'
+        serviceLocationId: 'location-2',
+        scheduledStartAtUtc: null,
+        dueAtUtc: null
       }
     ])
 
@@ -62,6 +66,12 @@ describe('MyJobsPage', () => {
     expect(await screen.findByText('JT-2026-000101')).toBeInTheDocument()
     expect(screen.getByText('Status: In Progress | Priority: High')).toBeInTheDocument()
     expect(screen.getByText('Status: Unknown status | Priority: Unknown priority')).toBeInTheDocument()
+    expect(screen.getAllByText(/^Due:/)).toHaveLength(2)
+    expect(screen.getByText('Field context: Ready for field-context review')).toBeInTheDocument()
+    expect(screen.getByText('Next field-context fix: No field-context blockers are visible from the assigned-jobs list.')).toBeInTheDocument()
+    expect(screen.getByText('Due: Not set')).toBeInTheDocument()
+    expect(screen.getByText('Field context: Needs field-context review')).toBeInTheDocument()
+    expect(screen.getByText('Next field-context fix: No scheduled start is visible from the assigned-jobs list.')).toBeInTheDocument()
 
     await waitFor(() => {
       expect(jobTicketsApi.listMine).toHaveBeenCalledTimes(1)
