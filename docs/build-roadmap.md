@@ -45,6 +45,7 @@ Do not steer the project toward a general ERP build-out.
 - Phase 4B pilot workflow polish.
 - Opt-in local/test Admin bootstrap for empty databases, plus maintained setup docs for test credentials, seeded pilot data, custom connection strings, integrated security, and scheduled-runner workarounds.
 - Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, edit-side dispatch-readiness cues, detail dispatch-readiness checklist cues, invoice-readiness cues, and status/archive review clarity.
+- Manager/Admin job-ticket workspace UI polish for shell navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing.
 - Manager/Admin job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, schedule, or due-date context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets.
 - Employee job-ticket detail field-context cues and pre-work guidance for schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket detail data.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
@@ -70,6 +71,7 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
 - Manager/Admin job-ticket detail surfaces show a dispatch-readiness checklist for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names when Admin-loaded employee records are available;
 - Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
+- Manager/Admin job-ticket workspace surfaces have clearer navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing for faster scanning;
 - Employee job-ticket detail surfaces show field-context cues for scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions, plus pre-work guidance when manager review is still needed;
 - this implementation uses existing job-ticket list/detail data, existing edit DTO fields, and existing assignment endpoints only.
 
