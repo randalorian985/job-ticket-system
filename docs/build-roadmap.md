@@ -22,7 +22,7 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
-Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, next-step dispatch fixes for missing list/edit readiness context, dispatch-readiness filtering, detail dispatch-readiness checklist cues with named assignment ownership when employee records are loaded, edit-side dispatch-readiness cues, and Employee job-ticket detail field-context cues and pre-work guidance using existing job-ticket and assignment APIs.
+Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin job-ticket list dispatch-readiness rollups, per-ticket readiness cues, next-step dispatch fixes for missing list/detail/edit readiness context, dispatch-readiness filtering, detail dispatch-readiness checklist cues with named assignment ownership when employee records are loaded, edit-side dispatch-readiness cues, and Employee job-ticket detail field-context cues and pre-work guidance using existing job-ticket and assignment APIs.
 
 Test environment setup is now part of the maintained project baseline: docs cover the opt-in Admin bootstrap for empty local/test databases, full pilot seed setup, scheduled-runner workarounds, Docker SQL authentication, custom SQL Server connection strings, named instances, and Windows integrated security guidance.
 
@@ -45,7 +45,7 @@ Do not steer the project toward a general ERP build-out.
 - Phase 4B pilot workflow polish.
 - Opt-in local/test Admin bootstrap for empty databases, plus maintained setup docs for test credentials, seeded pilot data, custom connection strings, integrated security, and scheduled-runner workarounds.
 - Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, edit-side dispatch-readiness cues, detail dispatch-readiness checklist cues, invoice-readiness cues, and status/archive review clarity.
-- Manager/Admin job-ticket list and edit readiness surfaces now show the next dispatch fix for missing assignment, lead-tech, schedule, due-date, or job-instruction context using existing loaded data.
+- Manager/Admin job-ticket list, detail, and edit readiness surfaces now show the next dispatch fix for missing assignment, lead-tech, schedule, due-date, or job-instruction context using existing loaded data.
 - Manager/Admin job-ticket workspace UI polish for shell navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing.
 - Manager/Admin job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, schedule, or due-date context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets.
 - Employee job-ticket detail field-context cues and pre-work guidance for schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket detail data.
@@ -71,7 +71,7 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list rows show whether each ticket is ready for dispatch or which dispatch context is missing;
 - Manager/Admin job-ticket list rows now identify the first next dispatch fix when assignment, lead-tech, schedule, or due-date context is missing;
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
-- Manager/Admin job-ticket detail surfaces show a dispatch-readiness checklist for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names when Admin-loaded employee records are available;
+- Manager/Admin job-ticket detail surfaces show a dispatch-readiness checklist and next dispatch fix for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names when Admin-loaded employee records are available;
 - Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
 - Manager/Admin job-ticket edit surfaces now identify the first next dispatch fix when edit-side readiness context is missing;
 - Manager/Admin job-ticket workspace surfaces have clearer navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing for faster scanning;

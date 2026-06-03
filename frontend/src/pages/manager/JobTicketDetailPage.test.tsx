@@ -79,6 +79,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
+    expectRenderedText('Next Dispatch FixNo dispatch blockers found.')
     expectRenderedText('Assigned employees: e1.')
     expectRenderedText('Lead tech is e1.')
     expectRenderedText('Current lead: e1')
@@ -184,6 +185,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     await screen.findAllByText('Needs attention')
+    expectRenderedText('Next Dispatch FixNo employees are assigned.')
     expectRenderedText('No employees are assigned.')
     expectRenderedText('No lead tech is marked.')
     expectRenderedText('No scheduled start is set.')
