@@ -52,7 +52,7 @@ export function ManagerDashboardPage() {
         const assignmentEntries = await Promise.all(
           response.map(async (job) => [
             job.id,
-            await jobTicketsApi.listAssignments(job.id).catch(() => [])
+            await jobTicketsApi.listAssignments(job.id)
           ] as const)
         )
 
