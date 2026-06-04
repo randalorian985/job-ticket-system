@@ -34,6 +34,7 @@ import {
 import { JobTicketEditorForm } from "./JobTicketEditorForm";
 
 const displayValue = (value?: string | null) => value?.trim() ? value : "—";
+const activeDispatchStatusValues = new Set([2, 3, 4, 5, 6]);
 
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
@@ -91,7 +92,15 @@ export function JobTicketDetailPage() {
   const dispatchReadiness = useMemo(() => {
     const assignedEmployeeNames = assignments.map((item) => getEmployeeDisplayName(item));
     const leadTechName = leadAssignment ? getEmployeeDisplayName(leadAssignment) : null;
+    const isActiveDispatchStatus = Boolean(job && activeDispatchStatusValues.has(job.status));
     const checks = [
+      {
+        label: "Active dispatch status",
+        isReady: isActiveDispatchStatus,
+        detail: isActiveDispatchStatus
+          ? "Ticket is in the active dispatch queue."
+          : "Ticket is outside the active dispatch queue.",
+      },
       {
         label: "Assigned employees",
         isReady: Boolean(assignments.length),
@@ -150,6 +159,7 @@ export function JobTicketDetailPage() {
       checks,
       readyCount: checks.filter((check) => check.isReady).length,
       warnings,
+      isActiveDispatchStatus,
     };
   }, [assignments, employeesById, job, leadAssignment]);
   const dispatchWarnings = dispatchReadiness.warnings;
@@ -601,7 +611,7 @@ export function JobTicketDetailPage() {
             <div className="review-grid">
               <div>
                 <span className="muted">Dispatch Status</span>
-                <strong>{dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review"}</strong>
+                <strong>{dispatchReadiness.isActiveDispatchStatus ? (dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review") : "Not active dispatch"}</strong>
               </div>
               <div>
                 <span className="muted">Readiness Checks</span>
@@ -635,7 +645,7 @@ export function JobTicketDetailPage() {
             </div>
             <div>
               <span className="muted">Dispatch Status</span>
-              <strong>{dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review"}</strong>
+              <strong>{dispatchReadiness.isActiveDispatchStatus ? (dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review") : "Not active dispatch"}</strong>
             </div>
           </div>
           {dispatchWarnings.length ? (

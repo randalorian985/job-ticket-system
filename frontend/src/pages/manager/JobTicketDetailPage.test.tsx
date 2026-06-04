@@ -145,6 +145,33 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('no-equipment context is allowed for this ticket')
   })
 
+  it('marks completed tickets as outside active dispatch even when dispatch context is complete', async () => {
+    vi.mocked(jobTicketsApi.get).mockResolvedValue({
+      id: 'j1',
+      ticketNumber: 'JT-1',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      billingPartyCustomerId: 'c1',
+      equipmentId: 'eq1',
+      title: 'Issue',
+      description: 'Replace leaking hose and confirm restart.',
+      priority: 2,
+      status: 7,
+      requestedAtUtc: '2026-04-01T08:00:00Z',
+      scheduledStartAtUtc: '2026-04-02T09:30:00Z',
+      dueAtUtc: '2026-04-03T17:00:00Z',
+      purchaseOrderNumber: 'PO-44',
+      customerFacingNotes: 'Work complete.'
+    } as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expectRenderedText('Dispatch StatusNot active dispatch')
+    expectRenderedText('Next Dispatch FixTicket is outside the active dispatch queue.')
+    expectRenderedText('Active dispatch status: Ticket is outside the active dispatch queue.')
+  })
+
   it('shows assigned employee names when admin employee records are loaded', async () => {
     vi.mocked(useAuth).mockReturnValue({ user: { role: 'Admin' } } as any)
     vi.mocked(usersApi.list).mockResolvedValue([
