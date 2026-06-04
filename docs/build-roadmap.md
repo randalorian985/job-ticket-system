@@ -73,7 +73,7 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list rows now identify the first next dispatch fix when assignment, lead-tech, schedule, or due-date context is missing;
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
 - Manager/Admin dashboard shows the first next dispatch focus from existing loaded job-ticket and assignment data;
-- Manager/Admin job-ticket detail surfaces show an active-status-aware dispatch-readiness checklist and next dispatch fix for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names from assignment responses with Admin-loaded employee-record and ID fallback;
+- Manager/Admin job-ticket detail surfaces show an active-status-aware dispatch-readiness checklist and next dispatch fix for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names from assignment responses with Admin-loaded employee-record and ID fallback, and treat assignment-load failures as unavailable assignment data instead of empty assignment lists;
 - Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
 - Manager/Admin job-ticket edit surfaces now identify the first next dispatch fix when edit-side readiness context is missing;
 - Manager/Admin job-ticket workspace surfaces have clearer navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing for faster scanning;
