@@ -52,8 +52,30 @@ describe('MyJobsPage', () => {
         priority: 77,
         customerId: 'customer-2',
         serviceLocationId: 'location-2',
+        scheduledStartAtUtc: '2026-06-03T15:00:00Z',
+        dueAtUtc: '2026-06-04T20:00:00Z'
+      },
+      {
+        id: 'job-3',
+        ticketNumber: 'JT-2026-000103',
+        title: 'Missing Field Context',
+        status: 3,
+        priority: 2,
+        customerId: 'customer-3',
+        serviceLocationId: 'location-3',
         scheduledStartAtUtc: null,
         dueAtUtc: null
+      },
+      {
+        id: 'job-4',
+        ticketNumber: 'JT-2026-000104',
+        title: 'Completed Job',
+        status: 7,
+        priority: 2,
+        customerId: 'customer-4',
+        serviceLocationId: 'location-4',
+        scheduledStartAtUtc: '2026-06-03T15:00:00Z',
+        dueAtUtc: '2026-06-04T20:00:00Z'
       }
     ])
 
@@ -66,12 +88,14 @@ describe('MyJobsPage', () => {
     expect(await screen.findByText('JT-2026-000101')).toBeInTheDocument()
     expect(screen.getByText('Status: In Progress | Priority: High')).toBeInTheDocument()
     expect(screen.getByText('Status: Unknown status | Priority: Unknown priority')).toBeInTheDocument()
-    expect(screen.getAllByText(/^Due:/)).toHaveLength(2)
+    expect(screen.getAllByText(/^Due:/)).toHaveLength(4)
     expect(screen.getByText('Field context: Ready for field-context review')).toBeInTheDocument()
     expect(screen.getByText('Next field-context fix: No field-context blockers are visible from the assigned-jobs list.')).toBeInTheDocument()
     expect(screen.getByText('Due: Not set')).toBeInTheDocument()
     expect(screen.getByText('Field context: Needs field-context review')).toBeInTheDocument()
     expect(screen.getByText('Next field-context fix: No scheduled start is visible from the assigned-jobs list.')).toBeInTheDocument()
+    expect(screen.getAllByText('Field context: Not active field work')).toHaveLength(2)
+    expect(screen.getAllByText('Next field-context fix: Ticket is outside the active field-work queue.')).toHaveLength(2)
 
     await waitFor(() => {
       expect(jobTicketsApi.listMine).toHaveBeenCalledTimes(1)

@@ -10,6 +10,7 @@ import type { JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto,
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from './jobDisplay'
 
 const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
 
 const formatOptionalDateTime = (value?: string | null) => (value ? new Date(value).toLocaleString() : 'Not set')
 
@@ -50,7 +51,15 @@ export function JobDetailPage() {
 
   const employeeFieldContext = useMemo(() => {
     const hasJobInstructions = Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim())
+    const isActiveFieldWork = Boolean(job && activeFieldWorkStatuses.has(job.status))
     const checks = [
+      {
+        label: 'Field-work status',
+        isReady: isActiveFieldWork,
+        detail: isActiveFieldWork
+          ? 'Ticket is in the active field-work queue.'
+          : 'Ticket is outside the active field-work queue.'
+      },
       {
         label: 'Scheduled start',
         isReady: Boolean(job?.scheduledStartAtUtc),
@@ -90,6 +99,9 @@ export function JobDetailPage() {
       checks,
       readyCount: checks.length - warnings.length,
       warnings,
+      statusLabel: !isActiveFieldWork
+        ? 'Not active field work'
+        : warnings.length ? 'Needs manager review' : 'Ready for field work review',
       nextFieldContextFix: warnings[0] ?? 'No field-context blockers are visible from the assigned ticket.',
       guidance: warnings.length
         ? 'Review open field context with a manager before starting field work.'
@@ -377,7 +389,7 @@ export function JobDetailPage() {
         <div className="review-grid">
           <div>
             <span className="muted">Context Status</span>
-            <strong>{employeeFieldContext.warnings.length ? 'Needs manager review' : 'Ready for field work review'}</strong>
+            <strong>{employeeFieldContext.statusLabel}</strong>
           </div>
           <div>
             <span className="muted">Context Checks</span>

@@ -140,9 +140,10 @@ describe('JobDetailPage', () => {
 
     const fieldContext = screen.getByLabelText('field context review')
     expect(within(fieldContext).getByText('Ready for field work review')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('6 / 6')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('7 / 7')).toBeInTheDocument()
     expect(within(fieldContext).getByText('Field context is complete for assigned work.')).toBeInTheDocument()
     expect(within(fieldContext).getByText('No field-context blockers are visible from the assigned ticket.')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('Ticket is in the active field-work queue.')).toBeInTheDocument()
     expect(within(fieldContext).getByText('Job instructions are available.')).toBeInTheDocument()
     expect(screen.getByText('Field context is ready for clock-in.')).toBeInTheDocument()
   })
@@ -208,7 +209,7 @@ describe('JobDetailPage', () => {
 
     const fieldContext = screen.getByLabelText('field context review')
     expect(within(fieldContext).getByText('Needs manager review')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('3 / 6')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('4 / 7')).toBeInTheDocument()
     expect(within(fieldContext).getByText('Review open field context with a manager before starting field work.')).toBeInTheDocument()
     expect(within(fieldContext).getByText('Next Field Context Fix')).toBeInTheDocument()
     expect(within(fieldContext).getAllByText('No scheduled start is set.')).toHaveLength(2)
@@ -228,5 +229,59 @@ describe('JobDetailPage', () => {
     await waitFor(() => {
       expect(filesApi.upload).not.toHaveBeenCalled()
     })
+  })
+
+  it('marks completed assigned tickets as outside active field work even when context is complete', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: {
+        employeeId: 'employee-1',
+        username: 'employee',
+        firstName: 'Casey',
+        lastName: 'Tech',
+        role: 'Employee',
+        email: 'employee@example.com'
+      },
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    vi.mocked(jobTicketsApi.get).mockResolvedValue({
+      id: 'job-1',
+      ticketNumber: 'JT-2026-000112',
+      title: 'Completed inspection',
+      status: 7,
+      priority: 2,
+      customerId: 'customer-1',
+      serviceLocationId: 'location-1',
+      billingPartyCustomerId: 'customer-1',
+      equipmentId: 'equipment-1',
+      description: 'Inspection complete',
+      scheduledStartAtUtc: '2026-06-01T15:00:00Z',
+      dueAtUtc: '2026-06-02T20:00:00Z'
+    })
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    vi.mocked(partsApi.list).mockResolvedValue([])
+    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
+      throw { status: 404 }
+    })
+
+    render(
+      <MemoryRouter future={routerFuture} initialEntries={['/jobs/job-1']}>
+        <Routes>
+          <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'JT-2026-000112' })).toBeInTheDocument()
+
+    const fieldContext = screen.getByLabelText('field context review')
+    expect(within(fieldContext).getByText('Not active field work')).toBeInTheDocument()
+    expect(within(fieldContext).getByText('6 / 7')).toBeInTheDocument()
+    expect(within(fieldContext).getAllByText('Ticket is outside the active field-work queue.')).toHaveLength(2)
+    expect(screen.getByText('Field context needs manager review before starting new work.')).toBeInTheDocument()
   })
 })
