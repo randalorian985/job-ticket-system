@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
+import { usersApi } from '../../api/usersApi'
 import { routerFuture } from '../../routes/routerFuture'
 import { JobTicketListPage } from './JobTicketListPage'
 
@@ -21,6 +22,12 @@ vi.mock('../../api/masterDataApi', () => ({
   }
 }))
 
+vi.mock('../../api/usersApi', () => ({
+  usersApi: {
+    list: vi.fn()
+  }
+}))
+
 describe('Manager list pages', () => {
   beforeEach(() => {
     cleanup()
@@ -32,6 +39,10 @@ describe('Manager list pages', () => {
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
       { id: 's-1', locationName: 'HQ' },
       { id: 's-2', locationName: 'Field Shop' }
+    ] as any)
+    vi.mocked(usersApi.list).mockResolvedValue([
+      { id: 'e-1', firstName: 'Alex', lastName: 'Rivera', userName: 'arivera' },
+      { id: 'e-2', firstName: 'Jamie', lastName: 'Chen', userName: 'jchen' }
     ] as any)
     vi.mocked(jobTicketsApi.listAssignments).mockImplementation(async (jobTicketId: string) => {
       if (jobTicketId === 'job-1') {
@@ -67,10 +78,22 @@ describe('Manager list pages', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
-    expect(screen.getByText('Dispatch 1 assigned · Lead e-1')).toBeInTheDocument()
+    expect(screen.getByText('Assigned: Alex Rivera · Lead: Alex Rivera')).toBeInTheDocument()
     expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing scheduled start, due date.')).toBeInTheDocument()
     expect(screen.getByText('Next dispatch fix: Set a scheduled start time before dispatch.')).toBeInTheDocument()
     expect(renderedPageText()).toContain('Due —')
+  })
+
+  it('falls back to assignment ids when employee names cannot be loaded', async () => {
+    vi.mocked(usersApi.list).mockRejectedValue(new ApiError('Forbidden', 403, undefined))
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix unit', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('Assigned: e-1 · Lead: e-1')).toBeInTheDocument()
   })
 
   it('shows queue summary counts for active, urgent, waiting, unscheduled, missing due date, unassigned, needs-lead, and dispatch readiness work', async () => {
@@ -178,6 +201,11 @@ describe('Manager list pages', () => {
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(resetFiltersButton).toBeEnabled()
 
+    fireEvent.change(screen.getByLabelText(/Search tickets/i), { target: { value: 'Jamie' } })
+    expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
+    expect(screen.getByText('JT-2')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/Search tickets/i), { target: { value: 'compressor' } })
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: '5' } })
     expect(screen.getByText('No job tickets match the current filters. Reset filters to see all tickets.')).toBeInTheDocument()
 
