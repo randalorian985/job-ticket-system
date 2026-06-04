@@ -167,6 +167,21 @@ describe('JobTicketDetailPage', () => {
     expect(screen.queryByRole('option', { name: 'Old Worker' })).not.toBeInTheDocument()
   })
 
+  it('shows assignment response names for managers without loading admin user records', async () => {
+    vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([
+      { employeeId: 'e1', employeeName: 'Alex Rivera', assignedAtUtc: '2026-04-01T08:15:00Z', isLead: true }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(usersApi.list).not.toHaveBeenCalled()
+    expectRenderedText('Assigned employees: Alex Rivera.')
+    expectRenderedText('Lead tech is Alex Rivera.')
+    expectRenderedText('Current lead: Alex Rivera')
+    expectRenderedText('Alex Rivera (Lead Tech)')
+  })
+
   it('warns when dispatch coverage is incomplete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
