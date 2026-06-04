@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import { routerFuture } from '../../routes/routerFuture'
@@ -10,6 +10,10 @@ vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { listAll: vi.fn(), listAssignments: vi.fn() } }))
 
 describe('ManagerDashboardPage', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useAuth).mockReturnValue({ user: { role: 'Manager' } } as any)
