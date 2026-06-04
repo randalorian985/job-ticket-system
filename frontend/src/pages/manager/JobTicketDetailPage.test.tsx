@@ -236,6 +236,19 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('No due date is set.')
   })
 
+  it('marks dispatch readiness unavailable and disables assignment edits when assignments fail to load', async () => {
+    vi.mocked(jobTicketsApi.listAssignments).mockRejectedValue(new ApiError('Assignments unavailable', 503, undefined))
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expectRenderedText('Assignment data unavailable')
+    expectRenderedText('Next Dispatch FixAssignment data could not be loaded. Refresh or retry before dispatch review.')
+    expect(screen.getByRole('alert')).toHaveTextContent('Assignment data could not be loaded. Refresh before editing assignments or dispatch review.')
+    expect(screen.getByRole('button', { name: 'Assign Employee' })).toBeDisabled()
+    expectRenderedText('Assignment data: Assignment data could not be loaded. Refresh or retry before dispatch review.')
+  })
+
   it('prevents adding a second lead without clearing the current one first', async () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
