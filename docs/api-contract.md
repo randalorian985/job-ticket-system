@@ -53,7 +53,7 @@
 - Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
 - No transfer endpoints are implemented on `main`.
 - No inventory-expansion API lane is currently approved.
-- This dispatch-readiness update does not change API behavior or add endpoint scope.
+- This dispatch-readiness update adds the assignment `employeeName` response field but does not add endpoint scope.
 
 ## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.
