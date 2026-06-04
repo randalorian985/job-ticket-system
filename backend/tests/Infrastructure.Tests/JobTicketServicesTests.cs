@@ -70,6 +70,24 @@ public sealed class JobTicketServicesTests
         var assignment = await service.AddAssignmentAsync(ticket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
 
         Assert.Equal(refs.Employee.Id, assignment.EmployeeId);
+        Assert.Equal("Tech One", assignment.EmployeeName);
+    }
+
+    [Fact]
+    public async Task List_assignments_returns_employee_display_names()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedCoreReferencesAsync(context);
+        var service = CreateService(context);
+        var ticket = await service.CreateAsync(BuildCreateRequest(refs));
+        await service.AddAssignmentAsync(ticket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id, true));
+
+        var assignments = await service.ListAssignmentsAsync(ticket.Id);
+
+        var assignment = Assert.Single(assignments);
+        Assert.Equal(refs.Employee.Id, assignment.EmployeeId);
+        Assert.Equal("Tech One", assignment.EmployeeName);
+        Assert.True(assignment.IsLead);
     }
 
     [Fact]
