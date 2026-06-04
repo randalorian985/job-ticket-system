@@ -648,3 +648,73 @@ export type PurchaseOrderDto = {
   purchaseOrderNumber: string
   vendorId: string
   vendorName: string
+  status: number
+  orderedAtUtc: string
+  expectedAtUtc?: string | null
+  receivedAtUtc?: string | null
+  vendorInvoiceNumber?: string | null
+  vendorInvoiceDateUtc?: string | null
+  invoiceStatus: number
+  invoiceSubtotal: number
+  freightCost: number
+  taxAmount: number
+  otherLandedCost: number
+  landedCostTotal: number
+  landedCostNotes?: string | null
+  notes?: string | null
+  isArchived: boolean
+  lines: PurchaseOrderLineDto[]
+}
+
+export type PurchaseOrderListItemDto = {
+  id: string
+  purchaseOrderNumber: string
+  vendorId: string
+  vendorName: string
+  status: number
+  orderedAtUtc: string
+  expectedAtUtc?: string | null
+  receivedAtUtc?: string | null
+  vendorInvoiceNumber?: string | null
+  invoiceStatus: number
+  orderedSubtotal: number
+  landedCostTotal: number
+  quantityOrdered: number
+  quantityReceived: number
+  isArchived: boolean
+}
+
+export type PurchaseOrderLineRequestDto = {
+  partId: string
+  quantityOrdered: number
+  unitCost: number
+  notes?: string | null
+}
+
+export type CreatePurchaseOrderDto = {
+  vendorId: string
+  purchaseOrderNumber?: string | null
+  orderedAtUtc?: string | null
+  expectedAtUtc?: string | null
+  notes?: string | null
+  lines: PurchaseOrderLineRequestDto[]
+}
+
+export type UpdatePurchaseOrderDto = {
+  purchaseOrderNumber?: string | null
+  expectedAtUtc?: string | null
+  vendorInvoiceNumber?: string | null
+  vendorInvoiceDateUtc?: string | null
+  invoiceStatus: number
+  freightCost: number
+  taxAmount: number
+  otherLandedCost: number
+  landedCostNotes?: string | null
+  notes?: string | null
+  lines: PurchaseOrderLineRequestDto[]
+}
+
+export type ReceivePurchaseOrderDto = {
+  receivedAtUtc?: string | null
+  lines: { lineId: string; receivedQuantity: number }[]
+}
