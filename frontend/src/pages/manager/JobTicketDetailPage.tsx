@@ -80,17 +80,17 @@ export function JobTicketDetailPage() {
     () => assignments.find((item) => item.isLead) ?? null,
     [assignments],
   );
-  const getEmployeeDisplayName = (employeeId: string) => {
-    const employee = employeesById[employeeId];
+  const getEmployeeDisplayName = (assignment: JobTicketAssignmentDto) => {
+    const employee = employeesById[assignment.employeeId];
     const name = employee
       ? `${employee.firstName} ${employee.lastName}`.trim()
       : "";
 
-    return name || employeeId;
+    return assignment.employeeName?.trim() || name || assignment.employeeId;
   };
   const dispatchReadiness = useMemo(() => {
-    const assignedEmployeeNames = assignments.map((item) => getEmployeeDisplayName(item.employeeId));
-    const leadTechName = leadAssignment ? getEmployeeDisplayName(leadAssignment.employeeId) : null;
+    const assignedEmployeeNames = assignments.map((item) => getEmployeeDisplayName(item));
+    const leadTechName = leadAssignment ? getEmployeeDisplayName(leadAssignment) : null;
     const checks = [
       {
         label: "Assigned employees",
@@ -627,7 +627,7 @@ export function JobTicketDetailPage() {
           <div className="review-grid" aria-label="assignment ownership summary">
             <div>
               <span className="muted">Lead Tech</span>
-              <strong>{leadAssignment ? getEmployeeDisplayName(leadAssignment.employeeId) : "Needs assignment"}</strong>
+              <strong>{leadAssignment ? getEmployeeDisplayName(leadAssignment) : "Needs assignment"}</strong>
             </div>
             <div>
               <span className="muted">Assigned Employees</span>
@@ -884,13 +884,13 @@ export function JobTicketDetailPage() {
       <article className="card stack">
         <div className="row">
           <h3>Assigned Employees</h3>
-          <span className="muted">Current lead: {leadAssignment ? getEmployeeDisplayName(leadAssignment.employeeId) : "Needs assignment"}</span>
+          <span className="muted">Current lead: {leadAssignment ? getEmployeeDisplayName(leadAssignment) : "Needs assignment"}</span>
         </div>
         {assignments.length ? (
           <ul>
             {assignments.map((item) => (
               <li key={item.employeeId}>
-                <strong>{getEmployeeDisplayName(item.employeeId)}</strong> {item.isLead ? "(Lead Tech)" : ""}
+                <strong>{getEmployeeDisplayName(item)}</strong> {item.isLead ? "(Lead Tech)" : ""}
                 <div className="muted">Assigned {formatDate(item.assignedAtUtc)}</div>
                 <button
                   className="no-print"
