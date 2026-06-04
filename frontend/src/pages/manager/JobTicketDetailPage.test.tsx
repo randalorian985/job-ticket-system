@@ -37,6 +37,7 @@ describe('JobTicketDetailPage', () => {
       requestedAtUtc: '2026-04-01T08:00:00Z',
       scheduledStartAtUtc: '2026-04-02T09:30:00Z',
       dueAtUtc: '2026-04-03T17:00:00Z',
+      completedAtUtc: '2026-04-04T13:00:00Z',
       purchaseOrderNumber: 'PO-44',
       billingContactName: 'Casey Customer',
       billingContactPhone: '555-0100',
@@ -103,6 +104,7 @@ describe('JobTicketDetailPage', () => {
       equipmentId: 'eq1',
       title: 'Issue',
       description: 'Replace leaking hose and confirm restart.',
+      jobType: 'Repair',
       priority: 2,
       status: 7,
       scheduledStartAtUtc: '2026-04-02T09:30:00Z',
@@ -145,7 +147,7 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('no-equipment context is allowed for this ticket')
   })
 
-  it('marks completed tickets as outside active dispatch even when dispatch context is complete', async () => {
+  it('marks completed tickets as outside active dispatch even when detail context is complete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -167,9 +169,9 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expectRenderedText('Dispatch StatusNot active dispatch')
+    expectRenderedText('Not active dispatch')
     expectRenderedText('Next Dispatch FixTicket is outside the active dispatch queue.')
-    expectRenderedText('Active dispatch status: Ticket is outside the active dispatch queue.')
+    expectRenderedText('Dispatch status: Ticket is outside the active dispatch queue.')
   })
 
   it('shows assigned employee names when admin employee records are loaded', async () => {
