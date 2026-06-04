@@ -1,0 +1,253 @@
+name: Apply employee active field-work context patch
+
+on:
+  push:
+    branches:
+      - codex/employee-active-field-work-context
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/employee-active-field-work-context
+      - name: Apply source and docs patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              file = Path(path)
+              text = file.read_text()
+              if old not in text:
+                  raise SystemExit(f'Missing expected text in {path}')
+              file.write_text(text.replace(old, new))
+
+          replace('frontend/src/pages/employee/MyJobsPage.tsx',
+          """function formatOptionalDateTime(value?: string | null) {
+            return value ? new Date(value).toLocaleString() : 'Not set'
+          }
+
+          function getAssignedJobListFieldContext(job: JobTicketListItemDto) {
+            const warnings = [
+              job.scheduledStartAtUtc ? null : 'No scheduled start is visible from the assigned-jobs list.',""",
+          """function formatOptionalDateTime(value?: string | null) {
+            return value ? new Date(value).toLocaleString() : 'Not set'
+          }
+
+          const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
+
+          function getAssignedJobListFieldContext(job: JobTicketListItemDto) {
+            const isActiveFieldWork = activeFieldWorkStatuses.has(job.status)
+            const warnings = [
+              isActiveFieldWork ? null : 'Ticket is outside the active field-work queue.',
+              job.scheduledStartAtUtc ? null : 'No scheduled start is visible from the assigned-jobs list.',""")
+
+          replace('frontend/src/pages/employee/MyJobsPage.tsx',
+          """  return {
+              label: warnings.length ? 'Needs field-context review' : 'Ready for field-context review',
+              nextStep: warnings[0] ?? 'No field-context blockers are visible from the assigned-jobs list.'
+            }""",
+          """  return {
+              label: !isActiveFieldWork
+                ? 'Not active field work'
+                : warnings.length ? 'Needs field-context review' : 'Ready for field-context review',
+              nextStep: warnings[0] ?? 'No field-context blockers are visible from the assigned-jobs list.'
+            }""")
+
+          replace('frontend/src/pages/employee/JobDetailPage.tsx',
+          """const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+
+          const formatOptionalDateTime""",
+          """const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+          const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
+
+          const formatOptionalDateTime""")
+
+          replace('frontend/src/pages/employee/JobDetailPage.tsx',
+          """  const employeeFieldContext = useMemo(() => {
+              const hasJobInstructions = Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim())
+              const checks = [
+                {
+                  label: 'Scheduled start',""",
+          """  const employeeFieldContext = useMemo(() => {
+              const hasJobInstructions = Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim())
+              const isActiveFieldWork = Boolean(job && activeFieldWorkStatuses.has(job.status))
+              const checks = [
+                {
+                  label: 'Field-work status',
+                  isReady: isActiveFieldWork,
+                  detail: isActiveFieldWork
+                    ? 'Ticket is in the active field-work queue.'
+                    : 'Ticket is outside the active field-work queue.'
+                },
+                {
+                  label: 'Scheduled start',""")
+
+          replace('frontend/src/pages/employee/JobDetailPage.tsx',
+          """      checks,
+                readyCount: checks.length - warnings.length,
+                warnings,
+                nextFieldContextFix: warnings[0] ?? 'No field-context blockers are visible from the assigned ticket.',""",
+          """      checks,
+                readyCount: checks.length - warnings.length,
+                warnings,
+                statusLabel: !isActiveFieldWork
+                  ? 'Not active field work'
+                  : warnings.length ? 'Needs manager review' : 'Ready for field work review',
+                nextFieldContextFix: warnings[0] ?? 'No field-context blockers are visible from the assigned ticket.',""")
+
+          replace('frontend/src/pages/employee/JobDetailPage.tsx',
+          """            <strong>{employeeFieldContext.warnings.length ? 'Needs manager review' : 'Ready for field work review'}</strong>""",
+          """            <strong>{employeeFieldContext.statusLabel}</strong>""")
+
+          replace('frontend/src/pages/employee/__tests__/JobDetailPage.test.tsx', "'6 / 6'", "'7 / 7'")
+          replace('frontend/src/pages/employee/__tests__/JobDetailPage.test.tsx',
+          """    expect(within(fieldContext).getByText('No field-context blockers are visible from the assigned ticket.')).toBeInTheDocument()
+              expect(within(fieldContext).getByText('Job instructions are available.')).toBeInTheDocument()""",
+          """    expect(within(fieldContext).getByText('No field-context blockers are visible from the assigned ticket.')).toBeInTheDocument()
+              expect(within(fieldContext).getByText('Ticket is in the active field-work queue.')).toBeInTheDocument()
+              expect(within(fieldContext).getByText('Job instructions are available.')).toBeInTheDocument()""")
+          replace('frontend/src/pages/employee/__tests__/JobDetailPage.test.tsx', "'3 / 6'", "'4 / 7'")
+          replace('frontend/src/pages/employee/__tests__/JobDetailPage.test.tsx',
+          """  })
+          })
+          """,
+          """  })
+
+            it('marks completed assigned tickets as outside active field work even when context is complete', async () => {
+              vi.mocked(useAuth).mockReturnValue({
+                user: {
+                  employeeId: 'employee-1',
+                  username: 'employee',
+                  firstName: 'Casey',
+                  lastName: 'Tech',
+                  role: 'Employee',
+                  email: 'employee@example.com'
+                },
+                isLoading: false,
+                login: vi.fn(),
+                logout: vi.fn()
+              })
+
+              vi.mocked(jobTicketsApi.get).mockResolvedValue({
+                id: 'job-1',
+                ticketNumber: 'JT-2026-000112',
+                title: 'Completed inspection',
+                status: 7,
+                priority: 2,
+                customerId: 'customer-1',
+                serviceLocationId: 'location-1',
+                billingPartyCustomerId: 'customer-1',
+                equipmentId: 'equipment-1',
+                description: 'Inspection complete',
+                scheduledStartAtUtc: '2026-06-01T15:00:00Z',
+                dueAtUtc: '2026-06-02T20:00:00Z'
+              })
+              vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+              vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+              vi.mocked(filesApi.list).mockResolvedValue([])
+              vi.mocked(partsApi.list).mockResolvedValue([])
+              vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
+                throw { status: 404 }
+              })
+
+              render(
+                <MemoryRouter future={routerFuture} initialEntries={['/jobs/job-1']}>
+                  <Routes>
+                    <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
+                  </Routes>
+                </MemoryRouter>
+              )
+
+              expect(await screen.findByRole('heading', { name: 'JT-2026-000112' })).toBeInTheDocument()
+
+              const fieldContext = screen.getByLabelText('field context review')
+              expect(within(fieldContext).getByText('Not active field work')).toBeInTheDocument()
+              expect(within(fieldContext).getByText('6 / 7')).toBeInTheDocument()
+              expect(within(fieldContext).getAllByText('Ticket is outside the active field-work queue.')).toHaveLength(2)
+              expect(screen.getByText('Field context needs manager review before starting new work.')).toBeInTheDocument()
+            })
+          })
+          """)
+
+          replace('frontend/src/pages/employee/__tests__/MyJobsPage.test.tsx',
+          """        customerId: 'customer-2',
+                  serviceLocationId: 'location-2',
+                  scheduledStartAtUtc: null,
+                  dueAtUtc: null
+                }
+              ])""",
+          """        customerId: 'customer-2',
+                  serviceLocationId: 'location-2',
+                  scheduledStartAtUtc: '2026-06-03T15:00:00Z',
+                  dueAtUtc: '2026-06-04T20:00:00Z'
+                },
+                {
+                  id: 'job-3',
+                  ticketNumber: 'JT-2026-000103',
+                  title: 'Missing Field Context',
+                  status: 3,
+                  priority: 2,
+                  customerId: 'customer-3',
+                  serviceLocationId: 'location-3',
+                  scheduledStartAtUtc: null,
+                  dueAtUtc: null
+                },
+                {
+                  id: 'job-4',
+                  ticketNumber: 'JT-2026-000104',
+                  title: 'Completed Job',
+                  status: 7,
+                  priority: 2,
+                  customerId: 'customer-4',
+                  serviceLocationId: 'location-4',
+                  scheduledStartAtUtc: '2026-06-03T15:00:00Z',
+                  dueAtUtc: '2026-06-04T20:00:00Z'
+                }
+              ])""")
+          replace('frontend/src/pages/employee/__tests__/MyJobsPage.test.tsx', "toHaveLength(2)", "toHaveLength(4)")
+          replace('frontend/src/pages/employee/__tests__/MyJobsPage.test.tsx',
+          """    expect(screen.getByText('Next field-context fix: No scheduled start is visible from the assigned-jobs list.')).toBeInTheDocument()
+          """,
+          """    expect(screen.getByText('Next field-context fix: No scheduled start is visible from the assigned-jobs list.')).toBeInTheDocument()
+              expect(screen.getAllByText('Field context: Not active field work')).toHaveLength(2)
+              expect(screen.getAllByText('Next field-context fix: Ticket is outside the active field-work queue.')).toHaveLength(2)
+          """)
+
+          doc_replacements = {
+              'README.md': [
+                  ('Employee assigned-job list rows now show due-date context plus the next field-context fix from existing assigned-job list data, and Employee job detail shows field-context review cues, the next field-context fix, and pre-work guidance for assigned work using existing job-ticket detail data for schedule, due date, customer, service location, equipment, and job instructions.', 'Employee assigned-job list rows now show due-date context, active field-work status, and the next field-context fix from existing assigned-job list data, and Employee job detail shows active-status-aware field-context review cues, the next field-context fix, and pre-work guidance for assigned work using existing job-ticket detail data for status, schedule, due date, customer, service location, equipment, and job instructions.'),
+                  ('Employee mobile job workflow with GPS time tracking, work notes, part usage, files/photos, assigned-job list field-context review, assigned-work field context review, next field-context fix guidance, and context guidance before starting work.', 'Employee mobile job workflow with GPS time tracking, work notes, part usage, files/photos, active-status-aware assigned-job list/detail field-context review, next field-context fix guidance, and context guidance before starting work.')],
+              'docs/api-contract.md': [
+                  ('Employee assigned-job list field-context cues and next field-context fix guidance are client-side and use existing assigned-job list data for scheduled start, due date, customer reference, and service-location reference. Employee job-ticket detail field-context cues, next field-context fix guidance, and pre-work guidance are also client-side and use existing assigned-ticket detail data for scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions.', 'Employee assigned-job list field-context cues and next field-context fix guidance are client-side and use existing assigned-job list data for active field-work status, scheduled start, due date, customer reference, and service-location reference. Employee job-ticket detail field-context cues, next field-context fix guidance, and pre-work guidance are also client-side and use existing assigned-ticket detail data for active field-work status, scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions.'),
+                  ('client-side Manager/Admin dashboard/list/detail/edit and Employee list/detail review cues', 'client-side Manager/Admin dashboard/list/detail/edit and active-status-aware Employee list/detail review cues')],
+              'docs/build-roadmap.md': [
+                  ('and Employee assigned-job list/detail field-context cues with next-fix and pre-work guidance', 'and active-status-aware Employee assigned-job list/detail field-context cues with next-fix and pre-work guidance'),
+                  ('pre-work guidance for schedule, due date, customer, service location, equipment or no-equipment context, and job instructions', 'pre-work guidance for active field-work status, schedule, due date, customer, service location, equipment or no-equipment context, and job instructions'),
+                  ('Employee assigned-job list rows show due-date and next field-context fix cues', 'Employee assigned-job list rows show due-date, active field-work status, and next field-context fix cues'),
+                  ('field-context cues for scheduled start, due date, customer', 'field-context cues for active field-work status, scheduled start, due date, customer')],
+              'docs/project-scope.md': [
+                  ('Employee assigned-job list rows now show due-date and next field-context fix cues', 'Employee assigned-job list rows now show due-date, active field-work status, and next field-context fix cues'),
+                  ('field-context cues summarize schedule, due date, customer', 'field-context cues summarize active field-work status, schedule, due date, customer'),
+                  ('Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, files/photos, assigned-job list field-context review, assigned-work field context review', 'Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, files/photos, active-status-aware assigned-job list/detail field-context review'),
+                  ('the Employee assigned-job list now shows due-date and next field-context fix cues', 'the Employee assigned-job list now shows due-date, active field-work status, and next field-context fix cues'),
+                  ('summarizes field context for scheduled start, due date, customer', 'summarizes field context for active field-work status, scheduled start, due date, customer')]
+          }
+          for path, items in doc_replacements.items():
+              for old, new in items:
+                  replace(path, old, new)
+          PY
+          rm -f .github/workflows/apply-employee-field-work-status.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md docs/api-contract.md docs/build-roadmap.md docs/project-scope.md frontend/src/pages/employee/MyJobsPage.tsx frontend/src/pages/employee/JobDetailPage.tsx frontend/src/pages/employee/__tests__/MyJobsPage.test.tsx frontend/src/pages/employee/__tests__/JobDetailPage.test.tsx .github/workflows/apply-employee-field-work-status.yml
+          git commit -m "feat: show employee active field-work context"
+          git push origin HEAD:codex/employee-active-field-work-context
