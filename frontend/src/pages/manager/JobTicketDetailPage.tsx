@@ -33,8 +33,8 @@ import {
 } from "./managerDisplay";
 import { JobTicketEditorForm } from "./JobTicketEditorForm";
 
-const displayValue = (value?: string | null) => value?.trim() ? value : "—";
 const activeDispatchStatusValues = new Set([2, 3, 4, 5, 6]);
+const displayValue = (value?: string | null) => value?.trim() ? value : "—";
 
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
@@ -95,7 +95,7 @@ export function JobTicketDetailPage() {
     const isActiveDispatchStatus = Boolean(job && activeDispatchStatusValues.has(job.status));
     const checks = [
       {
-        label: "Active dispatch status",
+        label: "Dispatch status",
         isReady: isActiveDispatchStatus,
         detail: isActiveDispatchStatus
           ? "Ticket is in the active dispatch queue."
@@ -158,8 +158,12 @@ export function JobTicketDetailPage() {
     return {
       checks,
       readyCount: checks.filter((check) => check.isReady).length,
+      statusLabel: !isActiveDispatchStatus
+        ? "Not active dispatch"
+        : warnings.length
+          ? "Needs attention"
+          : "Ready for dispatch review",
       warnings,
-      isActiveDispatchStatus,
     };
   }, [assignments, employeesById, job, leadAssignment]);
   const dispatchWarnings = dispatchReadiness.warnings;
@@ -334,7 +338,9 @@ export function JobTicketDetailPage() {
     };
   }, [assignments.length, closeoutReview.warnings, dispatchWarnings, entries.length, job, leadAssignment, parts.length, statusValue, timeEntries.length]);
   const archiveReviewWarnings = useMemo(() => {
-    const warnings = dispatchWarnings.map((warning) => `Before archiving: ${warning}`);
+    const warnings = job && activeDispatchStatusValues.has(job.status)
+      ? dispatchWarnings.map((warning) => `Before archiving: ${warning}`)
+      : [];
 
     if (job && ![7, 8, 9, 10].includes(job.status)) {
       warnings.unshift(`This ticket is currently ${getJobTicketStatusLabel(job.status)}.`);
@@ -611,7 +617,7 @@ export function JobTicketDetailPage() {
             <div className="review-grid">
               <div>
                 <span className="muted">Dispatch Status</span>
-                <strong>{dispatchReadiness.isActiveDispatchStatus ? (dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review") : "Not active dispatch"}</strong>
+                <strong>{dispatchReadiness.statusLabel}</strong>
               </div>
               <div>
                 <span className="muted">Readiness Checks</span>
@@ -645,7 +651,7 @@ export function JobTicketDetailPage() {
             </div>
             <div>
               <span className="muted">Dispatch Status</span>
-              <strong>{dispatchReadiness.isActiveDispatchStatus ? (dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review") : "Not active dispatch"}</strong>
+              <strong>{dispatchReadiness.statusLabel}</strong>
             </div>
           </div>
           {dispatchWarnings.length ? (
@@ -794,7 +800,7 @@ export function JobTicketDetailPage() {
               </div>
               <div>
                 <span className="muted">Dispatch Readiness</span>
-                <strong>{dispatchWarnings.length ? "Needs attention" : "Ready"}</strong>
+                <strong>{dispatchReadiness.statusLabel}</strong>
               </div>
             </div>
             <p className="muted">{statusReview.summary}</p>
