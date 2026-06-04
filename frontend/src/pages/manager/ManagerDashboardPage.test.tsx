@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import { routerFuture } from '../../routes/routerFuture'
@@ -10,6 +10,10 @@ vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { listAll: vi.fn(), listAssignments: vi.fn() } }))
 
 describe('ManagerDashboardPage', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useAuth).mockReturnValue({ user: { role: 'Manager' } } as any)
@@ -69,6 +73,24 @@ describe('ManagerDashboardPage', () => {
 
     expect(await screen.findByText('Dispatch-ready')).toBeInTheDocument()
     expect(screen.getByText('Next dispatch focus: No dispatch blockers are visible from the dashboard data.')).toBeInTheDocument()
+  })
+
+  it('shows an error instead of dispatch readiness totals when assignment loading fails', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'j2', ticketNumber: 'JT-2', status: 4, scheduledStartAtUtc: '2026-06-01T14:00:00Z', dueAtUtc: '2026-06-02T14:00:00Z' }
+    ] as any)
+    vi.mocked(jobTicketsApi.listAssignments).mockRejectedValue(new Error('assignment load failed'))
+
+    render(
+      <MemoryRouter future={routerFuture}>
+        <ManagerDashboardPage />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('Unable to load the operations summary.')).toBeInTheDocument()
+    expect(screen.queryByText('Dispatch-ready')).not.toBeInTheDocument()
+    expect(screen.queryByText('Needs dispatch review')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Next dispatch focus:/)).not.toBeInTheDocument()
   })
 
   it('keeps admin-only user link limited to admin users', async () => {
