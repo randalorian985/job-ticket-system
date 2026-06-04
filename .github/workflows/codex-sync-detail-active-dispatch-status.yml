@@ -1,0 +1,103 @@
+name: Codex Sync Detail Active Dispatch Status
+
+on:
+  push:
+    branches:
+      - codex/detail-active-dispatch-status
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Apply cloud-to-local sync edits
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              file_path = Path(path)
+              text = file_path.read_text(encoding="utf-8")
+              if old not in text:
+                  raise SystemExit(f"Expected text not found in {path}: {old[:120]!r}")
+              file_path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          detail = "frontend/src/pages/manager/JobTicketDetailPage.tsx"
+          replace_once(detail, '''const displayValue = (value?: string | null) => value?.trim() ? value : "—";
+          const activeDispatchStatusValues = new Set([2, 3, 4, 5, 6]);''', '''const activeDispatchStatusValues = new Set([2, 3, 4, 5, 6]);
+          const displayValue = (value?: string | null) => value?.trim() ? value : "—";''')
+          replace_once(detail, '''        label: "Active dispatch status",''', '''        label: "Dispatch status",''')
+          replace_once(detail, '''      readyCount: checks.filter((check) => check.isReady).length,
+                warnings,
+                isActiveDispatchStatus,''', '''      readyCount: checks.filter((check) => check.isReady).length,
+                statusLabel: !isActiveDispatchStatus
+                  ? "Not active dispatch"
+                  : warnings.length
+                    ? "Needs attention"
+                    : "Ready for dispatch review",
+                warnings,''')
+          replace_once(detail, '''    const warnings = dispatchWarnings.map((warning) => `Before archiving: ${warning}`);''', '''    const warnings = job && activeDispatchStatusValues.has(job.status)
+                ? dispatchWarnings.map((warning) => `Before archiving: ${warning}`)
+                : [];''')
+          replace_once(detail, '''                <strong>{dispatchReadiness.isActiveDispatchStatus ? (dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review") : "Not active dispatch"}</strong>''', '''                <strong>{dispatchReadiness.statusLabel}</strong>''')
+          replace_once(detail, '''              <strong>{dispatchReadiness.isActiveDispatchStatus ? (dispatchWarnings.length ? "Needs attention" : "Ready for dispatch review") : "Not active dispatch"}</strong>''', '''              <strong>{dispatchReadiness.statusLabel}</strong>''')
+          replace_once(detail, '''                <strong>{dispatchWarnings.length ? "Needs attention" : "Ready"}</strong>''', '''                <strong>{dispatchReadiness.statusLabel}</strong>''')
+
+          test = "frontend/src/pages/manager/JobTicketDetailPage.test.tsx"
+          replace_once(test, '''  it('marks completed tickets as outside active dispatch even when dispatch context is complete', async () => {''', '''  it('marks completed tickets as outside active dispatch even when detail context is complete', async () => {''')
+          replace_once(test, '''      description: 'Replace leaking hose and confirm restart.',
+                priority: 2,''', '''      description: 'Replace leaking hose and confirm restart.',
+                jobType: 'Repair',
+                priority: 2,''')
+          replace_once(test, '''      dueAtUtc: '2026-04-03T17:00:00Z',
+                purchaseOrderNumber: 'PO-44',''', '''      dueAtUtc: '2026-04-03T17:00:00Z',
+                completedAtUtc: '2026-04-04T13:00:00Z',
+                purchaseOrderNumber: 'PO-44',''')
+          replace_once(test, '''    expectRenderedText('Dispatch StatusNot active dispatch')''', '''    expectRenderedText('Not active dispatch')''')
+          replace_once(test, '''    expectRenderedText('Active dispatch status: Ticket is outside the active dispatch queue.')''', '''    expectRenderedText('Dispatch status: Ticket is outside the active dispatch queue.')''')
+
+          readme = "README.md"
+          replace_once(readme, '''- Manager/Admin job ticket detail and edit surfaces now show dispatch-readiness cues for assignment, named lead-tech/assigned-employee ownership where available, customer, service location, equipment or no-equipment context, schedule, due date, and job instructions using existing job-ticket fields; detail readiness is active-status-aware and detail/edit readiness name the next dispatch fix from the current ticket fields.''', '''- Manager/Admin job ticket detail and edit surfaces now show dispatch-readiness cues for assignment, named lead-tech/assigned-employee ownership where available, customer, service location, equipment or no-equipment context, schedule, due date, and job instructions using existing job-ticket fields; detail readiness uses the same active dispatch statuses as the dashboard/list rule and shows not-active dispatch tickets with the next active-queue fix.''')
+          replace_once(readme, '''- Manager/Admin job ticket list, detail, and edit readiness review surfaces identify the next dispatch fix for missing assignment, lead tech, schedule, due date, or job-instruction context using existing loaded data, with list and detail ownership labels resolving employee names through assignment responses when available.''', '''- Manager/Admin job ticket list, detail, and edit readiness review surfaces identify the next dispatch fix for missing assignment, lead tech, schedule, due date, active dispatch status, or job-instruction context using existing loaded data, with list and detail ownership labels resolving employee names through assignment responses when available.''')
+          replace_once(readme, '''- Manager/Admin job ticket detail and edit readiness review for assignment, lead tech, customer, service location, equipment or no-equipment context, schedule, due date, and job instructions before dispatch handoff, including active-status-aware detail dispatch readiness and named assignment ownership on detail from assignment responses with employee-record and ID fallback.''', '''- Manager/Admin job ticket detail and edit readiness review for assignment, lead tech, customer, service location, equipment or no-equipment context, schedule, due date, active dispatch status, and job instructions before dispatch handoff, including named assignment ownership on detail from assignment responses with employee-record and ID fallback.''')
+
+          api = "docs/api-contract.md"
+          replace_once(api, '''- Manager/Admin job-ticket detail dispatch-readiness checklist cues are client-side and use existing job-ticket detail data plus existing assignment data for active dispatch status, assignment, lead-tech, scheduled-start, due-date, customer, service-location, and equipment or no-equipment context. Detail readiness treats statuses 2 Submitted, 3 Assigned, 4 In Progress, 5 Waiting on Parts, and 6 Waiting on Customer as the active dispatch queue, matching the list view. This does not add endpoints or change request/response DTOs.''', '''- Manager/Admin job-ticket detail dispatch-readiness checklist cues are client-side and use existing job-ticket detail data plus existing assignment data for assignment, lead-tech, scheduled-start, due-date, customer, service-location, equipment or no-equipment context, and active dispatch status. Detail readiness uses the same active dispatch statuses as dashboard/list readiness (`2=Submitted`, `3=Assigned`, `4=In Progress`, `5=Waiting on Parts`, `6=Waiting on Customer`) and shows tickets outside that queue as not-active dispatch. This does not add endpoints or change request/response DTOs.''')
+          replace_once(api, '''- Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane. Current dispatch-readiness polish uses existing job-ticket and assignment APIs plus client-side Manager/Admin dashboard/list/detail/edit and Employee list/detail review cues over existing job-ticket fields; any further API changes must be narrow, DTO-based, job-ticket-first, and documented here.''', '''- Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane. Current dispatch-readiness polish uses existing job-ticket and assignment APIs plus client-side Manager/Admin dashboard/list/detail/edit and Employee list/detail review cues over existing job-ticket fields, including active-status-aware Manager/Admin detail readiness; any further API changes must be narrow, DTO-based, job-ticket-first, and documented here.''')
+
+          scope = "docs/project-scope.md"
+          replace_once(scope, '''- Manager/Admin job ticket detail readiness cues now summarize active dispatch status, assignment ownership, lead tech, customer, service location, equipment or no-equipment context, schedule, and due date using existing job-ticket and assignment data, name the next dispatch fix, and show employee names from assignment responses with employee-record and ID fallback.''', '''- Manager/Admin job ticket detail readiness cues now summarize assignment ownership, lead tech, active dispatch status, customer, service location, equipment or no-equipment context, schedule, and due date using existing job-ticket and assignment data, name the next dispatch fix, and show employee names from assignment responses with employee-record and ID fallback.''')
+          replace_once(scope, '''- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, closeout/invoice-readiness review, dashboard dispatch-readiness summary, dispatch-readiness list cues and filters, detail dispatch-readiness checklist and next-fix cues, edit-side dispatch-readiness cues, and time-review approval workspace.''', '''- Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, closeout/invoice-readiness review, dashboard dispatch-readiness summary, dispatch-readiness list cues and filters, active-status-aware detail dispatch-readiness checklist and next-fix cues, edit-side dispatch-readiness cues, and time-review approval workspace.''')
+          replace_once(scope, '''- the Manager/Admin job-ticket detail page now summarizes dispatch readiness for active dispatch status, assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context using existing job-ticket and assignment data, including employee names from assignment responses with Admin-loaded employee-record and ID fallback;''', '''- the Manager/Admin job-ticket detail page now summarizes dispatch readiness for assignment ownership, lead tech, scheduled start, due date, customer, service location, equipment or no-equipment context, and the same active dispatch statuses used by dashboard/list readiness using existing job-ticket and assignment data, including employee names from assignment responses with Admin-loaded employee-record and ID fallback;''')
+
+          roadmap = "docs/build-roadmap.md"
+          replace_once(roadmap, '''- Manager/Admin job-ticket list, detail, and edit readiness surfaces now show the next dispatch fix for missing assignment, lead-tech, schedule, due-date, or job-instruction context using existing loaded data, with list and detail assignment labels resolving employee names from assignment responses when available.''', '''- Manager/Admin job-ticket list, detail, and edit readiness surfaces now show the next dispatch fix for missing assignment, lead-tech, schedule, due-date, active dispatch status, or job-instruction context using existing loaded data, with list and detail assignment labels resolving employee names from assignment responses when available.''')
+          replace_once(roadmap, '''- Manager/Admin job-ticket detail surfaces show a dispatch-readiness checklist and next dispatch fix for active dispatch status, assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names from assignment responses with Admin-loaded employee-record and ID fallback;''', '''- Manager/Admin job-ticket detail surfaces show an active-status-aware dispatch-readiness checklist and next dispatch fix for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names from assignment responses with Admin-loaded employee-record and ID fallback;''')
+          PY
+
+      - name: Commit synced files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/codex-sync-detail-active-dispatch-status.yml
+          git add frontend/src/pages/manager/JobTicketDetailPage.tsx \
+            frontend/src/pages/manager/JobTicketDetailPage.test.tsx \
+            README.md \
+            docs/api-contract.md \
+            docs/project-scope.md \
+            docs/build-roadmap.md
+          git status --short
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "fix: sync detail active dispatch readiness"
+          git push origin HEAD:${GITHUB_REF_NAME}
