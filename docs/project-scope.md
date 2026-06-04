@@ -21,7 +21,7 @@ That means the core scope is:
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is part of the implemented Manager/Admin job review baseline.
 - Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane.
 - Test environment setup and documentation are maintained as stabilization support for the existing product: empty-database Admin bootstrap, full pilot seed setup, scheduled-runner workarounds, custom connection strings, named SQL Server instances, and Windows integrated security guidance. This does not expand product domain scope.
-- Manager/Admin dashboard and job ticket list dispatch-readiness cues now summarize active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, schedule, or due-date context, name the next dispatch focus or fix from loaded data, show assigned and lead employee names on list rows when existing user records are available, and filter by dispatch-readiness state on the job-ticket list using existing job-ticket, assignment, and user APIs.
+- Manager/Admin dashboard and job ticket list dispatch-readiness cues now summarize active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, schedule, or due-date context, name the next dispatch focus or fix from loaded data, show assigned and lead employee names on list rows from assignment responses, and filter by dispatch-readiness state on the job-ticket list using existing job-ticket and assignment APIs.
 - Manager/Admin job ticket detail readiness cues now summarize assignment ownership, lead tech, customer, service location, equipment or no-equipment context, schedule, and due date using existing job-ticket and assignment data, name the next dispatch fix, and show employee names when loaded.
 - Manager/Admin job ticket edit readiness cues now summarize customer, service location, equipment or no-equipment context, schedule, due date, and job instruction context using existing job-ticket fields, and name the next edit-side dispatch fix when one is missing.
 - Manager/Admin job-ticket workspace UI now has clearer shell navigation, shared workspace styling, summary-card emphasis, filter panels, review panels, form controls, and responsive spacing for operational scanning.
@@ -51,7 +51,7 @@ The lane should improve how Manager/Admin users prepare a job ticket for field e
 Current implementation in this lane:
 - Manager/Admin dashboard and job-ticket list rollups now count active tickets that are dispatch-ready and active tickets that still need assignment, lead-tech, schedule, or due-date review;
 - each Manager/Admin job-ticket list row now names whether dispatch readiness is ready or needs review, using only existing job-ticket and assignment data;
-- Manager/Admin job-ticket list rows now show assigned and lead employee names when existing user records are available, with assignment-id fallback when names cannot be loaded;
+- Manager/Admin job-ticket list rows now show assigned and lead employee names from assignment responses, with assignment-id fallback when names are blank;
 - Manager/Admin job-ticket list rows now show the first next dispatch fix for missing assignment, lead-tech, schedule, or due-date context using existing loaded list and assignment data;
 - the Manager/Admin job-ticket list can filter loaded rows by dispatch-ready, needs-dispatch-review, and not-active dispatch states without changing the API surface;
 - the Manager/Admin dashboard now shows the first next dispatch focus from existing loaded job-ticket and assignment data;

@@ -235,7 +235,12 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         return await dbContext.JobTicketEmployees
             .Where(x => x.JobTicketId == jobTicketId)
             .OrderBy(x => x.AssignedAtUtc)
-            .Select(x => new JobTicketAssignmentDto(x.JobTicketId, x.EmployeeId, x.AssignedAtUtc, x.IsLead))
+            .Select(x => new JobTicketAssignmentDto(
+                x.JobTicketId,
+                x.EmployeeId,
+                x.AssignedAtUtc,
+                x.IsLead,
+                x.Employee.FirstName + " " + x.Employee.LastName))
             .ToListAsync(cancellationToken);
     }
 
@@ -269,7 +274,12 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         AddAudit(jobTicketId, nameof(JobTicketEmployee), AuditActionType.Assignment, null, AuditJson(("EmployeeId", request.EmployeeId), ("Operation", "Add")));
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return new JobTicketAssignmentDto(assignment.JobTicketId, assignment.EmployeeId, assignment.AssignedAtUtc, assignment.IsLead);
+        var employeeName = await dbContext.Employees
+            .Where(x => x.Id == assignment.EmployeeId)
+            .Select(x => x.FirstName + " " + x.LastName)
+            .SingleAsync(cancellationToken);
+
+        return new JobTicketAssignmentDto(assignment.JobTicketId, assignment.EmployeeId, assignment.AssignedAtUtc, assignment.IsLead, employeeName);
     }
 
     public async Task<bool> RemoveAssignmentAsync(Guid jobTicketId, Guid employeeId, CancellationToken cancellationToken = default)
@@ -879,7 +889,7 @@ public sealed record ChangeJobTicketStatusDto(JobTicketStatus Status);
 public sealed record ArchiveJobTicketDto(string ArchiveReason);
 
 public sealed record AddJobTicketAssignmentDto(Guid EmployeeId, bool IsLead = false);
-public sealed record JobTicketAssignmentDto(Guid JobTicketId, Guid EmployeeId, DateTime AssignedAtUtc, bool IsLead);
+public sealed record JobTicketAssignmentDto(Guid JobTicketId, Guid EmployeeId, DateTime AssignedAtUtc, bool IsLead, string EmployeeName);
 
 public sealed record AddJobWorkEntryDto(Guid? EmployeeId, WorkEntryType EntryType, string Notes, DateTime? PerformedAtUtc);
 public sealed record JobWorkEntryDto(Guid Id, Guid JobTicketId, Guid? EmployeeId, WorkEntryType EntryType, string Notes, DateTime PerformedAtUtc);

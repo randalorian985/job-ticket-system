@@ -2,9 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
-import { usersApi } from '../../api/usersApi'
 import { ApiError } from '../../api/httpClient'
-import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto, UserDto } from '../../types'
+import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto } from '../../types'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from '../employee/jobDisplay'
 import { formatDate, jobStatusOptions, priorityOptions } from './managerDisplay'
 
@@ -86,12 +85,13 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
   }
 }
 
+const getAssignmentDisplayName = (assignment: JobTicketAssignmentDto) => assignment.employeeName?.trim() || assignment.employeeId
+
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
   const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
   const [customers, setCustomers] = useState<Record<string, CustomerDto>>({})
   const [locations, setLocations] = useState<Record<string, ServiceLocationDto>>({})
-  const [employees, setEmployees] = useState<Record<string, UserDto>>({})
   const [statusFilter, setStatusFilter] = useState(allFilterValue)
   const [priorityFilter, setPriorityFilter] = useState(allFilterValue)
   const [customerFilter, setCustomerFilter] = useState(allFilterValue)
@@ -107,11 +107,10 @@ export function JobTicketListPage() {
       setIsLoading(true)
 
       try {
-        const [tickets, customersResponse, locationsResponse, usersResponse] = await Promise.all([
+        const [tickets, customersResponse, locationsResponse] = await Promise.all([
           jobTicketsApi.listAll(),
           masterDataApi.listCustomers(),
-          masterDataApi.listServiceLocations(),
-          usersApi.list().catch(() => [])
+          masterDataApi.listServiceLocations()
         ])
 
         const assignmentEntries = await Promise.all(
@@ -129,7 +128,6 @@ export function JobTicketListPage() {
         setAssignmentMap(Object.fromEntries(assignmentEntries))
         setCustomers(Object.fromEntries(customersResponse.map((item) => [item.id, item])))
         setLocations(Object.fromEntries(locationsResponse.map((item) => [item.id, item])))
-        setEmployees(Object.fromEntries(usersResponse.map((item) => [item.id, item])))
         setError(null)
       } catch (requestError) {
         if (requestError instanceof ApiError && (requestError.status === 401 || requestError.status === 403)) {
@@ -163,11 +161,7 @@ export function JobTicketListPage() {
     return jobs.filter((job) => {
       const customerName = customers[job.customerId]?.name ?? job.customerId
       const locationName = locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId
-      const assignmentNames = (assignmentMap[job.id] ?? []).map((item) => {
-        const employee = employees[item.employeeId]
-        const name = employee ? `${employee.firstName} ${employee.lastName}`.trim() : ''
-        return name || employee?.userName || item.employeeId
-      })
+      const assignmentNames = (assignmentMap[job.id] ?? []).map((item) => getAssignmentDisplayName(item))
       const readiness = getDispatchReadiness(job, assignmentMap[job.id] ?? [])
       const matchesStatus = statusFilter === allFilterValue || String(job.status) === statusFilter
       const matchesPriority = priorityFilter === allFilterValue || String(job.priority) === priorityFilter
@@ -181,7 +175,7 @@ export function JobTicketListPage() {
 
       return matchesStatus && matchesPriority && matchesCustomer && matchesDispatchReadiness && matchesSearch
     })
-  }, [assignmentMap, customerFilter, customers, dispatchReadinessFilter, employees, jobs, locations, priorityFilter, searchText, statusFilter])
+  }, [assignmentMap, customerFilter, customers, dispatchReadinessFilter, jobs, locations, priorityFilter, searchText, statusFilter])
 
   const triageSummary = useMemo(() => {
     const activeJobs = filteredJobs.filter((job) => activeStatusValues.has(job.status))
@@ -220,13 +214,6 @@ export function JobTicketListPage() {
     setCustomerFilter(allFilterValue)
     setDispatchReadinessFilter(allFilterValue)
     setSearchText('')
-  }
-
-  const getEmployeeDisplayName = (employeeId: string) => {
-    const employee = employees[employeeId]
-    const name = employee ? `${employee.firstName} ${employee.lastName}`.trim() : ''
-
-    return name || employee?.userName || employeeId
   }
 
   return (
@@ -295,8 +282,8 @@ export function JobTicketListPage() {
             {filteredJobs.map((job) => {
               const assignments = assignmentMap[job.id] ?? []
               const leadAssignments = assignments.filter((item) => item.isLead)
-              const leadSummary = leadAssignments.length ? leadAssignments.map((item) => getEmployeeDisplayName(item.employeeId)).join(', ') : 'Needs lead'
-              const assignmentSummary = assignments.length ? assignments.map((item) => getEmployeeDisplayName(item.employeeId)).join(', ') : 'Unassigned'
+              const leadSummary = leadAssignments.length ? leadAssignments.map(getAssignmentDisplayName).join(', ') : 'Needs lead'
+              const assignmentSummary = assignments.length ? assignments.map(getAssignmentDisplayName).join(', ') : 'Unassigned'
               const readiness = getDispatchReadiness(job, assignments)
 
               return (

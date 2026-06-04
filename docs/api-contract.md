@@ -30,9 +30,9 @@
 ## Job Tickets (Current Main Notes)
 - Manager/Admin create and update flows already support operational fields such as `jobType`, `purchaseOrderNumber`, `billingContactName`, `billingContactPhone`, `billingContactEmail`, `internalNotes`, `customerFacingNotes`, `requestedAtUtc`, `scheduledStartAtUtc`, and `dueAtUtc`.
 - `equipmentId` remains optional, but when supplied it must belong to the selected `serviceLocationId`.
-- Manager/Admin dashboard, list, and detail views use the existing assignment endpoints to surface assigned-employee counts, lead-tech visibility, and dispatch-readiness cues without changing the API surface.
+- Manager/Admin dashboard, list, and detail views use the existing assignment endpoints to surface assigned-employee counts, lead-tech visibility, and dispatch-readiness cues.
 - Manager/Admin dashboard and job-ticket list dispatch-readiness cues are client-side and use existing job-ticket list data plus existing assignment data. Active tickets are treated as dispatch-ready only when assignment, lead-tech, scheduled-start, and due-date context are present. Dispatch-readiness filters remain client-side on the job-ticket list.
-- Manager/Admin job-ticket list assignment ownership labels are client-side and use existing assignment data plus existing user data when available; if user records cannot be loaded, the list falls back to assignment employee IDs. This does not add endpoints or change request/response DTOs.
+- Manager/Admin job-ticket assignment responses include `employeeName` alongside `jobTicketId`, `employeeId`, `assignedAtUtc`, and `isLead`, so Manager/Admin list rows can show assigned and lead technician names without calling the Admin-only user-management API. If an assignment name is blank, the list falls back to the assignment employee ID. This does not add endpoints.
 - Manager/Admin job-ticket detail dispatch-readiness checklist cues are client-side and use existing job-ticket detail data plus existing assignment data for assignment, lead-tech, scheduled-start, due-date, customer, service-location, and equipment or no-equipment context. This does not add endpoints or change request/response DTOs.
 - Manager/Admin job-ticket edit dispatch-readiness cues are client-side and use the existing edit DTO fields for customer, service location, equipment or no-equipment context, scheduled start, due date, and job instructions. This does not add endpoints or change request/response DTOs.
 - Employee assigned-job list field-context cues and next field-context fix guidance are client-side and use existing assigned-job list data for scheduled start, due date, customer reference, and service-location reference. Employee job-ticket detail field-context cues, next field-context fix guidance, and pre-work guidance are also client-side and use existing assigned-ticket detail data for scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions. This does not add endpoints, expose assignment-management APIs to employees, block existing time-entry actions, or change request/response DTOs.
@@ -49,11 +49,11 @@
 ## Current Scope Interpretation
 - The product is being steered as a job-ticket-first platform.
 - Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented in the Manager/Admin job review surface using existing APIs.
-- Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane. Current dispatch-readiness polish uses existing job-ticket, assignment, and user APIs plus client-side Manager/Admin dashboard/list/detail/edit and Employee list/detail review cues over existing job-ticket fields; any further API changes must be narrow, DTO-based, job-ticket-first, and documented here.
+- Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane. Current dispatch-readiness polish uses existing job-ticket and assignment APIs plus client-side Manager/Admin dashboard/list/detail/edit and Employee list/detail review cues over existing job-ticket fields; any further API changes must be narrow, DTO-based, job-ticket-first, and documented here.
 - Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
 - No transfer endpoints are implemented on `main`.
 - No inventory-expansion API lane is currently approved.
-- This dispatch-readiness update does not change API behavior or add endpoint scope.
+- This dispatch-readiness update adds the assignment `employeeName` response field but does not add endpoint scope.
 
 ## Inventory (Current Main Foundation)
 All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.

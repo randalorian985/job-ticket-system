@@ -115,6 +115,7 @@ export type JobTicketAssignmentDto = {
   employeeId: string
   assignedAtUtc: string
   isLead: boolean
+  employeeName: string
 }
 
 export type JobWorkEntryDto = {

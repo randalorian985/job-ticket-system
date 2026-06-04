@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
-import { usersApi } from '../../api/usersApi'
 import { routerFuture } from '../../routes/routerFuture'
 import { JobTicketListPage } from './JobTicketListPage'
 
@@ -22,12 +21,6 @@ vi.mock('../../api/masterDataApi', () => ({
   }
 }))
 
-vi.mock('../../api/usersApi', () => ({
-  usersApi: {
-    list: vi.fn()
-  }
-}))
-
 describe('Manager list pages', () => {
   beforeEach(() => {
     cleanup()
@@ -40,17 +33,13 @@ describe('Manager list pages', () => {
       { id: 's-1', locationName: 'HQ' },
       { id: 's-2', locationName: 'Field Shop' }
     ] as any)
-    vi.mocked(usersApi.list).mockResolvedValue([
-      { id: 'e-1', firstName: 'Alex', lastName: 'Rivera', userName: 'arivera' },
-      { id: 'e-2', firstName: 'Jamie', lastName: 'Chen', userName: 'jchen' }
-    ] as any)
     vi.mocked(jobTicketsApi.listAssignments).mockImplementation(async (jobTicketId: string) => {
       if (jobTicketId === 'job-1') {
-        return [{ employeeId: 'e-1', assignedAtUtc: '2026-05-12T08:00:00Z', isLead: true }] as any
+        return [{ employeeId: 'e-1', assignedAtUtc: '2026-05-12T08:00:00Z', isLead: true, employeeName: 'Alex Rivera' }] as any
       }
 
       if (jobTicketId === 'job-2') {
-        return [{ employeeId: 'e-2', assignedAtUtc: '2026-05-12T08:30:00Z', isLead: false }] as any
+        return [{ employeeId: 'e-2', assignedAtUtc: '2026-05-12T08:30:00Z', isLead: false, employeeName: 'Jamie Chen' }] as any
       }
 
       return [] as any
@@ -84,8 +73,10 @@ describe('Manager list pages', () => {
     expect(renderedPageText()).toContain('Due —')
   })
 
-  it('falls back to assignment ids when employee names cannot be loaded', async () => {
-    vi.mocked(usersApi.list).mockRejectedValue(new ApiError('Forbidden', 403, undefined))
+  it('falls back to assignment ids when assignment names are not present', async () => {
+    vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([
+      { employeeId: 'e-1', assignedAtUtc: '2026-05-12T08:00:00Z', isLead: true, employeeName: '' }
+    ] as any)
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix unit', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' }
     ] as any)
