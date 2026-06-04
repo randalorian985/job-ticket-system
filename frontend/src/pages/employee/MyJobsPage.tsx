@@ -10,8 +10,12 @@ function formatOptionalDateTime(value?: string | null) {
   return value ? new Date(value).toLocaleString() : 'Not set'
 }
 
+const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
+
 function getAssignedJobListFieldContext(job: JobTicketListItemDto) {
+  const isActiveFieldWork = activeFieldWorkStatuses.has(job.status)
   const warnings = [
+    isActiveFieldWork ? null : 'Ticket is outside the active field-work queue.',
     job.scheduledStartAtUtc ? null : 'No scheduled start is visible from the assigned-jobs list.',
     job.dueAtUtc ? null : 'No due date is visible from the assigned-jobs list.',
     job.customerId ? null : 'No customer reference is visible from the assigned-jobs list.',
@@ -19,7 +23,9 @@ function getAssignedJobListFieldContext(job: JobTicketListItemDto) {
   ].filter((item): item is string => Boolean(item))
 
   return {
-    label: warnings.length ? 'Needs field-context review' : 'Ready for field-context review',
+    label: !isActiveFieldWork
+      ? 'Not active field work'
+      : warnings.length ? 'Needs field-context review' : 'Ready for field-context review',
     nextStep: warnings[0] ?? 'No field-context blockers are visible from the assigned-jobs list.'
   }
 }
