@@ -41,6 +41,7 @@ export function JobTicketDetailPage() {
   const { user } = useAuth();
   const [job, setJob] = useState<JobTicketDto | null>(null);
   const [assignments, setAssignments] = useState<JobTicketAssignmentDto[]>([]);
+  const [assignmentLoadFailed, setAssignmentLoadFailed] = useState(false);
   const [entries, setEntries] = useState<JobWorkEntryDto[]>([]);
   const [timeEntries, setTimeEntries] = useState<TimeEntryDto[]>([]);
   const [parts, setParts] = useState<JobTicketPartDto[]>([]);
@@ -93,6 +94,30 @@ export function JobTicketDetailPage() {
     const assignedEmployeeNames = assignments.map((item) => getEmployeeDisplayName(item));
     const leadTechName = leadAssignment ? getEmployeeDisplayName(leadAssignment) : null;
     const isActiveDispatchStatus = Boolean(job && activeDispatchStatusValues.has(job.status));
+    const assignmentChecks = assignmentLoadFailed
+      ? [
+          {
+            label: "Assignment data",
+            isReady: false,
+            detail: "Assignment data could not be loaded. Refresh or retry before dispatch review.",
+          },
+        ]
+      : [
+          {
+            label: "Assigned employees",
+            isReady: Boolean(assignments.length),
+            detail: assignments.length
+              ? `Assigned employees: ${assignedEmployeeNames.join(", ")}.`
+              : "No employees are assigned.",
+          },
+          {
+            label: "Lead tech",
+            isReady: Boolean(leadAssignment),
+            detail: leadTechName
+              ? `Lead tech is ${leadTechName}.`
+              : "No lead tech is marked.",
+          },
+        ];
     const checks = [
       {
         label: "Dispatch status",
@@ -101,20 +126,7 @@ export function JobTicketDetailPage() {
           ? "Ticket is in the active dispatch queue."
           : "Ticket is outside the active dispatch queue.",
       },
-      {
-        label: "Assigned employees",
-        isReady: Boolean(assignments.length),
-        detail: assignments.length
-          ? `Assigned employees: ${assignedEmployeeNames.join(", ")}.`
-          : "No employees are assigned.",
-      },
-      {
-        label: "Lead tech",
-        isReady: Boolean(leadAssignment),
-        detail: leadTechName
-          ? `Lead tech is ${leadTechName}.`
-          : "No lead tech is marked.",
-      },
+      ...assignmentChecks,
       {
         label: "Scheduled start",
         isReady: Boolean(job?.scheduledStartAtUtc),
@@ -160,12 +172,14 @@ export function JobTicketDetailPage() {
       readyCount: checks.filter((check) => check.isReady).length,
       statusLabel: !isActiveDispatchStatus
         ? "Not active dispatch"
-        : warnings.length
-          ? "Needs attention"
-          : "Ready for dispatch review",
+        : assignmentLoadFailed
+          ? "Assignment data unavailable"
+          : warnings.length
+            ? "Needs attention"
+            : "Ready for dispatch review",
       warnings,
     };
-  }, [assignments, employeesById, job, leadAssignment]);
+  }, [assignmentLoadFailed, assignments, employeesById, job, leadAssignment]);
   const dispatchWarnings = dispatchReadiness.warnings;
   const nextDispatchFix = dispatchWarnings[0] ?? "No dispatch blockers found.";
   const closeoutReview = useMemo(() => {
@@ -365,7 +379,9 @@ export function JobTicketDetailPage() {
       equipmentResponse,
     ] = await Promise.all([
       jobTicketsApi.get(jobTicketId),
-      jobTicketsApi.listAssignments(jobTicketId).catch(() => []),
+      jobTicketsApi.listAssignments(jobTicketId)
+        .then((items) => ({ items, failed: false }))
+        .catch(() => ({ items: [], failed: true })),
       jobTicketsApi.listWorkEntries(jobTicketId),
       timeEntriesApi.listByJob(jobTicketId).catch(() => []),
       jobTicketsApi.listParts(jobTicketId),
@@ -377,7 +393,8 @@ export function JobTicketDetailPage() {
 
     setJob(jobResponse);
     setStatusValue(String(jobResponse.status));
-    setAssignments(assignmentResponse);
+    setAssignmentLoadFailed(assignmentResponse.failed);
+    setAssignments(assignmentResponse.items);
     setEntries(entryResponse);
     setTimeEntries(timeResponse);
     setParts(partsResponse);
@@ -478,6 +495,11 @@ export function JobTicketDetailPage() {
   const onAddAssignment = async (event: FormEvent) => {
     event.preventDefault();
     if (!jobTicketId) return;
+    if (assignmentLoadFailed) {
+      setError("Assignment data must load before assignments can be changed.");
+      setMessage(null);
+      return;
+    }
     if (!assignmentEmployeeId) {
       setError("Select an employee before assigning.");
       setMessage(null);
@@ -516,7 +538,13 @@ export function JobTicketDetailPage() {
   };
 
   const onRemoveAssignment = async (employeeId: string) => {
-    if (!jobTicketId || !window.confirm("Remove this assignment?")) return;
+    if (!jobTicketId) return;
+    if (assignmentLoadFailed) {
+      setError("Assignment data must load before assignments can be changed.");
+      setMessage(null);
+      return;
+    }
+    if (!window.confirm("Remove this assignment?")) return;
     try {
       await jobTicketsApi.removeAssignment(jobTicketId, employeeId);
       setError(null);
@@ -902,6 +930,9 @@ export function JobTicketDetailPage() {
           <h3>Assigned Employees</h3>
           <span className="muted">Current lead: {leadAssignment ? getEmployeeDisplayName(leadAssignment) : "Needs assignment"}</span>
         </div>
+        {assignmentLoadFailed ? (
+          <p className="error" role="alert">Assignment data could not be loaded. Refresh before editing assignments or dispatch review.</p>
+        ) : null}
         {assignments.length ? (
           <ul>
             {assignments.map((item) => (
@@ -911,6 +942,7 @@ export function JobTicketDetailPage() {
                 <button
                   className="no-print"
                   onClick={() => onRemoveAssignment(item.employeeId)}
+                  disabled={assignmentLoadFailed}
                 >
                   Remove
                 </button>
@@ -926,6 +958,7 @@ export function JobTicketDetailPage() {
               value={assignmentEmployeeId}
               onChange={(e) => setAssignmentEmployeeId(e.target.value)}
               aria-label="assignment employee"
+              disabled={assignmentLoadFailed}
             >
               <option value="">Select employee</option>
               {employees
@@ -942,6 +975,7 @@ export function JobTicketDetailPage() {
               onChange={(e) => setAssignmentEmployeeId(e.target.value)}
               placeholder="Employee id"
               aria-label="assignment employee"
+              disabled={assignmentLoadFailed}
             />
           )}
           <label>
@@ -949,10 +983,11 @@ export function JobTicketDetailPage() {
               type="checkbox"
               checked={isLeadAssignment}
               onChange={(e) => setIsLeadAssignment(e.target.checked)}
+              disabled={assignmentLoadFailed}
             />
             Lead Tech
           </label>
-          <button type="submit">Assign Employee</button>
+          <button type="submit" disabled={assignmentLoadFailed}>Assign Employee</button>
         </form>
       </article>
       <article className="card stack review-section">
