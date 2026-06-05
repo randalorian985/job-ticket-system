@@ -25,12 +25,22 @@ type DispatchReadiness = {
   isReady: boolean
 }
 
-const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[]): DispatchReadiness => {
+const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[] | null): DispatchReadiness => {
   if (!activeStatusValues.has(job.status)) {
     return {
       label: 'Not active dispatch',
       detail: 'Ticket is outside the active dispatch queue.',
       nextStep: 'No dispatch validation is needed until the ticket returns to an active status.',
+      openItems: 0,
+      isReady: false
+    }
+  }
+
+  if (!assignments) {
+    return {
+      label: 'Assignment data unavailable',
+      detail: 'Assignment data could not be loaded for this ticket.',
+      nextStep: 'Reload assignments before using dispatch readiness to make assignment decisions.',
       openItems: 0,
       isReady: false
     }
@@ -90,6 +100,7 @@ const getAssignmentDisplayName = (assignment: JobTicketAssignmentDto) => assignm
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
   const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
+  const [assignmentDataUnavailable, setAssignmentDataUnavailable] = useState(false)
   const [customers, setCustomers] = useState<Record<string, CustomerDto>>({})
   const [locations, setLocations] = useState<Record<string, ServiceLocationDto>>({})
   const [statusFilter, setStatusFilter] = useState(allFilterValue)
@@ -113,11 +124,22 @@ export function JobTicketListPage() {
           masterDataApi.listServiceLocations()
         ])
 
-        const assignmentEntries = await Promise.all(
-          tickets.map(async (ticket) => [
-            ticket.id,
-            await jobTicketsApi.listAssignments(ticket.id).catch(() => [])
-          ] as const)
+        const assignmentResults = await Promise.all(
+          tickets.map(async (ticket) => {
+            try {
+              return {
+                ticketId: ticket.id,
+                assignments: await jobTicketsApi.listAssignments(ticket.id),
+                failed: false
+              }
+            } catch {
+              return {
+                ticketId: ticket.id,
+                assignments: [] as JobTicketAssignmentDto[],
+                failed: true
+              }
+            }
+          })
         )
 
         if (isCancelled) {
@@ -125,7 +147,8 @@ export function JobTicketListPage() {
         }
 
         setJobs(tickets)
-        setAssignmentMap(Object.fromEntries(assignmentEntries))
+        setAssignmentMap(Object.fromEntries(assignmentResults.map((item) => [item.ticketId, item.assignments])))
+        setAssignmentDataUnavailable(assignmentResults.some((item) => item.failed))
         setCustomers(Object.fromEntries(customersResponse.map((item) => [item.id, item])))
         setLocations(Object.fromEntries(locationsResponse.map((item) => [item.id, item])))
         setError(null)
@@ -161,8 +184,9 @@ export function JobTicketListPage() {
     return jobs.filter((job) => {
       const customerName = customers[job.customerId]?.name ?? job.customerId
       const locationName = locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId
-      const assignmentNames = (assignmentMap[job.id] ?? []).map((item) => getAssignmentDisplayName(item))
-      const readiness = getDispatchReadiness(job, assignmentMap[job.id] ?? [])
+      const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
+      const assignmentNames = assignments?.map((item) => getAssignmentDisplayName(item)) ?? []
+      const readiness = getDispatchReadiness(job, assignments)
       const matchesStatus = statusFilter === allFilterValue || String(job.status) === statusFilter
       const matchesPriority = priorityFilter === allFilterValue || String(job.priority) === priorityFilter
       const matchesCustomer = customerFilter === allFilterValue || job.customerId === customerFilter
@@ -175,7 +199,7 @@ export function JobTicketListPage() {
 
       return matchesStatus && matchesPriority && matchesCustomer && matchesDispatchReadiness && matchesSearch
     })
-  }, [assignmentMap, customerFilter, customers, dispatchReadinessFilter, jobs, locations, priorityFilter, searchText, statusFilter])
+  }, [assignmentDataUnavailable, assignmentMap, customerFilter, customers, dispatchReadinessFilter, jobs, locations, priorityFilter, searchText, statusFilter])
 
   const triageSummary = useMemo(() => {
     const activeJobs = filteredJobs.filter((job) => activeStatusValues.has(job.status))
@@ -183,9 +207,9 @@ export function JobTicketListPage() {
     const waitingJobs = filteredJobs.filter((job) => waitingStatusValues.has(job.status))
     const unscheduledJobs = activeJobs.filter((job) => !job.scheduledStartAtUtc)
     const missingDueDateJobs = activeJobs.filter((job) => !job.dueAtUtc)
-    const unassignedJobs = activeJobs.filter((job) => !(assignmentMap[job.id]?.length))
-    const needsLeadJobs = activeJobs.filter((job) => !(assignmentMap[job.id] ?? []).some((assignment) => assignment.isLead))
-    const activeReadiness = activeJobs.map((job) => getDispatchReadiness(job, assignmentMap[job.id] ?? []))
+    const unassignedJobs = assignmentDataUnavailable ? [] : activeJobs.filter((job) => !(assignmentMap[job.id]?.length))
+    const needsLeadJobs = assignmentDataUnavailable ? [] : activeJobs.filter((job) => !(assignmentMap[job.id] ?? []).some((assignment) => assignment.isLead))
+    const activeReadiness = assignmentDataUnavailable ? [] : activeJobs.map((job) => getDispatchReadiness(job, assignmentMap[job.id] ?? []))
     const dispatchReadyJobs = activeReadiness.filter((item) => item.isReady)
     const needsDispatchReviewJobs = activeReadiness.filter((item) => item.openItems > 0)
 
@@ -200,7 +224,7 @@ export function JobTicketListPage() {
       dispatchReadyCount: dispatchReadyJobs.length,
       needsDispatchReviewCount: needsDispatchReviewJobs.length
     }
-  }, [assignmentMap, filteredJobs])
+  }, [assignmentDataUnavailable, assignmentMap, filteredJobs])
 
   const hasActiveFilters = statusFilter !== allFilterValue ||
     priorityFilter !== allFilterValue ||
@@ -228,11 +252,21 @@ export function JobTicketListPage() {
           <div className="summary-card"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong><span className="muted">Waiting on parts or customer.</span></div>
           <div className="summary-card"><span>Unscheduled active</span><strong>{triageSummary.unscheduledCount}</strong><span className="muted">Active tickets without a start time.</span></div>
           <div className="summary-card"><span>Missing due date</span><strong>{triageSummary.missingDueDateCount}</strong><span className="muted">Active tickets without a due date.</span></div>
-          <div className="summary-card"><span>Unassigned active</span><strong>{triageSummary.unassignedCount}</strong><span className="muted">Active tickets that still need an assigned tech.</span></div>
-          <div className="summary-card"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong><span className="muted">Active tickets without a lead tech flag.</span></div>
-          <div className="summary-card"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong><span className="muted">Active tickets with assignment, lead, schedule, and due date.</span></div>
-          <div className="summary-card"><span>Needs dispatch review</span><strong>{triageSummary.needsDispatchReviewCount}</strong><span className="muted">Active tickets missing assignment, lead, schedule, or due date context.</span></div>
+          {assignmentDataUnavailable ? (
+            <div className="summary-card"><span>Assignment readiness</span><strong>Unavailable</strong><span className="muted">Assignment data must load before assignment-dependent dispatch counts are shown.</span></div>
+          ) : (
+            <>
+              <div className="summary-card"><span>Unassigned active</span><strong>{triageSummary.unassignedCount}</strong><span className="muted">Active tickets that still need an assigned tech.</span></div>
+              <div className="summary-card"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong><span className="muted">Active tickets without a lead tech flag.</span></div>
+              <div className="summary-card"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong><span className="muted">Active tickets with assignment, lead, schedule, and due date.</span></div>
+              <div className="summary-card"><span>Needs dispatch review</span><strong>{triageSummary.needsDispatchReviewCount}</strong><span className="muted">Active tickets missing assignment, lead, schedule, or due date context.</span></div>
+            </>
+          )}
         </section>
+      ) : null}
+
+      {!isLoading && !error && assignmentDataUnavailable ? (
+        <p className="warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and dispatch-readiness filters are unavailable until assignments reload.</p>
       ) : null}
 
       <section className="filter-panel" aria-label="job ticket filters">
@@ -263,7 +297,7 @@ export function JobTicketListPage() {
         </label>
         <label className="sr-label">
           Dispatch readiness
-          <select value={dispatchReadinessFilter} onChange={(event) => setDispatchReadinessFilter(event.target.value)}>
+          <select value={dispatchReadinessFilter} onChange={(event) => setDispatchReadinessFilter(event.target.value)} disabled={assignmentDataUnavailable}>
             {dispatchReadinessFilterOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
@@ -280,10 +314,10 @@ export function JobTicketListPage() {
           <p className="muted">Showing {filteredJobs.length} of {jobs.length} tickets.</p>
           <ul className="review-list">
             {filteredJobs.map((job) => {
-              const assignments = assignmentMap[job.id] ?? []
-              const leadAssignments = assignments.filter((item) => item.isLead)
-              const leadSummary = leadAssignments.length ? leadAssignments.map(getAssignmentDisplayName).join(', ') : 'Needs lead'
-              const assignmentSummary = assignments.length ? assignments.map(getAssignmentDisplayName).join(', ') : 'Unassigned'
+              const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
+              const leadAssignments = assignments?.filter((item) => item.isLead) ?? []
+              const leadSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : leadAssignments.length ? leadAssignments.map(getAssignmentDisplayName).join(', ') : 'Needs lead'
+              const assignmentSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : assignments?.length ? assignments.map(getAssignmentDisplayName).join(', ') : 'Unassigned'
               const readiness = getDispatchReadiness(job, assignments)
 
               return (
