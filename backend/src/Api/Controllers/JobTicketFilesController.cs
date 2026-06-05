@@ -60,7 +60,7 @@ public sealed class JobTicketFilesController(IJobTicketFilesService service, ICu
                     stream,
                     request.Caption,
                     request.Visibility,
-                    request.IsInvoiceAttachment,
+                    currentUserContext.IsManager && request.IsInvoiceAttachment,
                     currentUserContext.IsManager ? request.UploadedByEmployeeId : currentUserContext.EmployeeId,
                     request.EquipmentId,
                     request.WorkEntryId),
