@@ -28,6 +28,11 @@ type DispatchEditCheck = {
   detail: string
 }
 
+type EquipmentDuplicateMatch = {
+  equipment: EquipmentDto
+  reasons: string[]
+}
+
 type ServiceLocationQuickAddDraft = {
   locationName: string
   addressLine1: string
@@ -94,6 +99,48 @@ function uniqueLabels(labels: Array<string | null | undefined>) {
 function optionalText(value: string) {
   const trimmed = value.trim()
   return trimmed ? trimmed : null
+}
+
+function normalizedMatchText(value?: string | number | null) {
+  return String(value ?? '').trim().toLowerCase()
+}
+
+function draftMatchesExisting(draftValue: string, existingValue?: string | number | null) {
+  const draft = normalizedMatchText(draftValue)
+  return Boolean(draft && draft === normalizedMatchText(existingValue))
+}
+
+function equipmentIdentifierSummary(equipment: EquipmentDto) {
+  return uniqueLabels([
+    equipment.equipmentNumber ? `Equipment # ${equipment.equipmentNumber}` : null,
+    equipment.unitNumber ? `Unit ${equipment.unitNumber}` : null,
+    equipment.serialNumber ? `Serial ${equipment.serialNumber}` : null
+  ]).join(' / ')
+}
+
+function findEquipmentDuplicateMatches(
+  draft: EquipmentQuickAddDraft,
+  equipment: EquipmentDto[],
+  customerId: string,
+  serviceLocationId: string
+): EquipmentDuplicateMatch[] {
+  if (!customerId || !serviceLocationId) {
+    return []
+  }
+
+  return equipment
+    .filter((item) => item.customerId === customerId && item.serviceLocationId === serviceLocationId)
+    .map((item) => {
+      const reasons = [
+        draftMatchesExisting(draft.name, item.name) ? 'name' : null,
+        draftMatchesExisting(draft.equipmentNumber, item.equipmentNumber) ? 'equipment number' : null,
+        draftMatchesExisting(draft.unitNumber, item.unitNumber) ? 'unit number' : null,
+        draftMatchesExisting(draft.serialNumber, item.serialNumber) ? 'serial number' : null
+      ].filter((reason): reason is string => Boolean(reason))
+
+      return { equipment: item, reasons }
+    })
+    .filter((match) => match.reasons.length > 0)
 }
 
 function quickAddErrorMessage(error: unknown, fallback: string) {
@@ -236,6 +283,11 @@ export function JobTicketEditorForm({
     return true
   }), [allEquipment, form.customerId, form.serviceLocationId])
 
+  const equipmentDuplicateMatches = useMemo(
+    () => findEquipmentDuplicateMatches(equipmentDraft, allEquipment, form.customerId, form.serviceLocationId),
+    [allEquipment, equipmentDraft, form.customerId, form.serviceLocationId]
+  )
+
   const dispatchEditChecks = useMemo(() => buildDispatchEditChecks(form), [form])
   const dispatchReadyCount = dispatchEditChecks.filter((check) => check.isReady).length
   const dispatchOpenItems = dispatchEditChecks.filter((check) => !check.isReady)
@@ -373,6 +425,14 @@ export function JobTicketEditorForm({
     }
   }
 
+  const selectExistingEquipment = (existingEquipment: EquipmentDto) => {
+    setForm((prev) => ({ ...prev, equipmentId: existingEquipment.id }))
+    setEquipmentDraft(emptyEquipmentDraft)
+    setEquipmentQuickAddOpen(false)
+    setEquipmentQuickAddError(null)
+    setEquipmentQuickAddMessage(`${existingEquipment.name} selected from existing equipment.`)
+  }
+
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     if (!form.customerId || !form.serviceLocationId || !form.billingPartyCustomerId || !form.title.trim()) {
@@ -495,6 +555,29 @@ export function JobTicketEditorForm({
             <label>Equipment Type<input value={equipmentDraft.equipmentType} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, equipmentType: e.target.value }))} /></label>
             <label>Year<input type="number" min="1900" max="2100" value={equipmentDraft.year} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, year: e.target.value }))} /></label>
           </div>
+          {equipmentDuplicateMatches.length ? (
+            <div className="warning" role="status" aria-label="duplicate equipment warning">
+              <strong>Possible duplicate equipment already exists</strong>
+              <p>Review loaded equipment for {selectedCustomer?.name ?? 'the selected customer'} / {selectedServiceLocation?.locationName ?? 'the selected service location'} before creating another record.</p>
+              <ul className="duplicate-equipment-list">
+                {equipmentDuplicateMatches.map((match) => {
+                  const identifierSummary = equipmentIdentifierSummary(match.equipment)
+                  return (
+                    <li key={match.equipment.id}>
+                      <div>
+                        <strong>{match.equipment.name}</strong>
+                        {identifierSummary ? <span className="muted">{identifierSummary}</span> : null}
+                        <span className="muted">Matched {match.reasons.join(', ')}.</span>
+                      </div>
+                      <button type="button" className="secondary-button" onClick={() => selectExistingEquipment(match.equipment)}>
+                        Use existing
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ) : null}
           <div className="row">
             <button type="button" onClick={addEquipment} disabled={isAddingEquipment}>
               {isAddingEquipment ? 'Adding Equipment...' : 'Add Equipment'}

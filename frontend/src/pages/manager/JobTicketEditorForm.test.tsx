@@ -280,6 +280,48 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
     expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
   })
 
+  it('warns and selects existing equipment when quick-add matches loaded equipment', () => {
+    const existingEquipment = [
+      {
+        id: 'eq9',
+        customerId: 'c1',
+        serviceLocationId: 's1',
+        name: 'Pump 9',
+        equipmentNumber: 'EQ-9',
+        unitNumber: 'U-9',
+        serialNumber: 'SN-9'
+      }
+    ] as any
+
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, equipmentId: null }}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={existingEquipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Pump 9' } })
+    fireEvent.change(screen.getByLabelText('Equipment Number'), { target: { value: 'eq-9' } })
+    fireEvent.change(screen.getByLabelText('Serial Number'), { target: { value: 'sn-9' } })
+
+    expect(screen.getByLabelText('duplicate equipment warning')).toBeInTheDocument()
+    expect(screen.getByText('Possible duplicate equipment already exists')).toBeInTheDocument()
+    expect(screen.getByText('Equipment # EQ-9 / Unit U-9 / Serial SN-9')).toBeInTheDocument()
+    expect(screen.getByText('Matched name, equipment number, serial number.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use existing' }))
+
+    expect(masterDataApi.createEquipment).not.toHaveBeenCalled()
+    expect(screen.getByText('Pump 9 selected from existing equipment.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Equipment')).toHaveValue('eq9')
+    expect(screen.queryByLabelText('duplicate equipment warning')).not.toBeInTheDocument()
+  })
+
   it('quick-adds a job-type reference value and submits it with the ticket', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined)
 
