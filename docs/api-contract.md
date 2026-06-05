@@ -39,6 +39,7 @@
 - Manager/Admin detail/edit surfaces now provide inline status transition review, disable no-op status submissions, surface API validation messages, keep archive confirmation explicit as a soft-delete/archive workflow rather than hard delete, and summarize operational closeout readiness for invoice handoff.
 - Closeout/readiness review uses existing job-ticket, assignment, work-entry, time-entry, parts, file/photo, customer, service-location, and equipment data. It does not add endpoints or change request/response DTOs.
 - Job-ticket-first UI work should keep those existing fields visible and editable rather than introducing a separate workflow for the same context.
+- Job-ticket part usage that adjusts inventory writes matching `ManualAdjustment` inventory transaction history for the usage deduction. Archiving a job-ticket part with inventory restore writes the matching positive `ManualAdjustment` history row. This keeps stock visibility history aligned with existing `Part.QuantityOnHand` behavior and does not add endpoints, DTO fields, schema, migrations, or inventory-expansion scope.
 
 ## Reporting And Time Review (Current Main Notes)
 - Existing `/api/reports/*` endpoints remain the reporting API surface. Reports polish stays client-side by improving loaded-row review context, filter reset behavior, export-friendly table presentation, and CSV export from already-loaded rows.
@@ -106,6 +107,7 @@ All inventory endpoints require the existing `ManagerOrAdmin` authorization poli
 - `quantityDelta` must not be zero.
 - `reason` is required.
 - Successful adjustments create an `InventoryTransaction` row with `TransactionType = ManualAdjustment` and then recalculate `Part.QuantityOnHand` from persisted inventory history for that part.
+- Job-ticket part usage and archive-restore inventory adjustments also use `TransactionType = ManualAdjustment` rows so inventory transaction history remains consistent with parts-on-ticket stock changes.
 
 ### Inventory transaction shape
 - `InventoryTransactionDto`: `id`, `stockLocationId`, `stockLocationName`, `partId`, `partNumber`, `partName`, `transactionType`, `quantityDelta`, `occurredAtUtc`, `reason`, `notes`, `purchaseOrderNumber`
