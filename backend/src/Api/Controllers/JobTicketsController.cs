@@ -181,7 +181,7 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
     }
 
     [HttpPost("{jobTicketId:guid}/parts")]
-    [Authorize(Policy = "AssignedEmployeeOrManager")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketPartDto>> AddPartAsync(Guid jobTicketId, [FromBody] AddJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -196,7 +196,7 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
     }
 
     [HttpPost("{jobTicketId:guid}/parts/quick-add")]
-    [Authorize(Policy = "AssignedEmployeeOrManager")]
+    [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketPartDto>> QuickAddPartAsync(Guid jobTicketId, [FromBody] QuickAddJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         try
