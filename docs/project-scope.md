@@ -41,7 +41,7 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 - Manager/Admin Admin-only user management workflow at `/manage/users`.
 - Parts usage history visibility with cautious non-recommendation wording.
 - Purchasing workbench plus dedicated purchase-order workflow, receiving progress, vendor invoice tracking, landed-cost recording, close validation, and archive/unarchive behavior.
-- Supporting inventory foundation already merged on `main` for stock locations, inventory history, stock visibility, manual adjustments, and receipt-posted inventory transactions.
+- Supporting inventory foundation already merged on `main` for stock locations, inventory history, stock visibility, manual adjustments, receipt-posted inventory transactions, and job-ticket part usage/restore history when ticket parts adjust inventory.
 
 ## Selected Next Lane
 Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first workflow lane.
@@ -97,6 +97,8 @@ New work should stay centered on the job-ticket product surface:
 - targeted stabilization that protects those workflows.
 
 Supporting purchasing and inventory code already exists on `main`, but further expansion in those domains is not the active product direction.
+
+Parts-on-ticket inventory adjustments are allowed to keep the existing inventory foundation internally consistent. Recording job-ticket part usage and archive-restore adjustments as inventory history is a stabilization fix, not an approval for broader inventory expansion.
 
 Reports and time-review polish are part of the protected baseline: loaded-row filters, export-friendly review tables, visible-row CSV export, and clearer labor-snapshot wording should remain intact after the closeout/readiness lane.
 

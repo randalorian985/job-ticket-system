@@ -42,7 +42,7 @@ The project is centered on the original job-ticket workflow:
 - Admin-only user management at `/manage/users`.
 - Parts usage history visibility with cautious, non-recommendation wording.
 - Purchase-order and vendor-cost workflows already merged on `main`.
-- Supporting inventory foundation already merged on `main` for stock locations, inventory history, stock visibility, and manual adjustments.
+- Supporting inventory foundation already merged on `main` for stock locations, inventory history, stock visibility, manual adjustments, and job-ticket part usage/restore history when ticket parts adjust inventory.
 
 ## Scope Boundary
 Supporting purchasing and inventory capabilities already exist on `main`, but they are not the product's primary growth path.
