@@ -100,5 +100,5 @@ public sealed class JobTicketAssignmentValidatingService(ApplicationDbContext db
         => inner.RejectPartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
 
     public Task<JobTicketPartDto?> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default)
-        => inner.ArchivePartAsync(jobTicketId, request: request, jobTicketPartId: jobTicketPartId, cancellationToken: cancellationToken);
+        => inner.ArchivePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
 }
