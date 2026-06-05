@@ -48,8 +48,25 @@ type EquipmentQuickAddDraft = {
   year: string
 }
 
+type EquipmentDuplicateCheckDraft = Pick<EquipmentQuickAddDraft, 'name' | 'equipmentNumber' | 'unitNumber' | 'serialNumber'>
+
+export type EquipmentDuplicateWarning = {
+  equipment: EquipmentDto
+  matchedFields: string[]
+}
+
 const activeDispatchStatuses = new Set([2, 3, 4, 5, 6])
 const defaultJobTypeOptions = ['Repair', 'Inspection', 'Warranty', 'Install', 'Preventive Maintenance']
+const equipmentDuplicateMatchFields: Array<{
+  label: string
+  draftKey: keyof EquipmentDuplicateCheckDraft
+  equipmentKey: keyof EquipmentDto
+}> = [
+  { label: 'name', draftKey: 'name', equipmentKey: 'name' },
+  { label: 'equipment number', draftKey: 'equipmentNumber', equipmentKey: 'equipmentNumber' },
+  { label: 'unit number', draftKey: 'unitNumber', equipmentKey: 'unitNumber' },
+  { label: 'serial number', draftKey: 'serialNumber', equipmentKey: 'serialNumber' }
+]
 
 const emptyServiceLocationDraft: ServiceLocationQuickAddDraft = {
   locationName: '',
@@ -94,6 +111,28 @@ function uniqueLabels(labels: Array<string | null | undefined>) {
 function optionalText(value: string) {
   const trimmed = value.trim()
   return trimmed ? trimmed : null
+}
+
+function normalizedText(value: string | null | undefined) {
+  return value?.trim().toLowerCase() ?? ''
+}
+
+export function findEquipmentQuickAddDuplicates(
+  draft: EquipmentDuplicateCheckDraft,
+  equipment: EquipmentDto[]
+): EquipmentDuplicateWarning[] {
+  return equipment
+    .map((item) => {
+      const matchedFields = equipmentDuplicateMatchFields
+        .filter(({ draftKey, equipmentKey }) => {
+          const draftValue = normalizedText(draft[draftKey])
+          return Boolean(draftValue) && draftValue === normalizedText(item[equipmentKey] as string | null | undefined)
+        })
+        .map(({ label }) => label)
+
+      return { equipment: item, matchedFields }
+    })
+    .filter((warning) => warning.matchedFields.length > 0)
 }
 
 function quickAddErrorMessage(error: unknown, fallback: string) {
@@ -240,6 +279,16 @@ export function JobTicketEditorForm({
   const dispatchReadyCount = dispatchEditChecks.filter((check) => check.isReady).length
   const dispatchOpenItems = dispatchEditChecks.filter((check) => !check.isReady)
   const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'No edit-side dispatch blockers are visible from the current ticket fields.'
+  const equipmentQuickAddDuplicateWarnings = useMemo(() => {
+    if (!form.customerId || !form.serviceLocationId) {
+      return []
+    }
+
+    return findEquipmentQuickAddDuplicates(
+      equipmentDraft,
+      allEquipment.filter((item) => item.customerId === form.customerId && item.serviceLocationId === form.serviceLocationId)
+    )
+  }, [allEquipment, equipmentDraft, form.customerId, form.serviceLocationId])
 
   useEffect(() => {
     if (initial.jobType) {
@@ -495,6 +544,18 @@ export function JobTicketEditorForm({
             <label>Equipment Type<input value={equipmentDraft.equipmentType} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, equipmentType: e.target.value }))} /></label>
             <label>Year<input type="number" min="1900" max="2100" value={equipmentDraft.year} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, year: e.target.value }))} /></label>
           </div>
+          {equipmentQuickAddDuplicateWarnings.length ? (
+            <div className="warning" role="status" aria-label="possible duplicate equipment warning">
+              <strong>Possible duplicate equipment</strong>
+              <ul>
+                {equipmentQuickAddDuplicateWarnings.map((warning) => (
+                  <li key={warning.equipment.id}>
+                    {warning.equipment.name}{warning.equipment.isArchived ? ' (archived)' : ''}: matches {warning.matchedFields.join(', ')}.
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <div className="row">
             <button type="button" onClick={addEquipment} disabled={isAddingEquipment}>
               {isAddingEquipment ? 'Adding Equipment...' : 'Add Equipment'}
