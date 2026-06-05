@@ -47,6 +47,7 @@ describe('ManagerDashboardPage', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading operations summary')
     expect(await screen.findByLabelText('operations summary')).toHaveTextContent('Open jobs')
+    expect(screen.getByRole('link', { name: 'Create Job Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
     expect(screen.getByText('Assigned')).toBeInTheDocument()
     expect(screen.getByText('In progress')).toBeInTheDocument()
     expect(screen.getByText('Waiting on parts')).toBeInTheDocument()

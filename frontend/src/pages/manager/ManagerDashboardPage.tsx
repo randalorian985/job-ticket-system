@@ -119,9 +119,12 @@ export function ManagerDashboardPage() {
       </article>
 
       <article className="card stack" aria-label="operations summary">
-        <div className="row">
+        <div className="page-heading">
           <h3>Job Summary</h3>
-          <Link to="/manage/job-tickets">Review jobs</Link>
+          <div className="row dashboard-actions">
+            <Link className="button-link" to="/manage/job-tickets/new">Create Job Ticket</Link>
+            <Link to="/manage/job-tickets">Review jobs</Link>
+          </div>
         </div>
         {isLoadingSummary ? <p className="muted" role="status">Loading operations summary…</p> : null}
         {summaryError ? <p className="error">{summaryError}</p> : null}

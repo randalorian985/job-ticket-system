@@ -22,7 +22,7 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
-Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin dashboard and job-ticket list dispatch-readiness rollups, per-ticket readiness cues, named list-row and detail assignment/lead ownership from assignment responses, next-step dispatch fixes for missing list/detail/edit readiness context, dispatch-readiness filtering, active-status-aware detail dispatch-readiness checklist cues with employee-record and ID fallback for assignment names, active-status-aware edit-side dispatch-readiness cues, and active-status-aware Employee assigned-job list/detail field-context cues with next-fix and pre-work guidance using existing job-ticket and assignment APIs.
+Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin dashboard and job-ticket list dispatch-readiness rollups, per-ticket readiness cues, named list-row and detail assignment/lead ownership from assignment responses, next-step dispatch fixes for missing list/detail/edit readiness context, dispatch-readiness filtering, active-status-aware detail dispatch-readiness checklist cues with employee-record and ID fallback for assignment names, active-status-aware edit-side dispatch-readiness cues, Manager/Admin dashboard create-ticket navigation, focused job-ticket create/edit quick-add for job type, service location, and equipment context, and active-status-aware Employee assigned-job list/detail field-context cues with next-fix and pre-work guidance using existing job-ticket, assignment, and master-data APIs.
 
 Test environment setup is now part of the maintained project baseline: docs cover the opt-in Admin bootstrap for empty local/test databases, full pilot seed setup, scheduled-runner workarounds, Docker SQL authentication, custom SQL Server connection strings, named instances, and Windows integrated security guidance.
 
@@ -45,6 +45,7 @@ Do not steer the project toward a general ERP build-out.
 - Phase 4B pilot workflow polish.
 - Opt-in local/test Admin bootstrap for empty databases, plus maintained setup docs for test credentials, seeded pilot data, custom connection strings, integrated security, and scheduled-runner workarounds.
 - Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, assignment/dispatch review cues, edit-side dispatch-readiness cues, detail dispatch-readiness checklist cues, invoice-readiness cues, and status/archive review clarity.
+- Manager/Admin dashboard create-ticket shortcut and job-ticket create/edit quick-add for job type, service-location, and equipment context, using existing master-data APIs for persisted service-location and equipment records.
 - Manager/Admin job-ticket list, detail, and edit readiness surfaces now show the next dispatch fix for missing assignment, lead-tech, schedule, due-date, active dispatch status, or job-instruction context using existing loaded data, with list and detail assignment labels resolving employee names from assignment responses when available.
 - Manager/Admin job-ticket workspace UI polish for shell navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing.
 - Manager/Admin dashboard and job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, schedule, or due-date context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets on the job-ticket list.
@@ -77,12 +78,13 @@ Current implementation in this lane:
 - Manager/Admin job-ticket detail surfaces show an active-status-aware dispatch-readiness checklist and next dispatch fix for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names from assignment responses with Admin-loaded employee-record and ID fallback, and treat assignment-load failures as unavailable assignment data instead of empty assignment lists;
 - Manager/Admin job-ticket edit surfaces show whether active dispatch status, customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
 - Manager/Admin job-ticket edit surfaces now identify the first next dispatch fix when edit-side readiness context is missing, including moving tickets back into an active dispatch status before dispatch review;
+- Manager/Admin dashboard now links directly to `/manage/job-tickets/new`, and Manager/Admin job-ticket create/edit surfaces can quick-add a job type, service location, or equipment record, show validation/error and success feedback, and select the newly added value back into the current ticket form;
 - Manager/Admin job-ticket workspace surfaces have clearer navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing for faster scanning;
 - Employee assigned-job list rows show due-date, active field-work status, and next field-context fix cues from existing list data, and Employee job-ticket detail surfaces show field-context cues for active field-work status, scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions, identify the first next field-context fix when manager review is still needed, and show clear pre-work guidance;
 - this implementation uses existing job-ticket list/detail data, existing edit DTO fields, and existing assignment endpoints.
 
 Next coherent implementation slice:
-- after the current dispatch next-step UX PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap from the current main branch and active PR state;
+- after the current Manager/Admin job-ticket creation quick-add PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap from the current main branch and active PR state;
 - keep any edit, detail, employee, or status warnings tied to the existing job-ticket fields and assignment endpoints;
 - add focused frontend tests that cover ready and not-ready dispatch-review states;
 - update README, project scope, and API contract only if the implementation changes visible behavior or API expectations.
@@ -91,6 +93,7 @@ Allowed implementation scope:
 - clearer Manager/Admin assignment review and dispatch-readiness cues;
 - clearer visibility for assigned employees, lead technician context, schedule timing, due dates, customer, service location, and equipment context;
 - validation and error UX around assignment, schedule, and required job-ticket context;
+- focused Manager/Admin create/edit quick-add for job-ticket form context values, preserving customer/service-location/equipment relationships and using existing master-data APIs where possible;
 - job-ticket detail/list/edit polish that helps managers see whether a ticket is ready to dispatch;
 - employee-facing context improvements for assigned jobs when they rely on existing job-ticket, assignment, schedule, customer, service-location, equipment, notes, parts, files/photos, and time-entry data;
 - focused tests and docs updates.
@@ -160,6 +163,7 @@ Not included in the implementation PR:
 - continue avoiding purchasing or inventory expansion as the default next move.
 - parts-on-ticket inventory-history consistency fixes are allowed when they keep existing job-ticket part usage and existing inventory history aligned; they do not approve broader inventory expansion.
 - parts-on-ticket quick-add is allowed when it stays ticket-level: required part number, optional master-part match, unlisted one-off part capture, cost/billable price tracking, and office-order request context. It does not approve purchase-order expansion, receiving, vendor invoice tracking, landed cost, replenishment, truck/warehouse inventory, recommendations, AI/scoring, or automatic compatibility decisions.
+- job-ticket create/edit quick-add is allowed when it stays inside the current Manager/Admin ticket form context: job type reference values, service locations through existing service-location APIs, and equipment through existing equipment APIs. It does not approve broad master-data screens, purchasing expansion, receiving, inventory expansion, recommendations, AI/scoring, accounting, payment, or invoice-generation behavior.
 
 ### Explicitly still not approved
 - accounting or invoice generation;

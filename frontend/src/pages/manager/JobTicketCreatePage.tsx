@@ -31,10 +31,10 @@ export function JobTicketCreatePage() {
 
   useEffect(() => {
     Promise.all([masterDataApi.listCustomers(), masterDataApi.listServiceLocations(), masterDataApi.listEquipment()])
-      .then(([c, l, e]) => {
-        setCustomers(c)
-        setLocations(l)
-        setEquipment(e)
+      .then(([customerResponse, locationResponse, equipmentResponse]) => {
+        setCustomers(customerResponse)
+        setLocations(locationResponse)
+        setEquipment(equipmentResponse)
       })
       .catch(() => setError('Unable to load create form data.'))
   }, [])
@@ -52,5 +52,21 @@ export function JobTicketCreatePage() {
     }
   }
 
-  return <section className="card stack"><p><Link to="/manage/job-tickets">← Back to Job Tickets</Link></p><h2>Create Job Ticket</h2>{error ? <p className="error">{error}</p> : null}<JobTicketEditorForm initial={defaultForm} customers={customers} serviceLocations={locations} equipment={equipment} onSubmit={onSubmit} submitLabel="Create Ticket" /></section>
+  return (
+    <section className="card stack">
+      <p><Link to="/manage/job-tickets">Back to Job Tickets</Link></p>
+      <h2>Create Job Ticket</h2>
+      {error ? <p className="error">{error}</p> : null}
+      <JobTicketEditorForm
+        initial={defaultForm}
+        customers={customers}
+        serviceLocations={locations}
+        equipment={equipment}
+        onSubmit={onSubmit}
+        onServiceLocationCreated={(created) => setLocations((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
+        onEquipmentCreated={(created) => setEquipment((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
+        submitLabel="Create Ticket"
+      />
+    </section>
+  )
 }

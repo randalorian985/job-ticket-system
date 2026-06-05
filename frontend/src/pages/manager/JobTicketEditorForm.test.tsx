@@ -1,7 +1,16 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '../../api/httpClient'
+import { masterDataApi } from '../../api/masterDataApi'
 import type { CreateJobTicketDto } from '../../types'
 import { buildDispatchEditChecks, JobTicketEditorForm } from './JobTicketEditorForm'
+
+vi.mock('../../api/masterDataApi', () => ({
+  masterDataApi: {
+    createEquipment: vi.fn(),
+    createServiceLocation: vi.fn()
+  }
+}))
 
 const baseTicket: CreateJobTicketDto = {
   customerId: 'c1',
@@ -38,6 +47,10 @@ const equipment = [
 ] as any
 
 describe('JobTicketEditorForm dispatch edit readiness review', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   afterEach(() => cleanup())
 
   it('summarizes ready edit-side dispatch context', () => {
@@ -165,5 +178,174 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
         detail: 'Move the ticket into an active dispatch status before dispatch review.'
       })
     ]))
+  })
+
+  it('quick-adds service locations for the selected customer and selects the new location', async () => {
+    vi.mocked(masterDataApi.createServiceLocation).mockResolvedValue({
+      id: 's2',
+      customerId: 'c1',
+      companyName: 'Acme',
+      locationName: 'North Shop',
+      addressLine1: '55 North St',
+      city: 'Waco',
+      state: 'TX',
+      postalCode: '76701',
+      country: 'USA',
+      isActive: true
+    })
+
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, serviceLocationId: '', equipmentId: null }}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add location' }))
+    fireEvent.change(screen.getByLabelText('Location Name'), { target: { value: 'North Shop' } })
+    fireEvent.change(screen.getByLabelText('Street Address'), { target: { value: '55 North St' } })
+    fireEvent.change(screen.getByLabelText('City'), { target: { value: 'Waco' } })
+    fireEvent.change(screen.getByLabelText('State'), { target: { value: 'TX' } })
+    fireEvent.change(screen.getByLabelText('Postal Code'), { target: { value: '76701' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Location' }))
+
+    await waitFor(() => expect(masterDataApi.createServiceLocation).toHaveBeenCalledWith(expect.objectContaining({
+      customerId: 'c1',
+      companyName: 'Acme',
+      locationName: 'North Shop',
+      addressLine1: '55 North St',
+      city: 'Waco',
+      state: 'TX',
+      postalCode: '76701'
+    })))
+    expect(await screen.findByText('North Shop added and selected.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Service Location')).toHaveValue('s2')
+  })
+
+  it('quick-adds equipment in the selected customer and service-location context', async () => {
+    vi.mocked(masterDataApi.createEquipment).mockResolvedValue({
+      id: 'eq2',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      ownerCustomerId: 'c1',
+      responsibleBillingCustomerId: 'c1',
+      name: 'Pump 9',
+      equipmentNumber: 'EQ-9',
+      manufacturer: 'GCCS',
+      modelNumber: 'M-9',
+      serialNumber: 'SN-9',
+      equipmentType: 'Pump',
+      year: 2025
+    })
+
+    render(
+      <JobTicketEditorForm
+        initial={baseTicket}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Pump 9' } })
+    fireEvent.change(screen.getByLabelText('Equipment Number'), { target: { value: 'EQ-9' } })
+    fireEvent.change(screen.getByLabelText('Manufacturer'), { target: { value: 'GCCS' } })
+    fireEvent.change(screen.getByLabelText('Model Number'), { target: { value: 'M-9' } })
+    fireEvent.change(screen.getByLabelText('Serial Number'), { target: { value: 'SN-9' } })
+    fireEvent.change(screen.getByLabelText('Equipment Type'), { target: { value: 'Pump' } })
+    fireEvent.change(screen.getByLabelText('Year'), { target: { value: '2025' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
+
+    await waitFor(() => expect(masterDataApi.createEquipment).toHaveBeenCalledWith(expect.objectContaining({
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      ownerCustomerId: 'c1',
+      responsibleBillingCustomerId: 'c1',
+      name: 'Pump 9',
+      equipmentNumber: 'EQ-9',
+      manufacturer: 'GCCS',
+      modelNumber: 'M-9',
+      serialNumber: 'SN-9',
+      equipmentType: 'Pump',
+      year: 2025
+    })))
+    expect(await screen.findByText('Pump 9 added and selected.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
+  })
+
+  it('quick-adds a job-type reference value and submits it with the ticket', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+
+    render(
+      <JobTicketEditorForm
+        initial={baseTicket}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={onSubmit}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add job type' }))
+    fireEvent.change(screen.getByLabelText('New Job Type'), { target: { value: 'Emergency Repair' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Job Type' }))
+    expect(screen.getByText('Emergency Repair added and selected.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Job Type')).toHaveValue('Emergency Repair')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Ticket' }))
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      jobType: 'Emergency Repair'
+    })))
+  })
+
+  it('validates equipment quick-add context before calling the API', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, customerId: '', serviceLocationId: '', billingPartyCustomerId: '', equipmentId: null }}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Pump 9' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
+
+    expect(screen.getByText('Select a customer and service location before quick-adding equipment.')).toBeInTheDocument()
+    expect(masterDataApi.createEquipment).not.toHaveBeenCalled()
+  })
+
+  it('surfaces API validation errors from equipment quick-add', async () => {
+    vi.mocked(masterDataApi.createEquipment).mockRejectedValue(new ApiError('Serial number is already assigned.', 400))
+
+    render(
+      <JobTicketEditorForm
+        initial={baseTicket}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Truck 8' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
+
+    expect(await screen.findByText('Serial number is already assigned.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Equipment')).toHaveValue('eq1')
   })
 })

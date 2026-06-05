@@ -795,6 +795,8 @@ export function JobTicketDetailPage() {
               serviceLocations={locations}
               equipment={equipment}
               submitLabel="Save Ticket"
+              onServiceLocationCreated={(created) => setLocations((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
+              onEquipmentCreated={(created) => setEquipment((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
               onSubmit={async (payload) => {
                 if (!jobTicketId) return;
 
