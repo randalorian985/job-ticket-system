@@ -143,6 +143,26 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Next dispatch fix: Assign at least one employee before dispatch.')).toBeInTheDocument()
   })
 
+  it('does not treat assignment load failures as unassigned tickets or ready dispatch data', async () => {
+    vi.mocked(jobTicketsApi.listAssignments).mockRejectedValue(new Error('assignments unavailable'))
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText(/Assignment data could not be loaded for one or more tickets/)).toBeInTheDocument()
+    expect(screen.getByText('Assignment readiness')).toBeInTheDocument()
+    expect(screen.getByText('Assignment data must load before assignment-dependent dispatch counts are shown.')).toBeInTheDocument()
+    expect(screen.queryByText('Unassigned active')).not.toBeInTheDocument()
+    expect(screen.queryByText('Needs lead')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Dispatch readiness')).toBeDisabled()
+    expect(screen.getByText('Assigned: Assignment data unavailable · Lead: Assignment data unavailable')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch readiness: Assignment data unavailable · Assignment data could not be loaded for this ticket.')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch fix: Reload assignments before using dispatch readiness to make assignment decisions.')).toBeInTheDocument()
+  })
+
   it('filters by dispatch readiness from the loaded ticket and assignment data', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Ready compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
