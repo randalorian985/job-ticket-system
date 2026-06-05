@@ -280,46 +280,56 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
     expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
   })
 
-  it('warns and selects existing equipment when quick-add matches loaded equipment', () => {
-    const existingEquipment = [
-      {
-        id: 'eq9',
-        customerId: 'c1',
-        serviceLocationId: 's1',
-        name: 'Pump 9',
-        equipmentNumber: 'EQ-9',
-        unitNumber: 'U-9',
-        serialNumber: 'SN-9'
-      }
-    ] as any
+  it('warns about possible duplicate equipment without blocking quick-add', async () => {
+    vi.mocked(masterDataApi.createEquipment).mockResolvedValue({
+      id: 'eq2',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      ownerCustomerId: 'c1',
+      responsibleBillingCustomerId: 'c1',
+      name: 'Truck 7 - Replacement',
+      equipmentNumber: 'EQ-7B',
+      unitNumber: 'Unit-7',
+      serialNumber: 'SN-7'
+    })
 
     render(
       <JobTicketEditorForm
-        initial={{ ...baseTicket, equipmentId: null }}
+        initial={baseTicket}
         customers={customers}
         serviceLocations={serviceLocations}
-        equipment={existingEquipment}
+        equipment={[{
+          id: 'eq1',
+          customerId: 'c1',
+          serviceLocationId: 's1',
+          name: 'Truck 7',
+          equipmentNumber: 'EQ-7',
+          unitNumber: 'Unit-7',
+          serialNumber: 'SN-7'
+        }] as any}
         submitLabel="Save Ticket"
         onSubmit={vi.fn()}
       />
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
-    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Pump 9' } })
-    fireEvent.change(screen.getByLabelText('Equipment Number'), { target: { value: 'eq-9' } })
-    fireEvent.change(screen.getByLabelText('Serial Number'), { target: { value: 'sn-9' } })
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: ' truck 7 ' } })
+    fireEvent.change(screen.getByLabelText('Serial Number'), { target: { value: 'sn-7' } })
 
-    expect(screen.getByLabelText('duplicate equipment warning')).toBeInTheDocument()
-    expect(screen.getByText('Possible duplicate equipment already exists')).toBeInTheDocument()
-    expect(screen.getByText('Equipment # EQ-9 / Unit U-9 / Serial SN-9')).toBeInTheDocument()
-    expect(screen.getByText('Matched name, equipment number, serial number.')).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'possible duplicate equipment warning' })).toBeInTheDocument()
+    expect(screen.getByText('Truck 7: matches name, serial number.')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Use existing' }))
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Truck 7 - Replacement' } })
+    fireEvent.change(screen.getByLabelText('Equipment Number'), { target: { value: 'EQ-7B' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
 
-    expect(masterDataApi.createEquipment).not.toHaveBeenCalled()
-    expect(screen.getByText('Pump 9 selected from existing equipment.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Equipment')).toHaveValue('eq9')
-    expect(screen.queryByLabelText('duplicate equipment warning')).not.toBeInTheDocument()
+    await waitFor(() => expect(masterDataApi.createEquipment).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Truck 7 - Replacement',
+      equipmentNumber: 'EQ-7B',
+      serialNumber: 'sn-7'
+    })))
+    expect(await screen.findByText('Truck 7 - Replacement added and selected.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
   })
 
   it('quick-adds a job-type reference value and submits it with the ticket', async () => {
