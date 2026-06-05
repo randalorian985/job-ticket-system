@@ -126,16 +126,42 @@ textarea:focus-visible {
 }
 
 .warning {
-  color: #92400e;
-  background: #fffbeb;
-  border: 1px solid rgba(180, 83, 9, 0.35);
-  padding: 0.75rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
   border-radius: 8px;
+  color: #9a3412;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
 }
 
-.warning ul {
-  margin: 0.4rem 0 0;
-  padding-left: 1.25rem;
+.warning p {
+  margin: 0;
+}
+
+.duplicate-equipment-list {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.duplicate-equipment-list li {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 0.65rem;
+}
+
+.duplicate-equipment-list li > div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
 }
 
 .desktop-shell {
@@ -293,7 +319,8 @@ pre {
 }
 
 @media (max-width: 720px) {
-  .field-with-action {
+  .field-with-action,
+  .duplicate-equipment-list li {
     grid-template-columns: 1fr;
   }
 }

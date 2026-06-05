@@ -28,6 +28,11 @@ type DispatchEditCheck = {
   detail: string
 }
 
+type EquipmentDuplicateMatch = {
+  equipment: EquipmentDto
+  reasons: string[]
+}
+
 type ServiceLocationQuickAddDraft = {
   locationName: string
   addressLine1: string
@@ -133,6 +138,22 @@ export function findEquipmentQuickAddDuplicates(
       return { equipment: item, matchedFields }
     })
     .filter((warning) => warning.matchedFields.length > 0)
+}
+
+function findEquipmentDuplicateMatches(
+  draft: EquipmentDuplicateCheckDraft,
+  equipment: EquipmentDto[],
+  customerId: string,
+  serviceLocationId: string
+): EquipmentDuplicateMatch[] {
+  if (!customerId || !serviceLocationId) {
+    return []
+  }
+
+  return findEquipmentQuickAddDuplicates(
+    draft,
+    equipment.filter((item) => item.customerId === customerId && item.serviceLocationId === serviceLocationId)
+  ).map((warning) => ({ equipment: warning.equipment, reasons: warning.matchedFields }))
 }
 
 function quickAddErrorMessage(error: unknown, fallback: string) {
@@ -274,6 +295,11 @@ export function JobTicketEditorForm({
 
     return true
   }), [allEquipment, form.customerId, form.serviceLocationId])
+
+  const equipmentDuplicateMatches = useMemo(
+    () => findEquipmentDuplicateMatches(equipmentDraft, allEquipment, form.customerId, form.serviceLocationId),
+    [allEquipment, equipmentDraft, form.customerId, form.serviceLocationId]
+  )
 
   const dispatchEditChecks = useMemo(() => buildDispatchEditChecks(form), [form])
   const dispatchReadyCount = dispatchEditChecks.filter((check) => check.isReady).length
@@ -420,6 +446,14 @@ export function JobTicketEditorForm({
     } finally {
       setIsAddingEquipment(false)
     }
+  }
+
+  const selectExistingEquipment = (existingEquipment: EquipmentDto) => {
+    setForm((prev) => ({ ...prev, equipmentId: existingEquipment.id }))
+    setEquipmentDraft(emptyEquipmentDraft)
+    setEquipmentQuickAddOpen(false)
+    setEquipmentQuickAddError(null)
+    setEquipmentQuickAddMessage(`${existingEquipment.name} selected from existing equipment.`)
   }
 
   const submit = async (event: FormEvent) => {
