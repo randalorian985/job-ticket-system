@@ -4,7 +4,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../../api/filesApi'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
-import { partsApi } from '../../../api/partsApi'
 import { timeEntriesApi } from '../../../api/timeEntriesApi'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { JobDetailPage } from '../JobDetailPage'
@@ -36,15 +35,52 @@ vi.mock('../../../api/timeEntriesApi', () => ({
   }
 }))
 
-vi.mock('../../../api/partsApi', () => ({
-  partsApi: {
-    list: vi.fn()
-  }
-}))
-
 vi.mock('../../../features/auth/AuthContext', () => ({
   useAuth: vi.fn()
 }))
+
+const mockEmployeeAuth = () => {
+  vi.mocked(useAuth).mockReturnValue({
+    user: {
+      employeeId: 'employee-1',
+      username: 'employee',
+      firstName: 'Casey',
+      lastName: 'Tech',
+      role: 'Employee',
+      email: 'employee@example.com'
+    },
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn()
+  })
+}
+
+const mockJob = (overrides = {}) => {
+  vi.mocked(jobTicketsApi.get).mockResolvedValue({
+    id: 'job-1',
+    ticketNumber: 'JT-2026-000101',
+    title: 'Hydraulic Repair',
+    description: 'Fix valve leak',
+    status: 4,
+    priority: 3,
+    customerId: 'customer-1',
+    serviceLocationId: 'location-1',
+    billingPartyCustomerId: 'customer-1',
+    equipmentId: 'equipment-1',
+    scheduledStartAtUtc: '2026-06-01T15:00:00Z',
+    dueAtUtc: '2026-06-02T20:00:00Z',
+    ...overrides
+  })
+}
+
+const renderJobDetail = () =>
+  render(
+    <MemoryRouter future={routerFuture} initialEntries={['/jobs/job-1']}>
+      <Routes>
+        <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
+      </Routes>
+    </MemoryRouter>
+  )
 
 describe('JobDetailPage', () => {
   beforeEach(() => {
@@ -53,34 +89,8 @@ describe('JobDetailPage', () => {
   })
 
   it('renders ticket details, work entries, parts, files, and ready field context', async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: {
-        employeeId: 'employee-1',
-        username: 'employee',
-        firstName: 'Casey',
-        lastName: 'Tech',
-        role: 'Employee',
-        email: 'employee@example.com'
-      },
-      isLoading: false,
-      login: vi.fn(),
-      logout: vi.fn()
-    })
-
-    vi.mocked(jobTicketsApi.get).mockResolvedValue({
-      id: 'job-1',
-      ticketNumber: 'JT-2026-000101',
-      title: 'Hydraulic Repair',
-      description: 'Fix valve leak',
-      status: 4,
-      priority: 3,
-      customerId: 'customer-1',
-      serviceLocationId: 'location-1',
-      billingPartyCustomerId: 'customer-1',
-      equipmentId: 'equipment-1',
-      scheduledStartAtUtc: '2026-06-01T15:00:00Z',
-      dueAtUtc: '2026-06-02T20:00:00Z'
-    })
+    mockEmployeeAuth()
+    mockJob()
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([
       {
         id: 'work-1',
@@ -123,22 +133,16 @@ describe('JobDetailPage', () => {
         caption: 'Before photo'
       }
     ])
-    vi.mocked(partsApi.list).mockResolvedValue([])
     vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
       throw { status: 404 }
     })
 
-    render(
-      <MemoryRouter future={routerFuture} initialEntries={['/jobs/job-1']}>
-        <Routes>
-          <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
-        </Routes>
-      </MemoryRouter>
-    )
+    renderJobDetail()
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
     expect(screen.getByText('Status: In Progress')).toBeInTheDocument()
     expect(screen.getByText('Priority: High')).toBeInTheDocument()
+    expect(screen.queryByText(/Billing Party ID/)).not.toBeInTheDocument()
     expect(screen.getByText(/Inspected hydraulic lines/)).toBeInTheDocument()
     expect(screen.getByText(/P-1 - Valve kit/)).toBeInTheDocument()
     expect(screen.getByText(/before.jpg/)).toBeInTheDocument()
@@ -153,30 +157,110 @@ describe('JobDetailPage', () => {
     expect(screen.getByText('Field context is ready for clock-in.')).toBeInTheDocument()
   })
 
-  it('shows clock-out state, upload UI, and missing field context review', async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: {
-        employeeId: 'employee-1',
-        username: 'employee',
-        firstName: 'Casey',
-        lastName: 'Tech',
-        role: 'Employee',
-        email: 'employee@example.com'
-      },
-      isLoading: false,
-      login: vi.fn(),
-      logout: vi.fn()
+  it('lets technicians add a part used by name without pricing, billing, or part-number fields', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
+      throw { status: 404 }
+    })
+    vi.mocked(jobTicketsApi.quickAddPart).mockResolvedValue({
+      id: 'part-row-2',
+      jobTicketId: 'job-1',
+      partId: null,
+      partNumber: 'Hydraulic hose',
+      partName: 'Hydraulic hose',
+      isUnlistedPart: true,
+      officeOrderRequested: true,
+      officeOrderNotes: 'Need office to order one spare',
+      quantity: 2,
+      notes: 'Used on lift cylinder',
+      isBillable: false,
+      approvalStatus: 1,
+      addedAtUtc: '2026-04-28T11:00:00Z',
+      addedByEmployeeId: 'employee-1'
     })
 
-    vi.mocked(jobTicketsApi.get).mockResolvedValue({
-      id: 'job-1',
+    renderJobDetail()
+
+    expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Part used')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Part number')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Unit cost')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Billable price')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Invoice attachment')).not.toBeInTheDocument()
+    expect(screen.queryByText(/sale price/i)).not.toBeInTheDocument()
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Part used'), 'Hydraulic hose')
+    await user.clear(screen.getByLabelText('Quantity'))
+    await user.type(screen.getByLabelText('Quantity'), '2')
+    await user.type(screen.getByLabelText('Notes'), 'Used on lift cylinder')
+    await user.click(screen.getByLabelText('Office order requested'))
+    await user.type(screen.getByLabelText('Office order notes'), 'Need office to order one spare')
+    await user.click(screen.getByRole('button', { name: 'Add Part Used' }))
+
+    await waitFor(() => {
+      expect(jobTicketsApi.quickAddPart).toHaveBeenCalledWith('job-1', {
+        partNumber: 'Hydraulic hose',
+        partName: 'Hydraulic hose',
+        quantity: 2,
+        unitCost: 0,
+        salePrice: 0,
+        notes: 'Used on lift cylinder',
+        isBillable: false,
+        addedByEmployeeId: 'employee-1',
+        addedAtUtc: null,
+        requestOfficeOrder: true,
+        officeOrderNotes: 'Need office to order one spare',
+        adjustInventory: false,
+        allowManagerOverride: false
+      })
+    })
+  })
+
+  it('shows technician-added unlisted parts as needing office review without part-number-heavy labels', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([
+      {
+        id: 'part-row-2',
+        jobTicketId: 'job-1',
+        partId: null,
+        partNumber: 'Hydraulic hose',
+        partName: 'Hydraulic hose',
+        isUnlistedPart: true,
+        officeOrderRequested: true,
+        officeOrderNotes: 'Need office to order one spare',
+        quantity: 2,
+        notes: 'Used on lift cylinder',
+        isBillable: false,
+        approvalStatus: 1,
+        addedAtUtc: '2026-04-28T11:00:00Z',
+        addedByEmployeeId: 'employee-1'
+      }
+    ])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
+      throw { status: 404 }
+    })
+
+    renderJobDetail()
+
+    expect(await screen.findByText(/Hydraulic hose \(needs office review\) - Qty 2 - Used on lift cylinder/)).toBeInTheDocument()
+    expect(screen.queryByText(/Hydraulic hose - Hydraulic hose/)).not.toBeInTheDocument()
+  })
+
+  it('shows clock-out state, upload UI, and missing field context review', async () => {
+    mockEmployeeAuth()
+    mockJob({
       ticketNumber: 'JT-2026-000111',
       title: 'Boom inspection',
       status: 3,
       priority: 2,
-      customerId: 'customer-1',
-      serviceLocationId: 'location-1',
-      billingPartyCustomerId: 'customer-1',
       equipmentId: null,
       description: null,
       scheduledStartAtUtc: null,
@@ -186,7 +270,6 @@ describe('JobDetailPage', () => {
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    vi.mocked(partsApi.list).mockResolvedValue([{ id: 'part-1', partNumber: 'P-1', name: 'Filter' }])
     vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => ({
       id: 'time-1',
       jobTicketId: 'job-1',
@@ -199,18 +282,13 @@ describe('JobDetailPage', () => {
       clockInLongitude: 1
     }))
 
-    render(
-      <MemoryRouter future={routerFuture} initialEntries={['/jobs/job-1']}>
-        <Routes>
-          <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
-        </Routes>
-      </MemoryRouter>
-    )
+    renderJobDetail()
 
     expect(await screen.findByText(/Open entry: Started/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clock Out with GPS' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Upload Photo / File' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Invoice attachment')).not.toBeInTheDocument()
 
     const fieldContext = screen.getByLabelText('field context review')
     expect(within(fieldContext).getByText('Needs manager review')).toBeInTheDocument()
@@ -222,11 +300,6 @@ describe('JobDetailPage', () => {
     expect(within(fieldContext).getByText('No job instructions are available yet.')).toBeInTheDocument()
     expect(screen.getByText('Field context needs manager review before starting new work.')).toBeInTheDocument()
 
-    const invoiceAttachment = screen.getByLabelText('Invoice attachment')
-    expect(invoiceAttachment).toHaveAttribute('type', 'checkbox')
-    expect(invoiceAttachment.closest('label')).toHaveClass('row')
-    expect(invoiceAttachment.closest('label')).not.toHaveClass('master-data-form-row')
-
     const user = userEvent.setup()
     const uploadButton = screen.getByRole('button', { name: 'Upload' })
     await user.click(uploadButton)
@@ -237,49 +310,22 @@ describe('JobDetailPage', () => {
   })
 
   it('marks completed assigned tickets as outside active field work even when context is complete', async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: {
-        employeeId: 'employee-1',
-        username: 'employee',
-        firstName: 'Casey',
-        lastName: 'Tech',
-        role: 'Employee',
-        email: 'employee@example.com'
-      },
-      isLoading: false,
-      login: vi.fn(),
-      logout: vi.fn()
-    })
-
-    vi.mocked(jobTicketsApi.get).mockResolvedValue({
-      id: 'job-1',
+    mockEmployeeAuth()
+    mockJob({
       ticketNumber: 'JT-2026-000112',
       title: 'Completed inspection',
       status: 7,
       priority: 2,
-      customerId: 'customer-1',
-      serviceLocationId: 'location-1',
-      billingPartyCustomerId: 'customer-1',
-      equipmentId: 'equipment-1',
-      description: 'Inspection complete',
-      scheduledStartAtUtc: '2026-06-01T15:00:00Z',
-      dueAtUtc: '2026-06-02T20:00:00Z'
+      description: 'Inspection complete'
     })
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    vi.mocked(partsApi.list).mockResolvedValue([])
     vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
       throw { status: 404 }
     })
 
-    render(
-      <MemoryRouter future={routerFuture} initialEntries={['/jobs/job-1']}>
-        <Routes>
-          <Route path="/jobs/:jobTicketId" element={<JobDetailPage />} />
-        </Routes>
-      </MemoryRouter>
-    )
+    renderJobDetail()
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000112' })).toBeInTheDocument()
 

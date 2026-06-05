@@ -50,7 +50,7 @@ Do not steer the project toward a general ERP build-out.
 - Manager/Admin job-ticket workspace UI polish for shell navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing.
 - Manager/Admin dashboard and job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, schedule, or due-date context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets on the job-ticket list.
 - Employee assigned-job list field-context cues plus job-ticket detail field-context cues, next field-context fix guidance, and pre-work guidance for active field-work status, schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket data.
-- Employee quick-add parts-on-ticket support for required part-number capture, existing-part matching, one-off unlisted ticket parts, cost/billable price snapshots, and optional office-order request context.
+- Employee parts-used ticket entry for technicians: part name/description, quantity, notes, and optional office-order context, without part-number entry, pricing, billing, catalog/master-data controls, purchasing, or inventory expansion in the technician screen.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
 - Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
@@ -81,10 +81,11 @@ Current implementation in this lane:
 - Manager/Admin dashboard now links directly to `/manage/job-tickets/new`, and Manager/Admin job-ticket create/edit surfaces can quick-add a job type, service location, or equipment record, show validation/error, possible duplicate-equipment warnings, and success feedback, select the newly added value back into the current ticket form, and show read-only recent selected-equipment service-history context from the existing equipment service-history report;
 - Manager/Admin job-ticket workspace surfaces have clearer navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing for faster scanning;
 - Employee assigned-job list rows show due-date, active field-work status, and next field-context fix cues from existing list data, and Employee job-ticket detail surfaces show field-context cues for active field-work status, scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions, identify the first next field-context fix when manager review is still needed, and show clear pre-work guidance;
+- Employee service-ticket entry keeps technicians focused on work performed and parts used; parts entry captures part name/description, quantity, notes, and optional office-order context while hiding part number, cost, billable price, sale price, billing, and catalog controls.
 - this implementation uses existing job-ticket list/detail data, existing edit DTO fields, and existing assignment endpoints.
 
 Next coherent implementation slice:
-- after the Manager/Admin job-ticket creation quick-add PR is accepted and validated, choose one focused job-ticket creation follow-on from the current main branch and active PR state;
+- after the technician parts-used entry correction PR is accepted and validated, choose one focused job-ticket creation follow-on from the current main branch and active PR state;
 - candidate follow-on slices are create-from-recent-ticket, draft tickets, quick-add customer contacts, ticket templates, attachments during creation, audit trail visibility, and role-specific guardrails;
 - keep each slice tied to job-ticket creation/editing, assignment/readiness context, or existing service history data instead of broad master-data, purchasing, inventory, recommendations, AI/scoring, accounting, payment, or invoice-generation workflows;
 - add focused frontend and backend tests according to the selected slice risk, including validation/error handling and role boundaries when applicable;
@@ -98,6 +99,7 @@ Allowed implementation scope:
 - focused Manager/Admin job-ticket creation follow-ons: create-from-recent-ticket, draft tickets, quick-add customer contacts, ticket templates, attachments during creation, audit trail visibility, and role-specific guardrails;
 - job-ticket detail/list/edit polish that helps managers see whether a ticket is ready to dispatch;
 - employee-facing context improvements for assigned jobs when they rely on existing job-ticket, assignment, schedule, customer, service-location, equipment, notes, parts, files/photos, and time-entry data;
+- technician field-entry parts-used workflow that keeps billing, pricing, part-number, catalog matching, and invoice-readiness decisions back-office owned;
 - focused tests and docs updates.
 
 Expected implementation posture:
@@ -130,7 +132,7 @@ Job Ticket Closeout & Invoice-Readiness Workflow Polish helps Manager/Admin user
 
 Included in the implementation PR:
 - Manager/Admin review of job ticket readiness for invoicing;
-- clearer closeout cues for labor, time approvals, parts, files/photos, notes, status, and customer/equipment context;
+- clearer closeout cues for labor, parts, files/photos, notes, status, and customer/equipment context;
 - invoice/readiness status warnings around missing closeout information;
 - export and report wording that remains invoice-ready, not accounting or invoice generation;
 - focused tests for the closeout/readiness workflow;
@@ -164,7 +166,7 @@ Not included in the implementation PR:
 - keep the current report review filters, CSV export, time-review workspace, and closeout/readiness review working;
 - continue avoiding purchasing or inventory expansion as the default next move.
 - parts-on-ticket inventory-history consistency fixes are allowed when they keep existing job-ticket part usage and existing inventory history aligned; they do not approve broader inventory expansion.
-- parts-on-ticket quick-add is allowed when it stays ticket-level: required part number, optional master-part match, unlisted one-off part capture, cost/billable price tracking, and office-order request context. It does not approve purchase-order expansion, receiving, vendor invoice tracking, landed cost, replenishment, truck/warehouse inventory, recommendations, AI/scoring, or automatic compatibility decisions.
+- technician parts-used entry is allowed when it stays field-work focused: part name/description, quantity, notes, and optional office-order context only. It does not expose technician part-number entry, pricing, billing, catalog cleanup, purchasing, receiving, vendor invoice tracking, landed cost, replenishment, truck/warehouse inventory, recommendations, AI/scoring, or automatic compatibility decisions.
 - job-ticket create/edit quick-add is allowed when it stays inside the current Manager/Admin ticket form context: job type reference values, service locations through existing service-location APIs, equipment through existing equipment APIs, and non-blocking duplicate-equipment warnings from loaded selected-context records. It does not approve broad master-data screens, purchasing expansion, receiving, inventory expansion, recommendations, AI/scoring, accounting, payment, or invoice-generation behavior.
 - Manager/Admin job-ticket creation follow-ons are allowed when they remain ticket-first and separately scoped: create-from-recent-ticket, draft tickets, quick-add customer contacts, ticket templates, attachments during creation, audit trail visibility, and role-specific guardrails. API or schema work must be narrow, DTO-based, authorization-preserving, and documented before implementation.
 

@@ -3,16 +3,26 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { filesApi } from '../../api/filesApi'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
-import { partsApi } from '../../api/partsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { useAuth } from '../../features/auth/AuthContext'
-import type { JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, PartLookupDto, TimeEntryDto } from '../../types'
+import type { JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, TimeEntryDto } from '../../types'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from './jobDisplay'
 
 const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
 const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
 
 const formatOptionalDateTime = (value?: string | null) => (value ? new Date(value).toLocaleString() : 'Not set')
+const getPartUsedDisplay = (part: JobTicketPartDto) => {
+  if (part.isUnlistedPart) {
+    return part.partName?.trim() || part.notes?.trim() || 'Part used'
+  }
+
+  if (part.partNumber && part.partName) {
+    return `${part.partNumber} - ${part.partName}`
+  }
+
+  return part.partName || `Part ${part.partId ?? 'unlisted'}`
+}
 
 export function JobDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>()
@@ -24,39 +34,25 @@ export function JobDetailPage() {
   const [partsUsed, setPartsUsed] = useState<JobTicketPartDto[]>([])
   const [files, setFiles] = useState<JobTicketFileDto[]>([])
   const [openEntry, setOpenEntry] = useState<TimeEntryDto | null>(null)
-  const [partsCatalog, setPartsCatalog] = useState<PartLookupDto[]>([])
 
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const [workNote, setWorkNote] = useState('')
-  const [partId, setPartId] = useState('')
-  const [partQuantity, setPartQuantity] = useState('1')
-  const [partNotes, setPartNotes] = useState('')
-  const [quickPartNumber, setQuickPartNumber] = useState('')
   const [quickPartName, setQuickPartName] = useState('')
   const [quickPartQuantity, setQuickPartQuantity] = useState('1')
-  const [quickPartUnitCost, setQuickPartUnitCost] = useState('0')
-  const [quickPartSalePrice, setQuickPartSalePrice] = useState('0')
   const [quickPartNotes, setQuickPartNotes] = useState('')
   const [quickPartRequestOfficeOrder, setQuickPartRequestOfficeOrder] = useState(false)
   const [quickPartOfficeOrderNotes, setQuickPartOfficeOrderNotes] = useState('')
   const [clockWorkSummary, setClockWorkSummary] = useState('')
   const [clockNote, setClockNote] = useState('')
   const [uploadCaption, setUploadCaption] = useState('')
-  const [uploadInvoiceAttachment, setUploadInvoiceAttachment] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
 
   const [isSavingWork, setIsSavingWork] = useState(false)
-  const [isSavingPart, setIsSavingPart] = useState(false)
   const [isQuickAddingPart, setIsQuickAddingPart] = useState(false)
   const [isClocking, setIsClocking] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-
-  const partOptions = useMemo(
-    () => partsCatalog.map((part) => ({ value: part.id, label: `${part.partNumber} - ${part.name}` })),
-    [partsCatalog]
-  )
 
   const employeeFieldContext = useMemo(() => {
     const hasJobInstructions = Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim())
@@ -153,15 +149,7 @@ export function JobDetailPage() {
 
     let isMounted = true
 
-    Promise.all([refreshDetails(), partsApi.list().catch(() => [])])
-      .then(([, catalog]) => {
-        if (isMounted) {
-          setPartsCatalog(catalog)
-          if (catalog.length && !partId) {
-            setPartId(catalog[0].id)
-          }
-        }
-      })
+    refreshDetails()
       .catch((requestError) => {
         if (requestError instanceof ApiError) {
           if (requestError.status === 401) {
@@ -300,40 +288,18 @@ export function JobDetailPage() {
     }
   }
 
-  const onAddPart = async (event: FormEvent) => {
+  const onQuickAddPart = async (event: FormEvent) => {
     event.preventDefault()
-    if (!jobTicketId || !partId) {
-      setError('Select a part before submitting.')
+    const partName = quickPartName.trim()
+    const quantity = Number(quickPartQuantity)
+
+    if (!jobTicketId || !partName) {
+      setError('Part used is required.')
       return
     }
 
-    setIsSavingPart(true)
-    setError(null)
-    try {
-      await jobTicketsApi.addPart(jobTicketId, {
-        partId,
-        quantity: Number(partQuantity),
-        notes: partNotes || null,
-        isBillable: true,
-        addedByEmployeeId: user?.employeeId,
-        addedAtUtc: null,
-        adjustInventory: true,
-        allowManagerOverride: false
-      })
-      setPartQuantity('1')
-      setPartNotes('')
-      await refreshDetails()
-    } catch (saveError) {
-      setError(saveError instanceof ApiError ? saveError.message : 'Unable to add part used.')
-    } finally {
-      setIsSavingPart(false)
-    }
-  }
-
-  const onQuickAddPart = async (event: FormEvent) => {
-    event.preventDefault()
-    if (!jobTicketId || !quickPartNumber.trim()) {
-      setError('Part number is required.')
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setError('Quantity must be greater than zero.')
       return
     }
 
@@ -341,31 +307,28 @@ export function JobDetailPage() {
     setError(null)
     try {
       await jobTicketsApi.quickAddPart(jobTicketId, {
-        partNumber: quickPartNumber.trim(),
-        partName: quickPartName.trim() || null,
-        quantity: Number(quickPartQuantity),
-        unitCost: Number(quickPartUnitCost),
-        salePrice: Number(quickPartSalePrice),
+        partNumber: partName,
+        partName,
+        quantity,
+        unitCost: 0,
+        salePrice: 0,
         notes: quickPartNotes || null,
-        isBillable: true,
+        isBillable: false,
         addedByEmployeeId: user?.employeeId,
         addedAtUtc: null,
         requestOfficeOrder: quickPartRequestOfficeOrder,
         officeOrderNotes: quickPartOfficeOrderNotes || null,
-        adjustInventory: true,
+        adjustInventory: false,
         allowManagerOverride: false
       })
-      setQuickPartNumber('')
       setQuickPartName('')
       setQuickPartQuantity('1')
-      setQuickPartUnitCost('0')
-      setQuickPartSalePrice('0')
       setQuickPartNotes('')
       setQuickPartRequestOfficeOrder(false)
       setQuickPartOfficeOrderNotes('')
       await refreshDetails()
     } catch (saveError) {
-      setError(saveError instanceof ApiError ? saveError.message : 'Unable to quick-add part.')
+      setError(saveError instanceof ApiError ? saveError.message : 'Unable to add part used.')
     } finally {
       setIsQuickAddingPart(false)
     }
@@ -385,7 +348,7 @@ export function JobDetailPage() {
     const formData = new FormData()
     formData.append('File', uploadFile)
     formData.append('Caption', uploadCaption)
-    formData.append('IsInvoiceAttachment', String(uploadInvoiceAttachment))
+    formData.append('IsInvoiceAttachment', 'false')
 
     setIsUploading(true)
     setError(null)
@@ -393,7 +356,6 @@ export function JobDetailPage() {
       await filesApi.upload(jobTicketId, formData)
       setUploadFile(null)
       setUploadCaption('')
-      setUploadInvoiceAttachment(false)
       await refreshDetails()
     } catch (uploadError) {
       setError(uploadError instanceof ApiError ? uploadError.message : 'Unable to upload file.')
@@ -429,7 +391,6 @@ export function JobDetailPage() {
         <p className="muted">Priority: {getJobTicketPriorityLabel(job.priority)}</p>
         <p className="muted">Customer ID: {job.customerId}</p>
         <p className="muted">Service Location ID: {job.serviceLocationId}</p>
-        <p className="muted">Billing Party ID: {job.billingPartyCustomerId}</p>
         <p className="muted">Equipment ID: {job.equipmentId ?? 'None'}</p>
         <p>{job.description ?? 'No description provided.'}</p>
       </section>
@@ -506,64 +467,15 @@ export function JobDetailPage() {
       </section>
 
       <section className="card stack">
-        <h2>Add Part Used</h2>
-        <form onSubmit={onAddPart} className="stack">
-          {partOptions.length ? (
-            <label>
-              Part
-              <select value={partId} onChange={(event) => setPartId(event.target.value)}>
-                {partOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <p className="muted">Part lookup unavailable for this role. Enter Part ID manually.</p>
-          )}
-
-          {!partOptions.length ? (
-            <label>
-              Part ID
-              <input value={partId} onChange={(event) => setPartId(event.target.value)} required />
-            </label>
-          ) : null}
-
-          <label>
-            Quantity
-            <input type="number" min="0.01" step="0.01" value={partQuantity} onChange={(event) => setPartQuantity(event.target.value)} required />
-          </label>
-          <label>
-            Notes
-            <input value={partNotes} onChange={(event) => setPartNotes(event.target.value)} />
-          </label>
-          <button type="submit" disabled={isSavingPart}>
-            {isSavingPart ? 'Adding part...' : 'Add Part Used'}
-          </button>
-        </form>
-
+        <h2>Parts Used</h2>
         <form onSubmit={onQuickAddPart} className="stack">
-          <h3>Quick Add Part</h3>
           <label>
-            Part number
-            <input value={quickPartNumber} onChange={(event) => setQuickPartNumber(event.target.value)} required />
-          </label>
-          <label>
-            Part name
-            <input value={quickPartName} onChange={(event) => setQuickPartName(event.target.value)} />
+            Part used
+            <input value={quickPartName} onChange={(event) => setQuickPartName(event.target.value)} required placeholder="Describe the part used" />
           </label>
           <label>
             Quantity
             <input type="number" min="0.01" step="0.01" value={quickPartQuantity} onChange={(event) => setQuickPartQuantity(event.target.value)} required />
-          </label>
-          <label>
-            Unit cost
-            <input type="number" min="0" step="0.01" value={quickPartUnitCost} onChange={(event) => setQuickPartUnitCost(event.target.value)} required />
-          </label>
-          <label>
-            Billable price
-            <input type="number" min="0" step="0.01" value={quickPartSalePrice} onChange={(event) => setQuickPartSalePrice(event.target.value)} required />
           </label>
           <label>
             Notes
@@ -582,7 +494,7 @@ export function JobDetailPage() {
             <input value={quickPartOfficeOrderNotes} onChange={(event) => setQuickPartOfficeOrderNotes(event.target.value)} />
           </label>
           <button type="submit" disabled={isQuickAddingPart}>
-            {isQuickAddingPart ? 'Adding part...' : 'Quick Add Part'}
+            {isQuickAddingPart ? 'Adding part...' : 'Add Part Used'}
           </button>
         </form>
       </section>
@@ -599,10 +511,6 @@ export function JobDetailPage() {
           <label>
             Caption
             <input value={uploadCaption} onChange={(event) => setUploadCaption(event.target.value)} />
-          </label>
-          <label className="row">
-            <input type="checkbox" checked={uploadInvoiceAttachment} onChange={(event) => setUploadInvoiceAttachment(event.target.checked)} />
-            Invoice attachment
           </label>
           <button type="submit" disabled={isUploading}>
             {isUploading ? 'Uploading...' : 'Upload'}
@@ -626,8 +534,8 @@ export function JobDetailPage() {
         <ul>
           {partsUsed.map((part) => (
             <li key={part.id}>
-              {(part.partNumber && part.partName) ? `${part.partNumber} - ${part.partName}` : `Part ${part.partId ?? 'unlisted'}`}
-              {part.isUnlistedPart ? ' (unlisted)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'}
+              {getPartUsedDisplay(part)}
+              {part.isUnlistedPart ? ' (needs office review)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'}
               {part.officeOrderRequested ? ` - Office order requested${part.officeOrderNotes ? `: ${part.officeOrderNotes}` : ''}` : ''}
             </li>
           ))}
