@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
@@ -30,7 +30,7 @@ describe('ManagerDashboardPage', () => {
     })
   })
 
-  it('renders operational and dispatch readiness summary from loaded manager job data', async () => {
+  it('renders the refreshed operations board and dispatch readiness summary from loaded manager job data', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'j1', ticketNumber: 'JT-1', status: 3 },
       { id: 'j2', ticketNumber: 'JT-2', status: 4, scheduledStartAtUtc: '2026-06-01T14:00:00Z', dueAtUtc: '2026-06-02T14:00:00Z' },
@@ -46,18 +46,22 @@ describe('ManagerDashboardPage', () => {
     )
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading operations summary')
-    expect(await screen.findByLabelText('operations summary')).toHaveTextContent('Open jobs')
+    expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(screen.getByLabelText('manager operations dashboard')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Create Job Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
-    expect(screen.getByText('Assigned')).toBeInTheDocument()
-    expect(screen.getByText('In progress')).toBeInTheDocument()
-    expect(screen.getByText('Waiting on parts')).toBeInTheDocument()
-    expect(screen.getByText('Completed / review-ready')).toBeInTheDocument()
-    expect(screen.getByText('Invoice-ready')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch-ready')).toBeInTheDocument()
-    expect(screen.getByText('Needs dispatch review')).toBeInTheDocument()
+
+    const kpis = screen.getByLabelText('operations summary')
+    expect(within(kpis).getByText('Open Jobs')).toBeInTheDocument()
+    expect(within(kpis).getByText('Assigned')).toBeInTheDocument()
+    expect(within(kpis).getByText('In Progress')).toBeInTheDocument()
+    expect(within(kpis).getByText('Waiting on Parts')).toBeInTheDocument()
+    expect(within(kpis).getByText('Dispatch-ready')).toBeInTheDocument()
+    expect(within(kpis).getByText('All Jobs')).toBeInTheDocument()
+
+    expect(screen.getByRole('heading', { name: 'Unresolved Jobs by Status' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Back Office Review' })).toBeInTheDocument()
     expect(screen.getByText('Next dispatch focus: JT-1: Assign at least one employee before dispatch.')).toBeInTheDocument()
-    expect(screen.getByText('3')).toBeInTheDocument()
-    expect(screen.getAllByText('1')).toHaveLength(6)
     expect(jobTicketsApi.listAssignments).toHaveBeenCalledTimes(5)
   })
 
@@ -72,11 +76,11 @@ describe('ManagerDashboardPage', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByText('Dispatch-ready')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
     expect(screen.getByText('Next dispatch focus: No dispatch blockers are visible from the dashboard data.')).toBeInTheDocument()
   })
 
-  it('shows an error instead of dispatch readiness totals when assignment loading fails', async () => {
+  it('shows an error instead of dispatch readiness panels when assignment loading fails', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'j2', ticketNumber: 'JT-2', status: 4, scheduledStartAtUtc: '2026-06-01T14:00:00Z', dueAtUtc: '2026-06-02T14:00:00Z' }
     ] as any)
@@ -89,8 +93,8 @@ describe('ManagerDashboardPage', () => {
     )
 
     expect(await screen.findByText('Unable to load the operations summary.')).toBeInTheDocument()
-    expect(screen.queryByText('Dispatch-ready')).not.toBeInTheDocument()
-    expect(screen.queryByText('Needs dispatch review')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Dispatch Readiness' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Back Office Review' })).not.toBeInTheDocument()
     expect(screen.queryByText(/Next dispatch focus:/)).not.toBeInTheDocument()
   })
 
