@@ -561,6 +561,186 @@ pre {
   margin: 0;
 }
 
+.job-ticket-queue-page {
+  gap: 1rem;
+}
+
+.job-ticket-queue-header {
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.job-ticket-queue-header h2 {
+  color: #0b1220;
+  font-size: 1.65rem;
+  letter-spacing: 0;
+  margin-bottom: 0.25rem;
+}
+
+.job-ticket-queue-header .button-link {
+  flex: 0 0 auto;
+}
+
+.queue-kpi-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.queue-kpi-card {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: grid;
+  gap: 0.45rem;
+  min-height: 6.75rem;
+  overflow: hidden;
+  padding: 0;
+}
+
+.queue-kpi-card > span:first-child {
+  background: #3157c8;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.55rem 0.7rem;
+  text-transform: uppercase;
+}
+
+.queue-kpi-card strong {
+  color: #0b1220;
+  font-size: 2rem;
+  letter-spacing: 0;
+  line-height: 1;
+  padding: 0 0.7rem;
+}
+
+.queue-kpi-card .muted {
+  color: #475569;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  padding: 0 0.7rem 0.7rem;
+}
+
+.queue-kpi-card-ready > span:first-child {
+  background: #047857;
+}
+
+.queue-kpi-card-review > span:first-child {
+  background: #07559c;
+}
+
+.queue-kpi-card-alert > span:first-child {
+  background: #be123c;
+}
+
+.queue-warning {
+  margin: 0;
+}
+
+.queue-filter-panel {
+  background: #ffffff;
+  border-color: #dbe4ef;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.queue-results-panel {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.queue-results-heading {
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+}
+
+.queue-results-heading h3 {
+  color: #0b1220;
+  margin: 0;
+}
+
+.ticket-queue-list {
+  gap: 0.85rem;
+}
+
+.ticket-queue-list .ticket-list-item {
+  border-color: #dbe4ef;
+  border-left-width: 5px;
+  box-shadow: none;
+  padding: 1rem;
+}
+
+.ticket-queue-list .ticket-list-main {
+  align-items: flex-start;
+}
+
+.ticket-queue-list .ticket-number-link {
+  color: #07559c;
+  font-size: 1.02rem;
+  text-decoration: none;
+}
+
+.ticket-queue-list .ticket-number-link:hover {
+  text-decoration: underline;
+}
+
+.ticket-queue-list .ticket-title {
+  color: #0b1220;
+}
+
+.ticket-queue-list .ticket-meta-grid > div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ticket-queue-list .ticket-meta-grid strong {
+  color: #64748b;
+  font-size: 0.74rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.ticket-queue-list .ticket-meta-grid span {
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.ticket-queue-list .readiness-panel {
+  background: #f8fafc;
+  color: #334155;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ticket-date-grid {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+}
+
+@media (max-width: 980px) {
+  .queue-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 720px) {
   .desktop-shell {
     padding: 0.75rem;
@@ -570,6 +750,8 @@ pre {
   .page-heading,
   .review-heading,
   .ticket-list-main,
+  .job-ticket-queue-header,
+  .queue-results-heading,
   .row {
     align-items: stretch;
     flex-direction: column;
@@ -581,7 +763,8 @@ pre {
     width: 100%;
   }
 
-  .summary-grid {
+  .summary-grid,
+  .queue-kpi-grid {
     grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
   }
 }
