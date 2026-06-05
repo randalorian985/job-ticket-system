@@ -62,11 +62,20 @@ export const jobTicketsApi = {
       method: 'POST',
       body: JSON.stringify(payload)
     }),
-  quickAddPart: (jobTicketId: string, payload: QuickAddJobTicketPartDto) =>
-    apiRequest<JobTicketPartDto>(`/api/job-tickets/${jobTicketId}/parts/quick-add`, {
+  quickAddPart: (jobTicketId: string, payload: QuickAddJobTicketPartDto) => {
+    const technicianPayload = {
+      partName: payload.partName ?? payload.partNumber,
+      quantity: payload.quantity,
+      notes: payload.notes ?? null,
+      requestOfficeOrder: payload.requestOfficeOrder ?? false,
+      officeOrderNotes: payload.officeOrderNotes ?? null
+    }
+
+    return apiRequest<JobTicketPartDto>(`/api/job-tickets/${jobTicketId}/parts/technician-entry`, {
       method: 'POST',
-      body: JSON.stringify(payload)
-    }),
+      body: JSON.stringify(technicianPayload)
+    })
+  },
   approvePart: (jobTicketId: string, jobTicketPartId: string) =>
     apiRequest<JobTicketPartDto>(`/api/job-tickets/${jobTicketId}/parts/${jobTicketPartId}/approve`, {
       method: 'POST',

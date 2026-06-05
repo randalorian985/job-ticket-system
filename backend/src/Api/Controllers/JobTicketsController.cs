@@ -210,6 +210,42 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
         }
     }
 
+    [HttpPost("{jobTicketId:guid}/parts/technician-entry")]
+    [Authorize(Policy = "AssignedEmployeeOrManager")]
+    public async Task<ActionResult<JobTicketPartDto>> AddTechnicianPartEntryAsync(Guid jobTicketId, [FromBody] TechnicianAddJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var partName = string.IsNullOrWhiteSpace(request.PartName) ? null : request.PartName.Trim();
+            if (partName is null)
+            {
+                throw new ValidationException("PartName is required.");
+            }
+
+            return Ok(await service.QuickAddPartAsync(
+                jobTicketId,
+                new QuickAddJobTicketPartDto(
+                    partName,
+                    partName,
+                    request.Quantity,
+                    0m,
+                    0m,
+                    request.Notes,
+                    false,
+                    currentUserContext.EmployeeId,
+                    null,
+                    request.RequestOfficeOrder,
+                    request.OfficeOrderNotes,
+                    false,
+                    false),
+                cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
     [HttpPut("{jobTicketId:guid}/parts/{jobTicketPartId:guid}")]
     [Authorize(Policy = "AssignedEmployeeOrManager")]
     public async Task<ActionResult<JobTicketPartDto>> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
@@ -279,3 +315,10 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
         };
     }
 }
+
+public sealed record TechnicianAddJobTicketPartDto(
+    string PartName,
+    decimal Quantity,
+    string? Notes,
+    bool RequestOfficeOrder = false,
+    string? OfficeOrderNotes = null);
