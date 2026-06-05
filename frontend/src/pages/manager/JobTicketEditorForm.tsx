@@ -17,10 +17,20 @@ type DispatchEditCheck = {
   detail: string
 }
 
+const activeDispatchStatuses = new Set([2, 3, 4, 5, 6])
+
 export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditCheck[] {
   const hasEquipmentContext = Boolean(form.equipmentId)
+  const isActiveDispatchStatus = activeDispatchStatuses.has(form.status)
 
   return [
+    {
+      label: 'Dispatch status',
+      isReady: isActiveDispatchStatus,
+      detail: isActiveDispatchStatus
+        ? 'Ticket is in the active dispatch queue.'
+        : 'Move the ticket into an active dispatch status before dispatch review.'
+    },
     {
       label: 'Customer',
       isReady: Boolean(form.customerId),
@@ -130,11 +140,11 @@ export function JobTicketEditorForm({ initial, customers, serviceLocations, equi
         {dispatchOpenItems.length ? (
           <ul className="muted" aria-label="dispatch edit readiness warnings">
             {dispatchOpenItems.map((check) => (
-              <li key={check.label}>{check.detail}</li>
+              <li key={check.label}>{check.label}: {check.detail}</li>
             ))}
           </ul>
         ) : (
-          <p className="muted">Customer, location, equipment or no-equipment context, schedule, due date, and job instructions are ready for dispatch review.</p>
+          <p className="muted">Dispatch status, customer, location, equipment or no-equipment context, schedule, due date, and job instructions are ready for dispatch review.</p>
         )}
       </section>
       <label>Title<input value={form.title} onChange={(e) => update('title', e.target.value)} /></label>
