@@ -241,35 +241,40 @@ export function JobTicketListPage() {
   }
 
   return (
-    <section className="card stack">
-      <div className="row"><h2>Job Tickets</h2><Link to="/manage/job-tickets/new">Create Ticket</Link></div>
-      <p className="muted">Search, filter, and isolate dispatch-ready or dispatch-review tickets using existing ticket and assignment data.</p>
+    <section className="job-ticket-queue-page stack" aria-label="manager job ticket queue">
+      <header className="job-ticket-queue-header">
+        <div>
+          <h2>Job Tickets</h2>
+          <p className="muted">Search, filter, and isolate dispatch-ready or dispatch-review tickets using existing ticket and assignment data.</p>
+        </div>
+        <Link className="button-link" to="/manage/job-tickets/new">Create Ticket</Link>
+      </header>
 
       {!isLoading && !error && jobs.length ? (
-        <section className="summary-grid" aria-label="queue summary">
-          <div className="summary-card"><span>Active tickets</span><strong>{triageSummary.activeCount}</strong><span className="muted">Submitted through waiting statuses.</span></div>
-          <div className="summary-card"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong><span className="muted">Urgent priority tickets still active.</span></div>
-          <div className="summary-card"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong><span className="muted">Waiting on parts or customer.</span></div>
-          <div className="summary-card"><span>Unscheduled active</span><strong>{triageSummary.unscheduledCount}</strong><span className="muted">Active tickets without a start time.</span></div>
-          <div className="summary-card"><span>Missing due date</span><strong>{triageSummary.missingDueDateCount}</strong><span className="muted">Active tickets without a due date.</span></div>
+        <section className="queue-kpi-grid" aria-label="queue summary">
+          <div className="queue-kpi-card"><span>Active tickets</span><strong>{triageSummary.activeCount}</strong><span className="muted">Submitted through waiting statuses.</span></div>
+          <div className="queue-kpi-card queue-kpi-card-alert"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong><span className="muted">Urgent priority tickets still active.</span></div>
+          <div className="queue-kpi-card"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong><span className="muted">Waiting on parts or customer.</span></div>
+          <div className="queue-kpi-card"><span>Unscheduled active</span><strong>{triageSummary.unscheduledCount}</strong><span className="muted">Active tickets without a start time.</span></div>
+          <div className="queue-kpi-card"><span>Missing due date</span><strong>{triageSummary.missingDueDateCount}</strong><span className="muted">Active tickets without a due date.</span></div>
           {assignmentDataUnavailable ? (
-            <div className="summary-card"><span>Assignment readiness</span><strong>Unavailable</strong><span className="muted">Assignment data must load before assignment-dependent dispatch counts are shown.</span></div>
+            <div className="queue-kpi-card queue-kpi-card-review"><span>Assignment readiness</span><strong>Unavailable</strong><span className="muted">Assignment data must load before assignment-dependent dispatch counts are shown.</span></div>
           ) : (
             <>
-              <div className="summary-card"><span>Unassigned active</span><strong>{triageSummary.unassignedCount}</strong><span className="muted">Active tickets that still need an assigned tech.</span></div>
-              <div className="summary-card"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong><span className="muted">Active tickets without a lead tech flag.</span></div>
-              <div className="summary-card"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong><span className="muted">Active tickets with assignment, lead, schedule, and due date.</span></div>
-              <div className="summary-card"><span>Needs dispatch review</span><strong>{triageSummary.needsDispatchReviewCount}</strong><span className="muted">Active tickets missing assignment, lead, schedule, or due date context.</span></div>
+              <div className="queue-kpi-card"><span>Unassigned active</span><strong>{triageSummary.unassignedCount}</strong><span className="muted">Active tickets that still need an assigned tech.</span></div>
+              <div className="queue-kpi-card"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong><span className="muted">Active tickets without a lead tech flag.</span></div>
+              <div className="queue-kpi-card queue-kpi-card-ready"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong><span className="muted">Active tickets with assignment, lead, schedule, and due date.</span></div>
+              <div className="queue-kpi-card queue-kpi-card-review"><span>Needs dispatch review</span><strong>{triageSummary.needsDispatchReviewCount}</strong><span className="muted">Active tickets missing assignment, lead, schedule, or due date context.</span></div>
             </>
           )}
         </section>
       ) : null}
 
       {!isLoading && !error && assignmentDataUnavailable ? (
-        <p className="warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and dispatch-readiness filters are unavailable until assignments reload.</p>
+        <p className="queue-warning warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and dispatch-readiness filters are unavailable until assignments reload.</p>
       ) : null}
 
-      <section className="filter-panel" aria-label="job ticket filters">
+      <section className="filter-panel queue-filter-panel" aria-label="job ticket filters">
         <label className="sr-label">
           Search tickets
           <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Ticket, title, customer, or location" />
@@ -310,32 +315,52 @@ export function JobTicketListPage() {
       {!isLoading && !error && jobs.length > 0 && !filteredJobs.length ? <p className="muted">No job tickets match the current filters. Reset filters to see all tickets.</p> : null}
 
       {!isLoading && !error && filteredJobs.length ? (
-        <>
-          <p className="muted">Showing {filteredJobs.length} of {jobs.length} tickets.</p>
-          <ul className="review-list">
+        <section className="queue-results-panel" aria-label="job ticket results">
+          <div className="queue-results-heading">
+            <h3>Ticket Queue</h3>
+            <span className="muted">Showing {filteredJobs.length} of {jobs.length} tickets.</span>
+          </div>
+          <ul className="review-list ticket-queue-list">
             {filteredJobs.map((job) => {
               const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
               const leadAssignments = assignments?.filter((item) => item.isLead) ?? []
               const leadSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : leadAssignments.length ? leadAssignments.map(getAssignmentDisplayName).join(', ') : 'Needs lead'
               const assignmentSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : assignments?.length ? assignments.map(getAssignmentDisplayName).join(', ') : 'Unassigned'
               const readiness = getDispatchReadiness(job, assignments)
+              const readinessClass = readiness.isReady ? 'readiness-ready' : readiness.openItems > 0 || assignmentDataUnavailable ? 'readiness-review' : 'readiness-inactive'
 
               return (
-                <li key={job.id}>
-                  <Link to={`/manage/job-tickets/${job.id}`}>{job.ticketNumber}</Link> · {getJobTicketStatusLabel(job.status)} · {getJobTicketPriorityLabel(job.priority)}
-                  <div>{job.title}</div>
-                  <div className="muted">
-                    {customers[job.customerId]?.name ?? job.customerId} / {locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId}
+                <li key={job.id} className={`ticket-list-item ${readinessClass}`}>
+                  <div className="ticket-list-main">
+                    <div>
+                      <Link className="ticket-number-link" to={`/manage/job-tickets/${job.id}`}>{job.ticketNumber}</Link>
+                      <div className="ticket-title">{job.title}</div>
+                      <div className="muted">{getJobTicketStatusLabel(job.status)} · {getJobTicketPriorityLabel(job.priority)}</div>
+                    </div>
+                    <span className={`status-pill readiness-pill ${readinessClass}`}>{readiness.label}</span>
                   </div>
-                  <div className="muted">Assigned: {assignmentSummary} · Lead: {leadSummary}</div>
-                  <div className="muted">Dispatch readiness: {readiness.label} · {readiness.detail}</div>
-                  <div className="muted">Next dispatch fix: {readiness.nextStep}</div>
-                  <div className="muted">Created {formatDate(job.requestedAtUtc)} · Scheduled {formatDate(job.scheduledStartAtUtc)} · Due {formatDate(job.dueAtUtc)} · Completed {formatDate(job.completedAtUtc)}</div>
+                  <div className="ticket-meta-grid">
+                    <div><strong>Customer</strong><span>{customers[job.customerId]?.name ?? job.customerId}</span></div>
+                    <div><strong>Location</strong><span>{locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId}</span></div>
+                    <div><strong>Assigned</strong><span>{assignmentSummary}</span></div>
+                    <div><strong>Lead</strong><span>{leadSummary}</span></div>
+                  </div>
+                  <div className="readiness-panel">
+                    <div>Assigned: {assignmentSummary} · Lead: {leadSummary}</div>
+                    <div>Dispatch readiness: {readiness.label} · {readiness.detail}</div>
+                    <div>Next dispatch fix: {readiness.nextStep}</div>
+                  </div>
+                  <div className="ticket-meta-grid ticket-date-grid">
+                    <div><strong>Created</strong><span>{formatDate(job.requestedAtUtc)}</span></div>
+                    <div><strong>Scheduled</strong><span>{formatDate(job.scheduledStartAtUtc)}</span></div>
+                    <div><strong>Due</strong><span>{formatDate(job.dueAtUtc)}</span></div>
+                    <div><strong>Completed</strong><span>{formatDate(job.completedAtUtc)}</span></div>
+                  </div>
                 </li>
               )
             })}
           </ul>
-        </>
+        </section>
       ) : null}
     </section>
   )

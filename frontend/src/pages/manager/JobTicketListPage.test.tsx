@@ -54,8 +54,6 @@ describe('Manager list pages', () => {
     )
   }
 
-  const renderedPageText = () => document.body.textContent?.replace(/\s+/g, ' ') ?? ''
-
   it('renders manager job ticket list with loading state, readable labels, timing details, and dispatch ownership cues', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix unit', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' }
@@ -63,14 +61,17 @@ describe('Manager list pages', () => {
 
     renderPage()
 
+    expect(screen.getByLabelText('manager job ticket queue')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Loading manager job tickets')
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ticket Queue' })).toBeInTheDocument()
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
     expect(screen.getByText('Assigned: Alex Rivera · Lead: Alex Rivera')).toBeInTheDocument()
     expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing scheduled start, due date.')).toBeInTheDocument()
     expect(screen.getByText('Next dispatch fix: Set a scheduled start time before dispatch.')).toBeInTheDocument()
-    expect(renderedPageText()).toContain('Due —')
+    expect(screen.getByText('Due')).toBeInTheDocument()
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
 
   it('falls back to assignment ids when assignment names are not present', async () => {
@@ -97,12 +98,13 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('Active tickets')).toBeInTheDocument()
+    expect(screen.getByLabelText('queue summary')).toBeInTheDocument()
     expect(screen.getByText('Urgent active')).toBeInTheDocument()
     expect(screen.getByText('Waiting')).toBeInTheDocument()
     expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
     expect(screen.getByText('Missing due date')).toBeInTheDocument()
     expect(screen.getByText('Unassigned active')).toBeInTheDocument()
-    expect(screen.getByText('Needs lead')).toBeInTheDocument()
+    expect(screen.getAllByText('Needs lead').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Dispatch-ready').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Needs dispatch review').length).toBeGreaterThan(0)
   })
