@@ -1,12 +1,14 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../api/httpClient'
 import { masterDataApi } from '../../api/masterDataApi'
+import { reportsApi } from '../../api/reportsApi'
 import type {
   CreateEquipmentDto,
   CreateJobTicketDto,
   CreateServiceLocationDto,
   CustomerDto,
   EquipmentDto,
+  ReportServiceHistoryItemDto,
   ServiceLocationDto
 } from '../../types'
 import { priorityOptions, jobStatusOptions } from './managerDisplay'
@@ -120,6 +122,10 @@ function optionalText(value: string) {
 
 function normalizedText(value: string | null | undefined) {
   return value?.trim().toLowerCase() ?? ''
+}
+
+function jobStatusLabel(value: number) {
+  return jobStatusOptions.find((item) => item.value === value)?.label ?? `Status ${value}`
 }
 
 export function findEquipmentQuickAddDuplicates(
@@ -244,6 +250,9 @@ export function JobTicketEditorForm({
   const [jobTypeOptions, setJobTypeOptions] = useState(() => uniqueLabels([...defaultJobTypeOptions, initial.jobType]))
   const [isAddingServiceLocation, setIsAddingServiceLocation] = useState(false)
   const [isAddingEquipment, setIsAddingEquipment] = useState(false)
+  const [equipmentHistory, setEquipmentHistory] = useState<ReportServiceHistoryItemDto[]>([])
+  const [equipmentHistoryError, setEquipmentHistoryError] = useState<string | null>(null)
+  const [isLoadingEquipmentHistory, setIsLoadingEquipmentHistory] = useState(false)
 
   const allServiceLocations = useMemo(
     () => {
@@ -333,6 +342,41 @@ export function JobTicketEditorForm({
       setForm((prev) => ({ ...prev, equipmentId: null }))
     }
   }, [filteredEquipment, form.equipmentId])
+
+  useEffect(() => {
+    if (!form.equipmentId) {
+      setEquipmentHistory([])
+      setEquipmentHistoryError(null)
+      setIsLoadingEquipmentHistory(false)
+      return
+    }
+
+    let isCurrent = true
+    setIsLoadingEquipmentHistory(true)
+    setEquipmentHistoryError(null)
+
+    reportsApi.getEquipmentHistory(form.equipmentId, { offset: 0, limit: 3 })
+      .then((items) => {
+        if (isCurrent) {
+          setEquipmentHistory(items)
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setEquipmentHistory([])
+          setEquipmentHistoryError('Equipment service history is unavailable right now.')
+        }
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setIsLoadingEquipmentHistory(false)
+        }
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [form.equipmentId])
 
   const update = <K extends keyof CreateJobTicketDto>(key: K, value: CreateJobTicketDto[K]) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -599,6 +643,28 @@ export function JobTicketEditorForm({
           <p className="muted">Context: {selectedCustomer?.name ?? 'No customer'} / {selectedServiceLocation?.locationName ?? 'No service location'}</p>
         </section>
       ) : null}
+      <section className="quick-add-panel" aria-label="equipment service history context">
+        <h3>Recent Equipment Service Context</h3>
+        {!form.equipmentId ? (
+          <p className="muted">Select equipment to review recent service history before saving this ticket.</p>
+        ) : isLoadingEquipmentHistory ? (
+          <p className="muted" role="status">Loading recent equipment service history...</p>
+        ) : equipmentHistoryError ? (
+          <p className="error">{equipmentHistoryError}</p>
+        ) : equipmentHistory.length ? (
+          <ul className="history-context-list">
+            {equipmentHistory.map((item) => (
+              <li key={item.jobTicketId}>
+                <strong>{item.jobTicketNumber}: {item.title}</strong>
+                <span>{jobStatusLabel(item.jobStatus)} - {item.completedAtUtc ? `Completed ${new Date(item.completedAtUtc).toLocaleDateString()}` : `Created ${new Date(item.createdAtUtc).toLocaleDateString()}`}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">No recent service history is visible for the selected equipment.</p>
+        )}
+        <p className="muted">History is context for Manager/Admin review only; it does not recommend parts or guarantee compatibility.</p>
+      </section>
       <label>Priority<select value={form.priority} onChange={(e) => update('priority', Number(e.target.value))}>{priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
       <label>Status<select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>{jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
       <label>Description<textarea value={form.description ?? ''} onChange={(e) => update('description', e.target.value || null)} /></label>
