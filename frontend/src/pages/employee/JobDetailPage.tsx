@@ -47,7 +47,6 @@ export function JobDetailPage() {
   const [clockWorkSummary, setClockWorkSummary] = useState('')
   const [clockNote, setClockNote] = useState('')
   const [uploadCaption, setUploadCaption] = useState('')
-  const [uploadInvoiceAttachment, setUploadInvoiceAttachment] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
 
   const [isSavingWork, setIsSavingWork] = useState(false)
@@ -349,7 +348,7 @@ export function JobDetailPage() {
     const formData = new FormData()
     formData.append('File', uploadFile)
     formData.append('Caption', uploadCaption)
-    formData.append('IsInvoiceAttachment', String(uploadInvoiceAttachment))
+    formData.append('IsInvoiceAttachment', 'false')
 
     setIsUploading(true)
     setError(null)
@@ -357,7 +356,6 @@ export function JobDetailPage() {
       await filesApi.upload(jobTicketId, formData)
       setUploadFile(null)
       setUploadCaption('')
-      setUploadInvoiceAttachment(false)
       await refreshDetails()
     } catch (uploadError) {
       setError(uploadError instanceof ApiError ? uploadError.message : 'Unable to upload file.')
@@ -393,7 +391,6 @@ export function JobDetailPage() {
         <p className="muted">Priority: {getJobTicketPriorityLabel(job.priority)}</p>
         <p className="muted">Customer ID: {job.customerId}</p>
         <p className="muted">Service Location ID: {job.serviceLocationId}</p>
-        <p className="muted">Billing Party ID: {job.billingPartyCustomerId}</p>
         <p className="muted">Equipment ID: {job.equipmentId ?? 'None'}</p>
         <p>{job.description ?? 'No description provided.'}</p>
       </section>
@@ -514,10 +511,6 @@ export function JobDetailPage() {
           <label>
             Caption
             <input value={uploadCaption} onChange={(event) => setUploadCaption(event.target.value)} />
-          </label>
-          <label className="row">
-            <input type="checkbox" checked={uploadInvoiceAttachment} onChange={(event) => setUploadInvoiceAttachment(event.target.checked)} />
-            Invoice attachment
           </label>
           <button type="submit" disabled={isUploading}>
             {isUploading ? 'Uploading...' : 'Upload'}
