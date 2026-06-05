@@ -75,8 +75,23 @@ public sealed class JobTicketAssignmentValidatingService(ApplicationDbContext db
     public Task<JobTicketPartDto> QuickAddPartAsync(Guid jobTicketId, QuickAddJobTicketPartDto request, CancellationToken cancellationToken = default)
         => inner.QuickAddPartAsync(jobTicketId, request, cancellationToken);
 
-    public Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
-        => inner.UpdatePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+    public async Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        if (!currentUserContext.IsManager)
+        {
+            var existingIsBillable = await dbContext.JobTicketParts
+                .Where(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId)
+                .Select(x => (bool?)x.IsBillable)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (existingIsBillable.HasValue && request.IsBillable != existingIsBillable.Value)
+            {
+                throw new ValidationException("Only managers or admins can change job part billing state.");
+            }
+        }
+
+        return await inner.UpdatePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+    }
 
     public Task<JobTicketPartDto?> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, ApproveJobTicketPartDto request, CancellationToken cancellationToken = default)
         => inner.ApprovePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
