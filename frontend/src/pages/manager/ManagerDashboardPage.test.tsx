@@ -76,7 +76,7 @@ describe('ManagerDashboardPage', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByText('Dispatch-ready')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
     expect(screen.getByText('Next dispatch focus: No dispatch blockers are visible from the dashboard data.')).toBeInTheDocument()
   })
 
