@@ -1028,8 +1028,10 @@ export function JobTicketDetailPage() {
           <ul>
             {parts.map((item) => (
               <li key={item.id}>
-                Part {item.partId} · Qty {item.quantity} ·{" "}
+                {(item.partNumber && item.partName) ? `${item.partNumber} - ${item.partName}` : `Part ${item.partId ?? "unlisted"}`}
+                {item.isUnlistedPart ? " (unlisted)" : ""} · Qty {item.quantity} ·{" "}
                 {getApprovalLabel(item.approvalStatus)}
+                {item.officeOrderRequested ? " · Office order requested" : ""}
                 {item.notes ? ` · ${item.notes}` : ""}
               </li>
             ))}

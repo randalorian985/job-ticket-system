@@ -48,7 +48,7 @@ public sealed record InvoiceReadySummaryDto(
     string? BillingContactEmail);
 
 public sealed record InvoiceReadyLaborLineDto(Guid TimeEntryId, Guid EmployeeId, string EmployeeName, decimal LaborHours, decimal BillableHours, decimal? CostRate, decimal? BillRate);
-public sealed record InvoiceReadyPartLineDto(Guid JobTicketPartId, Guid PartId, string PartNumber, string PartName, decimal Quantity, decimal UnitCostSnapshot, decimal UnitPriceSnapshot);
+public sealed record InvoiceReadyPartLineDto(Guid JobTicketPartId, Guid? PartId, string PartNumber, string PartName, decimal Quantity, decimal UnitCostSnapshot, decimal UnitPriceSnapshot);
 
 public sealed record JobCostSummaryDto(Guid JobTicketId, string JobTicketNumber, decimal LaborHours, decimal LaborCostTotal, decimal LaborBillableTotal, decimal PartsCostTotal, decimal PartsBillableTotal, decimal GrandTotal);
 public sealed record JobsReadyToInvoiceItemDto(Guid JobTicketId, string JobTicketNumber, string Customer, string BillingPartyCustomer, JobTicketStatus JobStatus, InvoiceStatus InvoiceStatus, decimal ApprovedLaborHours, decimal ApprovedPartsCount, decimal EstimatedBillableTotal, DateTime CreatedAtUtc, DateTime? CompletedAtUtc);
@@ -114,7 +114,7 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
 
         var approvedParts = await dbContext.JobTicketParts
             .Where(x => x.JobTicketId == jobTicketId && x.ApprovalStatus == JobPartApprovalStatus.Approved)
-            .Select(x => new InvoiceReadyPartLineDto(x.Id, x.PartId, x.Part.PartNumber, x.Part.Name, x.Quantity, x.UnitCostSnapshot, x.SalePriceSnapshot))
+            .Select(x => new InvoiceReadyPartLineDto(x.Id, x.PartId, x.PartNumberSnapshot, x.PartNameSnapshot, x.Quantity, x.UnitCostSnapshot, x.SalePriceSnapshot))
             .ToListAsync(cancellationToken);
 
         var laborHours = approvedLabor.Sum(x => x.LaborHours);

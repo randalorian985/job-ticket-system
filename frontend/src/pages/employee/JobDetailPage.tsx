@@ -33,6 +33,14 @@ export function JobDetailPage() {
   const [partId, setPartId] = useState('')
   const [partQuantity, setPartQuantity] = useState('1')
   const [partNotes, setPartNotes] = useState('')
+  const [quickPartNumber, setQuickPartNumber] = useState('')
+  const [quickPartName, setQuickPartName] = useState('')
+  const [quickPartQuantity, setQuickPartQuantity] = useState('1')
+  const [quickPartUnitCost, setQuickPartUnitCost] = useState('0')
+  const [quickPartSalePrice, setQuickPartSalePrice] = useState('0')
+  const [quickPartNotes, setQuickPartNotes] = useState('')
+  const [quickPartRequestOfficeOrder, setQuickPartRequestOfficeOrder] = useState(false)
+  const [quickPartOfficeOrderNotes, setQuickPartOfficeOrderNotes] = useState('')
   const [clockWorkSummary, setClockWorkSummary] = useState('')
   const [clockNote, setClockNote] = useState('')
   const [uploadCaption, setUploadCaption] = useState('')
@@ -41,6 +49,7 @@ export function JobDetailPage() {
 
   const [isSavingWork, setIsSavingWork] = useState(false)
   const [isSavingPart, setIsSavingPart] = useState(false)
+  const [isQuickAddingPart, setIsQuickAddingPart] = useState(false)
   const [isClocking, setIsClocking] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -321,6 +330,47 @@ export function JobDetailPage() {
     }
   }
 
+  const onQuickAddPart = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!jobTicketId || !quickPartNumber.trim()) {
+      setError('Part number is required.')
+      return
+    }
+
+    setIsQuickAddingPart(true)
+    setError(null)
+    try {
+      await jobTicketsApi.quickAddPart(jobTicketId, {
+        partNumber: quickPartNumber.trim(),
+        partName: quickPartName.trim() || null,
+        quantity: Number(quickPartQuantity),
+        unitCost: Number(quickPartUnitCost),
+        salePrice: Number(quickPartSalePrice),
+        notes: quickPartNotes || null,
+        isBillable: true,
+        addedByEmployeeId: user?.employeeId,
+        addedAtUtc: null,
+        requestOfficeOrder: quickPartRequestOfficeOrder,
+        officeOrderNotes: quickPartOfficeOrderNotes || null,
+        adjustInventory: true,
+        allowManagerOverride: false
+      })
+      setQuickPartNumber('')
+      setQuickPartName('')
+      setQuickPartQuantity('1')
+      setQuickPartUnitCost('0')
+      setQuickPartSalePrice('0')
+      setQuickPartNotes('')
+      setQuickPartRequestOfficeOrder(false)
+      setQuickPartOfficeOrderNotes('')
+      await refreshDetails()
+    } catch (saveError) {
+      setError(saveError instanceof ApiError ? saveError.message : 'Unable to quick-add part.')
+    } finally {
+      setIsQuickAddingPart(false)
+    }
+  }
+
   const onUpload = async (event: FormEvent) => {
     event.preventDefault()
     if (!jobTicketId || !uploadFile) {
@@ -492,6 +542,49 @@ export function JobDetailPage() {
             {isSavingPart ? 'Adding part...' : 'Add Part Used'}
           </button>
         </form>
+
+        <form onSubmit={onQuickAddPart} className="stack">
+          <h3>Quick Add Part</h3>
+          <label>
+            Part number
+            <input value={quickPartNumber} onChange={(event) => setQuickPartNumber(event.target.value)} required />
+          </label>
+          <label>
+            Part name
+            <input value={quickPartName} onChange={(event) => setQuickPartName(event.target.value)} />
+          </label>
+          <label>
+            Quantity
+            <input type="number" min="0.01" step="0.01" value={quickPartQuantity} onChange={(event) => setQuickPartQuantity(event.target.value)} required />
+          </label>
+          <label>
+            Unit cost
+            <input type="number" min="0" step="0.01" value={quickPartUnitCost} onChange={(event) => setQuickPartUnitCost(event.target.value)} required />
+          </label>
+          <label>
+            Billable price
+            <input type="number" min="0" step="0.01" value={quickPartSalePrice} onChange={(event) => setQuickPartSalePrice(event.target.value)} required />
+          </label>
+          <label>
+            Notes
+            <input value={quickPartNotes} onChange={(event) => setQuickPartNotes(event.target.value)} />
+          </label>
+          <label className="row">
+            <input
+              type="checkbox"
+              checked={quickPartRequestOfficeOrder}
+              onChange={(event) => setQuickPartRequestOfficeOrder(event.target.checked)}
+            />
+            Office order requested
+          </label>
+          <label>
+            Office order notes
+            <input value={quickPartOfficeOrderNotes} onChange={(event) => setQuickPartOfficeOrderNotes(event.target.value)} />
+          </label>
+          <button type="submit" disabled={isQuickAddingPart}>
+            {isQuickAddingPart ? 'Adding part...' : 'Quick Add Part'}
+          </button>
+        </form>
       </section>
 
       <section className="card stack">
@@ -533,7 +626,9 @@ export function JobDetailPage() {
         <ul>
           {partsUsed.map((part) => (
             <li key={part.id}>
-              Part ID {part.partId} · Qty {part.quantity} · {part.notes ?? 'No notes'}
+              {(part.partNumber && part.partName) ? `${part.partNumber} - ${part.partName}` : `Part ${part.partId ?? 'unlisted'}`}
+              {part.isUnlistedPart ? ' (unlisted)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'}
+              {part.officeOrderRequested ? ` - Office order requested${part.officeOrderNotes ? `: ${part.officeOrderNotes}` : ''}` : ''}
             </li>
           ))}
         </ul>

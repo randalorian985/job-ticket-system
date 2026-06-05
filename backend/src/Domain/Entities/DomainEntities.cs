@@ -294,8 +294,14 @@ public sealed class JobTicketPart : SoftDeletableEntity
 {
     public Guid JobTicketId { get; set; }
     public JobTicket JobTicket { get; set; } = null!;
-    public Guid PartId { get; set; }
-    public Part Part { get; set; } = null!;
+    public Guid? PartId { get; set; }
+    public Part? Part { get; set; }
+    public string PartNumberSnapshot { get; set; } = string.Empty;
+    public string PartNameSnapshot { get; set; } = string.Empty;
+    public bool IsUnlistedPart { get; set; }
+    public bool OfficeOrderRequested { get; set; }
+    public DateTime? OfficeOrderRequestedAtUtc { get; set; }
+    public string? OfficeOrderNotes { get; set; }
     public Guid? EquipmentId { get; set; }
     public Equipment? Equipment { get; set; }
     public decimal Quantity { get; set; }

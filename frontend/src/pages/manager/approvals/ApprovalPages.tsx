@@ -273,7 +273,9 @@ export function PartsApprovalPage() {
       <ul>
         {parts.map((part) => (
           <li key={part.id}>
-            Part {part.partId} · Qty {part.quantity} · Added by {part.addedByEmployeeId ?? 'n/a'} · Cost {part.unitCostSnapshot} · Sale {part.salePriceSnapshot} · {getApprovalLabel(part.approvalStatus)}{' '}
+            {(part.partNumber && part.partName) ? `${part.partNumber} - ${part.partName}` : `Part ${part.partId ?? 'unlisted'}`}
+            {part.isUnlistedPart ? ' (unlisted)' : ''} · Qty {part.quantity} · Added by {part.addedByEmployeeId ?? 'n/a'} · Cost {part.unitCostSnapshot} · Sale {part.salePriceSnapshot} · {getApprovalLabel(part.approvalStatus)}{' '}
+            {part.officeOrderRequested ? 'Office order requested ' : ''}
             <button onClick={() => void approve(part.id)}>Approve</button>{' '}
             <button onClick={() => void reject(part.id)}>Reject</button>
           </li>

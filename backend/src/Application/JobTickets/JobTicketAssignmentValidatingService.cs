@@ -72,6 +72,9 @@ public sealed class JobTicketAssignmentValidatingService(ApplicationDbContext db
     public Task<JobTicketPartDto> AddPartAsync(Guid jobTicketId, AddJobTicketPartDto request, CancellationToken cancellationToken = default)
         => inner.AddPartAsync(jobTicketId, request, cancellationToken);
 
+    public Task<JobTicketPartDto> QuickAddPartAsync(Guid jobTicketId, QuickAddJobTicketPartDto request, CancellationToken cancellationToken = default)
+        => inner.QuickAddPartAsync(jobTicketId, request, cancellationToken);
+
     public Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
         => inner.UpdatePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
 

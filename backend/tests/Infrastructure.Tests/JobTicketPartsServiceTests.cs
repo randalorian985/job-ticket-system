@@ -23,6 +23,8 @@ public sealed class JobTicketPartsServiceTests
 
         Assert.Equal(refs.JobTicket.Id, created.JobTicketId);
         Assert.Equal(refs.Part.Id, created.PartId);
+        Assert.Equal(refs.Part.PartNumber, created.PartNumber);
+        Assert.Equal(refs.Part.Name, created.PartName);
         Assert.Equal(2m, created.Quantity);
     }
 
@@ -214,6 +216,71 @@ public sealed class JobTicketPartsServiceTests
         Assert.NotNull(transactions[1].Notes);
         Assert.Contains(created.Id.ToString(), transactions[1].Notes!);
         Assert.Contains("part archive restore", transactions[1].Reason);
+    }
+
+    [Fact]
+    public async Task Quick_add_existing_part_number_uses_catalog_part_and_records_inventory_history()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var created = await service.QuickAddPartAsync(
+            refs.JobTicket.Id,
+            new QuickAddJobTicketPartDto("p-100", null, 2m, 1m, 2m, "quick existing", true, refs.Employee.Id, null));
+
+        var refreshedPart = await context.Parts.SingleAsync(x => x.Id == refs.Part.Id);
+        var transaction = await context.InventoryTransactions.SingleAsync(x => x.PartId == refs.Part.Id);
+
+        Assert.Equal(refs.Part.Id, created.PartId);
+        Assert.Equal("P-100", created.PartNumber);
+        Assert.Equal("Filter", created.PartName);
+        Assert.False(created.IsUnlistedPart);
+        Assert.Equal(8m, refreshedPart.QuantityOnHand);
+        Assert.Equal(-2m, transaction.QuantityDelta);
+        Assert.Contains("quick-add", transaction.Reason);
+    }
+
+    [Fact]
+    public async Task Quick_add_unlisted_part_tracks_cost_and_billable_price_without_master_part()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var created = await service.QuickAddPartAsync(
+            refs.JobTicket.Id,
+            new QuickAddJobTicketPartDto("MISC-1", "One off seal", 1.5m, 4m, 9m, "not in catalog", true, refs.Employee.Id, null));
+
+        Assert.Null(created.PartId);
+        Assert.Equal("MISC-1", created.PartNumber);
+        Assert.Equal("One off seal", created.PartName);
+        Assert.True(created.IsUnlistedPart);
+        Assert.Equal(4m, created.UnitCostSnapshot);
+        Assert.Equal(9m, created.SalePriceSnapshot);
+        Assert.Empty(await context.InventoryTransactions.ToListAsync());
+        Assert.Equal(1, await context.Parts.CountAsync());
+    }
+
+    [Fact]
+    public async Task Quick_add_can_request_office_order()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var created = await service.QuickAddPartAsync(
+            refs.JobTicket.Id,
+            new QuickAddJobTicketPartDto("MISC-ORDER", "Return trip fitting", 1m, 11m, 22m, null, true, refs.Employee.Id, null, RequestOfficeOrder: true, OfficeOrderNotes: "Order for return trip"));
+
+        var persisted = await context.JobTicketParts.SingleAsync(x => x.Id == created.Id);
+
+        Assert.True(created.OfficeOrderRequested);
+        Assert.NotNull(created.OfficeOrderRequestedAtUtc);
+        Assert.Equal("Order for return trip", created.OfficeOrderNotes);
+        Assert.True(persisted.OfficeOrderRequested);
+        Assert.NotNull(persisted.OfficeOrderRequestedAtUtc);
+        Assert.Equal("Order for return trip", persisted.OfficeOrderNotes);
     }
 
     [Fact]

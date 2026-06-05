@@ -61,7 +61,7 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
 
         var rows = await history
             .OrderByDescending(x => x.InstalledAtUtc ?? x.AddedAtUtc)
-            .ThenBy(x => x.Part.PartNumber)
+            .ThenBy(x => x.PartNumberSnapshot)
             .Skip(normalized.Offset)
             .Take(normalized.Limit)
             .Select(x => new PartsUsageHistoryRowDto(
@@ -69,8 +69,8 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
                 x.JobTicketId,
                 x.JobTicket.TicketNumber,
                 x.PartId,
-                x.Part.PartNumber,
-                x.Part.Name,
+                x.PartNumberSnapshot,
+                x.PartNameSnapshot,
                 x.EquipmentId ?? x.JobTicket.EquipmentId,
                 x.Equipment != null ? x.Equipment.Name : x.JobTicket.Equipment != null ? x.JobTicket.Equipment.Name : null,
                 x.Equipment != null ? x.Equipment.Manufacturer : x.JobTicket.Equipment != null ? x.JobTicket.Equipment.Manufacturer : null,
@@ -163,7 +163,7 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
         Guid JobTicketPartId,
         Guid JobTicketId,
         string TicketNumber,
-        Guid PartId,
+        Guid? PartId,
         string PartNumber,
         string PartName,
         Guid? EquipmentId,
@@ -197,7 +197,7 @@ public sealed record PartsUsageHistoryItemDto(
     Guid JobTicketPartId,
     Guid JobTicketId,
     string TicketNumber,
-    Guid PartId,
+    Guid? PartId,
     string PartNumber,
     string PartName,
     Guid? EquipmentId,

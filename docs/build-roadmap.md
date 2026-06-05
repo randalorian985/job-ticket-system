@@ -49,6 +49,7 @@ Do not steer the project toward a general ERP build-out.
 - Manager/Admin job-ticket workspace UI polish for shell navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing.
 - Manager/Admin dashboard and job-ticket list dispatch-readiness rollups for active tickets that are ready for dispatch versus tickets missing assignment, lead-tech, schedule, or due-date context, plus dispatch-readiness filtering for ready, needs-review, and not-active tickets on the job-ticket list.
 - Employee assigned-job list field-context cues plus job-ticket detail field-context cues, next field-context fix guidance, and pre-work guidance for active field-work status, schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket data.
+- Employee quick-add parts-on-ticket support for required part-number capture, existing-part matching, one-off unlisted ticket parts, cost/billable price snapshots, and optional office-order request context.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
 - Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
@@ -158,6 +159,7 @@ Not included in the implementation PR:
 - keep the current report review filters, CSV export, time-review workspace, and closeout/readiness review working;
 - continue avoiding purchasing or inventory expansion as the default next move.
 - parts-on-ticket inventory-history consistency fixes are allowed when they keep existing job-ticket part usage and existing inventory history aligned; they do not approve broader inventory expansion.
+- parts-on-ticket quick-add is allowed when it stays ticket-level: required part number, optional master-part match, unlisted one-off part capture, cost/billable price tracking, and office-order request context. It does not approve purchase-order expansion, receiving, vendor invoice tracking, landed cost, replenishment, truck/warehouse inventory, recommendations, AI/scoring, or automatic compatibility decisions.
 
 ### Explicitly still not approved
 - accounting or invoice generation;

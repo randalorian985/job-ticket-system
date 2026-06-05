@@ -10,6 +10,7 @@ import type {
   JobTicketListItemDto,
   JobTicketPartDto,
   JobWorkEntryDto,
+  QuickAddJobTicketPartDto,
   RejectJobTicketPartDto,
   UpdateJobTicketDto
 } from '../types'
@@ -58,6 +59,11 @@ export const jobTicketsApi = {
   listParts: (jobTicketId: string) => apiRequest<JobTicketPartDto[]>(`/api/job-tickets/${jobTicketId}/parts`),
   addPart: (jobTicketId: string, payload: AddJobTicketPartDto) =>
     apiRequest<JobTicketPartDto>(`/api/job-tickets/${jobTicketId}/parts`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  quickAddPart: (jobTicketId: string, payload: QuickAddJobTicketPartDto) =>
+    apiRequest<JobTicketPartDto>(`/api/job-tickets/${jobTicketId}/parts/quick-add`, {
       method: 'POST',
       body: JSON.stringify(payload)
     }),

@@ -24,6 +24,7 @@ public interface IJobTicketsService
     Task<JobWorkEntryDto> AddWorkEntryAsync(Guid jobTicketId, AddJobWorkEntryDto request, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<JobTicketPartDto>> ListPartsAsync(Guid jobTicketId, CancellationToken cancellationToken = default);
     Task<JobTicketPartDto> AddPartAsync(Guid jobTicketId, AddJobTicketPartDto request, CancellationToken cancellationToken = default);
+    Task<JobTicketPartDto> QuickAddPartAsync(Guid jobTicketId, QuickAddJobTicketPartDto request, CancellationToken cancellationToken = default);
     Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default);
     Task<JobTicketPartDto?> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, ApproveJobTicketPartDto request, CancellationToken cancellationToken = default);
     Task<JobTicketPartDto?> RejectPartAsync(Guid jobTicketId, Guid jobTicketPartId, RejectJobTicketPartDto request, CancellationToken cancellationToken = default);
@@ -382,6 +383,8 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         {
             JobTicketId = jobTicketId,
             PartId = request.PartId,
+            PartNumberSnapshot = part.PartNumber,
+            PartNameSnapshot = part.Name,
             EquipmentId = request.EquipmentId,
             Quantity = request.Quantity,
             UnitCostSnapshot = part.UnitCost,
@@ -423,6 +426,105 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         }
 
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Create, null, AuditJson(("JobTicketPartId", entry.Id), ("PartId", request.PartId), ("Quantity", request.Quantity)));
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
+    }
+
+    public async Task<JobTicketPartDto> QuickAddPartAsync(Guid jobTicketId, QuickAddJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        var jobTicket = await dbContext.JobTickets.SingleOrDefaultAsync(x => x.Id == jobTicketId, cancellationToken);
+        if (jobTicket is null)
+        {
+            throw new ValidationException("JobTicketId does not reference an active job ticket.");
+        }
+
+        ValidatePositiveQuantity(request.Quantity);
+        var partNumber = ValidationHelpers.NullIfWhitespace(request.PartNumber);
+        if (partNumber is null)
+        {
+            throw new ValidationException("PartNumber is required.");
+        }
+
+        if (request.UnitCost < 0)
+        {
+            throw new ValidationException("UnitCost cannot be negative.");
+        }
+
+        if (request.SalePrice < 0)
+        {
+            throw new ValidationException("SalePrice cannot be negative.");
+        }
+
+        if (request.AddedByEmployeeId.HasValue)
+        {
+            await ValidateAddedByEmployeeAssignmentAsync(jobTicketId, request.AddedByEmployeeId.Value, request.AllowManagerOverride, cancellationToken);
+        }
+
+        await ValidatePartCompatibilityReferencesAsync(request.EquipmentId, request.ReplacedByJobTicketPartId, jobTicketId, null, cancellationToken);
+
+        var normalizedPartNumber = partNumber.Trim();
+        var partNumberUpper = normalizedPartNumber.ToUpperInvariant();
+        var existingPart = await dbContext.Parts.SingleOrDefaultAsync(x => x.PartNumber.ToUpper() == partNumberUpper, cancellationToken);
+
+        var partName = ValidationHelpers.NullIfWhitespace(request.PartName);
+        if (existingPart is null && partName is null)
+        {
+            throw new ValidationException("PartName is required when PartNumber does not match an existing part.");
+        }
+
+        var addedAtUtc = request.AddedAtUtc ?? DateTime.UtcNow;
+        var entry = new JobTicketPart
+        {
+            JobTicketId = jobTicketId,
+            PartId = existingPart?.Id,
+            PartNumberSnapshot = existingPart?.PartNumber ?? normalizedPartNumber,
+            PartNameSnapshot = existingPart?.Name ?? partName!,
+            IsUnlistedPart = existingPart is null,
+            EquipmentId = request.EquipmentId,
+            Quantity = request.Quantity,
+            UnitCostSnapshot = existingPart?.UnitCost ?? request.UnitCost,
+            SalePriceSnapshot = existingPart?.UnitPrice ?? request.SalePrice,
+            ComponentCategory = ValidationHelpers.NullIfWhitespace(request.ComponentCategory),
+            FailureDescription = ValidationHelpers.NullIfWhitespace(request.FailureDescription),
+            RepairDescription = ValidationHelpers.NullIfWhitespace(request.RepairDescription),
+            TechnicianNotes = ValidationHelpers.NullIfWhitespace(request.TechnicianNotes),
+            InstalledAtUtc = request.InstalledAtUtc,
+            WasSuccessful = request.WasSuccessful,
+            RemovedAtUtc = request.RemovedAtUtc,
+            ReplacedByJobTicketPartId = request.ReplacedByJobTicketPartId,
+            CompatibilityNotes = ValidationHelpers.NullIfWhitespace(request.CompatibilityNotes),
+            Notes = ValidationHelpers.NullIfWhitespace(request.Notes),
+            IsBillable = request.IsBillable,
+            OfficeOrderRequested = request.RequestOfficeOrder,
+            OfficeOrderRequestedAtUtc = request.RequestOfficeOrder ? addedAtUtc : null,
+            OfficeOrderNotes = ValidationHelpers.NullIfWhitespace(request.OfficeOrderNotes),
+            ApprovalStatus = JobPartApprovalStatus.Pending,
+            AddedAtUtc = addedAtUtc,
+            AddedByEmployeeId = request.AddedByEmployeeId,
+            AddedByUserId = request.AddedByEmployeeId,
+            Status = PartTransactionStatus.Used
+        };
+
+        dbContext.JobTicketParts.Add(entry);
+
+        if (existingPart is not null && request.AdjustInventory)
+        {
+            existingPart.QuantityOnHand -= request.Quantity;
+            var stockLocation = await GetOrCreateDefaultStockLocationAsync(cancellationToken);
+            dbContext.InventoryTransactions.Add(new InventoryTransaction
+            {
+                StockLocation = stockLocation,
+                PartId = existingPart.Id,
+                TransactionType = InventoryTransactionType.ManualAdjustment,
+                QuantityDelta = -request.Quantity,
+                Reason = $"Job ticket {jobTicket.TicketNumber} quick-add part usage",
+                Notes = $"JobTicketPartId: {entry.Id}",
+                OccurredAtUtc = entry.AddedAtUtc
+            });
+        }
+
+        AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Create, null, AuditJson(("JobTicketPartId", entry.Id), ("PartNumber", entry.PartNumberSnapshot), ("Quantity", request.Quantity), ("IsUnlistedPart", entry.IsUnlistedPart), ("OfficeOrderRequested", entry.OfficeOrderRequested)));
         await dbContext.SaveChangesAsync(cancellationToken);
         return MapJobTicketPart(currentUserContext.IsManager).Compile().Invoke(entry);
     }
@@ -536,8 +638,8 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
         if (entry is null) return null;
 
-        var part = request.RestoreInventory
-            ? await dbContext.Parts.SingleOrDefaultAsync(x => x.Id == entry.PartId, cancellationToken)
+        var part = request.RestoreInventory && entry.PartId.HasValue
+            ? await dbContext.Parts.SingleOrDefaultAsync(x => x.Id == entry.PartId.Value, cancellationToken)
             : null;
 
         var archivedAtUtc = DateTime.UtcNow;
@@ -813,6 +915,12 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         x.Id,
         x.JobTicketId,
         x.PartId,
+        x.PartNumberSnapshot,
+        x.PartNameSnapshot,
+        x.IsUnlistedPart,
+        x.OfficeOrderRequested,
+        x.OfficeOrderRequestedAtUtc,
+        x.OfficeOrderNotes,
         x.EquipmentId,
         x.Quantity,
         includePricing ? x.UnitCostSnapshot : null,
@@ -959,6 +1067,31 @@ public sealed record AddJobTicketPartDto(
     Guid? ReplacedByJobTicketPartId = null,
     string? CompatibilityNotes = null);
 
+public sealed record QuickAddJobTicketPartDto(
+    string PartNumber,
+    string? PartName,
+    decimal Quantity,
+    decimal UnitCost,
+    decimal SalePrice,
+    string? Notes,
+    bool IsBillable,
+    Guid? AddedByEmployeeId,
+    DateTime? AddedAtUtc,
+    bool RequestOfficeOrder = false,
+    string? OfficeOrderNotes = null,
+    bool AdjustInventory = true,
+    bool AllowManagerOverride = false,
+    Guid? EquipmentId = null,
+    string? ComponentCategory = null,
+    string? FailureDescription = null,
+    string? RepairDescription = null,
+    string? TechnicianNotes = null,
+    DateTime? InstalledAtUtc = null,
+    bool? WasSuccessful = null,
+    DateTime? RemovedAtUtc = null,
+    Guid? ReplacedByJobTicketPartId = null,
+    string? CompatibilityNotes = null);
+
 public sealed record UpdateJobTicketPartDto(
     decimal Quantity,
     string? Notes,
@@ -985,7 +1118,13 @@ public sealed record ArchiveJobTicketPartDto(Guid? ArchivedByUserId, bool Restor
 public sealed record JobTicketPartDto(
     Guid Id,
     Guid JobTicketId,
-    Guid PartId,
+    Guid? PartId,
+    string PartNumber,
+    string PartName,
+    bool IsUnlistedPart,
+    bool OfficeOrderRequested,
+    DateTime? OfficeOrderRequestedAtUtc,
+    string? OfficeOrderNotes,
     Guid? EquipmentId,
     decimal Quantity,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] decimal? UnitCostSnapshot,
