@@ -1,7 +1,8 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/httpClient'
 import { masterDataApi } from '../../api/masterDataApi'
+import { reportsApi } from '../../api/reportsApi'
 import type { CreateJobTicketDto } from '../../types'
 import { buildDispatchEditChecks, JobTicketEditorForm } from './JobTicketEditorForm'
 
@@ -9,6 +10,12 @@ vi.mock('../../api/masterDataApi', () => ({
   masterDataApi: {
     createEquipment: vi.fn(),
     createServiceLocation: vi.fn()
+  }
+}))
+
+vi.mock('../../api/reportsApi', () => ({
+  reportsApi: {
+    getEquipmentHistory: vi.fn()
   }
 }))
 
@@ -49,6 +56,7 @@ const equipment = [
 describe('JobTicketEditorForm dispatch edit readiness review', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(reportsApi.getEquipmentHistory).mockResolvedValue([])
   })
 
   afterEach(() => cleanup())
@@ -278,6 +286,62 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
     })))
     expect(await screen.findByText('Pump 9 added and selected.')).toBeInTheDocument()
     expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
+  })
+
+  it('shows recent service history for the selected equipment using existing report data', async () => {
+    vi.mocked(reportsApi.getEquipmentHistory).mockResolvedValue([
+      {
+        jobTicketId: 'job-1',
+        jobTicketNumber: 'JT-1001',
+        customerId: 'c1',
+        customer: 'Acme',
+        equipmentId: 'eq1',
+        equipment: 'Truck 7',
+        title: 'Replace hydraulic hose',
+        jobStatus: 7,
+        createdAtUtc: '2026-03-01T08:00:00.000Z',
+        completedAtUtc: '2026-03-02T17:00:00.000Z'
+      }
+    ])
+
+    render(
+      <JobTicketEditorForm
+        initial={baseTicket}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    expect(await screen.findByText('JT-1001: Replace hydraulic hose')).toBeInTheDocument()
+    expect(reportsApi.getEquipmentHistory).toHaveBeenCalledWith('eq1', { offset: 0, limit: 3 })
+    const serviceHistoryContext = screen.getByLabelText('equipment service history context')
+    expect(within(serviceHistoryContext).getByText(/7 - Completed/)).toBeInTheDocument()
+    expect(screen.getByText('History is context for Manager/Admin review only; it does not recommend parts or guarantee compatibility.')).toBeInTheDocument()
+  })
+
+  it('keeps equipment service history optional when no equipment is selected or history cannot load', async () => {
+    vi.mocked(reportsApi.getEquipmentHistory).mockRejectedValue(new Error('network'))
+
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, equipmentId: null }}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Select equipment to review recent service history before saving this ticket.')).toBeInTheDocument()
+    expect(reportsApi.getEquipmentHistory).not.toHaveBeenCalled()
+
+    fireEvent.change(screen.getByLabelText('Equipment'), { target: { value: 'eq1' } })
+
+    expect(await screen.findByText('Equipment service history is unavailable right now.')).toBeInTheDocument()
   })
 
   it('warns about possible duplicate equipment without blocking quick-add', async () => {

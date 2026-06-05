@@ -164,6 +164,30 @@ textarea:focus-visible {
   min-width: 0;
 }
 
+.history-context-list {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-context-list li {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.65rem 0;
+}
+
+.history-context-list li:last-child {
+  border-bottom: 0;
+}
+
+.history-context-list span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .desktop-shell {
   max-width: 1180px;
   margin: 0 auto;
