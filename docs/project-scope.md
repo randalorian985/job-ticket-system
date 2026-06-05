@@ -70,6 +70,7 @@ Allowed implementation scope for this lane:
 - clearer visibility for assigned employees, lead technician context, schedule timing, due dates, customer, service location, and equipment context;
 - validation and error UX around assignment, schedule, and required job-ticket context;
 - focused create/edit quick-add UX for job-ticket form context values that users need while creating a ticket, using existing master-data APIs where possible;
+- scoped Manager/Admin job-ticket creation follow-ons, including create-from-recent-ticket, equipment history context, draft tickets, duplicate-equipment warnings during quick-add, quick-add customer contacts, ticket templates, attachments during creation, targeted dashboard create shortcuts, audit trail visibility, and role-specific guardrails;
 - job-ticket detail/list/edit polish that helps managers see whether a ticket is ready to dispatch;
 - employee-facing context improvements for assigned jobs when they rely on existing job-ticket, assignment, schedule, customer, service-location, equipment, notes, parts, files/photos, and time-entry data;
 - focused tests and documentation updates for the selected lane.
@@ -108,6 +109,8 @@ Parts-on-ticket inventory adjustments are allowed to keep the existing inventory
 Parts-on-ticket quick-add is allowed as a job-ticket workflow improvement. It may match an existing part number to master data, or save an unlisted one-off ticket part with required part number, part name, quantity, cost, billable price, notes, and optional office-order request fields. It does not approve purchase orders, receiving, vendor invoicing, landed cost, truck inventory, warehouse transfers, replenishment, recommendations, AI/scoring, or automatic compatibility decisions.
 
 Job-ticket form quick-add is allowed as a Manager/Admin creation/editing convenience when it stays tied to the current ticket context. Service-location and equipment quick-add must preserve the selected customer and service-location relationship, must use DTO APIs, and must not expand into broad master-data management, purchasing, receiving, inventory expansion, recommendations, accounting, payment, or invoice-generation behavior.
+
+Manager/Admin job-ticket creation follow-ons are allowed as future scoped slices when they improve ticket creation quality without turning into a broad ERP or master-data expansion. Approved candidate slices include create-from-recent-ticket, equipment history context from existing service data where possible, draft tickets, duplicate-equipment warnings during quick-add, quick-add customer contacts, ticket templates, attachments during ticket creation, targeted dashboard create shortcuts, audit trail visibility, and role-specific guardrails. Any slice that needs API or schema changes must stay narrow, DTO-based, authorization-preserving, and documented before implementation.
 
 Reports and time-review polish are part of the protected baseline: loaded-row filters, export-friendly review tables, visible-row CSV export, and clearer labor-snapshot wording should remain intact after the closeout/readiness lane.
 

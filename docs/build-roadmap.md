@@ -84,9 +84,10 @@ Current implementation in this lane:
 - this implementation uses existing job-ticket list/detail data, existing edit DTO fields, and existing assignment endpoints.
 
 Next coherent implementation slice:
-- after the current Manager/Admin job-ticket creation quick-add PR is accepted and validated, evaluate the next job-ticket-first dispatch/assignment readiness gap from the current main branch and active PR state;
-- keep any edit, detail, employee, or status warnings tied to the existing job-ticket fields and assignment endpoints;
-- add focused frontend tests that cover ready and not-ready dispatch-review states;
+- after the Manager/Admin job-ticket creation quick-add PR is accepted and validated, choose one focused job-ticket creation follow-on from the current main branch and active PR state;
+- candidate follow-on slices are create-from-recent-ticket, equipment history context, draft tickets, duplicate-equipment warnings during quick-add, quick-add customer contacts, ticket templates, attachments during creation, targeted dashboard create shortcuts, audit trail visibility, and role-specific guardrails;
+- keep each slice tied to job-ticket creation/editing, assignment/readiness context, or existing service history data instead of broad master-data, purchasing, inventory, recommendations, AI/scoring, accounting, payment, or invoice-generation workflows;
+- add focused frontend and backend tests according to the selected slice risk, including validation/error handling and role boundaries when applicable;
 - update README, project scope, and API contract only if the implementation changes visible behavior or API expectations.
 
 Allowed implementation scope:
@@ -94,6 +95,7 @@ Allowed implementation scope:
 - clearer visibility for assigned employees, lead technician context, schedule timing, due dates, customer, service location, and equipment context;
 - validation and error UX around assignment, schedule, and required job-ticket context;
 - focused Manager/Admin create/edit quick-add for job-ticket form context values, preserving customer/service-location/equipment relationships and using existing master-data APIs where possible;
+- focused Manager/Admin job-ticket creation follow-ons: create-from-recent-ticket, equipment history context, draft tickets, duplicate-equipment warnings during quick-add, quick-add customer contacts, ticket templates, attachments during creation, targeted dashboard create shortcuts, audit trail visibility, and role-specific guardrails;
 - job-ticket detail/list/edit polish that helps managers see whether a ticket is ready to dispatch;
 - employee-facing context improvements for assigned jobs when they rely on existing job-ticket, assignment, schedule, customer, service-location, equipment, notes, parts, files/photos, and time-entry data;
 - focused tests and docs updates.
@@ -164,6 +166,7 @@ Not included in the implementation PR:
 - parts-on-ticket inventory-history consistency fixes are allowed when they keep existing job-ticket part usage and existing inventory history aligned; they do not approve broader inventory expansion.
 - parts-on-ticket quick-add is allowed when it stays ticket-level: required part number, optional master-part match, unlisted one-off part capture, cost/billable price tracking, and office-order request context. It does not approve purchase-order expansion, receiving, vendor invoice tracking, landed cost, replenishment, truck/warehouse inventory, recommendations, AI/scoring, or automatic compatibility decisions.
 - job-ticket create/edit quick-add is allowed when it stays inside the current Manager/Admin ticket form context: job type reference values, service locations through existing service-location APIs, and equipment through existing equipment APIs. It does not approve broad master-data screens, purchasing expansion, receiving, inventory expansion, recommendations, AI/scoring, accounting, payment, or invoice-generation behavior.
+- Manager/Admin job-ticket creation follow-ons are allowed when they remain ticket-first and separately scoped: create-from-recent-ticket, equipment history context, draft tickets, duplicate-equipment warnings during quick-add, quick-add customer contacts, ticket templates, attachments during creation, targeted dashboard create shortcuts, audit trail visibility, and role-specific guardrails. API or schema work must be narrow, DTO-based, authorization-preserving, and documented before implementation.
 
 ### Explicitly still not approved
 - accounting or invoice generation;

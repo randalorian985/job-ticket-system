@@ -54,6 +54,7 @@ Supporting purchasing and inventory capabilities already exist on `main`, but th
 Current roadmap discipline:
 - keep new work centered on job tickets, parts-on-ticket workflows, assignment workflows, job information, time tracking, closeout readiness, and related Manager/Admin usability;
 - use Job Ticket Dispatch & Assignment Readiness Polish as the selected implementation lane, focused on clearer assignment, dispatch, schedule, due-date, and readiness review around existing job-ticket data;
+- treat the next Manager/Admin job-ticket creation follow-ons as scoped candidates only when they stay ticket-first: create-from-recent-ticket, equipment history context, draft tickets, duplicate-equipment warnings during quick-add, quick-add customer contacts, ticket templates, attachments during creation, targeted dashboard create shortcuts, audit trail visibility, and role-specific guardrails;
 - keep reports, time-review polish, and closeout readiness working as part of the existing job-ticket-first reporting and review workflow;
 - use the completed checkpoint for historical regression review and docs alignment rather than a new domain expansion;
 - treat invoice-readiness as operational handoff review, not accounting, payment tracking, or invoice generation;
