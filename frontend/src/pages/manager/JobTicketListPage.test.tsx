@@ -63,8 +63,10 @@ describe('Manager list pages', () => {
 
     renderPage()
 
+    expect(screen.getByLabelText('manager job ticket queue')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Loading manager job tickets')
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ticket Queue' })).toBeInTheDocument()
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
     expect(screen.getByText('Assigned: Alex Rivera · Lead: Alex Rivera')).toBeInTheDocument()
@@ -97,6 +99,7 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('Active tickets')).toBeInTheDocument()
+    expect(screen.getByLabelText('queue summary')).toBeInTheDocument()
     expect(screen.getByText('Urgent active')).toBeInTheDocument()
     expect(screen.getByText('Waiting')).toBeInTheDocument()
     expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
