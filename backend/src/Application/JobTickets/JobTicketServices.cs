@@ -409,6 +409,17 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         if (request.AdjustInventory)
         {
             part.QuantityOnHand -= request.Quantity;
+            var stockLocation = await GetOrCreateDefaultStockLocationAsync(cancellationToken);
+            dbContext.InventoryTransactions.Add(new InventoryTransaction
+            {
+                StockLocation = stockLocation,
+                PartId = part.Id,
+                TransactionType = InventoryTransactionType.ManualAdjustment,
+                QuantityDelta = -request.Quantity,
+                Reason = $"Job ticket {jobTicket.TicketNumber} part usage",
+                Notes = $"JobTicketPartId: {entry.Id}",
+                OccurredAtUtc = entry.AddedAtUtc
+            });
         }
 
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Create, null, AuditJson(("JobTicketPartId", entry.Id), ("PartId", request.PartId), ("Quantity", request.Quantity)));
@@ -529,14 +540,26 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             ? await dbContext.Parts.SingleOrDefaultAsync(x => x.Id == entry.PartId, cancellationToken)
             : null;
 
+        var archivedAtUtc = DateTime.UtcNow;
         entry.IsDeleted = true;
-        entry.DeletedAtUtc = DateTime.UtcNow;
+        entry.DeletedAtUtc = archivedAtUtc;
         entry.DeletedByUserId = request.ArchivedByUserId;
         entry.Status = PartTransactionStatus.Cancelled;
 
         if (request.RestoreInventory && part is not null)
         {
             part.QuantityOnHand += entry.Quantity;
+            var stockLocation = await GetOrCreateDefaultStockLocationAsync(cancellationToken);
+            dbContext.InventoryTransactions.Add(new InventoryTransaction
+            {
+                StockLocation = stockLocation,
+                PartId = part.Id,
+                TransactionType = InventoryTransactionType.ManualAdjustment,
+                QuantityDelta = entry.Quantity,
+                Reason = $"Job ticket {jobTicketId} part archive restore",
+                Notes = $"JobTicketPartId: {entry.Id}",
+                OccurredAtUtc = archivedAtUtc
+            });
         }
 
         AddAudit(jobTicketId, nameof(JobTicketPart), AuditActionType.Delete, null, AuditJson(("JobTicketPartId", entry.Id), ("RestoreInventory", request.RestoreInventory)));
@@ -581,6 +604,28 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         {
             throw new ValidationException("Quantity must be greater than zero.");
         }
+    }
+
+    private async Task<StockLocation> GetOrCreateDefaultStockLocationAsync(CancellationToken cancellationToken)
+    {
+        var stockLocation = await dbContext.StockLocations
+            .OrderByDescending(x => x.IsActive)
+            .ThenBy(x => x.Code)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (stockLocation is not null)
+        {
+            return stockLocation;
+        }
+
+        stockLocation = new StockLocation
+        {
+            Name = "Main Warehouse",
+            Code = "MAIN",
+            Description = "Default warehouse stock location"
+        };
+        dbContext.StockLocations.Add(stockLocation);
+        return stockLocation;
     }
 
     private void ValidatePartUpdatePermissions(UpdateJobTicketPartDto request)

@@ -175,6 +175,48 @@ public sealed class JobTicketPartsServiceTests
     }
 
     [Fact]
+    public async Task Add_part_with_inventory_adjustment_records_inventory_history()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, true, refs.Employee.Id, null, AdjustInventory: true));
+
+        var refreshedPart = await context.Parts.SingleAsync(x => x.Id == refs.Part.Id);
+        var transaction = await context.InventoryTransactions.Include(x => x.StockLocation).SingleAsync(x => x.PartId == refs.Part.Id);
+        Assert.Equal(7m, refreshedPart.QuantityOnHand);
+        Assert.Equal(InventoryTransactionType.ManualAdjustment, transaction.TransactionType);
+        Assert.Equal(-3m, transaction.QuantityDelta);
+        Assert.Equal("MAIN", transaction.StockLocation.Code);
+        Assert.Contains(refs.JobTicket.TicketNumber, transaction.Reason);
+        Assert.NotNull(transaction.Notes);
+        Assert.Contains(created.Id.ToString(), transaction.Notes!);
+    }
+
+    [Fact]
+    public async Task Archive_part_with_inventory_restore_records_inventory_history()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, true, refs.Employee.Id, null, AdjustInventory: true));
+        await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id, RestoreInventory: true));
+
+        var refreshedPart = await context.Parts.SingleAsync(x => x.Id == refs.Part.Id);
+        var transactions = await context.InventoryTransactions.OrderBy(x => x.QuantityDelta).ToListAsync();
+        Assert.Equal(10m, refreshedPart.QuantityOnHand);
+        Assert.Equal(2, transactions.Count);
+        Assert.Equal(-3m, transactions[0].QuantityDelta);
+        Assert.Equal(3m, transactions[1].QuantityDelta);
+        Assert.Equal(InventoryTransactionType.ManualAdjustment, transactions[1].TransactionType);
+        Assert.NotNull(transactions[1].Notes);
+        Assert.Contains(created.Id.ToString(), transactions[1].Notes!);
+        Assert.Contains("part archive restore", transactions[1].Reason);
+    }
+
+    [Fact]
     public async Task Audit_logs_created_for_add_update_archive_approve_reject_actions()
     {
         await using var context = CreateContext();
