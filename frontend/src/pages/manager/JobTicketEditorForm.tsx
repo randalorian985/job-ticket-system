@@ -140,6 +140,22 @@ export function findEquipmentQuickAddDuplicates(
     .filter((warning) => warning.matchedFields.length > 0)
 }
 
+function findEquipmentDuplicateMatches(
+  draft: EquipmentDuplicateCheckDraft,
+  equipment: EquipmentDto[],
+  customerId: string,
+  serviceLocationId: string
+): EquipmentDuplicateMatch[] {
+  if (!customerId || !serviceLocationId) {
+    return []
+  }
+
+  return findEquipmentQuickAddDuplicates(
+    draft,
+    equipment.filter((item) => item.customerId === customerId && item.serviceLocationId === serviceLocationId)
+  ).map((warning) => ({ equipment: warning.equipment, reasons: warning.matchedFields }))
+}
+
 function quickAddErrorMessage(error: unknown, fallback: string) {
   if (error instanceof ApiError) {
     return error.message
