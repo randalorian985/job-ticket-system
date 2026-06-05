@@ -21,6 +21,14 @@ function getDispatchOpenItems(job: JobTicketListItemDto, assignments: JobTicketA
   ].filter((item): item is string => Boolean(item))
 }
 
+function getPercent(count: number, max: number) {
+  if (max <= 0) {
+    return 0
+  }
+
+  return Math.round((count / max) * 100)
+}
+
 export function ManagerDashboardPage() {
   const { user } = useAuth()
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
@@ -97,7 +105,9 @@ export function ManagerDashboardPage() {
     const nextDispatchFocus = activeDispatchReadiness.find((item) => item.openItems.length)
 
     return {
+      allJobs: jobs.length,
       open: jobs.filter((job) => openStatuses.has(job.status)).length,
+      submitted: jobs.filter((job) => job.status === 2).length,
       assigned: jobs.filter((job) => job.status === 3).length,
       inProgress: jobs.filter((job) => job.status === 4).length,
       waitingOnParts: jobs.filter((job) => job.status === 5).length,
@@ -111,46 +121,103 @@ export function ManagerDashboardPage() {
     }
   }, [assignmentMap, jobs])
 
-  return (
-    <section className="stack">
-      <article className="card">
-        <h2>Operations Dashboard</h2>
-        <p className="muted">Read-first operational visibility for manager and admin users.</p>
-      </article>
+  const maxStatusCount = Math.max(summary.open, summary.submitted, summary.assigned, summary.inProgress, summary.waitingOnParts, summary.completedReviewReady, summary.invoiceReady, 1)
+  const statusRows = [
+    { label: 'Open jobs', count: summary.open },
+    { label: 'Submitted', count: summary.submitted },
+    { label: 'Assigned', count: summary.assigned },
+    { label: 'In progress', count: summary.inProgress },
+    { label: 'Waiting on parts', count: summary.waitingOnParts },
+    { label: 'Completed / review-ready', count: summary.completedReviewReady },
+    { label: 'Invoice-ready', count: summary.invoiceReady }
+  ]
+  const readinessRows = [
+    { label: 'Dispatch-ready', count: summary.dispatchReady },
+    { label: 'Needs dispatch review', count: summary.needsDispatchReview }
+  ]
+  const maxReadinessCount = Math.max(summary.dispatchReady, summary.needsDispatchReview, 1)
 
-      <article className="card stack" aria-label="operations summary">
-        <div className="page-heading">
-          <h3>Job Summary</h3>
-          <div className="row dashboard-actions">
-            <Link className="button-link" to="/manage/job-tickets/new">Create Job Ticket</Link>
-            <Link to="/manage/job-tickets">Review jobs</Link>
-          </div>
+  return (
+    <section className="manager-dashboard-board" aria-label="manager operations dashboard">
+      <header className="dashboard-hero-strip">
+        <div>
+          <h2>Job ticket management dashboard</h2>
+          <p className="muted">Manager/Admin view for dispatch readiness, open work, and back-office review queues.</p>
         </div>
-        {isLoadingSummary ? <p className="muted" role="status">Loading operations summary…</p> : null}
+        <div className="row dashboard-actions">
+          <Link className="button-link" to="/manage/job-tickets/new">Create Job Ticket</Link>
+          <Link to="/manage/job-tickets">Review jobs</Link>
+        </div>
+      </header>
+
+      <section className="operations-kpi-grid" aria-label="operations summary">
+        {isLoadingSummary ? <p className="muted" role="status">Loading operations summary...</p> : null}
         {summaryError ? <p className="error">{summaryError}</p> : null}
         {!isLoadingSummary && !summaryError ? (
-          <div className="summary-grid">
-            <div className="summary-card"><strong>{summary.open}</strong><span>Open jobs</span></div>
-            <div className="summary-card"><strong>{summary.assigned}</strong><span>Assigned</span></div>
-            <div className="summary-card"><strong>{summary.inProgress}</strong><span>In progress</span></div>
-            <div className="summary-card"><strong>{summary.waitingOnParts}</strong><span>Waiting on parts</span></div>
-            <div className="summary-card"><strong>{summary.completedReviewReady}</strong><span>Completed / review-ready</span></div>
-            <div className="summary-card"><strong>{summary.invoiceReady}</strong><span>Invoice-ready</span></div>
-            <div className="summary-card"><strong>{summary.dispatchReady}</strong><span>Dispatch-ready</span></div>
-            <div className="summary-card"><strong>{summary.needsDispatchReview}</strong><span>Needs dispatch review</span></div>
-          </div>
+          <>
+            <div className="operations-kpi-tile"><span>Open Jobs</span><strong>{summary.open}</strong></div>
+            <div className="operations-kpi-tile"><span>Assigned</span><strong>{summary.assigned}</strong></div>
+            <div className="operations-kpi-tile"><span>In Progress</span><strong>{summary.inProgress}</strong></div>
+            <div className="operations-kpi-tile"><span>Waiting on Parts</span><strong>{summary.waitingOnParts}</strong></div>
+            <div className="operations-kpi-tile"><span>Dispatch-ready</span><strong>{summary.dispatchReady}</strong></div>
+            <div className="operations-kpi-tile"><span>All Jobs</span><strong>{summary.allJobs}</strong></div>
+          </>
         ) : null}
-        {!isLoadingSummary && !summaryError ? (
-          <p className="muted">Next dispatch focus: {summary.nextDispatchFocus}</p>
-        ) : null}
-      </article>
+      </section>
 
-      <section className="dashboard-grid">
-        {links.map((item) => (
-          <Link key={item.to} className="card nav-card" to={item.to}>
-            <h3>{item.label}</h3>
-          </Link>
-        ))}
+      {!isLoadingSummary && !summaryError ? (
+        <section className="operations-panel-grid">
+          <article className="operations-panel">
+            <h3>Unresolved Jobs by Status</h3>
+            <div className="operations-bar-list">
+              {statusRows.map((row) => (
+                <div className="operations-bar-row" key={row.label}>
+                  <span>{row.label}</span>
+                  <div className="operations-bar-track" aria-hidden="true">
+                    <div className="operations-bar-fill" style={{ width: `${getPercent(row.count, maxStatusCount)}%` }} />
+                  </div>
+                  <strong>{row.count}</strong>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="operations-panel">
+            <h3>Dispatch Readiness</h3>
+            <div className="operations-bar-list">
+              {readinessRows.map((row) => (
+                <div className="operations-bar-row" key={row.label}>
+                  <span>{row.label}</span>
+                  <div className="operations-bar-track" aria-hidden="true">
+                    <div className="operations-bar-fill operations-bar-fill-accent" style={{ width: `${getPercent(row.count, maxReadinessCount)}%` }} />
+                  </div>
+                  <strong>{row.count}</strong>
+                </div>
+              ))}
+            </div>
+            <p className="muted">Next dispatch focus: {summary.nextDispatchFocus}</p>
+          </article>
+
+          <article className="operations-panel">
+            <h3>Back Office Review</h3>
+            <div className="operations-review-grid">
+              <div><strong>{summary.completedReviewReady}</strong><span>Completed / review-ready</span></div>
+              <div><strong>{summary.invoiceReady}</strong><span>Invoice-ready</span></div>
+              <div><strong>{summary.needsDispatchReview}</strong><span>Needs dispatch review</span></div>
+            </div>
+          </article>
+        </section>
+      ) : null}
+
+      <section className="operations-panel operations-nav-panel" aria-label="manager workspace links">
+        <h3>Manager Workspace</h3>
+        <div className="dashboard-grid operations-link-grid">
+          {links.map((item) => (
+            <Link key={item.to} className="nav-card operations-link" to={item.to}>
+              {item.label}
+            </Link>
+          ))}
+        </div>
       </section>
     </section>
   )
