@@ -22,7 +22,7 @@ The post-reports historical regression audit and docs checkpoint is recorded in 
 
 Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented as a Manager/Admin job review enhancement.
 
-Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin dashboard and job-ticket list dispatch-readiness rollups, per-ticket readiness cues, named list-row and detail assignment/lead ownership from assignment responses, next-step dispatch fixes for missing list/detail/edit readiness context, dispatch-readiness filtering, active-status-aware detail dispatch-readiness checklist cues with employee-record and ID fallback for assignment names, edit-side dispatch-readiness cues, and active-status-aware Employee assigned-job list/detail field-context cues with next-fix and pre-work guidance using existing job-ticket and assignment APIs.
+Job Ticket Dispatch & Assignment Readiness Polish is the selected job-ticket-first implementation lane. Current implementation progress adds Manager/Admin dashboard and job-ticket list dispatch-readiness rollups, per-ticket readiness cues, named list-row and detail assignment/lead ownership from assignment responses, next-step dispatch fixes for missing list/detail/edit readiness context, dispatch-readiness filtering, active-status-aware detail dispatch-readiness checklist cues with employee-record and ID fallback for assignment names, active-status-aware edit-side dispatch-readiness cues, and active-status-aware Employee assigned-job list/detail field-context cues with next-fix and pre-work guidance using existing job-ticket and assignment APIs.
 
 Test environment setup is now part of the maintained project baseline: docs cover the opt-in Admin bootstrap for empty local/test databases, full pilot seed setup, scheduled-runner workarounds, Docker SQL authentication, custom SQL Server connection strings, named instances, and Windows integrated security guidance.
 
@@ -51,7 +51,7 @@ Do not steer the project toward a general ERP build-out.
 - Employee assigned-job list field-context cues plus job-ticket detail field-context cues, next field-context fix guidance, and pre-work guidance for active field-work status, schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket data.
 - Employee quick-add parts-on-ticket support for required part-number capture, existing-part matching, one-off unlisted ticket parts, cost/billable price snapshots, and optional office-order request context.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
-- Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
+- Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible data, and snapshot-first labor labels.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
 - Parts Purchase / Vendor Cost Tracking Phase 2.
 - Purchasing stabilization follow-ups for submit-state discipline, close-transition discipline, and closed-order receiving-action gating.
@@ -75,8 +75,8 @@ Current implementation in this lane:
 - Manager/Admin job-ticket list filters can isolate dispatch-ready tickets, tickets needing dispatch review, and not-active dispatch tickets;
 - Manager/Admin dashboard shows the first next dispatch focus from existing loaded job-ticket and assignment data;
 - Manager/Admin job-ticket detail surfaces show an active-status-aware dispatch-readiness checklist and next dispatch fix for assignment ownership, lead tech, scheduled start, due date, customer, service location, and equipment or no-equipment context, including employee names from assignment responses with Admin-loaded employee-record and ID fallback, and treat assignment-load failures as unavailable assignment data instead of empty assignment lists;
-- Manager/Admin job-ticket edit surfaces show whether customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
-- Manager/Admin job-ticket edit surfaces now identify the first next dispatch fix when edit-side readiness context is missing;
+- Manager/Admin job-ticket edit surfaces show whether active dispatch status, customer, service-location, equipment or no-equipment context, scheduled-start, due-date, and job instruction context are present before dispatch;
+- Manager/Admin job-ticket edit surfaces now identify the first next dispatch fix when edit-side readiness context is missing, including moving tickets back into an active dispatch status before dispatch review;
 - Manager/Admin job-ticket workspace surfaces have clearer navigation, shared summary cards, filter panels, review panels, form controls, and responsive workspace spacing for faster scanning;
 - Employee assigned-job list rows show due-date, active field-work status, and next field-context fix cues from existing list data, and Employee job-ticket detail surfaces show field-context cues for active field-work status, scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions, identify the first next field-context fix when manager review is still needed, and show clear pre-work guidance;
 - this implementation uses existing job-ticket list/detail data, existing edit DTO fields, and existing assignment endpoints.
@@ -92,7 +92,7 @@ Allowed implementation scope:
 - clearer visibility for assigned employees, lead technician context, schedule timing, due dates, customer, service location, and equipment context;
 - validation and error UX around assignment, schedule, and required job-ticket context;
 - job-ticket detail/list/edit polish that helps managers see whether a ticket is ready to dispatch;
-- employee-facing context improvements for assigned jobs using existing job-ticket, assignment, schedule, customer, service-location, equipment, notes, parts, files/photos, and time-entry data;
+- employee-facing context improvements for assigned jobs when they rely on existing job-ticket, assignment, schedule, customer, service-location, equipment, notes, parts, files/photos, and time-entry data;
 - focused tests and docs updates.
 
 Expected implementation posture:
@@ -195,7 +195,7 @@ Run in a checkout-capable environment:
 ```bash
 dotnet restore backend/JobTicketSystem.sln
 dotnet build backend/JobTicketSystem.sln
-dotnet test backend/JobTicketSystem.sln
+ dotnet test backend/JobTicketSystem.sln
 cd frontend && npm install
 cd frontend && npm run build
 cd frontend && npm test
