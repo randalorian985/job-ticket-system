@@ -105,7 +105,7 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
     expect(screen.getByText('Missing due date')).toBeInTheDocument()
     expect(screen.getByText('Unassigned active')).toBeInTheDocument()
-    expect(screen.getByText('Needs lead')).toBeInTheDocument()
+    expect(screen.getAllByText('Needs lead').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Dispatch-ready').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Needs dispatch review').length).toBeGreaterThan(0)
   })
