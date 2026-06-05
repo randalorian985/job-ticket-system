@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/httpClient'
 import { masterDataApi } from '../../api/masterDataApi'
@@ -317,7 +317,8 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
 
     expect(await screen.findByText('JT-1001: Replace hydraulic hose')).toBeInTheDocument()
     expect(reportsApi.getEquipmentHistory).toHaveBeenCalledWith('eq1', { offset: 0, limit: 3 })
-    expect(screen.getByText(/7 - Completed/)).toBeInTheDocument()
+    const serviceHistoryContext = screen.getByLabelText('equipment service history context')
+    expect(within(serviceHistoryContext).getByText(/7 - Completed/)).toBeInTheDocument()
     expect(screen.getByText('History is context for Manager/Admin review only; it does not recommend parts or guarantee compatibility.')).toBeInTheDocument()
   })
 
