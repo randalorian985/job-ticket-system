@@ -216,7 +216,7 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
     {
         try
         {
-            var partName = ValidationHelpers.NullIfWhitespace(request.PartName);
+            var partName = string.IsNullOrWhiteSpace(request.PartName) ? null : request.PartName.Trim();
             if (partName is null)
             {
                 throw new ValidationException("PartName is required.");
