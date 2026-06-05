@@ -280,6 +280,58 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
     expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
   })
 
+  it('warns about possible duplicate equipment without blocking quick-add', async () => {
+    vi.mocked(masterDataApi.createEquipment).mockResolvedValue({
+      id: 'eq2',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      ownerCustomerId: 'c1',
+      responsibleBillingCustomerId: 'c1',
+      name: 'Truck 7 - Replacement',
+      equipmentNumber: 'EQ-7B',
+      unitNumber: 'Unit-7',
+      serialNumber: 'SN-7'
+    })
+
+    render(
+      <JobTicketEditorForm
+        initial={baseTicket}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={[{
+          id: 'eq1',
+          customerId: 'c1',
+          serviceLocationId: 's1',
+          name: 'Truck 7',
+          equipmentNumber: 'EQ-7',
+          unitNumber: 'Unit-7',
+          serialNumber: 'SN-7'
+        }] as any}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: ' truck 7 ' } })
+    fireEvent.change(screen.getByLabelText('Serial Number'), { target: { value: 'sn-7' } })
+
+    expect(screen.getByRole('status', { name: 'possible duplicate equipment warning' })).toBeInTheDocument()
+    expect(screen.getByText('Truck 7: matches name, serial number.')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Truck 7 - Replacement' } })
+    fireEvent.change(screen.getByLabelText('Equipment Number'), { target: { value: 'EQ-7B' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
+
+    await waitFor(() => expect(masterDataApi.createEquipment).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Truck 7 - Replacement',
+      equipmentNumber: 'EQ-7B',
+      serialNumber: 'sn-7'
+    })))
+    expect(await screen.findByText('Truck 7 - Replacement added and selected.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
+  })
+
   it('quick-adds a job-type reference value and submits it with the ticket', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined)
 
