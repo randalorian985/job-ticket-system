@@ -191,7 +191,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Operations Dashboard' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
     expect(screen.queryByText('Users')).not.toBeInTheDocument()
 
     render(
@@ -251,7 +251,7 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Operations Dashboard' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
   })
 
   it('manager and admin users are routed to manager console from root', async () => {
@@ -269,7 +269,7 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Operations Dashboard' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
 
     vi.mocked(useAuth).mockReturnValue({
       user: adminUser,
@@ -285,7 +285,7 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Operations Dashboard' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
   })
 
   it('manager and admin users cannot access employee-only routes', async () => {
