@@ -195,6 +195,21 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
         }
     }
 
+    [HttpPost("{jobTicketId:guid}/parts/quick-add")]
+    [Authorize(Policy = "AssignedEmployeeOrManager")]
+    public async Task<ActionResult<JobTicketPartDto>> QuickAddPartAsync(Guid jobTicketId, [FromBody] QuickAddJobTicketPartDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var addedByEmployeeId = currentUserContext.IsManager ? request.AddedByEmployeeId : currentUserContext.EmployeeId;
+            return Ok(await service.QuickAddPartAsync(jobTicketId, request with { AddedByEmployeeId = addedByEmployeeId }, cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
     [HttpPut("{jobTicketId:guid}/parts/{jobTicketPartId:guid}")]
     [Authorize(Policy = "AssignedEmployeeOrManager")]
     public async Task<ActionResult<JobTicketPartDto>> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, [FromBody] UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)

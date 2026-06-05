@@ -740,6 +740,11 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("IsUnlistedPart")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<Guid>("JobTicketId")
                         .HasColumnType("uniqueidentifier");
 
@@ -747,8 +752,30 @@ namespace Infrastructure.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<Guid>("PartId")
+                    b.Property<string>("OfficeOrderNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("OfficeOrderRequested")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("OfficeOrderRequestedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("PartId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PartNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PartNumberSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal>("Quantity")
                         .HasPrecision(18, 4)
@@ -809,7 +836,11 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasIndex("JobTicketId");
 
+                    b.HasIndex("OfficeOrderRequested");
+
                     b.HasIndex("PartId");
+
+                    b.HasIndex("PartNumberSnapshot");
 
                     b.HasIndex("ReplacedByJobTicketPartId");
 
@@ -1672,8 +1703,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasOne("JobTicketSystem.Domain.Entities.Part", "Part")
                         .WithMany("JobTicketParts")
                         .HasForeignKey("PartId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("JobTicketSystem.Domain.Entities.JobTicketPart", "ReplacedByJobTicketPart")
                         .WithMany("ReplacedJobTicketParts")

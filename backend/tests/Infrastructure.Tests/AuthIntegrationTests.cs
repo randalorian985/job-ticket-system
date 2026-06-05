@@ -422,6 +422,8 @@ public sealed class AuthIntegrationTests
             {
                 JobTicketId = refs.AssignedJob.Id,
                 PartId = part.Id,
+                PartNumberSnapshot = part.PartNumber,
+                PartNameSnapshot = part.Name,
                 Quantity = 1m,
                 UnitCostSnapshot = part.UnitCost,
                 SalePriceSnapshot = part.UnitPrice,
@@ -481,6 +483,8 @@ public sealed class AuthIntegrationTests
             {
                 JobTicketId = refs.AssignedJob.Id,
                 PartId = part.Id,
+                PartNumberSnapshot = part.PartNumber,
+                PartNameSnapshot = part.Name,
                 Quantity = 1m,
                 UnitCostSnapshot = part.UnitCost,
                 SalePriceSnapshot = part.UnitPrice,

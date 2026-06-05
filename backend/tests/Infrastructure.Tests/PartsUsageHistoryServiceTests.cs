@@ -117,6 +117,8 @@ public sealed class PartsUsageHistoryServiceTests
     {
         JobTicketId = jobTicketId,
         PartId = partId,
+        PartNumberSnapshot = "SEAL-1",
+        PartNameSnapshot = "Seal Kit",
         EquipmentId = equipmentId,
         Quantity = 1m,
         UnitCostSnapshot = 10m,

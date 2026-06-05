@@ -26,6 +26,7 @@ That means the core scope is:
 - Manager/Admin job ticket edit readiness cues now summarize customer, service location, equipment or no-equipment context, schedule, due date, and job instruction context using existing job-ticket fields, and name the next edit-side dispatch fix when one is missing.
 - Manager/Admin job-ticket workspace UI now has clearer shell navigation, shared workspace styling, summary-card emphasis, filter panels, review panels, form controls, and responsive spacing for operational scanning.
 - Employee assigned-job list rows now show due-date, active field-work status, and next field-context fix cues from existing assigned-job list data, while Employee job ticket detail field-context cues summarize active field-work status, schedule, due date, customer, service location, equipment or no-equipment context, and job instruction context, name the next field-context fix, and show pre-work guidance when field context still needs manager review using existing assigned-ticket detail data.
+- Employee job ticket parts workflow now includes quick-add for parts that are not convenient to select from the parts list: part number is required, existing part numbers are matched to catalog parts, and unmatched one-off parts are tracked on the ticket with cost, billable price, quantity, notes, and optional office-order request context without creating master parts.
 - Employee workflow and existing Manager/Admin workflow must continue working while future job-ticket-centric phases are chosen and built.
 
 Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-roadmap.md).
@@ -34,6 +35,7 @@ Current roadmap sequencing is controlled in [docs/build-roadmap.md](./build-road
 - Auth, JWT token revalidation, and role enforcement for `Admin`, `Manager`, and `Employee`.
 - Local/test environment support for opt-in Admin bootstrap without full seeded data, plus documented seeded pilot setup and database connection-string options.
 - Employee mobile workflow for assigned jobs, GPS time tracking, work notes, part usage, files/photos, active-status-aware assigned-job list/detail field-context review, next field-context fix guidance, and pre-work context guidance.
+- Employee quick-add parts-on-ticket workflow for catalog-matched and one-off unlisted parts, including ticket-level cost/billable snapshots and optional office-order request flagging.
 - Manager/Admin job-ticket workflow, assignment management, archive/status UX, reporting hub, inline status/archive review feedback, closeout/invoice-readiness review, dashboard dispatch-readiness summary, dispatch-readiness list cues and filters, active-status-aware detail dispatch-readiness checklist and next-fix cues, edit-side dispatch-readiness cues, and time-review approval workspace.
 - Manager/Admin job-ticket create/edit/detail/list support for scheduling, billing context, purchase-order references, operational notes, lead-tech/assignment review cues, invoice-readiness cues, dispatch-readiness rollups, next-step dispatch fixes, workspace visual polish, and clearer status-change confirmation.
 - Manager/Admin reporting filters, export-friendly loaded tables, client-side CSV export from loaded report data, visible review context, and snapshot-first labor labels.
@@ -99,6 +101,8 @@ New work should stay centered on the job-ticket product surface:
 Supporting purchasing and inventory code already exists on `main`, but further expansion in those domains is not the active product direction.
 
 Parts-on-ticket inventory adjustments are allowed to keep the existing inventory foundation internally consistent. Recording job-ticket part usage and archive-restore adjustments as inventory history is a stabilization fix, not an approval for broader inventory expansion.
+
+Parts-on-ticket quick-add is allowed as a job-ticket workflow improvement. It may match an existing part number to master data, or save an unlisted one-off ticket part with required part number, part name, quantity, cost, billable price, notes, and optional office-order request fields. It does not approve purchase orders, receiving, vendor invoicing, landed cost, truck inventory, warehouse transfers, replenishment, recommendations, AI/scoring, or automatic compatibility decisions.
 
 Reports and time-review polish are part of the protected baseline: loaded-row filters, export-friendly review tables, visible-row CSV export, and clearer labor-snapshot wording should remain intact after the closeout/readiness lane.
 

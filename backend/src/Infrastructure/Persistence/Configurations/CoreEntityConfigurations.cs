@@ -306,6 +306,11 @@ public sealed class JobTicketPartConfiguration : IEntityTypeConfiguration<JobTic
         builder.Property(x => x.Quantity).HasPrecision(18, 4);
         builder.Property(x => x.UnitCostSnapshot).HasPrecision(18, 2);
         builder.Property(x => x.SalePriceSnapshot).HasPrecision(18, 2);
+        builder.Property(x => x.PartNumberSnapshot).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.PartNameSnapshot).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.IsUnlistedPart).HasDefaultValue(false).IsRequired();
+        builder.Property(x => x.OfficeOrderRequested).HasDefaultValue(false).IsRequired();
+        builder.Property(x => x.OfficeOrderNotes).HasMaxLength(2000);
         builder.Property(x => x.IsBillable).HasDefaultValue(true).IsRequired();
         builder.Property(x => x.ApprovalStatus).HasDefaultValue(JobTicketSystem.Domain.Enums.JobPartApprovalStatus.Pending).IsRequired();
         builder.Property(x => x.Notes).HasMaxLength(2000);
@@ -322,6 +327,8 @@ public sealed class JobTicketPartConfiguration : IEntityTypeConfiguration<JobTic
         builder.HasOne(x => x.AddedByEmployee).WithMany().HasForeignKey(x => x.AddedByEmployeeId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.JobTicketId);
         builder.HasIndex(x => x.PartId);
+        builder.HasIndex(x => x.PartNumberSnapshot);
+        builder.HasIndex(x => x.OfficeOrderRequested);
         builder.HasIndex(x => x.ApprovalStatus);
         builder.HasIndex(x => new { x.JobTicketId, x.ApprovalStatus });
         builder.HasIndex(x => x.AddedByEmployeeId);

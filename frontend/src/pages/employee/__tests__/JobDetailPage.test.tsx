@@ -16,7 +16,8 @@ vi.mock('../../../api/jobTicketsApi', () => ({
     listWorkEntries: vi.fn(),
     listParts: vi.fn(),
     addWorkEntry: vi.fn(),
-    addPart: vi.fn()
+    addPart: vi.fn(),
+    quickAddPart: vi.fn()
   }
 }))
 
@@ -95,6 +96,10 @@ describe('JobDetailPage', () => {
         id: 'part-row-1',
         jobTicketId: 'job-1',
         partId: 'part-1',
+        partNumber: 'P-1',
+        partName: 'Valve kit',
+        isUnlistedPart: false,
+        officeOrderRequested: false,
         quantity: 1,
         notes: 'Valve kit replacement',
         isBillable: true,
@@ -135,7 +140,7 @@ describe('JobDetailPage', () => {
     expect(screen.getByText('Status: In Progress')).toBeInTheDocument()
     expect(screen.getByText('Priority: High')).toBeInTheDocument()
     expect(screen.getByText(/Inspected hydraulic lines/)).toBeInTheDocument()
-    expect(screen.getByText(/Part ID part-1/)).toBeInTheDocument()
+    expect(screen.getByText(/P-1 - Valve kit/)).toBeInTheDocument()
     expect(screen.getByText(/before.jpg/)).toBeInTheDocument()
 
     const fieldContext = screen.getByLabelText('field context review')

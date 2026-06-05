@@ -137,7 +137,13 @@ export type AddJobWorkEntryDto = {
 export type JobTicketPartDto = {
   id: string
   jobTicketId: string
-  partId: string
+  partId?: string | null
+  partNumber: string
+  partName: string
+  isUnlistedPart: boolean
+  officeOrderRequested: boolean
+  officeOrderRequestedAtUtc?: string | null
+  officeOrderNotes?: string | null
   equipmentId?: string | null
   quantity: number
   unitCostSnapshot?: number
@@ -170,6 +176,32 @@ export type AddJobTicketPartDto = {
   isBillable: boolean
   addedByEmployeeId?: string | null
   addedAtUtc?: string | null
+  adjustInventory?: boolean
+  allowManagerOverride?: boolean
+  equipmentId?: string | null
+  componentCategory?: string | null
+  failureDescription?: string | null
+  repairDescription?: string | null
+  technicianNotes?: string | null
+  installedAtUtc?: string | null
+  wasSuccessful?: boolean | null
+  removedAtUtc?: string | null
+  replacedByJobTicketPartId?: string | null
+  compatibilityNotes?: string | null
+}
+
+export type QuickAddJobTicketPartDto = {
+  partNumber: string
+  partName?: string | null
+  quantity: number
+  unitCost: number
+  salePrice: number
+  notes?: string | null
+  isBillable: boolean
+  addedByEmployeeId?: string | null
+  addedAtUtc?: string | null
+  requestOfficeOrder?: boolean
+  officeOrderNotes?: string | null
   adjustInventory?: boolean
   allowManagerOverride?: boolean
   equipmentId?: string | null
@@ -282,7 +314,7 @@ export type PartsUsageHistoryItemDto = {
   jobTicketPartId: string
   jobTicketId: string
   ticketNumber: string
-  partId: string
+  partId?: string | null
   partNumber: string
   partName: string
   equipmentId?: string | null
@@ -583,7 +615,7 @@ export type InvoiceReadyLaborLineDto = {
 
 export type InvoiceReadyPartLineDto = {
   jobTicketPartId: string
-  partId: string
+  partId?: string | null
   partNumber: string
   partName: string
   quantity: number

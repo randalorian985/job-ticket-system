@@ -182,6 +182,8 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
         completedTicket.Parts.Add(new JobTicketPart
         {
             Part = filter,
+            PartNumberSnapshot = filter.PartNumber,
+            PartNameSnapshot = filter.Name,
             Equipment = equipment,
             Quantity = 1m,
             UnitCostSnapshot = filter.UnitCost,
@@ -230,6 +232,8 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
         waitingTicket.Parts.Add(new JobTicketPart
         {
             Part = belt,
+            PartNumberSnapshot = belt.PartNumber,
+            PartNameSnapshot = belt.Name,
             Equipment = equipment,
             Quantity = 1m,
             UnitCostSnapshot = belt.UnitCost,

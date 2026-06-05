@@ -20,6 +20,7 @@ The project is centered on the original job-ticket workflow:
 - Manager/Admin job ticket detail and edit surfaces now show dispatch-readiness cues for assignment, named lead-tech/assigned-employee ownership where available, customer, service location, equipment or no-equipment context, schedule, due date, and job instructions using existing job-ticket fields; detail readiness uses the same active dispatch statuses as the dashboard/list rule, shows not-active dispatch tickets with the next active-queue fix, and treats assignment-load failures as unavailable assignment data instead of empty assignment lists.
 - Manager/Admin job-ticket workspace UI now has clearer console navigation, shared workspace styling, summary-card emphasis, filter panels, review panels, and responsive spacing for faster scanning across desktop and mobile.
 - Employee assigned-job list rows now show due-date context, active field-work status, and the next field-context fix from existing assigned-job list data, and Employee job detail shows active-status-aware field-context review cues, the next field-context fix, and pre-work guidance for assigned work using existing job-ticket detail data for status, schedule, due date, customer, service location, equipment, and job instructions.
+- Employee job detail now supports ticket-level quick-add parts by required part number, including catalog matching when the part exists, one-off unlisted part capture when it does not, cost and billable price snapshots, and optional office-order request context.
 - Test environments can opt into a lightweight Admin credential bootstrap when full pilot seed data is not desired.
 - Database setup documentation now covers Docker SQL authentication, custom SQL Server connection strings, named instances, and Windows integrated security for local/test environments.
 - Parts Purchase / Vendor Cost Tracking Phase 1 and Phase 2 remain implemented as supporting operational workflows already present on `main`.
@@ -38,6 +39,7 @@ The project is centered on the original job-ticket workflow:
 - Manager/Admin reporting filters, loaded-row review context, snapshot-first labor labels, export-friendly report tables, and client-side CSV export from loaded report data.
 - Manager/Admin time review with export-friendly loaded rows, visible-slice filters, summary counts, and CSV export for loaded time-entry review.
 - Employee mobile job workflow with GPS time tracking, work notes, part usage, files/photos, active-status-aware assigned-job list/detail field-context review, next field-context fix guidance, and context guidance before starting work.
+- Employee parts-on-ticket quick-add for catalog-matched and one-off unlisted parts without expanding the master parts, purchasing, or inventory domains.
 - Master-data lifecycle workflows for customers, service locations, equipment, vendors, part categories, and parts.
 - Admin-only user management at `/manage/users`.
 - Parts usage history visibility with cautious, non-recommendation wording.
