@@ -54,7 +54,7 @@ Do not steer the project toward a general ERP build-out.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
 - Parts Purchase / Vendor Cost Tracking Phase 2.
 - Purchasing stabilization follow-ups for submit-state discipline, close-transition discipline, and closed-order receiving-action gating.
-- Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, and purchase-order receipt posting.
+- Supporting inventory foundation for stock locations, inventory history, stock visibility, manual adjustments, purchase-order receipt posting, and job-ticket part usage/restore history when ticket parts adjust inventory.
 
 ## Current Roadmap Gate
 The Job Ticket Closeout & Invoice-Readiness Workflow Polish slice is implemented using existing Manager/Admin job-ticket review data and APIs.
@@ -157,6 +157,7 @@ Not included in the implementation PR:
 - prefer coherent workflow slices or clearly necessary stabilization follow-ups;
 - keep the current report review filters, CSV export, time-review workspace, and closeout/readiness review working;
 - continue avoiding purchasing or inventory expansion as the default next move.
+- parts-on-ticket inventory-history consistency fixes are allowed when they keep existing job-ticket part usage and existing inventory history aligned; they do not approve broader inventory expansion.
 
 ### Explicitly still not approved
 - accounting or invoice generation;
