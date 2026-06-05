@@ -142,6 +142,7 @@ describe('JobDetailPage', () => {
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
     expect(screen.getByText('Status: In Progress')).toBeInTheDocument()
     expect(screen.getByText('Priority: High')).toBeInTheDocument()
+    expect(screen.queryByText(/Billing Party ID/)).not.toBeInTheDocument()
     expect(screen.getByText(/Inspected hydraulic lines/)).toBeInTheDocument()
     expect(screen.getByText(/P-1 - Valve kit/)).toBeInTheDocument()
     expect(screen.getByText(/before.jpg/)).toBeInTheDocument()
@@ -189,6 +190,7 @@ describe('JobDetailPage', () => {
     expect(screen.queryByLabelText('Part number')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Unit cost')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Billable price')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Invoice attachment')).not.toBeInTheDocument()
     expect(screen.queryByText(/sale price/i)).not.toBeInTheDocument()
 
     const user = userEvent.setup()
@@ -286,6 +288,7 @@ describe('JobDetailPage', () => {
     expect(screen.getByRole('button', { name: 'Clock Out with GPS' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Upload Photo / File' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Invoice attachment')).not.toBeInTheDocument()
 
     const fieldContext = screen.getByLabelText('field context review')
     expect(within(fieldContext).getByText('Needs manager review')).toBeInTheDocument()
@@ -296,11 +299,6 @@ describe('JobDetailPage', () => {
     expect(within(fieldContext).getByText('No due date is set.')).toBeInTheDocument()
     expect(within(fieldContext).getByText('No job instructions are available yet.')).toBeInTheDocument()
     expect(screen.getByText('Field context needs manager review before starting new work.')).toBeInTheDocument()
-
-    const invoiceAttachment = screen.getByLabelText('Invoice attachment')
-    expect(invoiceAttachment).toHaveAttribute('type', 'checkbox')
-    expect(invoiceAttachment.closest('label')).toHaveClass('row')
-    expect(invoiceAttachment.closest('label')).not.toHaveClass('master-data-form-row')
 
     const user = userEvent.setup()
     const uploadButton = screen.getByRole('button', { name: 'Upload' })
