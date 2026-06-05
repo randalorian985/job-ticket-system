@@ -51,7 +51,7 @@ Do not steer the project toward a general ERP build-out.
 - Employee assigned-job list field-context cues plus job-ticket detail field-context cues, next field-context fix guidance, and pre-work guidance for active field-work status, schedule, due date, customer, service location, equipment or no-equipment context, and job instructions using existing assigned-ticket data.
 - Employee quick-add parts-on-ticket support for required part-number capture, existing-part matching, one-off unlisted ticket parts, cost/billable price snapshots, and optional office-order request context.
 - Manager/Admin closeout/readiness review for labor, time approvals, parts, files/photos, notes, status, customer/equipment context, and billing handoff context without accounting or invoice generation.
-- Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible data, and snapshot-first labor labels.
+- Manager/Admin reports and time-review polish, including loaded-row filters, export-friendly tables, client-side CSV export from visible loaded data, and snapshot-first labor labels.
 - Parts Purchase / Vendor Cost Tracking Phase 1.
 - Parts Purchase / Vendor Cost Tracking Phase 2.
 - Purchasing stabilization follow-ups for submit-state discipline, close-transition discipline, and closed-order receiving-action gating.
@@ -195,7 +195,7 @@ Run in a checkout-capable environment:
 ```bash
 dotnet restore backend/JobTicketSystem.sln
 dotnet build backend/JobTicketSystem.sln
- dotnet test backend/JobTicketSystem.sln
+dotnet test backend/JobTicketSystem.sln
 cd frontend && npm install
 cd frontend && npm run build
 cd frontend && npm test
