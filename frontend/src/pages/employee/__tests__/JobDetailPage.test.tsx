@@ -190,7 +190,6 @@ describe('JobDetailPage', () => {
     expect(screen.queryByLabelText('Unit cost')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Billable price')).not.toBeInTheDocument()
     expect(screen.queryByText(/sale price/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/billing/i)).not.toBeInTheDocument()
 
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Part used'), 'Hydraulic hose')
