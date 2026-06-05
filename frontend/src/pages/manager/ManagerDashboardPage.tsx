@@ -4,6 +4,7 @@ import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import type { JobTicketAssignmentDto, JobTicketListItemDto } from '../../types'
+import './ManagerDashboardPage.css'
 
 const openStatuses = new Set([1, 2, 3, 4, 5, 6])
 const activeDispatchStatuses = new Set([2, 3, 4, 5, 6])
