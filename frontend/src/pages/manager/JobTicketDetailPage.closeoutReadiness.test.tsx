@@ -15,7 +15,7 @@ vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn(
 vi.mock('../../api/filesApi', () => ({ filesApi: { list: vi.fn(), getDownloadUrl: vi.fn(() => '#') } }))
 vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn() } }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn() } }))
-vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn() } }))
+vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
 
 describe('JobTicketDetailPage closeout readiness semantics', () => {
   const renderPage = () => {
@@ -42,12 +42,13 @@ describe('JobTicketDetailPage closeout readiness semantics', () => {
     } as any)
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([{ employeeId: 'e1', assignedAtUtc: '2026-04-01T08:15:00Z', isLead: true }] as any)
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([{ id: 'w1', performedAtUtc: '2026-04-01T12:00:00Z', notes: 'Replaced belt' }] as any)
-    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 2, notes: 'Approved stock' }] as any)
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', partNumber: 'P-100', partName: 'Hydraulic hose', isUnlistedPart: false, officeOrderRequested: false, quantity: 2, approvalStatus: 2, notes: 'Approved stock', addedAtUtc: '2026-04-01T12:00:00Z', isBillable: false }] as any)
     vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:00:00Z', laborHours: 1.5, billableHours: 1, approvalStatus: 2, workSummary: 'Checked motor' }] as any)
     vi.mocked(filesApi.list).mockResolvedValue([{ id: 'f1', jobTicketId: 'j1', originalFileName: 'photo.jpg' }] as any)
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's1', locationName: 'HQ' }] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Truck 7' }] as any)
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
     vi.mocked(usersApi.list).mockResolvedValue([] as any)
   }
 
@@ -88,8 +89,8 @@ describe('JobTicketDetailPage closeout readiness semantics', () => {
 
   it('does not count pending or rejected-only parts as invoice ready', async () => {
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([
-      { id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 1, notes: 'Pending stock' },
-      { id: 'p2', partId: 'part-2', quantity: 1, approvalStatus: 3, notes: 'Rejected stock' }
+      { id: 'p1', partId: 'part-1', partNumber: 'P-100', partName: 'Pending stock', isUnlistedPart: false, officeOrderRequested: false, quantity: 2, approvalStatus: 1, notes: 'Pending stock', addedAtUtc: '2026-04-01T12:00:00Z', isBillable: false },
+      { id: 'p2', partId: 'part-2', partNumber: 'P-200', partName: 'Rejected stock', isUnlistedPart: false, officeOrderRequested: false, quantity: 1, approvalStatus: 3, notes: 'Rejected stock', addedAtUtc: '2026-04-01T13:00:00Z', isBillable: false }
     ] as any)
 
     renderPage()
