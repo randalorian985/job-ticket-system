@@ -38,6 +38,13 @@ Parts Request Workflow Phase 2 is not a purchasing, receiving, vendor invoice, l
 - `GET /health`
 - `GET /api/system/info`
 
+## Local Docker Demo
+Docker dev enables local pilot seed data. Demo users:
+- `pilot.admin` / `PilotDemo123!`
+- `pilot.manager` / `PilotDemo123!`
+- `pilot.tech` / `PilotDemo123!`
+- Bootstrap-only admin: `test.admin` / `TestAdmin123!`
+
 ## Validation Commands
 Run from repository root in a checkout-capable environment:
 

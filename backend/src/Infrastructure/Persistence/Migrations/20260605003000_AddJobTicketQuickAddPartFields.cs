@@ -1,10 +1,14 @@
 using System;
+using JobTicketSystem.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Infrastructure.Persistence.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260605003000_AddJobTicketQuickAddPartFields")]
     public partial class AddJobTicketQuickAddPartFields : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

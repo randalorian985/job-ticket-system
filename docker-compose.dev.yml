@@ -18,6 +18,8 @@ services:
       - FileStorage__RootPath=/src/src/Api/storage
       - TestBootstrap__Enabled=true
       - TestBootstrap__MigrateDatabase=true
+      - PilotDemoSeed__Enabled=true
+      - PilotDemoSeed__MigrateDatabase=true
     env_file:
       - .env
     depends_on:
