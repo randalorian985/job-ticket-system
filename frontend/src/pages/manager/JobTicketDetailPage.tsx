@@ -4,6 +4,7 @@ import { filesApi } from "../../api/filesApi";
 import { ApiError } from "../../api/httpClient";
 import { jobTicketsApi } from "../../api/jobTicketsApi";
 import { masterDataApi } from "../../api/masterDataApi";
+import { partRequestsApi } from "../../api/partRequestsApi";
 import { timeEntriesApi } from "../../api/timeEntriesApi";
 import { usersApi } from "../../api/usersApi";
 import { useAuth } from "../../features/auth/AuthContext";
@@ -16,6 +17,7 @@ import type {
   JobTicketFileDto,
   JobTicketPartDto,
   JobWorkEntryDto,
+  PartDto,
   ServiceLocationDto,
   TimeEntryDto,
   UserDto,
@@ -36,6 +38,30 @@ import { JobTicketEditorForm } from "./JobTicketEditorForm";
 const activeDispatchStatusValues = new Set([2, 3, 4, 5, 6]);
 const displayValue = (value?: string | null) => value?.trim() ? value : "—";
 
+const getPartDisplayName = (part: JobTicketPartDto) => {
+  if (part.partNumber && part.partName) {
+    return `${part.partNumber} - ${part.partName}`;
+  }
+
+  return part.partName || part.partNumber || `Part ${part.partId ?? "unlisted"}`;
+};
+
+const getPartReviewLabel = (status: number) => {
+  if (status === JOB_PART_APPROVAL_STATUS.Pending) {
+    return "Pending review";
+  }
+
+  return getApprovalLabel(status);
+};
+
+const getPartRequestLabel = (part: JobTicketPartDto) => {
+  if (part.officeOrderRequested) {
+    return "Needs ordered";
+  }
+
+  return "Ticket part only";
+};
+
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
   const { user } = useAuth();
@@ -45,6 +71,7 @@ export function JobTicketDetailPage() {
   const [entries, setEntries] = useState<JobWorkEntryDto[]>([]);
   const [timeEntries, setTimeEntries] = useState<TimeEntryDto[]>([]);
   const [parts, setParts] = useState<JobTicketPartDto[]>([]);
+  const [catalogParts, setCatalogParts] = useState<PartDto[]>([]);
   const [files, setFiles] = useState<JobTicketFileDto[]>([]);
   const [customers, setCustomers] = useState<CustomerDto[]>([]);
   const [locations, setLocations] = useState<ServiceLocationDto[]>([]);
@@ -56,6 +83,14 @@ export function JobTicketDetailPage() {
   const [isArchiving, setIsArchiving] = useState(false);
   const [assignmentEmployeeId, setAssignmentEmployeeId] = useState("");
   const [isLeadAssignment, setIsLeadAssignment] = useState(false);
+  const [partDescription, setPartDescription] = useState("");
+  const [selectedCatalogPartId, setSelectedCatalogPartId] = useState("");
+  const [partQuantity, setPartQuantity] = useState("1");
+  const [partNotes, setPartNotes] = useState("");
+  const [partNeedsOrdered, setPartNeedsOrdered] = useState(true);
+  const [partUrgency, setPartUrgency] = useState("");
+  const [partNeededBy, setPartNeededBy] = useState("");
+  const [isSubmittingPart, setIsSubmittingPart] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +117,56 @@ export function JobTicketDetailPage() {
     () => assignments.find((item) => item.isLead) ?? null,
     [assignments],
   );
+  const selectedCatalogPart = useMemo(
+    () => catalogParts.find((part) => part.id === selectedCatalogPartId) ?? null,
+    [catalogParts, selectedCatalogPartId],
+  );
+  const catalogPartMatches = useMemo(() => {
+    const search = partDescription.trim().toLowerCase();
+    if (!search) {
+      return catalogParts.slice(0, 12);
+    }
+
+    return catalogParts
+      .filter((part) => `${part.partNumber} ${part.name} ${part.description ?? ""}`.toLowerCase().includes(search))
+      .slice(0, 12);
+  }, [catalogParts, partDescription]);
+  const partsReview = useMemo(() => {
+    const needsOrdered = parts.filter((part) => part.officeOrderRequested);
+    const pendingNeedsOrdered = needsOrdered.filter((part) => part.approvalStatus === JOB_PART_APPROVAL_STATUS.Pending);
+    const approvedNeedsOrdered = needsOrdered.filter((part) => part.approvalStatus === JOB_PART_APPROVAL_STATUS.Approved);
+    const rejectedNeedsOrdered = needsOrdered.filter((part) => part.approvalStatus === JOB_PART_APPROVAL_STATUS.Rejected);
+    const ticketOnlyParts = parts.filter((part) => !part.officeOrderRequested);
+    const isWaitingStatus = job?.status === 5;
+    const blockerCount = pendingNeedsOrdered.length + (isWaitingStatus && !approvedNeedsOrdered.length ? 1 : 0);
+
+    return {
+      needsOrdered,
+      pendingNeedsOrdered,
+      approvedNeedsOrdered,
+      rejectedNeedsOrdered,
+      ticketOnlyParts,
+      blockerCount,
+      statusLabel: pendingNeedsOrdered.length
+        ? "Waiting on parts review"
+        : isWaitingStatus
+          ? "Ticket marked waiting on parts"
+          : needsOrdered.length
+            ? "Parts requests reviewed"
+            : parts.length
+              ? "Parts recorded"
+              : "No parts recorded",
+      nextAction: pendingNeedsOrdered.length
+        ? "Review pending Needs ordered items in the parts request queue."
+        : isWaitingStatus
+          ? "Confirm whether parts are still blocking this ticket before moving status forward."
+          : needsOrdered.length
+            ? "Needs ordered items have no pending review blockers."
+            : parts.length
+              ? "No Needs ordered blockers are recorded on this ticket."
+              : "Add or request parts from this ticket if field work needs them.",
+    };
+  }, [job?.status, parts]);
   const getEmployeeDisplayName = (assignment: JobTicketAssignmentDto) => {
     const employee = employeesById[assignment.employeeId];
     const name = employee
@@ -153,7 +238,7 @@ export function JobTicketDetailPage() {
         isReady: Boolean(job?.serviceLocationId),
         detail: job?.serviceLocationId
           ? "Service location is selected."
-          : "No service location is selected.",
+          : "Service location is not selected.",
       },
       {
         label: "Equipment or no-equipment context",
@@ -377,6 +462,7 @@ export function JobTicketDetailPage() {
       customerResponse,
       locationResponse,
       equipmentResponse,
+      catalogPartResponse,
     ] = await Promise.all([
       jobTicketsApi.get(jobTicketId),
       jobTicketsApi.listAssignments(jobTicketId)
@@ -389,6 +475,7 @@ export function JobTicketDetailPage() {
       masterDataApi.listCustomers(),
       masterDataApi.listServiceLocations(),
       masterDataApi.listEquipment(),
+      masterDataApi.listParts(),
     ]);
 
     setJob(jobResponse);
@@ -402,6 +489,7 @@ export function JobTicketDetailPage() {
     setCustomers(customerResponse);
     setLocations(locationResponse);
     setEquipment(equipmentResponse);
+    setCatalogParts(catalogPartResponse.filter((part) => !part.isArchived));
 
     if (user?.role === "Admin") {
       const userList = await usersApi.list().catch(() => []);
@@ -560,6 +648,57 @@ export function JobTicketDetailPage() {
     }
   };
 
+  const onSubmitPart = async (event: FormEvent) => {
+    event.preventDefault();
+    const selectedPartName = selectedCatalogPart?.name ?? null;
+    const normalizedDescription = selectedPartName ?? partDescription.trim();
+    const quantity = Number(partQuantity);
+
+    if (!jobTicketId || !normalizedDescription) {
+      setError("Select an existing part or enter a new part name or description.");
+      setMessage(null);
+      return;
+    }
+
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setError("Quantity must be greater than zero.");
+      setMessage(null);
+      return;
+    }
+
+    setIsSubmittingPart(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await partRequestsApi.createForJobTicket(jobTicketId, {
+        partDescription: normalizedDescription,
+        partId: selectedCatalogPart?.id ?? null,
+        needsOrdered: partNeedsOrdered,
+        quantity,
+        notes: partNotes || null,
+        urgency: partNeedsOrdered ? partUrgency || null : null,
+        neededByUtc: partNeedsOrdered && partNeededBy ? new Date(partNeededBy).toISOString() : null,
+      });
+      setPartDescription("");
+      setSelectedCatalogPartId("");
+      setPartQuantity("1");
+      setPartNotes("");
+      setPartNeedsOrdered(true);
+      setPartUrgency("");
+      setPartNeededBy("");
+      setMessage(partNeedsOrdered ? "Part request added to the back-office queue." : "Ticket part added.");
+      await load();
+    } catch (requestError) {
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to add or request part.",
+      );
+    } finally {
+      setIsSubmittingPart(false);
+    }
+  };
+
   const editPayload: CreateJobTicketDto | null = job
     ? {
         customerId: job.customerId,
@@ -691,6 +830,28 @@ export function JobTicketDetailPage() {
           ) : (
             <p className="muted">Assignment, lead tech, schedule, due date, customer, service location, and equipment or no-equipment signals are all present.</p>
           )}
+          <section className="stack" aria-label="waiting on parts summary">
+            <h3>Waiting on Parts</h3>
+            <div className="review-grid">
+              <div>
+                <span className="muted">Parts Status</span>
+                <strong>{partsReview.statusLabel}</strong>
+              </div>
+              <div>
+                <span className="muted">Open Blockers</span>
+                <strong>{partsReview.blockerCount}</strong>
+              </div>
+              <div>
+                <span className="muted">Needs Ordered</span>
+                <strong>{partsReview.needsOrdered.length}</strong>
+              </div>
+              <div>
+                <span className="muted">Pending Review</span>
+                <strong>{partsReview.pendingNeedsOrdered.length}</strong>
+              </div>
+            </div>
+            <p className="muted">{partsReview.nextAction}</p>
+          </section>
           <section className="stack" aria-label="closeout invoice readiness review">
             <h3>Closeout & Invoice Readiness</h3>
             <div className="review-grid">
@@ -1024,23 +1185,111 @@ export function JobTicketDetailPage() {
           <p className="muted">No time entries have been logged.</p>
         )}
       </article>
-      <article className="card stack review-section">
-        <h3>Parts Usage</h3>
+      <article className="card stack review-section" aria-label="ticket parts panel">
+        <div className="review-heading">
+          <div>
+            <h3>Parts</h3>
+            <p className="muted">Ticket parts and back-office request status.</p>
+          </div>
+          <div className="review-grid" aria-label="parts summary counts">
+            <div>
+              <span className="muted">Recorded Parts</span>
+              <strong>{parts.length}</strong>
+            </div>
+            <div>
+              <span className="muted">Needs Ordered</span>
+              <strong>{partsReview.needsOrdered.length}</strong>
+            </div>
+            <div>
+              <span className="muted">Ticket Part Only</span>
+              <strong>{partsReview.ticketOnlyParts.length}</strong>
+            </div>
+          </div>
+        </div>
         {parts.length ? (
           <ul>
             {parts.map((item) => (
               <li key={item.id}>
-                {(item.partNumber && item.partName) ? `${item.partNumber} - ${item.partName}` : `Part ${item.partId ?? "unlisted"}`}
-                {item.isUnlistedPart ? " (unlisted)" : ""} · Qty {item.quantity} ·{" "}
-                {getApprovalLabel(item.approvalStatus)}
-                {item.officeOrderRequested ? " · Office order requested" : ""}
+                <strong>{getPartDisplayName(item)}</strong>
+                {item.isUnlistedPart ? " (unlisted)" : ""} · Qty {item.quantity} · {getPartRequestLabel(item)} · {getPartReviewLabel(item.approvalStatus)}
+                {item.officeOrderNotes ? ` · ${item.officeOrderNotes}` : ""}
                 {item.notes ? ` · ${item.notes}` : ""}
+                {item.rejectionReason ? ` · Rejection: ${item.rejectionReason}` : ""}
               </li>
             ))}
           </ul>
         ) : (
           <p className="muted">No parts usage has been logged.</p>
         )}
+        <form onSubmit={onSubmitPart} className="stack no-print" aria-label="add or request ticket part">
+          <h4>Add / Request Part</h4>
+          <label className="stack">
+            Find existing part or enter new part
+            <input
+              value={partDescription}
+              onChange={(event) => setPartDescription(event.target.value)}
+              placeholder="Search part number, name, or type a new part"
+            />
+          </label>
+          <label className="stack">
+            Existing parts match
+            <select value={selectedCatalogPartId} onChange={(event) => setSelectedCatalogPartId(event.target.value)}>
+              <option value="">Use typed new/unlisted part</option>
+              {catalogPartMatches.map((part) => (
+                <option key={part.id} value={part.id}>
+                  {part.partNumber} - {part.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {selectedCatalogPart ? (
+            <p className="muted">Selected existing part: {selectedCatalogPart.partNumber} - {selectedCatalogPart.name}</p>
+          ) : (
+            <p className="muted">No catalog match selected; the typed value will be submitted as an unlisted ticket part.</p>
+          )}
+          <label className="stack">
+            Quantity
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={partQuantity}
+              onChange={(event) => setPartQuantity(event.target.value)}
+              required
+            />
+          </label>
+          <label className="stack">
+            Notes
+            <input value={partNotes} onChange={(event) => setPartNotes(event.target.value)} />
+          </label>
+          <label className="row">
+            <input
+              type="checkbox"
+              checked={partNeedsOrdered}
+              onChange={(event) => setPartNeedsOrdered(event.target.checked)}
+            />
+            Needs ordered
+          </label>
+          {partNeedsOrdered ? (
+            <>
+              <label className="stack">
+                Urgency
+                <select value={partUrgency} onChange={(event) => setPartUrgency(event.target.value)}>
+                  <option value="">Routine</option>
+                  <option value="Soon">Soon</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
+              </label>
+              <label className="stack">
+                Needed by
+                <input type="date" value={partNeededBy} onChange={(event) => setPartNeededBy(event.target.value)} />
+              </label>
+            </>
+          ) : null}
+          <button type="submit" disabled={isSubmittingPart}>
+            {isSubmittingPart ? "Adding part..." : "Add / Request Part"}
+          </button>
+        </form>
       </article>
       <article className="card stack review-section">
         <h3>Files / Photos</h3>
