@@ -21,6 +21,7 @@ Parts Request Workflow Phase 2 is the active feature slice in this PR. It builds
 - a clear `Needs ordered` flag during in-ticket part add/request;
 - Needs ordered items flow to the Manager/Admin parts request queue;
 - non-ordered items are recorded on the ticket without creating queue items;
+- Manager/Admin job-ticket detail includes a Parts panel, waiting-on-parts summary, current request/review labels, and in-ticket Add / Request Part controls;
 - Manager/Admin queue search/status filtering and request review updates;
 - catalog matching, status, notes, cost snapshot, billable price snapshot, and billable state remain back-office only;
 - pilot seed data includes realistic catalog parts and existing/unlisted Needs ordered examples;
@@ -48,8 +49,9 @@ Before merge, confirm:
 - technicians can select existing parts and add unlisted parts from a ticket;
 - technicians can mark `Needs ordered`;
 - technicians cannot see or submit cost, billable price, vendor, purchase, inventory, catalog cleanup, or billing controls;
+- Manager/Admin can see current ticket parts/requests, waiting-on-parts state, and Add / Request Part controls from ticket detail;
 - Manager/Admin can filter/search and review/update the parts request queue;
-- backend and frontend tests cover lookup, creation, queue review/update, authorization boundaries, seed data, and technician pricing restrictions;
+- backend and frontend tests cover lookup, creation, queue review/update, authorization boundaries, seed data, technician pricing restrictions, and Manager/Admin ticket-detail parts visibility;
 - validation commands pass in CI or a checkout-capable environment.
 
 ## Validation Requirements Before Merge

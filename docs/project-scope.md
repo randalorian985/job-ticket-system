@@ -19,6 +19,7 @@ Core scope:
 - Technicians can search/select an existing catalog part through a safe lookup or type a new/unlisted part from inside an assigned service/job ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
+- Manager/Admin job-ticket detail includes a clear Parts panel, waiting-on-parts summary, current part/request labels, and in-ticket Add / Request Part controls backed by the existing parts request API.
 - Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
@@ -56,6 +57,8 @@ Allowed back-office fields in Phase 2:
 - billable price snapshot;
 - billable state;
 - optional catalog part match using existing parts.
+
+Manager/Admin ticket detail may show and create ticket parts/requests, summarize waiting-on-parts state, and route Needs ordered work into the back-office review queue. This remains a ticket-support workflow, not a purchasing or inventory workflow.
 
 This does not approve or implement purchase orders, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory, inventory transactions, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
 
