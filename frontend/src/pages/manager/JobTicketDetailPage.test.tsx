@@ -5,6 +5,7 @@ import { filesApi } from '../../api/filesApi'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
+import { partRequestsApi } from '../../api/partRequestsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
@@ -15,8 +16,9 @@ vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn() } }))
 vi.mock('../../api/filesApi', () => ({ filesApi: { list: vi.fn(), getDownloadUrl: vi.fn(() => '#') } }))
 vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn() } }))
+vi.mock('../../api/partRequestsApi', () => ({ partRequestsApi: { createForJobTicket: vi.fn() } }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn() } }))
-vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn() } }))
+vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
 
 describe('JobTicketDetailPage', () => {
   const setupBaseMocks = () => {
@@ -47,12 +49,53 @@ describe('JobTicketDetailPage', () => {
     } as any)
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([{ employeeId: 'e1', assignedAtUtc: '2026-04-01T08:15:00Z', isLead: true }] as any)
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([{ id: 'w1', performedAtUtc: '2026-04-01T12:00:00Z', notes: 'Replaced belt' }] as any)
-    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 1, notes: 'Pilot stock' }] as any)
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([
+      {
+        id: 'p1',
+        jobTicketId: 'j1',
+        partId: 'part-1',
+        partNumber: 'P-100',
+        partName: 'Hydraulic hose',
+        isUnlistedPart: false,
+        officeOrderRequested: false,
+        quantity: 2,
+        approvalStatus: 1,
+        notes: 'Pilot stock',
+        addedAtUtc: '2026-04-01T12:00:00Z',
+        isBillable: false
+      }
+    ] as any)
     vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:00:00Z', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
     vi.mocked(filesApi.list).mockResolvedValue([{ id: 'f1', jobTicketId: 'j1', originalFileName: 'photo.jpg' }] as any)
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's1', locationName: 'HQ' }] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Truck 7' }] as any)
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([
+      {
+        id: 'part-1',
+        partCategoryId: 'cat-1',
+        partNumber: 'P-100',
+        name: 'Hydraulic hose',
+        description: 'Two wire hose assembly',
+        unitCost: 12,
+        unitPrice: 25,
+        quantityOnHand: 3,
+        reorderThreshold: 1,
+        isArchived: false
+      },
+      {
+        id: 'part-2',
+        partCategoryId: 'cat-1',
+        partNumber: 'P-200',
+        name: 'Pendant harness',
+        unitCost: 20,
+        unitPrice: 45,
+        quantityOnHand: 0,
+        reorderThreshold: 1,
+        isArchived: false
+      }
+    ] as any)
+    vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({ id: 'request-1' } as any)
   }
 
   beforeEach(() => {
@@ -74,7 +117,7 @@ describe('JobTicketDetailPage', () => {
     expect(renderedPageText()).toContain(text)
   }
 
-  it('renders dispatch, closeout, archive, and review sections alongside job details', async () => {
+  it('renders dispatch, closeout, archive, parts, and review sections alongside job details', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
@@ -90,7 +133,7 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('Archive Review')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
-    expect(screen.getByText('Parts Usage')).toBeInTheDocument()
+    expect(screen.getByLabelText('ticket parts panel')).toBeInTheDocument()
     expect(screen.getByText('Files / Photos')).toBeInTheDocument()
   })
 
@@ -111,7 +154,7 @@ describe('JobTicketDetailPage', () => {
       purchaseOrderNumber: 'PO-44',
       customerFacingNotes: 'Work complete.'
     } as any)
-    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', quantity: 2, approvalStatus: 2, notes: 'Approved stock' }] as any)
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([{ id: 'p1', partId: 'part-1', partNumber: 'P-100', partName: 'Hydraulic hose', isUnlistedPart: false, officeOrderRequested: false, quantity: 2, approvalStatus: 2, notes: 'Approved stock', addedAtUtc: '2026-04-01T12:00:00Z', isBillable: false }] as any)
     vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:00:00Z', laborHours: 1.5, billableHours: 1, approvalStatus: 2, workSummary: 'Checked motor' }] as any)
 
     renderPage()
@@ -119,6 +162,138 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Ready for invoice handoff')).toBeInTheDocument()
     expect(screen.getByText('Labor, time approval, parts, files/photos, notes, and billing handoff context are ready for invoice review.')).toBeInTheDocument()
+  })
+
+  it('shows the Manager/Admin ticket parts panel and waiting-on-parts summary', async () => {
+    vi.mocked(jobTicketsApi.get).mockResolvedValue({
+      id: 'j1',
+      ticketNumber: 'JT-1',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      billingPartyCustomerId: 'c1',
+      equipmentId: 'eq1',
+      title: 'Issue',
+      description: 'Replace leaking hose and confirm restart.',
+      priority: 2,
+      status: 5,
+      scheduledStartAtUtc: '2026-04-02T09:30:00Z'
+    } as any)
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([
+      {
+        id: 'p1',
+        jobTicketId: 'j1',
+        partId: 'part-2',
+        partNumber: 'P-200',
+        partName: 'Pendant harness',
+        isUnlistedPart: false,
+        officeOrderRequested: true,
+        officeOrderNotes: 'Urgency: Urgent',
+        quantity: 1,
+        approvalStatus: 1,
+        notes: 'Need for return visit',
+        addedAtUtc: '2026-04-01T12:00:00Z',
+        isBillable: false
+      },
+      {
+        id: 'p2',
+        jobTicketId: 'j1',
+        partId: null,
+        partNumber: 'Unlisted pressure switch',
+        partName: 'Unlisted pressure switch',
+        isUnlistedPart: true,
+        officeOrderRequested: false,
+        quantity: 1,
+        approvalStatus: 2,
+        notes: 'Used from truck stock',
+        addedAtUtc: '2026-04-01T13:00:00Z',
+        isBillable: false
+      },
+      {
+        id: 'p3',
+        jobTicketId: 'j1',
+        partId: null,
+        partNumber: 'Unlisted gasket',
+        partName: 'Unlisted gasket',
+        isUnlistedPart: true,
+        officeOrderRequested: true,
+        quantity: 1,
+        approvalStatus: 3,
+        rejectionReason: 'Need model verification before ordering.',
+        addedAtUtc: '2026-04-01T14:00:00Z',
+        isBillable: false
+      }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByLabelText('waiting on parts summary')).toBeInTheDocument()
+    expectRenderedText('Parts StatusWaiting on parts review')
+    expectRenderedText('Open Blockers1')
+    expectRenderedText('Needs Ordered2')
+    expectRenderedText('Pending Review1')
+    expectRenderedText('Review pending Needs ordered items in the parts request queue.')
+    expectRenderedText('P-200 - Pendant harness · Qty 1 · Needs ordered · Pending review · Urgency: Urgent · Need for return visit')
+    expectRenderedText('Unlisted pressure switch (unlisted) · Qty 1 · Ticket part only · Approved · Used from truck stock')
+    expectRenderedText('Unlisted gasket (unlisted) · Qty 1 · Needs ordered · Rejected · Rejection: Need model verification before ordering.')
+  })
+
+  it('lets Manager/Admin add or request a part from the ticket detail without pricing fields', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByLabelText('add or request ticket part')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Unit cost')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Billable price')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Vendor')).not.toBeInTheDocument()
+    expect(screen.queryByText(/inventory/i)).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Find existing part or enter new part'), { target: { value: 'pendant' } })
+    fireEvent.change(screen.getByLabelText('Existing parts match'), { target: { value: 'part-2' } })
+    expect(screen.getByText('Selected existing part: P-200 - Pendant harness')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '2' } })
+    fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'Needed before return visit' } })
+    fireEvent.change(screen.getByLabelText('Urgency'), { target: { value: 'Urgent' } })
+    fireEvent.change(screen.getByLabelText('Needed by'), { target: { value: '2026-04-05' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add / Request Part' }))
+
+    await waitFor(() => {
+      expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('j1', {
+        partDescription: 'Pendant harness',
+        partId: 'part-2',
+        needsOrdered: true,
+        quantity: 2,
+        notes: 'Needed before return visit',
+        urgency: 'Urgent',
+        neededByUtc: new Date('2026-04-05').toISOString()
+      })
+    })
+    expect(await screen.findByText('Part request added to the back-office queue.')).toBeInTheDocument()
+  })
+
+  it('lets Manager/Admin add a ticket-only unlisted part without sending order context', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Find existing part or enter new part'), { target: { value: 'Temporary cap plug' } })
+    fireEvent.click(screen.getByLabelText('Needs ordered'))
+    expect(screen.queryByLabelText('Urgency')).not.toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'Used from service kit' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add / Request Part' }))
+
+    await waitFor(() => {
+      expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('j1', {
+        partDescription: 'Temporary cap plug',
+        partId: null,
+        needsOrdered: false,
+        quantity: 1,
+        notes: 'Used from service kit',
+        urgency: null,
+        neededByUtc: null
+      })
+    })
+    expect(await screen.findByText('Ticket part added.')).toBeInTheDocument()
   })
 
   it('treats no-equipment detail context as dispatch-ready when the other dispatch signals are complete', async () => {
