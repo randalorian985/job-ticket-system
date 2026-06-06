@@ -1,4 +1,5 @@
 using JobTicketSystem.Application.JobTickets;
+using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
