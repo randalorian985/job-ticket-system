@@ -1,0 +1,7 @@
+/* Keep padded app shells inside the viewport on narrow screens. */
+@media (max-width: 720px) {
+  .desktop-shell,
+  .mobile-shell {
+    box-sizing: border-box;
+  }
+}
