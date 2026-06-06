@@ -79,7 +79,7 @@ describe('PartRequestsPage', () => {
     render(<PartRequestsPage />)
 
     expect(await screen.findByRole('heading', { name: 'Parts Request Queue' })).toBeInTheDocument()
-    expect(screen.getByText(/JT-2026-000101/)).toBeInTheDocument()
+    expect(screen.getAllByText(/JT-2026-000101/)).toHaveLength(2)
     expect(screen.getByText('Urgency: Urgent')).toBeInTheDocument()
 
     const user = userEvent.setup()
