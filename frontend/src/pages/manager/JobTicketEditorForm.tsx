@@ -3,6 +3,7 @@ import { ApiError } from '../../api/httpClient'
 import { masterDataApi } from '../../api/masterDataApi'
 import { reportsApi } from '../../api/reportsApi'
 import type {
+  CreateCustomerDto,
   CreateEquipmentDto,
   CreateJobTicketDto,
   CreateServiceLocationDto,
@@ -19,6 +20,7 @@ type Props = {
   serviceLocations: ServiceLocationDto[]
   equipment: EquipmentDto[]
   onSubmit: (payload: CreateJobTicketDto) => Promise<void>
+  onCustomerCreated?: (customer: CustomerDto) => void
   onServiceLocationCreated?: (serviceLocation: ServiceLocationDto) => void
   onEquipmentCreated?: (equipment: EquipmentDto) => void
   submitLabel: string
@@ -33,6 +35,14 @@ type DispatchEditCheck = {
 type EquipmentDuplicateMatch = {
   equipment: EquipmentDto
   reasons: string[]
+}
+
+type CustomerQuickAddDraft = {
+  name: string
+  accountNumber: string
+  contactName: string
+  email: string
+  phone: string
 }
 
 type ServiceLocationQuickAddDraft = {
@@ -74,6 +84,14 @@ const equipmentDuplicateMatchFields: Array<{
   { label: 'unit number', draftKey: 'unitNumber', equipmentKey: 'unitNumber' },
   { label: 'serial number', draftKey: 'serialNumber', equipmentKey: 'serialNumber' }
 ]
+
+const emptyCustomerDraft: CustomerQuickAddDraft = {
+  name: '',
+  accountNumber: '',
+  contactName: '',
+  email: '',
+  phone: ''
+}
 
 const emptyServiceLocationDraft: ServiceLocationQuickAddDraft = {
   locationName: '',
@@ -227,32 +245,52 @@ export function JobTicketEditorForm({
   serviceLocations,
   equipment,
   onSubmit,
+  onCustomerCreated,
   onServiceLocationCreated,
   onEquipmentCreated,
   submitLabel
 }: Props) {
   const [form, setForm] = useState<CreateJobTicketDto>(initial)
   const [error, setError] = useState<string | null>(null)
+  const [createdCustomers, setCreatedCustomers] = useState<CustomerDto[]>([])
   const [createdServiceLocations, setCreatedServiceLocations] = useState<ServiceLocationDto[]>([])
   const [createdEquipment, setCreatedEquipment] = useState<EquipmentDto[]>([])
+  const [customerQuickAddOpen, setCustomerQuickAddOpen] = useState(false)
   const [serviceLocationQuickAddOpen, setServiceLocationQuickAddOpen] = useState(false)
   const [equipmentQuickAddOpen, setEquipmentQuickAddOpen] = useState(false)
   const [jobTypeQuickAddOpen, setJobTypeQuickAddOpen] = useState(false)
+  const [customerDraft, setCustomerDraft] = useState<CustomerQuickAddDraft>(emptyCustomerDraft)
   const [serviceLocationDraft, setServiceLocationDraft] = useState<ServiceLocationQuickAddDraft>(emptyServiceLocationDraft)
   const [equipmentDraft, setEquipmentDraft] = useState<EquipmentQuickAddDraft>(emptyEquipmentDraft)
   const [jobTypeDraft, setJobTypeDraft] = useState('')
+  const [customerQuickAddError, setCustomerQuickAddError] = useState<string | null>(null)
   const [serviceLocationQuickAddError, setServiceLocationQuickAddError] = useState<string | null>(null)
   const [equipmentQuickAddError, setEquipmentQuickAddError] = useState<string | null>(null)
   const [jobTypeQuickAddError, setJobTypeQuickAddError] = useState<string | null>(null)
+  const [customerQuickAddMessage, setCustomerQuickAddMessage] = useState<string | null>(null)
   const [serviceLocationQuickAddMessage, setServiceLocationQuickAddMessage] = useState<string | null>(null)
   const [equipmentQuickAddMessage, setEquipmentQuickAddMessage] = useState<string | null>(null)
   const [jobTypeQuickAddMessage, setJobTypeQuickAddMessage] = useState<string | null>(null)
   const [jobTypeOptions, setJobTypeOptions] = useState(() => uniqueLabels([...defaultJobTypeOptions, initial.jobType]))
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false)
   const [isAddingServiceLocation, setIsAddingServiceLocation] = useState(false)
   const [isAddingEquipment, setIsAddingEquipment] = useState(false)
   const [equipmentHistory, setEquipmentHistory] = useState<ReportServiceHistoryItemDto[]>([])
   const [equipmentHistoryError, setEquipmentHistoryError] = useState<string | null>(null)
   const [isLoadingEquipmentHistory, setIsLoadingEquipmentHistory] = useState(false)
+
+  const allCustomers = useMemo(
+    () => {
+      const merged = [...createdCustomers]
+      customers.forEach((item) => {
+        if (!merged.some((existing) => existing.id === item.id)) {
+          merged.push(item)
+        }
+      })
+      return merged
+    },
+    [createdCustomers, customers]
+  )
 
   const allServiceLocations = useMemo(
     () => {
@@ -280,7 +318,7 @@ export function JobTicketEditorForm({
     [createdEquipment, equipment]
   )
 
-  const selectedCustomer = customers.find((item) => item.id === form.customerId)
+  const selectedCustomer = allCustomers.find((item) => item.id === form.customerId)
   const selectedServiceLocation = allServiceLocations.find((item) => item.id === form.serviceLocationId)
 
   const displayedJobTypeOptions = useMemo(
@@ -380,6 +418,10 @@ export function JobTicketEditorForm({
 
   const update = <K extends keyof CreateJobTicketDto>(key: K, value: CreateJobTicketDto[K]) => setForm((prev) => ({ ...prev, [key]: value }))
 
+  const selectCustomer = (customerId: string) => {
+    setForm((prev) => ({ ...prev, customerId, serviceLocationId: '', equipmentId: null }))
+  }
+
   const addJobType = () => {
     const nextJobType = jobTypeDraft.trim()
     if (!nextJobType) {
@@ -394,6 +436,50 @@ export function JobTicketEditorForm({
     setJobTypeQuickAddOpen(false)
     setJobTypeQuickAddError(null)
     setJobTypeQuickAddMessage(`${nextJobType} added and selected.`)
+  }
+
+  const addCustomer = async () => {
+    const payload: CreateCustomerDto = {
+      name: customerDraft.name.trim(),
+      accountNumber: optionalText(customerDraft.accountNumber),
+      contactName: optionalText(customerDraft.contactName),
+      email: optionalText(customerDraft.email),
+      phone: optionalText(customerDraft.phone)
+    }
+
+    if (!payload.name) {
+      setCustomerQuickAddError('Customer name is required.')
+      setCustomerQuickAddMessage(null)
+      return
+    }
+
+    try {
+      setIsAddingCustomer(true)
+      setCustomerQuickAddError(null)
+      const created = await masterDataApi.createCustomer(payload)
+      setCreatedCustomers((prev) => upsertById(prev, created))
+      onCustomerCreated?.(created)
+      setForm((prev) => ({
+        ...prev,
+        customerId: created.id,
+        billingPartyCustomerId: created.id,
+        serviceLocationId: '',
+        equipmentId: null,
+        billingContactName: created.contactName ?? prev.billingContactName ?? null,
+        billingContactPhone: created.phone ?? prev.billingContactPhone ?? null,
+        billingContactEmail: created.email ?? prev.billingContactEmail ?? null
+      }))
+      setCustomerDraft(emptyCustomerDraft)
+      setCustomerQuickAddOpen(false)
+      setCustomerQuickAddMessage(`${created.name} added and selected.`)
+      setServiceLocationQuickAddMessage(null)
+      setEquipmentQuickAddMessage(null)
+    } catch (requestError) {
+      setCustomerQuickAddError(quickAddErrorMessage(requestError, 'Unable to add customer.'))
+      setCustomerQuickAddMessage(null)
+    } finally {
+      setIsAddingCustomer(false)
+    }
   }
 
   const addServiceLocation = async () => {
@@ -564,7 +650,37 @@ export function JobTicketEditorForm({
           </div>
         </section>
       ) : null}
-      <label>Customer<select value={form.customerId} onChange={(e) => update('customerId', e.target.value)}><option value="">Select customer</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+      <div className="field-with-action">
+        <label>Customer
+          <select value={form.customerId} onChange={(e) => selectCustomer(e.target.value)}>
+            <option value="">Select customer</option>
+            {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </label>
+        <button type="button" className="secondary-button" onClick={() => setCustomerQuickAddOpen((prev) => !prev)}>
+          Quick add customer
+        </button>
+      </div>
+      {customerQuickAddMessage ? <p className="success" role="status">{customerQuickAddMessage}</p> : null}
+      {customerQuickAddError ? <p className="error">{customerQuickAddError}</p> : null}
+      {customerQuickAddOpen ? (
+        <section className="quick-add-panel" aria-label="quick add customer">
+          <div className="quick-add-grid">
+            <label>Customer Name<input value={customerDraft.name} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, name: e.target.value }))} /></label>
+            <label>Account Number<input value={customerDraft.accountNumber} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, accountNumber: e.target.value }))} /></label>
+            <label>Contact Name<input value={customerDraft.contactName} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, contactName: e.target.value }))} /></label>
+            <label>Contact Phone<input value={customerDraft.phone} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, phone: e.target.value }))} /></label>
+            <label>Contact Email<input type="email" value={customerDraft.email} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, email: e.target.value }))} /></label>
+          </div>
+          <div className="row">
+            <button type="button" onClick={addCustomer} disabled={isAddingCustomer}>
+              {isAddingCustomer ? 'Adding Customer...' : 'Add Customer'}
+            </button>
+            <button type="button" className="secondary-button" onClick={() => setCustomerQuickAddOpen(false)}>Cancel</button>
+          </div>
+          <p className="muted">New customers are selected for the ticket and billing party. Add a service location next before saving.</p>
+        </section>
+      ) : null}
       <div className="field-with-action">
         <label>Service Location
           <select value={form.serviceLocationId} onChange={(e) => update('serviceLocationId', e.target.value)}>
@@ -596,7 +712,7 @@ export function JobTicketEditorForm({
           </div>
         </section>
       ) : null}
-      <label>Billing Party<select value={form.billingPartyCustomerId} onChange={(e) => update('billingPartyCustomerId', e.target.value)}><option value="">Select billing party</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+      <label>Billing Party<select value={form.billingPartyCustomerId} onChange={(e) => update('billingPartyCustomerId', e.target.value)}><option value="">Select billing party</option>{allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
       <div className="field-with-action">
         <label>Equipment
           <select value={form.equipmentId ?? ''} onChange={(e) => update('equipmentId', e.target.value || null)}>
