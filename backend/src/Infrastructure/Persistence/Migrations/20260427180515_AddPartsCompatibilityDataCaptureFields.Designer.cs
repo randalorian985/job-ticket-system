@@ -1328,7 +1328,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasOne("JobTicketSystem.Domain.Entities.Employee", "AssignedManagerEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedManagerEmployeeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("JobTicketSystem.Domain.Entities.Customer", "BillingPartyCustomer")
                         .WithMany()
@@ -1421,7 +1421,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasOne("JobTicketSystem.Domain.Entities.JobTicketPart", "ReplacedByJobTicketPart")
                         .WithMany("ReplacedJobTicketParts")
                         .HasForeignKey("ReplacedByJobTicketPartId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("AddedByEmployee");
 

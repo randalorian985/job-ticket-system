@@ -1,3 +1,52 @@
+# Job Ticket System — Local development
+
+Quick guide to run the application locally with Docker (fast iteration) or on the host (fastest feedback).
+
+Containerized dev (hot-reload, recommended if you want a self-contained Docker dev stack):
+
+1. Ensure Docker is running.
+2. Copy or edit `.env` at the repo root to set `SA_PASSWORD`.
+3. Start the dev stack with the explicit development compose file:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build sqlserver api-dev frontend-dev
+```
+
+4. Services:
+- API: http://localhost:5000 (health: `/health`)
+- Frontend dev server: http://localhost:3000
+- SQL Server: localhost:1433
+
+Host-native dev (fastest iteration, prefer if you have dotnet 8 and node 20 installed):
+
+Backend (from `backend/src/Api`):
+```powershell
+cd backend/src/Api
+dotnet watch run --urls http://+:5000
+```
+
+Frontend (from `frontend`):
+```powershell
+cd frontend
+npm ci
+npm run dev -- --host
+```
+
+Useful commands:
+```powershell
+docker compose ps
+docker compose logs -f api
+docker compose logs -f frontend
+docker compose down -v
+```
+
+Notes
+- Keep `.env` out of version control. For production, use Docker secrets or a secrets manager.
+- The API stores ASP.NET DataProtection keys in a Docker volume for local persistence; configure an encryptor for production.
+
+Files added/edited for local dev:
+- `docker-compose.dev.yml` — bind mounts and watch commands for fast reload
+- `.env` — development secrets (do not commit)
 # Job Ticket Management System
 
 Job Ticket Management System is an API-first platform for creating, assigning, executing, and reporting on field service job tickets.

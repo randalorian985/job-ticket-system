@@ -174,7 +174,7 @@ namespace Infrastructure.Persistence.Migrations
                 column: "ReplacedByJobTicketPartId",
                 principalTable: "JobTicketParts",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.NoAction);
         }
 
         /// <inheritdoc />

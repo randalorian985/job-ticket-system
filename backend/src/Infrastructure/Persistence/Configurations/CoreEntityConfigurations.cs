@@ -323,7 +323,7 @@ public sealed class JobTicketPartConfiguration : IEntityTypeConfiguration<JobTic
         builder.HasOne(x => x.JobTicket).WithMany(x => x.Parts).HasForeignKey(x => x.JobTicketId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Part).WithMany(x => x.JobTicketParts).HasForeignKey(x => x.PartId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Equipment).WithMany().HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
-        builder.HasOne(x => x.ReplacedByJobTicketPart).WithMany(x => x.ReplacedJobTicketParts).HasForeignKey(x => x.ReplacedByJobTicketPartId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(x => x.ReplacedByJobTicketPart).WithMany(x => x.ReplacedJobTicketParts).HasForeignKey(x => x.ReplacedByJobTicketPartId).OnDelete(DeleteBehavior.NoAction);
         builder.HasOne(x => x.AddedByEmployee).WithMany().HasForeignKey(x => x.AddedByEmployeeId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.JobTicketId);
         builder.HasIndex(x => x.PartId);
@@ -353,7 +353,7 @@ public sealed class JobTicketFileConfiguration : IEntityTypeConfiguration<JobTic
         builder.Property(x => x.IsInvoiceAttachment).HasDefaultValue(false).IsRequired();
         builder.HasOne(x => x.JobTicket).WithMany(x => x.Files).HasForeignKey(x => x.JobTicketId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Equipment).WithMany().HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.SetNull);
-        builder.HasOne(x => x.WorkEntry).WithMany().HasForeignKey(x => x.WorkEntryId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(x => x.WorkEntry).WithMany().HasForeignKey(x => x.WorkEntryId).OnDelete(DeleteBehavior.NoAction);
         builder.HasOne(x => x.UploadedByEmployee).WithMany().HasForeignKey(x => x.UploadedByEmployeeId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => x.JobTicketId);
         builder.HasIndex(x => x.UploadedByEmployeeId);

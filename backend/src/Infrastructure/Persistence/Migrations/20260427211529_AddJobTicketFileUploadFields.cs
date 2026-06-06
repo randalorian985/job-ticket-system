@@ -102,7 +102,7 @@ namespace Infrastructure.Persistence.Migrations
                 column: "WorkEntryId",
                 principalTable: "JobWorkEntries",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.NoAction);
         }
 
         /// <inheritdoc />
