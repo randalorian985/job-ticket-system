@@ -1,0 +1,110 @@
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { masterDataApi } from '../../api/masterDataApi'
+import { partRequestsApi } from '../../api/partRequestsApi'
+import { PartRequestsPage } from './PartRequestsPage'
+
+vi.mock('../../api/partRequestsApi', () => ({
+  partRequestsApi: {
+    listQueue: vi.fn(),
+    update: vi.fn()
+  }
+}))
+
+vi.mock('../../api/masterDataApi', () => ({
+  masterDataApi: {
+    listParts: vi.fn()
+  }
+}))
+
+describe('PartRequestsPage', () => {
+  beforeEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  it('loads the queue and lets back office update status, notes, price, and catalog match', async () => {
+    vi.mocked(partRequestsApi.listQueue).mockResolvedValue([
+      {
+        id: 'request-1',
+        jobTicketId: 'job-1',
+        jobTicketNumber: 'JT-2026-000101',
+        jobTicketTitle: 'Hydraulic Repair',
+        partId: null,
+        partNumber: 'Hydraulic hose',
+        partName: 'Hydraulic hose',
+        quantity: 2,
+        notes: 'Need hose at the lift',
+        technicianNotes: 'Need hose at the lift',
+        requestNotes: 'Urgency: Urgent',
+        internalStatusNotes: null,
+        unitCostSnapshot: 0,
+        salePriceSnapshot: 0,
+        isBillable: false,
+        status: 1,
+        requestedAtUtc: '2026-06-01T15:00:00Z'
+      }
+    ])
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([
+      {
+        id: 'part-1',
+        partCategoryId: 'cat-1',
+        partNumber: 'HYD-100',
+        name: 'Hydraulic Hose',
+        unitCost: 50,
+        unitPrice: 75,
+        quantityOnHand: 4,
+        reorderThreshold: 1
+      }
+    ])
+    vi.mocked(partRequestsApi.update).mockResolvedValue({
+      id: 'request-1',
+      jobTicketId: 'job-1',
+      jobTicketNumber: 'JT-2026-000101',
+      jobTicketTitle: 'Hydraulic Repair',
+      partId: 'part-1',
+      partNumber: 'HYD-100',
+      partName: 'Hydraulic Hose',
+      quantity: 2,
+      notes: 'Need hose at the lift',
+      internalStatusNotes: 'Matched and approved.',
+      unitCostSnapshot: 50,
+      salePriceSnapshot: 75,
+      isBillable: true,
+      status: 2,
+      requestedAtUtc: '2026-06-01T15:00:00Z'
+    })
+
+    render(<PartRequestsPage />)
+
+    expect(await screen.findByRole('heading', { name: 'Parts Request Queue' })).toBeInTheDocument()
+    expect(screen.getByText(/JT-2026-000101/)).toBeInTheDocument()
+    expect(screen.getByText('Urgency: Urgent')).toBeInTheDocument()
+
+    const user = userEvent.setup()
+    await user.selectOptions(screen.getByLabelText('Catalog part match'), 'part-1')
+    await user.selectOptions(screen.getByLabelText('Status'), '2')
+    await user.type(screen.getByLabelText('Internal status notes'), 'Matched and approved.')
+    await user.clear(screen.getByLabelText('Part cost'))
+    await user.type(screen.getByLabelText('Part cost'), '50')
+    await user.clear(screen.getByLabelText('Billable price'))
+    await user.type(screen.getByLabelText('Billable price'), '75')
+    await user.click(screen.getByLabelText('Billable after back-office review'))
+    await user.click(screen.getByRole('button', { name: 'Save Request Review' }))
+
+    await waitFor(() => {
+      expect(partRequestsApi.update).toHaveBeenCalledWith('request-1', {
+        partDescription: 'Hydraulic hose',
+        quantity: 2,
+        status: 2,
+        internalStatusNotes: 'Matched and approved.',
+        unitCostSnapshot: 50,
+        salePriceSnapshot: 75,
+        isBillable: true,
+        partId: 'part-1'
+      })
+    })
+    expect(screen.getByText('Part request updated.')).toBeInTheDocument()
+  })
+})
