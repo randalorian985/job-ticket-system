@@ -29,6 +29,21 @@ public sealed class PilotDemoSeedTests
         Assert.Equal(3, second.DemoJobTicketCount);
         Assert.Equal(1, second.InvoiceReadyJobTicketCount);
         Assert.Equal(3, await context.JobTickets.CountAsync(x => x.TicketNumber.StartsWith("PILOT-")));
+        Assert.Equal(4, await context.Parts.CountAsync(x => x.PartNumber.StartsWith("PILOT-")));
+    }
+
+    [Fact]
+    public async Task Seeded_pilot_data_includes_parts_request_workflow_examples()
+    {
+        await using var context = CreateContext();
+        var seedService = CreateSeedService(context);
+        await seedService.SeedAsync();
+
+        Assert.True(await context.JobTicketParts.AnyAsync(x => x.PartNumberSnapshot == "PILOT-HOSE-003" && !x.OfficeOrderRequested));
+        Assert.True(await context.JobTicketParts.AnyAsync(x => x.PartNumberSnapshot == "PILOT-BELT-002" && x.OfficeOrderRequested && x.ApprovalStatus == JobPartApprovalStatus.Pending));
+        Assert.True(await context.JobTicketParts.AnyAsync(x => x.IsUnlistedPart && x.OfficeOrderRequested && x.ApprovalStatus == JobPartApprovalStatus.Pending));
+        Assert.True(await context.JobTicketParts.AnyAsync(x => x.IsUnlistedPart && x.OfficeOrderRequested && x.ApprovalStatus == JobPartApprovalStatus.Rejected));
+        Assert.True(await context.JobTicketParts.AnyAsync(x => x.PartNumberSnapshot == "PILOT-SEAL-004" && x.OfficeOrderRequested && x.ApprovalStatus == JobPartApprovalStatus.Approved));
     }
 
     [Fact]
