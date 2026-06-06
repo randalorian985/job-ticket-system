@@ -5,5 +5,6 @@ export { UnauthorizedPage } from './users/UnauthorizedPage'
 export { UsersPage } from './users/UsersPage'
 
 export { InventoryPage } from './InventoryPage'
+export { PartRequestsPage } from './PartRequestsPage'
 export { PartsUsageHistoryPage } from './PartsUsageHistoryPage'
 export { PurchasingWorkbenchPage } from './PurchasingWorkbenchPage'
