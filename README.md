@@ -6,11 +6,13 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Core backend/API workflows remain implemented and validated.
 - Employee mobile workflow remains implemented.
 - Manager/Admin job-ticket, assignment, reporting, master-data, purchasing-support, and inventory-foundation workflows remain implemented on `main`.
-- Parts Request Workflow Phase 1 adds a ticket-first technician request flow and a back-office parts request queue without adding purchasing, receiving, inventory expansion, recommendations, or automatic compatibility decisions.
-- Technicians can submit part requests from the assigned job ticket using only part name/description, quantity, notes, urgency, and needed-by context.
+- Parts Request Workflow Phase 2 adds an in-ticket Add / Request Part flow without adding purchasing, receiving, inventory expansion, recommendations, or automatic compatibility decisions.
+- Technicians can search/select existing parts through a technician-safe lookup or type a new/unlisted part from inside an assigned service ticket.
+- Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin parts request queue.
+- If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office order/request queue item.
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
-- Manager/Admin back-office users can review the parts request queue, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
-- No dedicated Parts Manager role is added in Phase 1; existing Manager/Admin access remains the back-office authorization boundary.
+- Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
+- No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 
 ## Scope Boundary
 The project remains centered on the job-ticket workflow:
@@ -20,7 +22,7 @@ The project remains centered on the job-ticket workflow:
 - track time;
 - support Manager/Admin coordination, reporting, closeout readiness, parts request review, and user management.
 
-Parts Request Workflow Phase 1 is not a purchasing, receiving, vendor invoice, landed-cost, warehouse/truck inventory, replenishment, recommendation, AI/scoring, or automatic compatibility workflow.
+Parts Request Workflow Phase 2 is not a purchasing, receiving, vendor invoice, landed-cost, warehouse/truck inventory, replenishment, recommendation, AI/scoring, or automatic compatibility workflow.
 
 ## Project Navigation
 - Project control center: [docs/build-roadmap.md](docs/build-roadmap.md)
@@ -55,5 +57,5 @@ cd frontend && npm test
 - Preserve soft-delete/archive behavior.
 - Keep Employee and Manager/Admin route boundaries intact.
 - Treat `/manage` as Manager/Admin-only and `/manage/users` as Admin-only.
-- Do not expose cost, price, vendor, purchase, inventory, or billing controls to technicians.
+- Do not expose cost, price, vendor, purchase, inventory, catalog-admin, or billing controls to technicians.
 - Keep deferred purchasing, inventory expansion, recommendation, AI/scoring, and automatic compatibility domains deferred until explicitly selected.
