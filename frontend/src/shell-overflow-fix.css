@@ -40,6 +40,11 @@ label.row input[type="radio"] {
     min-height: 0;
   }
 
+  .report-results-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   label.row {
     align-items: center;
     flex-direction: row;
@@ -48,5 +53,10 @@ label.row input[type="radio"] {
   .row > button,
   .row > .button-link {
     width: 100%;
+  }
+
+  .button-link {
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 }
