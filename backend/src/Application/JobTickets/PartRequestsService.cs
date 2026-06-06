@@ -12,7 +12,7 @@ namespace JobTicketSystem.Application.JobTickets;
 public interface IPartRequestsService
 {
     Task<PartRequestDto> CreateForJobTicketAsync(Guid jobTicketId, CreatePartRequestDto request, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<PartRequestDto>> ListQueueAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<PartRequestDto>> ListQueueAsync(PartRequestQueueQuery? query = null, CancellationToken cancellationToken = default);
     Task<PartRequestDto?> GetAsync(Guid partRequestId, CancellationToken cancellationToken = default);
     Task<PartRequestDto?> UpdateBackOfficeAsync(Guid partRequestId, UpdatePartRequestDto request, CancellationToken cancellationToken = default);
 }
@@ -31,22 +31,38 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
             throw new ValidationException("JobTicketId does not reference an active job ticket.");
         }
 
-        var partDescription = NormalizeRequired(request.PartDescription, nameof(request.PartDescription));
         ValidatePositiveQuantity(request.Quantity);
+
+        Part? selectedPart = null;
+        if (request.PartId.HasValue)
+        {
+            selectedPart = await dbContext.Parts.SingleOrDefaultAsync(x => x.Id == request.PartId.Value, cancellationToken);
+            if (selectedPart is null)
+            {
+                throw new ValidationException("PartId does not reference an active part.");
+            }
+        }
+
+        var partDescription = Normalize(request.PartDescription) ?? selectedPart?.Name;
+        if (partDescription is null)
+        {
+            throw new ValidationException("PartDescription is required when no catalog part is selected.");
+        }
 
         var technicianNotes = Normalize(request.Notes);
         var urgency = Normalize(request.Urgency);
         var addedAtUtc = DateTime.UtcNow;
-        var officeNotes = BuildOfficeNotes(technicianNotes, urgency, request.NeededByUtc);
+        var officeNotes = request.NeedsOrdered ? BuildOfficeNotes(technicianNotes, urgency, request.NeededByUtc) : null;
 
         var entry = new JobTicketPart
         {
             JobTicketId = jobTicketId,
-            PartNumberSnapshot = partDescription,
-            PartNameSnapshot = partDescription,
-            IsUnlistedPart = true,
-            OfficeOrderRequested = true,
-            OfficeOrderRequestedAtUtc = addedAtUtc,
+            PartId = selectedPart?.Id,
+            PartNumberSnapshot = selectedPart?.PartNumber ?? partDescription,
+            PartNameSnapshot = selectedPart?.Name ?? partDescription,
+            IsUnlistedPart = selectedPart is null,
+            OfficeOrderRequested = request.NeedsOrdered,
+            OfficeOrderRequestedAtUtc = request.NeedsOrdered ? addedAtUtc : null,
             OfficeOrderNotes = officeNotes,
             Quantity = request.Quantity,
             UnitCostSnapshot = 0m,
@@ -68,17 +84,34 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
             EntityId = entry.Id,
             ActionType = AuditActionType.Create,
             UserId = currentUserContext.UserId == Guid.Empty ? SystemUserId : currentUserContext.UserId,
-            NewValuesJson = $"{{\"PartRequest\":true,\"JobTicketId\":\"{jobTicketId}\"}}"
+            NewValuesJson = $"{{\"PartRequest\":true,\"JobTicketId\":\"{jobTicketId}\",\"PartId\":\"{selectedPart?.Id}\",\"NeedsOrdered\":{request.NeedsOrdered.ToString().ToLowerInvariant()}}}"
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        return await MapPartRequestQuery().SingleAsync(x => x.Id == entry.Id, cancellationToken);
+        return await MapPartRequestQuery(queueOnly: false).SingleAsync(x => x.Id == entry.Id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<PartRequestDto>> ListQueueAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<PartRequestDto>> ListQueueAsync(PartRequestQueueQuery? query = null, CancellationToken cancellationToken = default)
     {
         EnsureBackOffice();
-        return await MapPartRequestQuery()
+
+        var requests = MapPartRequestQuery(queueOnly: true);
+        if (query?.Status is not null)
+        {
+            requests = requests.Where(x => x.Status == query.Status.Value);
+        }
+
+        var search = Normalize(query?.Search);
+        if (search is not null)
+        {
+            requests = requests.Where(x =>
+                x.JobTicketNumber.Contains(search) ||
+                x.JobTicketTitle.Contains(search) ||
+                x.PartNumber.Contains(search) ||
+                x.PartName.Contains(search));
+        }
+
+        return await requests
             .OrderByDescending(x => x.RequestedAtUtc)
             .ToListAsync(cancellationToken);
     }
@@ -86,7 +119,7 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
     public async Task<PartRequestDto?> GetAsync(Guid partRequestId, CancellationToken cancellationToken = default)
     {
         EnsureBackOffice();
-        return await MapPartRequestQuery().SingleOrDefaultAsync(x => x.Id == partRequestId, cancellationToken);
+        return await MapPartRequestQuery(queueOnly: true).SingleOrDefaultAsync(x => x.Id == partRequestId, cancellationToken);
     }
 
     public async Task<PartRequestDto?> UpdateBackOfficeAsync(Guid partRequestId, UpdatePartRequestDto request, CancellationToken cancellationToken = default)
@@ -172,35 +205,40 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        return await MapPartRequestQuery().SingleAsync(x => x.Id == entry.Id, cancellationToken);
+        return await MapPartRequestQuery(queueOnly: true).SingleAsync(x => x.Id == entry.Id, cancellationToken);
     }
 
-    private IQueryable<PartRequestDto> MapPartRequestQuery()
+    private IQueryable<PartRequestDto> MapPartRequestQuery(bool queueOnly)
     {
-        return dbContext.JobTicketParts
-            .Where(x => x.OfficeOrderRequested)
-            .Select(x => new PartRequestDto(
-                x.Id,
-                x.JobTicketId,
-                x.JobTicket.TicketNumber,
-                x.JobTicket.Title,
-                x.PartId,
-                x.PartNumberSnapshot,
-                x.PartNameSnapshot,
-                x.Quantity,
-                x.Notes,
-                x.TechnicianNotes,
-                x.OfficeOrderNotes,
-                x.CompatibilityNotes,
-                x.UnitCostSnapshot,
-                x.SalePriceSnapshot,
-                x.IsBillable,
-                x.ApprovalStatus,
-                x.AddedAtUtc,
-                x.AddedByEmployeeId,
-                x.ApprovedAtUtc,
-                x.RejectedAtUtc,
-                x.RejectionReason));
+        var parts = dbContext.JobTicketParts.AsQueryable();
+        if (queueOnly)
+        {
+            parts = parts.Where(x => x.OfficeOrderRequested);
+        }
+
+        return parts.Select(x => new PartRequestDto(
+            x.Id,
+            x.JobTicketId,
+            x.JobTicket.TicketNumber,
+            x.JobTicket.Title,
+            x.PartId,
+            x.PartNumberSnapshot,
+            x.PartNameSnapshot,
+            x.Quantity,
+            x.Notes,
+            x.TechnicianNotes,
+            x.OfficeOrderNotes,
+            x.CompatibilityNotes,
+            x.UnitCostSnapshot,
+            x.SalePriceSnapshot,
+            x.IsBillable,
+            x.OfficeOrderRequested,
+            x.ApprovalStatus,
+            x.AddedAtUtc,
+            x.AddedByEmployeeId,
+            x.ApprovedAtUtc,
+            x.RejectedAtUtc,
+            x.RejectionReason));
     }
 
     private async Task EnsureCurrentUserCanAccessJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken)
@@ -274,7 +312,13 @@ public sealed record CreatePartRequestDto(
     decimal Quantity,
     string? Notes,
     string? Urgency = null,
-    DateTime? NeededByUtc = null);
+    DateTime? NeededByUtc = null,
+    Guid? PartId = null,
+    bool NeedsOrdered = true);
+
+public sealed record PartRequestQueueQuery(
+    JobPartApprovalStatus? Status = null,
+    string? Search = null);
 
 public sealed record UpdatePartRequestDto(
     string PartDescription,
@@ -302,6 +346,7 @@ public sealed record PartRequestDto(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] decimal UnitCostSnapshot,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] decimal SalePriceSnapshot,
     bool IsBillable,
+    bool NeedsOrdered,
     JobPartApprovalStatus Status,
     DateTime RequestedAtUtc,
     Guid? RequestedByEmployeeId,
