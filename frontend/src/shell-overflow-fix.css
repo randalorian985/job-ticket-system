@@ -34,6 +34,19 @@ label.row input[type="radio"] {
   width: auto;
 }
 
+/* Keep wide admin/report tables contained inside their panels. */
+.table-scroll,
+.table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll table,
+.table-wrapper table {
+  min-width: 42rem;
+}
+
 @media (max-width: 720px) {
   input[type="checkbox"],
   input[type="radio"] {
