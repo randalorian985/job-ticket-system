@@ -1,154 +1,104 @@
-# API Contract (Current Main State)
+# API Contract (Current Main State Plus Parts Request Workflow Phase 1)
 
 ## Base URL
 `/api`
 
-## Health
-- `GET /health`
-  - Public and unauthenticated.
-  - Returns the documented ASP.NET Core health payload.
+## Public Endpoints
+- `GET /health` is public and unauthenticated.
+- `GET /api/system/info` is public and unauthenticated.
 
-## System Metadata
-- `GET /api/system/info`
-  - Public and unauthenticated.
-  - Returns service name, API base path, health endpoint path, environment name, and assembly version.
-
-## API Group Status
-### Implemented and active on `main`
-- Health (`/health`)
-- System metadata (`/api/system/info`)
+## Implemented API Groups
 - Authentication (`/api/auth/*`)
 - User management (`/api/users/*`)
 - Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)
 - Job tickets (`/api/job-tickets/*`)
+- Job-ticket files/photos (`/api/job-ticket-files/*`)
 - Time entries (`/api/time-entries/*`)
 - Reporting (`/api/reports/*`)
 - Parts usage history visibility (`/api/parts/usage-history`)
+- Parts request workflow Phase 1 (`/api/part-requests/*`)
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory foundation (`/api/inventory/*`)
 
-## Job Tickets (Current Main Notes)
-- Manager/Admin create and update flows already support operational fields such as `jobType`, `purchaseOrderNumber`, `billingContactName`, `billingContactPhone`, `billingContactEmail`, `internalNotes`, `customerFacingNotes`, `requestedAtUtc`, `scheduledStartAtUtc`, and `dueAtUtc`.
-- `equipmentId` remains optional, but when supplied it must belong to the selected `serviceLocationId`.
-- Manager/Admin create/edit UI now provides a dashboard shortcut to `/manage/job-tickets/new` and focused quick-add inside the job-ticket form. Job type quick-add remains a client-side reference-value convenience over the existing nullable `jobType` field. Service-location quick-add calls the existing `POST /api/service-locations` endpoint, then selects the returned service location into the existing job-ticket DTO. Equipment quick-add calls the existing `POST /api/equipment` endpoint with the selected `customerId` and `serviceLocationId`, then selects the returned equipment ID into the existing job-ticket DTO. Before equipment quick-add save, the UI warns about possible duplicate equipment when the entered name, equipment number, unit number, or serial number exactly matches loaded equipment in the selected customer/service-location context. This warning is client-side and non-blocking. When equipment is selected, the form also shows recent equipment service-history context from the existing `GET /api/reports/equipment/{equipmentId}/service-history` endpoint. This adds no job-ticket endpoints, request fields, response fields, schema changes, migrations, purchasing behavior, inventory expansion, recommendation behavior, or accounting behavior.
-- Manager/Admin dashboard, list, and detail views use the existing assignment endpoints to surface assigned-employee counts, lead-tech visibility, and dispatch-readiness cues.
-- Manager/Admin dashboard and job-ticket list dispatch-readiness cues are client-side and use existing job-ticket list data plus existing assignment data. Active tickets are treated as dispatch-ready only when assignment, lead-tech, scheduled-start, and due-date context are present. Dispatch-readiness filters remain client-side on the job-ticket list and are disabled when assignment data cannot be loaded, so assignment failures are not presented as unassigned tickets.
-- Manager/Admin job-ticket assignment responses include `employeeName` alongside `jobTicketId`, `employeeId`, `assignedAtUtc`, and `isLead`, so Manager/Admin list rows and detail assignment ownership can show assigned and lead technician names without calling the Admin-only user-management API. If an assignment name is blank, list and detail views fall back to loaded employee records where available and then the assignment employee ID. This does not add endpoints.
-- Manager/Admin job-ticket detail dispatch-readiness checklist cues are client-side and use existing job-ticket detail data plus existing assignment data for assignment, lead-tech, scheduled-start, due-date, customer, service-location, equipment or no-equipment context, and active dispatch status. Detail readiness uses the same active dispatch statuses as dashboard/list readiness (`2=Submitted`, `3=Assigned`, `4=In Progress`, `5=Waiting on Parts`, `6=Waiting on Customer`), shows tickets outside that queue as not-active dispatch, and treats assignment-load failures as unavailable assignment data instead of empty assignment lists. This does not add endpoints or change request/response DTOs.
-- Manager/Admin job-ticket edit dispatch-readiness cues are client-side and use the existing edit DTO fields for active dispatch status, customer, service location, equipment or no-equipment context, scheduled start, due date, and job instructions. Edit readiness uses the same active dispatch statuses as dashboard/list/detail readiness (`2=Submitted`, `3=Assigned`, `4=In Progress`, `5=Waiting on Parts`, `6=Waiting on Customer`) and shows tickets outside that queue as needing an active dispatch status before dispatch review. This does not add endpoints or change request/response DTOs.
-- Employee assigned-job list field-context cues and next field-context fix guidance are client-side and use existing assigned-job list data for active field-work status, scheduled start, due date, customer reference, and service-location reference. Employee job-ticket detail field-context cues, next field-context fix guidance, and pre-work guidance are also client-side and use existing assigned-ticket detail data for active field-work status, scheduled start, due date, customer, service location, equipment or no-equipment context, and job instructions. This does not add endpoints, expose assignment-management APIs to employees, block existing time-entry actions, or change request/response DTOs.
-- Manager/Admin detail/edit surfaces now provide inline status transition review, disable no-op status submissions, surface API validation messages, keep archive confirmation explicit as a soft-delete/archive workflow rather than hard delete, and summarize operational closeout readiness for invoice handoff.
-- Closeout/readiness review uses existing job-ticket, assignment, work-entry, time-entry, parts, file/photo, customer, service-location, and equipment data. It does not add endpoints or change request/response DTOs.
-- Job-ticket-first UI work should keep those existing fields visible and editable rather than introducing a separate workflow for the same context.
-- Job-ticket part usage that adjusts inventory writes matching `ManualAdjustment` inventory transaction history for the usage deduction. Archiving a job-ticket part with inventory restore writes the matching positive `ManualAdjustment` history row. This keeps stock visibility history aligned with existing `Part.QuantityOnHand` behavior and does not add endpoints, DTO fields, schema, migrations, or inventory-expansion scope.
-- `POST /api/job-tickets/{jobTicketId}/parts` remains the catalog-backed add-part endpoint and requires `partId`.
-- `POST /api/job-tickets/{jobTicketId}/parts/quick-add` remains the ticket-level quick-add endpoint. The technician UI now uses it as a field-entry workflow: technicians enter only part name/description, quantity, notes, and optional office-order context while the UI hides part number, unit cost, sale/billable price, billing fields, and catalog controls. The employee request submits the entered part name as the internal unlisted part reference, sends zero pricing snapshots, marks the entry non-billable for technician purposes, and disables inventory adjustment so back office review owns catalog matching, pricing, billing, and inventory decisions.
-- The quick-add API still accepts `partNumber`, `partName`, `quantity`, `unitCost`, `salePrice`, `notes`, `isBillable`, `addedByEmployeeId`, `addedAtUtc`, `requestOfficeOrder`, `officeOrderNotes`, `adjustInventory`, `allowManagerOverride`, plus the existing optional compatibility capture fields. Employee UI must not expose the pricing, billing, part-number, or catalog-facing fields.
-- Job-ticket part responses include nullable `partId`, `partNumber`, `partName`, `isUnlistedPart`, `officeOrderRequested`, `officeOrderRequestedAtUtc`, and `officeOrderNotes`. Manager/Admin responses may include cost and billable price snapshots; employee-safe responses continue to hide price snapshots, and employee display treats unlisted technician-added parts as needing office review rather than showing part-number-heavy labels.
+## Parts Request Workflow Phase 1
+The parts request API is a job-ticket-first workflow for technician-submitted part needs and back-office review. It uses DTOs and stores requests as office-review job-ticket part records; no new schema is required for Phase 1.
 
-## Reporting And Time Review (Current Main Notes)
-- Existing `/api/reports/*` endpoints remain the reporting API surface. Reports polish stays client-side by improving loaded-row review context, filter reset behavior, export-friendly table presentation, and CSV export from already-loaded rows.
-- Manager/Admin reporting surfaces now label labor money columns as snapshot-first to clarify that approved time-entry snapshots are used before any legacy fallback rate behavior.
-- Manager/Admin time review still uses existing `/api/time-entries/job/{jobTicketId}`, `/api/time-entries/{id}/approve`, and `/api/time-entries/{id}/reject` endpoints. The polish layer is UI-only: visible-row filters, summary counts, export-friendly loaded tables, and visible-row CSV export on top of the loaded job slice.
-- Closeout and invoice-readiness wording builds on existing reporting and time-review data, but remains an operational readiness review rather than accounting, payment tracking, or invoice generation.
+### Technician create request
+- `POST /api/part-requests/job-ticket/{jobTicketId}`
+- Authorization: `AssignedEmployeeOrManager`
+- Request DTO: `CreatePartRequestDto`
+  - `partDescription` required
+  - `quantity` required and greater than zero
+  - `notes` optional
+  - `urgency` optional
+  - `neededByUtc` optional
+- Response DTO: `PartRequestDto`
+- Technician behavior:
+  - creates an unlisted job-ticket part marked for office/back-office review;
+  - stores zero cost and zero billable price snapshots;
+  - keeps `isBillable` false;
+  - does not adjust inventory;
+  - does not create purchase orders, receiving, vendor invoice rows, landed cost, inventory transactions, recommendations, AI/scoring, automatic compatibility decisions, or automatic approvals.
 
-## Current Scope Interpretation
-- The product is being steered as a job-ticket-first platform.
-- Job Ticket Closeout & Invoice-Readiness Workflow Polish is implemented in the Manager/Admin job review surface using existing APIs.
-- Job Ticket Dispatch & Assignment Readiness Polish is the selected implementation lane. Current dispatch-readiness polish uses existing job-ticket and assignment APIs plus client-side Manager/Admin dashboard/list/detail/edit and active-status-aware Employee list/detail review cues over existing job-ticket fields, including active-status-aware Manager/Admin detail and edit readiness; any further API changes must be narrow, DTO-based, job-ticket-first, and documented here.
-- Manager/Admin job-ticket creation quick-add and selected-equipment history context remain within the current API surface by using existing master-data create endpoints only where a ticket form needs an immediate service-location or equipment value, plus the existing equipment service-history report endpoint for read-only review context.
-- Technician parts-used entry is a field-work ticket workflow. Technicians enter work performed and parts used; back office handles catalog cleanup, part numbers, cost, billable pricing, invoice readiness, and customer-facing billing decisions.
-- Purchase-order and inventory endpoints already implemented on `main` remain valid, but they should be understood as supporting capabilities rather than the main product-growth path.
-- No transfer endpoints are implemented on `main`.
-- No inventory-expansion API lane is currently approved.
-- This dispatch-readiness update adds the assignment `employeeName` response field but does not add endpoint scope.
+### Back-office queue
+- `GET /api/part-requests`
+- Authorization: `ManagerOrAdmin`
+- Returns all current part request DTOs ordered newest first.
 
-## Inventory (Current Main Foundation)
-All inventory endpoints require the existing `ManagerOrAdmin` authorization policy and return DTOs only.
+### Back-office detail
+- `GET /api/part-requests/{id}`
+- Authorization: `ManagerOrAdmin`
+- Returns one part request DTO or `404 Not Found`.
 
-### Stock locations
-- `GET /api/inventory/stock-locations`
-  - Query params: `offset` (default `0`), `limit` (default `50`), `includeArchived` (default `false`).
-- `GET /api/inventory/stock-locations/{id}`
-- `POST /api/inventory/stock-locations`
-- `PUT /api/inventory/stock-locations/{id}`
-- `POST /api/inventory/stock-locations/{id}/archive`
-- `POST /api/inventory/stock-locations/{id}/unarchive`
+### Back-office update
+- `PUT /api/part-requests/{id}`
+- Authorization: `ManagerOrAdmin`
+- Request DTO: `UpdatePartRequestDto`
+  - `partDescription`
+  - `quantity`
+  - `status` using existing job-part approval status values
+  - `internalStatusNotes`
+  - `unitCostSnapshot`
+  - `salePriceSnapshot`
+  - `isBillable`
+  - `partId` optional catalog match
+- Behavior:
+  - Manager/Admin can update request status, internal notes, part cost snapshot, billable price snapshot, billable state, and optional catalog part match;
+  - catalog match updates the job-ticket part snapshot to the existing catalog part number/name;
+  - rejected requests require an internal rejection/status note fallback;
+  - no purchase, receiving, vendor invoice, landed-cost, inventory, recommendation, AI/scoring, or automatic compatibility behavior is added.
 
-#### Stock location DTOs
-- `StockLocationDto`: `id`, `name`, `code`, `description`, `isActive`, `isArchived`
-- `CreateStockLocationDto`: `name`, `code`, `description`
-- `UpdateStockLocationDto`: `name`, `code`, `description`, `isActive`
+### `PartRequestDto`
+- `id`
+- `jobTicketId`
+- `jobTicketNumber`
+- `jobTicketTitle`
+- `partId`
+- `partNumber`
+- `partName`
+- `quantity`
+- `notes`
+- `technicianNotes`
+- `requestNotes`
+- `internalStatusNotes`
+- `unitCostSnapshot` back-office response field
+- `salePriceSnapshot` back-office response field
+- `isBillable`
+- `status`
+- `requestedAtUtc`
+- `requestedByEmployeeId`
+- `approvedAtUtc`
+- `rejectedAtUtc`
+- `rejectionReason`
 
-#### Stock location behavior notes
-- `name` and `code` are required.
-- `code` is normalized to uppercase and must be unique.
-- Archive uses soft-delete behavior and also marks the location inactive.
-- Unarchive can return `400 Bad Request` when restore validation fails and `404 Not Found` when the target location does not exist.
+## Existing Job-Ticket Part Boundaries
+- `POST /api/job-tickets/{jobTicketId}/parts` remains Manager/Admin catalog-backed part usage.
+- Existing employee-safe job-ticket part responses continue to hide price snapshots when returned through employee contexts.
+- Technicians must not receive UI controls for part number, part cost, billable price, vendor cost, purchase history, inventory transactions, or billing decisions.
 
-### Stock visibility
-- `GET /api/inventory/stock`
-  - Optional query params: `stockLocationId`, `partId`
-  - Returns grouped stock visibility derived from persisted inventory transactions.
-
-### Transaction history
-- `GET /api/inventory/transactions`
-  - Optional query params: `stockLocationId`, `partId`, `limit` (default `100`, clamped to `1..200`)
-  - Returns recent inventory transaction DTOs ordered newest first.
-
-### Manual adjustments
-- `POST /api/inventory/adjustments`
-
-#### Manual adjustment request DTO
-- `CreateManualInventoryAdjustmentDto`
-  - `stockLocationId`
-  - `partId`
-  - `quantityDelta`
-  - `reason`
-  - `notes`
-  - `occurredAtUtc`
-
-#### Manual adjustment behavior notes
-- `stockLocationId` is required and must reference an active stock location.
-- `partId` is required and must reference an active part.
-- `quantityDelta` must not be zero.
-- `reason` is required.
-- Successful adjustments create an `InventoryTransaction` row with `TransactionType = ManualAdjustment` and then recalculate `Part.QuantityOnHand` from persisted inventory history for that part.
-- Job-ticket part usage and archive-restore inventory adjustments also use `TransactionType = ManualAdjustment` rows so inventory transaction history remains consistent with parts-on-ticket stock changes.
-
-### Inventory transaction shape
-- `InventoryTransactionDto`: `id`, `stockLocationId`, `stockLocationName`, `partId`, `partNumber`, `partName`, `transactionType`, `quantityDelta`, `occurredAtUtc`, `reason`, `notes`, `purchaseOrderNumber`
-- `InventoryStockSummaryDto`: `stockLocationId`, `stockLocationName`, `partId`, `partNumber`, `partName`, `quantityOnHand`, `lastTransactionAtUtc`
-
-### Enum discipline
-- `InventoryTransactionType` is appended only:
-  - `1=Receipt`
-  - `2=ManualAdjustment`
-- `main` now creates both `Receipt` and `ManualAdjustment` transactions.
-
-## Purchase Orders (Current Main Notes)
-- `POST /api/purchase-orders/{id}/receive` records vendor receiving progress.
-- Receipt increases now post `InventoryTransaction` entries tied to the purchase order and update `Part.QuantityOnHand`.
-- Duplicate `LineId` entries are rejected.
-- A line's recorded received quantity cannot decrease once saved.
-- `receivedQuantity` cannot exceed `quantityOrdered`.
-
-## API Growth Boundary
-Until scope is explicitly expanded again, API growth should stay centered on:
-- job-ticket workflows;
-- job-ticket dispatch and assignment readiness;
-- job-ticket closeout and invoice-readiness review;
-- time-entry workflows;
-- parts-on-ticket workflows;
-- Manager/Admin behavior that directly supports job-ticket operations.
-
-The selected dispatch/assignment readiness lane does not approve accounting, invoice generation, payment tracking, purchasing expansion, or inventory expansion APIs. Future API changes must be justified by that approved job-ticket-first workflow, kept narrow, and documented here.
-
-Do not expand the API surface into transfer workflows, truck inventory, replenishment automation, pick/reserve/issue automation, compatibility recommendations, or AI/scoring under the current roadmap.
-
-## Existing Platform Contracts That Remain In Force
-- Manager/Admin `/manage/purchasing` still uses the dedicated purchase-order workflow and the reorder-focused workbench.
-- Parts usage history remains a visibility-only workflow and must not be interpreted as a compatibility recommendation engine.
+## Protected Boundaries
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
-- Deferred domains remain deferred: accounting/invoice generation, inventory expansion beyond the current support baseline, truck inventory, replenishment, compatibility recommendations, and AI/scoring.
+- No backend enum numeric values are changed.
+- No hard deletes are introduced.
+- Deferred domains remain deferred unless explicitly selected: purchasing expansion, receiving expansion, vendor invoice expansion, landed cost expansion, warehouse/truck inventory, replenishment, recommendation engine, AI/scoring, automatic compatibility decisions, and automatic approval.

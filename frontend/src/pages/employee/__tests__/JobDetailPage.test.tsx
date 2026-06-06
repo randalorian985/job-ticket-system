@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../../api/filesApi'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
+import { partRequestsApi } from '../../../api/partRequestsApi'
 import { timeEntriesApi } from '../../../api/timeEntriesApi'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { JobDetailPage } from '../JobDetailPage'
@@ -17,6 +18,12 @@ vi.mock('../../../api/jobTicketsApi', () => ({
     addWorkEntry: vi.fn(),
     addPart: vi.fn(),
     quickAddPart: vi.fn()
+  }
+}))
+
+vi.mock('../../../api/partRequestsApi', () => ({
+  partRequestsApi: {
+    createForJobTicket: vi.fn()
   }
 }))
 
@@ -157,7 +164,7 @@ describe('JobDetailPage', () => {
     expect(screen.getByText('Field context is ready for clock-in.')).toBeInTheDocument()
   })
 
-  it('lets technicians add a part used by name without pricing, billing, or part-number fields', async () => {
+  it('lets technicians submit a part request without pricing, billing, catalog, or vendor fields', async () => {
     mockEmployeeAuth()
     mockJob()
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
@@ -166,59 +173,50 @@ describe('JobDetailPage', () => {
     vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
       throw { status: 404 }
     })
-    vi.mocked(jobTicketsApi.quickAddPart).mockResolvedValue({
-      id: 'part-row-2',
+    vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({
+      id: 'request-1',
       jobTicketId: 'job-1',
+      jobTicketNumber: 'JT-2026-000101',
+      jobTicketTitle: 'Hydraulic Repair',
       partId: null,
       partNumber: 'Hydraulic hose',
       partName: 'Hydraulic hose',
-      isUnlistedPart: true,
-      officeOrderRequested: true,
-      officeOrderNotes: 'Need office to order one spare',
       quantity: 2,
       notes: 'Used on lift cylinder',
       isBillable: false,
-      approvalStatus: 1,
-      addedAtUtc: '2026-04-28T11:00:00Z',
-      addedByEmployeeId: 'employee-1'
+      status: 1,
+      requestedAtUtc: '2026-04-28T11:00:00Z'
     })
 
     renderJobDetail()
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Part used')).toBeInTheDocument()
+    expect(screen.getByLabelText('Part name or description')).toBeInTheDocument()
     expect(screen.queryByLabelText('Part number')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Unit cost')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Billable price')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Invoice attachment')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Catalog part')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Vendor')).not.toBeInTheDocument()
     expect(screen.queryByText(/sale price/i)).not.toBeInTheDocument()
 
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Part used'), 'Hydraulic hose')
+    await user.type(screen.getByLabelText('Part name or description'), 'Hydraulic hose')
     await user.clear(screen.getByLabelText('Quantity'))
     await user.type(screen.getByLabelText('Quantity'), '2')
     await user.type(screen.getByLabelText('Notes'), 'Used on lift cylinder')
-    await user.click(screen.getByLabelText('Office order requested'))
-    await user.type(screen.getByLabelText('Office order notes'), 'Need office to order one spare')
-    await user.click(screen.getByRole('button', { name: 'Add Part Used' }))
+    await user.selectOptions(screen.getByLabelText('Urgency'), 'Urgent')
+    await user.click(screen.getByRole('button', { name: 'Submit Part Request' }))
 
     await waitFor(() => {
-      expect(jobTicketsApi.quickAddPart).toHaveBeenCalledWith('job-1', {
-        partNumber: 'Hydraulic hose',
-        partName: 'Hydraulic hose',
+      expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('job-1', {
+        partDescription: 'Hydraulic hose',
         quantity: 2,
-        unitCost: 0,
-        salePrice: 0,
         notes: 'Used on lift cylinder',
-        isBillable: false,
-        addedByEmployeeId: 'employee-1',
-        addedAtUtc: null,
-        requestOfficeOrder: true,
-        officeOrderNotes: 'Need office to order one spare',
-        adjustInventory: false,
-        allowManagerOverride: false
+        urgency: 'Urgent',
+        neededByUtc: null
       })
     })
+    expect(jobTicketsApi.quickAddPart).not.toHaveBeenCalled()
   })
 
   it('shows technician-added unlisted parts as needing office review without part-number-heavy labels', async () => {
@@ -234,7 +232,7 @@ describe('JobDetailPage', () => {
         partName: 'Hydraulic hose',
         isUnlistedPart: true,
         officeOrderRequested: true,
-        officeOrderNotes: 'Need office to order one spare',
+        officeOrderNotes: 'Urgency: Urgent',
         quantity: 2,
         notes: 'Used on lift cylinder',
         isBillable: false,
