@@ -5,3 +5,30 @@
     box-sizing: border-box;
   }
 }
+
+/* Keep checkbox and radio controls compact inside responsive form rows. */
+input[type="checkbox"],
+input[type="radio"] {
+  block-size: 1.1rem;
+  inline-size: 1.1rem;
+  min-width: 1.1rem;
+  padding: 0;
+  width: auto;
+}
+
+label.row input[type="checkbox"],
+label.row input[type="radio"] {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 0;
+  }
+
+  label.row {
+    align-items: center;
+    flex-direction: row;
+  }
+}
