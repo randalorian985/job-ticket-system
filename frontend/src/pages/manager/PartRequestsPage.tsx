@@ -17,6 +17,8 @@ export function PartRequestsPage() {
   const [requests, setRequests] = useState<PartRequestDto[]>([])
   const [parts, setParts] = useState<PartDto[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<number | ''>('')
+  const [search, setSearch] = useState('')
   const [partDescription, setPartDescription] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [status, setStatus] = useState(String(JOB_PART_APPROVAL_STATUS.Pending))
@@ -36,16 +38,17 @@ export function PartRequestsPage() {
   )
 
   const openRequests = requests.filter((request) => request.status === JOB_PART_APPROVAL_STATUS.Pending)
+  const unlistedRequests = requests.filter((request) => !request.partId)
 
   const load = async () => {
     setIsLoading(true)
     const [requestResponse, partResponse] = await Promise.all([
-      partRequestsApi.listQueue(),
+      partRequestsApi.listQueue({ status: statusFilter, search }),
       masterDataApi.listParts()
     ])
     setRequests(requestResponse)
     setParts(partResponse)
-    setSelectedId((current) => current ?? requestResponse[0]?.id ?? null)
+    setSelectedId((current) => requestResponse.some((request) => request.id === current) ? current : requestResponse[0]?.id ?? null)
     setError(null)
     setIsLoading(false)
   }
@@ -55,6 +58,7 @@ export function PartRequestsPage() {
       setError(requestError instanceof ApiError ? requestError.message : 'Unable to load part requests.')
       setIsLoading(false)
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -71,6 +75,12 @@ export function PartRequestsPage() {
     setIsBillable(selectedRequest.isBillable)
     setPartId(selectedRequest.partId ?? '')
   }, [selectedRequest])
+
+  const onFilterSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    setMessage(null)
+    await load()
+  }
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -125,7 +135,7 @@ export function PartRequestsPage() {
         <div className="review-heading">
           <div>
             <h2>Parts Request Queue</h2>
-            <p className="muted">Back-office review for technician-submitted ticket parts.</p>
+            <p className="muted">Back-office review for ticket parts marked Needs ordered.</p>
           </div>
           <div className="review-grid" aria-label="parts request summary">
             <div>
@@ -133,11 +143,31 @@ export function PartRequestsPage() {
               <strong>{openRequests.length}</strong>
             </div>
             <div>
+              <span className="muted">Unlisted Requests</span>
+              <strong>{unlistedRequests.length}</strong>
+            </div>
+            <div>
               <span className="muted">Loaded Requests</span>
               <strong>{requests.length}</strong>
             </div>
           </div>
         </div>
+        <form onSubmit={onFilterSubmit} className="review-grid" aria-label="parts request queue filters">
+          <label>
+            Search requests
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ticket, job, part number, or part name" />
+          </label>
+          <label>
+            Status filter
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value ? Number(event.target.value) : '')}>
+              <option value="">All statuses</option>
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" disabled={isLoading}>Apply Filters</button>
+        </form>
         {isLoading ? <p className="muted" role="status">Loading part requests...</p> : null}
         {error ? <p className="error">{error}</p> : null}
         {message ? <p>{message}</p> : null}
@@ -157,12 +187,12 @@ export function PartRequestsPage() {
                   >
                     {request.jobTicketNumber} · {request.partName} · {getApprovalLabel(request.status)}
                   </button>
-                  <div className="muted">Qty {request.quantity} · Requested {formatDate(request.requestedAtUtc)}</div>
+                  <div className="muted">Qty {request.quantity} · Needs ordered · Requested {formatDate(request.requestedAtUtc)}</div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="muted">No part requests are waiting for review.</p>
+            <p className="muted">No part requests match the current filters.</p>
           )}
         </article>
 
@@ -182,6 +212,10 @@ export function PartRequestsPage() {
                 <div>
                   <span className="muted">Current Status</span>
                   <strong>{getApprovalLabel(selectedRequest.status)}</strong>
+                </div>
+                <div>
+                  <span className="muted">Request Context</span>
+                  <strong>{selectedRequest.needsOrdered ? 'Needs ordered' : 'Ticket part only'}</strong>
                 </div>
                 <div>
                   <span className="muted">Technician Notes</span>
