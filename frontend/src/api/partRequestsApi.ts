@@ -6,6 +6,8 @@ export type CreatePartRequestDto = {
   notes?: string | null
   urgency?: string | null
   neededByUtc?: string | null
+  partId?: string | null
+  needsOrdered?: boolean
 }
 
 export type UpdatePartRequestDto = {
@@ -35,6 +37,7 @@ export type PartRequestDto = {
   unitCostSnapshot?: number
   salePriceSnapshot?: number
   isBillable: boolean
+  needsOrdered: boolean
   status: number
   requestedAtUtc: string
   requestedByEmployeeId?: string | null
@@ -43,13 +46,31 @@ export type PartRequestDto = {
   rejectionReason?: string | null
 }
 
+export type PartRequestQueueFilters = {
+  status?: number | ''
+  search?: string
+}
+
+const buildQueueUrl = (filters?: PartRequestQueueFilters) => {
+  const params = new URLSearchParams()
+  if (filters?.status !== undefined && filters.status !== '') {
+    params.set('status', String(filters.status))
+  }
+  if (filters?.search?.trim()) {
+    params.set('search', filters.search.trim())
+  }
+
+  const query = params.toString()
+  return query ? `/api/part-requests?${query}` : '/api/part-requests'
+}
+
 export const partRequestsApi = {
   createForJobTicket: (jobTicketId: string, payload: CreatePartRequestDto) =>
     apiRequest<PartRequestDto>(`/api/part-requests/job-ticket/${jobTicketId}`, {
       method: 'POST',
       body: JSON.stringify(payload)
     }),
-  listQueue: () => apiRequest<PartRequestDto[]>('/api/part-requests'),
+  listQueue: (filters?: PartRequestQueueFilters) => apiRequest<PartRequestDto[]>(buildQueueUrl(filters)),
   get: (partRequestId: string) => apiRequest<PartRequestDto>(`/api/part-requests/${partRequestId}`),
   update: (partRequestId: string, payload: UpdatePartRequestDto) =>
     apiRequest<PartRequestDto>(`/api/part-requests/${partRequestId}`, {
