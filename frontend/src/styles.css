@@ -795,25 +795,9 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(circle at top right, rgba(97, 115, 244, 0.22), transparent 0 8rem),
-    linear-gradient(180deg, #ffffff 0%, #ffffff 48%, #f5f7fb 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 52%, #f5f7fb 100%);
   color: var(--ink);
   min-height: 100vh;
-}
-
-body::before {
-  background: rgba(97, 115, 244, 0.55);
-  border-radius: 42% 58% 46% 54%;
-  content: "";
-  height: 5.8rem;
-  pointer-events: none;
-  position: fixed;
-  right: -2.6rem;
-  top: -1.3rem;
-  transform: rotate(28deg);
-  width: 12rem;
-  z-index: -1;
 }
 
 h1,
@@ -907,6 +891,18 @@ textarea:focus-visible {
   max-width: 620px;
 }
 
+.desktop-shell,
+.mobile-shell,
+.manager-shell,
+.card,
+.ticket-list-item,
+.operations-panel,
+.queue-results-panel,
+.job-ticket-queue-header,
+.manager-header {
+  min-width: 0;
+}
+
 .card,
 .manager-header,
 .quick-add-panel,
@@ -979,6 +975,7 @@ textarea:focus-visible {
   border-radius: 8px;
   color: #334155;
   font-weight: 750;
+  min-height: 2.25rem;
 }
 
 .inline-links a:hover {
@@ -1128,6 +1125,7 @@ textarea:focus-visible {
 .ticket-queue-list .ticket-title {
   color: var(--ink);
   font-weight: 900;
+  overflow-wrap: anywhere;
 }
 
 .ticket-meta-grid strong,
@@ -1189,13 +1187,48 @@ textarea:focus-visible {
 pre {
   background: #111827;
   border: 1px solid #243041;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  overflow-wrap: anywhere;
+  vertical-align: top;
 }
 
 @media (max-width: 720px) {
-  body::before {
-    height: 4rem;
-    right: -3rem;
-    width: 9rem;
+  .desktop-shell,
+  .mobile-shell {
+    max-width: none;
+    padding: 0.75rem;
+    width: 100%;
+  }
+
+  .manager-header-main {
+    gap: 0.65rem;
+  }
+
+  .manager-header-main h1 {
+    font-size: 1.55rem;
+  }
+
+  .manager-header .inline-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 0.75rem 0.75rem;
+  }
+
+  .inline-links a {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 2.75rem;
+    text-align: center;
   }
 
   .card > h2:first-child,
@@ -1211,5 +1244,47 @@ pre {
   .dashboard-grid .card strong,
   .nav-card.card strong {
     font-size: 1.65rem;
+  }
+
+  .card,
+  .queue-results-panel,
+  .job-ticket-queue-header,
+  .ticket-list-item,
+  .ticket-queue-list .ticket-list-item {
+    padding: 0.85rem;
+  }
+
+  .ticket-meta-grid,
+  .review-grid,
+  .report-grid,
+  .report-filters,
+  .form-grid,
+  .quick-add-grid {
+    grid-template-columns: 1fr;
+  }
+
+  input,
+  select,
+  textarea,
+  button,
+  .button-link {
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 440px) {
+  .manager-header .inline-links,
+  .summary-grid,
+  .queue-kpi-grid,
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    font-size: 1.45rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
   }
 }
