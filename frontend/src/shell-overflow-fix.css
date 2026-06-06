@@ -21,6 +21,19 @@ label.row input[type="radio"] {
   flex: 0 0 auto;
 }
 
+/* Let inline form rows shrink without forcing action buttons to fill the row. */
+.row > input,
+.row > select,
+.row > textarea {
+  min-width: 0;
+}
+
+.row > button,
+.row > .button-link {
+  flex: 0 0 auto;
+  width: auto;
+}
+
 @media (max-width: 720px) {
   input[type="checkbox"],
   input[type="radio"] {
@@ -30,5 +43,10 @@ label.row input[type="radio"] {
   label.row {
     align-items: center;
     flex-direction: row;
+  }
+
+  .row > button,
+  .row > .button-link {
+    width: 100%;
   }
 }
