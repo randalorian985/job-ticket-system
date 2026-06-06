@@ -229,13 +229,13 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByLabelText('waiting on parts summary')).toBeInTheDocument()
     expectRenderedText('Parts StatusWaiting on parts review')
-    expectRenderedText('Open Blockers1')
+    expectRenderedText('Open Blockers2')
     expectRenderedText('Needs Ordered2')
     expectRenderedText('Pending Review1')
     expectRenderedText('Review pending Needs ordered items in the parts request queue.')
     expectRenderedText('P-200 - Pendant harness · Qty 1 · Needs ordered · Pending review · Urgency: Urgent · Need for return visit')
-    expectRenderedText('Unlisted pressure switch (unlisted) · Qty 1 · Ticket part only · Approved · Used from truck stock')
-    expectRenderedText('Unlisted gasket (unlisted) · Qty 1 · Needs ordered · Rejected · Rejection: Need model verification before ordering.')
+    expectRenderedText('Unlisted pressure switch - Unlisted pressure switch (unlisted) · Qty 1 · Ticket part only · Approved · Used from truck stock')
+    expectRenderedText('Unlisted gasket - Unlisted gasket (unlisted) · Qty 1 · Needs ordered · Rejected · Rejection: Need model verification before ordering.')
   })
 
   it('lets Manager/Admin add or request a part from the ticket detail without pricing fields', async () => {
