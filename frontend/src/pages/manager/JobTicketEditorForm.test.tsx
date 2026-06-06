@@ -8,6 +8,7 @@ import { buildDispatchEditChecks, JobTicketEditorForm } from './JobTicketEditorF
 
 vi.mock('../../api/masterDataApi', () => ({
   masterDataApi: {
+    createCustomer: vi.fn(),
     createEquipment: vi.fn(),
     createServiceLocation: vi.fn()
   }
@@ -186,6 +187,78 @@ describe('JobTicketEditorForm dispatch edit readiness review', () => {
         detail: 'Move the ticket into an active dispatch status before dispatch review.'
       })
     ]))
+  })
+
+  it('quick-adds a customer, selects it for the ticket and billing party, then requires location context', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(masterDataApi.createCustomer).mockResolvedValue({
+      id: 'c2',
+      name: 'Northwind',
+      accountNumber: 'NW-10',
+      contactName: 'Nora North',
+      email: 'nora@example.com',
+      phone: '555-0200'
+    })
+
+    render(
+      <JobTicketEditorForm
+        initial={baseTicket}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={onSubmit}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add customer' }))
+    fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'Northwind' } })
+    fireEvent.change(screen.getByLabelText('Account Number'), { target: { value: 'NW-10' } })
+    fireEvent.change(screen.getByLabelText('Contact Name'), { target: { value: 'Nora North' } })
+    fireEvent.change(screen.getByLabelText('Contact Phone'), { target: { value: '555-0200' } })
+    fireEvent.change(screen.getByLabelText('Contact Email'), { target: { value: 'nora@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
+
+    await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({
+      name: 'Northwind',
+      accountNumber: 'NW-10',
+      contactName: 'Nora North',
+      email: 'nora@example.com',
+      phone: '555-0200'
+    }))
+
+    expect(await screen.findByText('Northwind added and selected.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Customer')).toHaveValue('c2')
+    expect(screen.getByLabelText('Billing Party')).toHaveValue('c2')
+    expect(screen.getByLabelText('Service Location')).toHaveValue('')
+    expect(screen.getByLabelText('Equipment')).toHaveValue('')
+    expect(screen.getByLabelText('Billing Contact Name')).toHaveValue('Nora North')
+    expect(screen.getByLabelText('Billing Contact Phone')).toHaveValue('555-0200')
+    expect(screen.getByLabelText('Billing Contact Email')).toHaveValue('nora@example.com')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Ticket' }))
+
+    expect(screen.getByText('Customer, location, billing party, and title are required.')).toBeInTheDocument()
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('validates customer quick-add before calling the API', () => {
+    render(
+      <JobTicketEditorForm
+        initial={baseTicket}
+        customers={customers}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add customer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
+
+    expect(screen.getByText('Customer name is required.')).toBeInTheDocument()
+    expect(masterDataApi.createCustomer).not.toHaveBeenCalled()
   })
 
   it('quick-adds service locations for the selected customer and selects the new location', async () => {
