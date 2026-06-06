@@ -14,6 +14,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
 - Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
+- Shared Employee and Manager/Admin UI polish keeps the existing workflows responsive, scannable, and aligned with the operations-board visual direction.
 
 ## Scope Boundary
 The project remains centered on the job-ticket workflow:

@@ -14,7 +14,7 @@ Use this roadmap together with:
 ## Current Roadmap Checkpoint
 The project remains explicitly centered on the original job-ticket system scope.
 
-Parts Request Workflow Phase 2 is the active feature slice in this PR. It builds on Phase 1 and smooths the service-ticket parts workflow:
+Parts Request Workflow Phase 2 is merged and protected on `main`. It builds on Phase 1 and smooths the service-ticket parts workflow:
 - technician-safe part lookup from the assigned job-ticket detail screen;
 - selecting existing catalog parts without exposing cost, price, vendor, inventory, catalog-admin, or billing fields;
 - typing new/unlisted parts when a catalog match is not found;
@@ -29,6 +29,12 @@ Parts Request Workflow Phase 2 is the active feature slice in this PR. It builds
 - no Parts Manager role added in Phase 2;
 - no purchasing, receiving, vendor invoice, landed cost, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
 
+The current active slice is frontend UI polish and responsive workflow stabilization across existing Employee and Manager/Admin surfaces:
+- shared spacing, wrapping, and mobile layout hardening;
+- clearer responsive manager navigation and compact operational panels;
+- no backend API, DTO, schema, migration, enum, auth, role, purchasing, inventory, recommendation, AI/scoring, accounting, payment, invoice-generation, or hard-delete changes;
+- no new business workflow beyond the existing implemented screens.
+
 ## Implemented Baseline That Remains Protected
 - Core backend/API workflows.
 - Employee mobile workflow.
@@ -39,19 +45,17 @@ Parts Request Workflow Phase 2 is the active feature slice in this PR. It builds
 - Parts usage history visibility with cautious non-recommendation wording.
 - Existing purchasing support and inventory foundation already present on `main`.
 
-## Phase 2 Merge Readiness Checklist
+## Current UI Polish Merge Readiness Checklist
 Before merge, confirm:
-- scope stayed limited to in-ticket parts request workflow polish;
+- scope stayed limited to frontend UI/responsive polish and docs alignment;
 - no deferred purchasing, receiving, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior was added;
 - no hard deletes were added;
 - no backend enum numeric values changed;
-- no migration was added unless CI reveals one is required;
-- technicians can select existing parts and add unlisted parts from a ticket;
-- technicians can mark `Needs ordered`;
-- technicians cannot see or submit cost, billable price, vendor, purchase, inventory, catalog cleanup, or billing controls;
-- Manager/Admin can see current ticket parts/requests, waiting-on-parts state, and Add / Request Part controls from ticket detail;
-- Manager/Admin can filter/search and review/update the parts request queue;
-- backend and frontend tests cover lookup, creation, queue review/update, authorization boundaries, seed data, technician pricing restrictions, and Manager/Admin ticket-detail parts visibility;
+- no migration was added;
+- no authorization boundaries or route guards were changed;
+- existing technician parts/request screens still do not expose cost, billable price, vendor, purchase, inventory, catalog cleanup, or billing controls;
+- existing Employee and Manager/Admin workflows remain reachable and responsive on narrow screens;
+- README, project scope, and roadmap docs no longer describe Phase 2 as an unmerged active PR;
 - validation commands pass in CI or a checkout-capable environment.
 
 ## Validation Requirements Before Merge

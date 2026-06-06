@@ -23,6 +23,7 @@ Core scope:
 - Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
+- Shared Employee and Manager/Admin UI polish is allowed as stabilization when it only improves spacing, wrapping, responsive layout, visual consistency, loading/empty/error state presentation, and workflow smoothness on existing screens.
 
 ## Technician Boundary
 Technician-facing parts request screens must stay simple and field-focused.
@@ -75,7 +76,7 @@ The following must remain stable:
 - README, API contract, project scope, and roadmap alignment.
 
 ## Not Approved Right Now
-The following are not approved as part of Parts Request Workflow Phase 2:
+The following are not approved as part of Parts Request Workflow Phase 2 or UI polish stabilization:
 - purchase orders;
 - receiving;
 - vendor invoice tracking;
