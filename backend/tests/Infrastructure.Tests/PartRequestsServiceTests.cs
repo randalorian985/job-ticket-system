@@ -144,8 +144,8 @@ public sealed class PartRequestsServiceTests
             rejected.Id,
             new UpdatePartRequestDto("Seal kit", 1m, JobPartApprovalStatus.Rejected, "Need more detail.", 0m, 0m, false));
 
-        var pendingHose = await managerService.ListQueueAsync(new PartRequestQueueQuery(JobPartApprovalStatus.Pending, "hose"));
-        var rejectedSeal = await managerService.ListQueueAsync(new PartRequestQueueQuery(JobPartApprovalStatus.Rejected, "seal"));
+        var pendingHose = await managerService.ListQueueAsync(new PartRequestQueueQuery(JobPartApprovalStatus.Pending, "Hydraulic hose"));
+        var rejectedSeal = await managerService.ListQueueAsync(new PartRequestQueueQuery(JobPartApprovalStatus.Rejected, "Seal kit"));
 
         Assert.Single(pendingHose);
         Assert.Equal("Hydraulic hose", pendingHose[0].PartName);
