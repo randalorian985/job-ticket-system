@@ -4,9 +4,10 @@ import { filesApi } from '../../api/filesApi'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { partRequestsApi } from '../../api/partRequestsApi'
+import { partsApi } from '../../api/partsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { useAuth } from '../../features/auth/AuthContext'
-import type { JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, TimeEntryDto } from '../../types'
+import type { JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, PartLookupDto, TimeEntryDto } from '../../types'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from './jobDisplay'
 
 const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
@@ -25,6 +26,26 @@ const getPartUsedDisplay = (part: JobTicketPartDto) => {
   return part.partName || `Part ${part.partId ?? 'unlisted'}`
 }
 
+const getPartApprovalLabel = (status: number) => {
+  switch (status) {
+    case 2:
+      return 'Approved'
+    case 3:
+      return 'Rejected'
+    default:
+      return 'Pending review'
+  }
+}
+
+const getPartRequestContext = (part: JobTicketPartDto) => {
+  const statusLabel = getPartApprovalLabel(part.approvalStatus)
+  if (part.officeOrderRequested) {
+    return `Needs ordered - ${statusLabel}`
+  }
+
+  return `Added to ticket - ${statusLabel}`
+}
+
 export function JobDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>()
   const navigate = useNavigate()
@@ -33,6 +54,7 @@ export function JobDetailPage() {
   const [job, setJob] = useState<JobTicketDto | null>(null)
   const [workEntries, setWorkEntries] = useState<JobWorkEntryDto[]>([])
   const [partsUsed, setPartsUsed] = useState<JobTicketPartDto[]>([])
+  const [partLookupItems, setPartLookupItems] = useState<PartLookupDto[]>([])
   const [files, setFiles] = useState<JobTicketFileDto[]>([])
   const [openEntry, setOpenEntry] = useState<TimeEntryDto | null>(null)
 
@@ -41,6 +63,8 @@ export function JobDetailPage() {
 
   const [workNote, setWorkNote] = useState('')
   const [partRequestDescription, setPartRequestDescription] = useState('')
+  const [selectedPartId, setSelectedPartId] = useState('')
+  const [partNeedsOrdered, setPartNeedsOrdered] = useState(true)
   const [partRequestQuantity, setPartRequestQuantity] = useState('1')
   const [partRequestNotes, setPartRequestNotes] = useState('')
   const [partRequestUrgency, setPartRequestUrgency] = useState('')
@@ -54,6 +78,25 @@ export function JobDetailPage() {
   const [isSubmittingPartRequest, setIsSubmittingPartRequest] = useState(false)
   const [isClocking, setIsClocking] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+
+  const selectedPart = useMemo(
+    () => partLookupItems.find((part) => part.id === selectedPartId) ?? null,
+    [partLookupItems, selectedPartId]
+  )
+
+  const partLookupMatches = useMemo(() => {
+    const search = partRequestDescription.trim().toLowerCase()
+    if (!search) {
+      return partLookupItems.slice(0, 8)
+    }
+
+    return partLookupItems
+      .filter((part) => {
+        const searchable = `${part.partNumber} ${part.name} ${part.description ?? ''}`.toLowerCase()
+        return searchable.includes(search)
+      })
+      .slice(0, 8)
+  }, [partLookupItems, partRequestDescription])
 
   const employeeFieldContext = useMemo(() => {
     const hasJobInstructions = Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim())
@@ -120,17 +163,19 @@ export function JobDetailPage() {
       return
     }
 
-    const [jobResponse, entriesResponse, partsResponse, filesResponse] = await Promise.all([
+    const [jobResponse, entriesResponse, partsResponse, filesResponse, partLookupResponse] = await Promise.all([
       jobTicketsApi.get(jobTicketId),
       jobTicketsApi.listWorkEntries(jobTicketId),
       jobTicketsApi.listParts(jobTicketId),
-      filesApi.list(jobTicketId)
+      filesApi.list(jobTicketId),
+      partsApi.list()
     ])
 
     setJob(jobResponse)
     setWorkEntries(entriesResponse)
     setPartsUsed(partsResponse)
     setFiles(filesResponse)
+    setPartLookupItems(partLookupResponse)
 
     try {
       setOpenEntry(await timeEntriesApi.getOpen(user.employeeId))
@@ -291,11 +336,11 @@ export function JobDetailPage() {
 
   const onSubmitPartRequest = async (event: FormEvent) => {
     event.preventDefault()
-    const partDescription = partRequestDescription.trim()
+    const partDescription = selectedPart?.name ?? partRequestDescription.trim()
     const quantity = Number(partRequestQuantity)
 
     if (!jobTicketId || !partDescription) {
-      setError('Part name or description is required.')
+      setError('Select an existing part or enter a new part name or description.')
       return
     }
 
@@ -309,19 +354,23 @@ export function JobDetailPage() {
     try {
       await partRequestsApi.createForJobTicket(jobTicketId, {
         partDescription,
+        partId: selectedPart?.id ?? null,
+        needsOrdered: partNeedsOrdered,
         quantity,
         notes: partRequestNotes || null,
-        urgency: partRequestUrgency || null,
-        neededByUtc: partRequestNeededBy ? new Date(partRequestNeededBy).toISOString() : null
+        urgency: partNeedsOrdered ? partRequestUrgency || null : null,
+        neededByUtc: partNeedsOrdered && partRequestNeededBy ? new Date(partRequestNeededBy).toISOString() : null
       })
       setPartRequestDescription('')
+      setSelectedPartId('')
+      setPartNeedsOrdered(true)
       setPartRequestQuantity('1')
       setPartRequestNotes('')
       setPartRequestUrgency('')
       setPartRequestNeededBy('')
       await refreshDetails()
     } catch (saveError) {
-      setError(saveError instanceof ApiError ? saveError.message : 'Unable to submit part request.')
+      setError(saveError instanceof ApiError ? saveError.message : 'Unable to add or request part.')
     } finally {
       setIsSubmittingPartRequest(false)
     }
@@ -460,12 +509,28 @@ export function JobDetailPage() {
       </section>
 
       <section className="card stack">
-        <h2>Request Part</h2>
+        <h2>Add / Request Part</h2>
         <form onSubmit={onSubmitPartRequest} className="stack">
           <label>
-            Part name or description
-            <input value={partRequestDescription} onChange={(event) => setPartRequestDescription(event.target.value)} required placeholder="Describe the part needed" />
+            Find existing part or enter new part
+            <input value={partRequestDescription} onChange={(event) => setPartRequestDescription(event.target.value)} placeholder="Search part number, name, or type a new part" />
           </label>
+          <label>
+            Existing parts match
+            <select value={selectedPartId} onChange={(event) => setSelectedPartId(event.target.value)}>
+              <option value="">Use typed new/unlisted part</option>
+              {partLookupMatches.map((part) => (
+                <option key={part.id} value={part.id}>
+                  {part.partNumber} - {part.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {selectedPart ? (
+            <p className="muted">Selected existing part: {selectedPart.partNumber} - {selectedPart.name}</p>
+          ) : (
+            <p className="muted">No match selected; the typed value will be submitted as a new/unlisted part.</p>
+          )}
           <label>
             Quantity
             <input type="number" min="0.01" step="0.01" value={partRequestQuantity} onChange={(event) => setPartRequestQuantity(event.target.value)} required />
@@ -474,20 +539,28 @@ export function JobDetailPage() {
             Notes
             <input value={partRequestNotes} onChange={(event) => setPartRequestNotes(event.target.value)} />
           </label>
-          <label>
-            Urgency
-            <select value={partRequestUrgency} onChange={(event) => setPartRequestUrgency(event.target.value)}>
-              <option value="">Routine</option>
-              <option value="Soon">Soon</option>
-              <option value="Urgent">Urgent</option>
-            </select>
+          <label className="row">
+            <input type="checkbox" checked={partNeedsOrdered} onChange={(event) => setPartNeedsOrdered(event.target.checked)} />
+            Needs ordered
           </label>
-          <label>
-            Needed by
-            <input type="date" value={partRequestNeededBy} onChange={(event) => setPartRequestNeededBy(event.target.value)} />
-          </label>
+          {partNeedsOrdered ? (
+            <>
+              <label>
+                Urgency
+                <select value={partRequestUrgency} onChange={(event) => setPartRequestUrgency(event.target.value)}>
+                  <option value="">Routine</option>
+                  <option value="Soon">Soon</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
+              </label>
+              <label>
+                Needed by
+                <input type="date" value={partRequestNeededBy} onChange={(event) => setPartRequestNeededBy(event.target.value)} />
+              </label>
+            </>
+          ) : null}
           <button type="submit" disabled={isSubmittingPartRequest}>
-            {isSubmittingPartRequest ? 'Submitting request...' : 'Submit Part Request'}
+            {isSubmittingPartRequest ? 'Adding part...' : 'Add / Request Part'}
           </button>
         </form>
       </section>
@@ -528,8 +601,8 @@ export function JobDetailPage() {
           {partsUsed.map((part) => (
             <li key={part.id}>
               {getPartUsedDisplay(part)}
-              {part.isUnlistedPart ? ' (needs office review)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'}
-              {part.officeOrderRequested ? ` - Part request submitted${part.officeOrderNotes ? `: ${part.officeOrderNotes}` : ''}` : ''}
+              {part.isUnlistedPart ? ' (unlisted)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'} - {getPartRequestContext(part)}
+              {part.officeOrderRequested && part.officeOrderNotes ? `: ${part.officeOrderNotes}` : ''}
             </li>
           ))}
         </ul>
