@@ -1,25 +1,23 @@
 # Local Demo Runbook
 
-This runbook prepares a local UX preview and Phase 4A pilot walkthrough for the current scaffold/stabilization baseline. It includes opt-in local demo seed data, but does not introduce production seed data, new deferred workflows, or deferred business domains.
+This runbook prepares a local UX preview and pilot walkthrough for the current job-ticket baseline. It includes opt-in local demo seed data, but does not introduce production seed data, new deferred workflows, or deferred business domains.
 
 ## Audience and scope
 
 Use this when a reviewer needs to confirm that the API, database dependency, and built frontend can run together on a workstation before a guided product walkthrough.
 
 In scope:
-
 - Validate required tools.
 - Choose and verify a SQL Server dependency.
 - Restore, build, and test the backend.
 - Build and preview the frontend.
-- Smoke-check public readiness endpoints, seeded pilot credentials, route boundaries, and the representative end-to-end workflow.
+- Smoke-check public readiness endpoints, seeded pilot credentials, route boundaries, employee ticket workflow, in-ticket parts add/request flow, and Manager/Admin parts request review.
 
 Out of scope:
-
 - Production deployment.
 - Cloud file storage.
-- Purchase/vendor cost tracking, advanced inventory, compatibility recommendation logic, or AI/scoring recommendations.
-- Creating representative production seed data. Phase 4A seed data is local/demo-only and must remain disabled by default.
+- Purchase orders, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory, replenishment, compatibility recommendation logic, or AI/scoring recommendations.
+- Creating representative production seed data. Pilot seed data is local/demo-only and must remain disabled by default.
 
 ## Ports and URLs
 
@@ -59,7 +57,7 @@ If `dotnet run` chooses a different backend URL, use that emitted URL consistent
    docker info
    ```
 
-   `docker info` must succeed before the Docker-backed SQL Server walkthrough. Docker client tools alone are insufficient in nested/Codex containers that lack daemon or container runtime privileges.
+   `docker info` must succeed before the Docker-backed SQL Server walkthrough.
 
 ## Demo startup sequence
 
@@ -81,29 +79,13 @@ Windows integrated-security example:
 $env:ConnectionStrings__DefaultConnection="Server=YOUR-SQL-SERVER;Database=JobTicketSystem;Integrated Security=True;TrustServerCertificate=True"
 ```
 
-Named instance example:
-
-```powershell
-$env:ConnectionStrings__DefaultConnection="Server=YOUR-SQL-SERVER\SQLEXPRESS;Database=JobTicketSystem;Integrated Security=True;TrustServerCertificate=True"
-```
-
-Integrated security works only when the Windows account running the API has SQL Server login and database permissions. Linux containers and hosted CI normally need SQL authentication unless domain/Kerberos authentication has been configured.
-
 ### 2. Start SQL Server if using Docker
 
 ```bash
 docker compose up -d
 ```
 
-Optional readiness check:
-
-```bash
-docker compose ps
-```
-
 Wait until the `job-ticket-sqlserver` health check is healthy before relying on database-backed API routes.
-
-If the workstation does not have Docker available, or if `docker info` fails because a nested/Codex container lacks Docker daemon privileges, use a non-Docker SQL Server connection string instead. If no SQL Server is available, record that as an environment limitation and continue only with backend validation that does not need the database, public `/health`, public `/api/system/info`, and the static `/preview` page. Do not exercise sign-in or database-backed walkthrough steps until SQL Server is available.
 
 ### 3. Restore and validate the backend
 
@@ -113,7 +95,7 @@ dotnet build backend/JobTicketSystem.sln --no-restore
 dotnet test backend/JobTicketSystem.sln --no-build
 ```
 
-### 4. Start the backend API with Phase 4A local pilot seed data
+### 4. Start the backend API with local pilot seed data
 
 The pilot seed is disabled by default in committed settings. Enable it with environment variables only for local/demo databases.
 
@@ -136,8 +118,7 @@ dotnet run --project backend/src/Api/Api.csproj --urls http://localhost:5000
 ```
 
 Expected backend log behavior:
-
-- On a fresh local database, the API applies EF Core migrations, creates the Phase 4A seed dataset, and logs the demo user/job-ticket counts.
+- On a fresh local database, the API applies EF Core migrations, creates the pilot seed dataset, and logs the demo user/job-ticket counts.
 - On a previously seeded local database, startup reports the seed is already present and does not duplicate records.
 - In non-demo environments, omit `PilotDemoSeed__Enabled=true` so the seed hosted service does nothing.
 
@@ -153,7 +134,6 @@ curl http://localhost:5000/api/system/info
 ```
 
 Expected result:
-
 - `/health` returns JSON with an overall status.
 - `/api/system/info` returns service metadata that includes the API base path and health endpoint path.
 
@@ -168,36 +148,26 @@ npm run preview -- --host 0.0.0.0
 
 Keep the preview process running.
 
-### 7. Open the UX readiness screen
-
-Open:
-
-```text
-http://localhost:4173/preview
-```
-
-Confirm that the page renders the readiness summary and links to:
-
-- Employee login (`/login`).
-- Manager/Admin console (`/manage`).
-
-The readiness page is static and public by design. It proves that the built frontend bundle can render before a reviewer signs in or connects prepared demo data.
-
-## Phase 4A pilot credentials
+## Pilot credentials
 
 Use these credentials only against local seeded pilot databases:
 
 | Role | Username | Password | Walkthrough use |
 | --- | --- | --- | --- |
 | Admin | `pilot.admin` | `PilotDemo123!` | Admin-only route and user-management checks. |
-| Manager | `pilot.manager` | `PilotDemo123!` | Manager console, approvals, master-data, and reporting checks. |
-| Employee | `pilot.tech` | `PilotDemo123!` | Employee mobile workflow checks. |
+| Manager | `pilot.manager` | `PilotDemo123!` | Manager console, approvals, master-data, reports, and parts request queue checks. |
+| Employee | `pilot.tech` | `PilotDemo123!` | Employee ticket, time, file, and in-ticket parts checks. |
 
 Seeded tickets to reference during a walkthrough:
+- `PILOT-READY-001`: completed ticket with approved labor/part lines, invoice-ready reporting data, and an approved Needs ordered catalog-matched parts request example.
+- `PILOT-ACTIVE-002`: employee-assigned ticket for clock-in/out, work-note, file/photo, and existing-part selection without Needs ordered.
+- `PILOT-PARTS-003`: waiting-on-parts ticket with pending existing-part Needs ordered, pending unlisted Needs ordered, and rejected unlisted Needs ordered examples for Manager/Admin review.
 
-- `PILOT-READY-001`: completed ticket with approved labor/part lines and invoice-ready reporting data.
-- `PILOT-ACTIVE-002`: employee-assigned ticket for clock-in/out, work-note, part-used, and file/photo walkthroughs.
-- `PILOT-PARTS-003`: waiting-on-parts ticket with a pending part line for manager review.
+Seeded safe lookup catalog examples:
+- `PILOT-FILTER-001` Compressor intake filter.
+- `PILOT-BELT-002` Drive belt kit.
+- `PILOT-HOSE-003` Hydraulic return hose.
+- `PILOT-SEAL-004` Cylinder seal kit.
 
 ## Guided route walkthrough
 
@@ -206,13 +176,13 @@ Use these checks after the backend and frontend preview are both running.
 1. Visit `/preview` and confirm the readiness cards render.
 2. Visit `/login` and confirm the employee login screen renders.
 3. Visit `/manage` while signed out and confirm protected routing sends the user to login.
-4. Sign in with prepared local demo credentials, if a demo database has already been created for the walkthrough.
+4. Sign in with prepared local demo credentials.
 5. Confirm role-specific navigation:
    - Employee users land on `/jobs`.
    - Manager and Admin users land on `/manage`.
    - Admin-only user management remains isolated to `/manage/users`.
 
-## Phase 4A end-to-end workflow walkthrough
+## End-to-end workflow walkthrough
 
 Use this path after backend, frontend preview, and seed data are running:
 
@@ -220,16 +190,17 @@ Use this path after backend, frontend preview, and seed data are running:
 2. Open ticket `PILOT-ACTIVE-002`.
 3. Clock in with browser location permissions enabled, or provide allowed local location values if the browser prompts.
 4. Add a work note describing the inspection.
-5. Add a used part from the seeded catalog, such as `PILOT-FILTER-001`.
-6. Clock out with a short work summary.
-7. Sign out, then sign in as `pilot.manager`.
-8. Open the Manager/Admin console at `/manage`.
-9. Confirm manager access to job tickets, reports, and approval-focused screens.
-10. Review the newly added time/part lines on `PILOT-ACTIVE-002` and approve them if exposed by the current UI path.
-11. Open reports and confirm `PILOT-READY-001` appears in invoice-ready or cost summary reporting.
-12. Optional Admin check: sign in as `pilot.admin` and confirm `/manage/users` is available.
+5. In `Add / Request Part`, search for `PILOT-HOSE-003` or `hose`, select `Hydraulic return hose`, clear `Needs ordered`, and submit it as a ticket part.
+6. In `Add / Request Part`, type a new/unlisted part such as `Unlisted crane pendant cable`, leave `Needs ordered` checked, add notes, and submit it to the parts request queue.
+7. Clock out with a short work summary.
+8. Sign out, then sign in as `pilot.manager`.
+9. Open the Manager/Admin console at `/manage` and then the parts request queue.
+10. Search/filter the queue and confirm Needs ordered requests from `PILOT-PARTS-003` plus the newly submitted unlisted request appear.
+11. Select a request, match it to a catalog part if appropriate, update status/internal notes/cost/billable price/billable state, and save.
+12. Open reports and confirm `PILOT-READY-001` appears in invoice-ready or cost summary reporting.
+13. Optional Admin check: sign in as `pilot.admin` and confirm `/manage/users` is available.
 
-Automated backend validation for this representative path is covered by `PilotDemoSeedTests`:
+Automated backend validation for the representative seed path is covered by `PilotDemoSeedTests`:
 
 ```bash
 dotnet test backend/JobTicketSystem.sln --no-build --filter PilotDemoSeedTests
@@ -261,7 +232,7 @@ The Docker seeded walkthrough requires a working Docker daemon that can pull ima
 
 ### SQL Server login or connection fails
 
-Confirm the backend was started with the intended `ConnectionStrings__DefaultConnection` value. For integrated security, confirm the Windows account running the API has SQL Server login and database permissions. For named instances, confirm the instance is reachable from the workstation, or switch to an explicit host and port.
+Confirm the backend was started with the intended `ConnectionStrings__DefaultConnection` value. For integrated security, confirm the Windows account running the API has SQL Server login and database permissions.
 
 ### Frontend cannot reach the backend
 
@@ -281,23 +252,7 @@ Confirm the backend process is still running and the API URL is correct:
 curl http://localhost:5000/health
 ```
 
-If database-backed endpoints fail but `/health` succeeds, confirm SQL Server is available. For Docker SQL Server:
-
-```bash
-docker compose ps
-```
-
-For non-Docker SQL Server, use SQL Server Management Studio, Azure Data Studio, or your normal SQL Server tooling to confirm connectivity and permissions.
-
-### Frontend preview serves an old build
-
-Rebuild before restarting preview:
-
-```bash
-cd frontend
-VITE_API_BASE_URL=http://localhost:5000 npm run build
-npm run preview -- --host 0.0.0.0
-```
+If database-backed endpoints fail but `/health` succeeds, confirm SQL Server is available.
 
 ### Pilot seed data does not appear
 
@@ -308,7 +263,7 @@ PilotDemoSeed__Enabled=true
 PilotDemoSeed__MigrateDatabase=true
 ```
 
-Then restart the API and watch for the Phase 4A seed log line. If the database was already seeded, records are not duplicated. To force a clean local Docker seed, stop the API and reset the Docker volume:
+Then restart the API and watch for the seed log line. If the database was already seeded, records are not duplicated. To force a clean local Docker seed, stop the API and reset the Docker volume:
 
 ```bash
 docker compose down -v

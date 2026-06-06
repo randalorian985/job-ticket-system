@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../../api/filesApi'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { partRequestsApi } from '../../../api/partRequestsApi'
+import { partsApi } from '../../../api/partsApi'
 import { timeEntriesApi } from '../../../api/timeEntriesApi'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { JobDetailPage } from '../JobDetailPage'
@@ -24,6 +25,12 @@ vi.mock('../../../api/jobTicketsApi', () => ({
 vi.mock('../../../api/partRequestsApi', () => ({
   partRequestsApi: {
     createForJobTicket: vi.fn()
+  }
+}))
+
+vi.mock('../../../api/partsApi', () => ({
+  partsApi: {
+    list: vi.fn()
   }
 }))
 
@@ -93,6 +100,7 @@ describe('JobDetailPage', () => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
+    vi.mocked(partsApi.list).mockResolvedValue([])
   })
 
   it('renders ticket details, work entries, parts, files, and ready field context', async () => {
@@ -152,6 +160,7 @@ describe('JobDetailPage', () => {
     expect(screen.queryByText(/Billing Party ID/)).not.toBeInTheDocument()
     expect(screen.getByText(/Inspected hydraulic lines/)).toBeInTheDocument()
     expect(screen.getByText(/P-1 - Valve kit/)).toBeInTheDocument()
+    expect(screen.getByText(/Added to ticket - Pending review/)).toBeInTheDocument()
     expect(screen.getByText(/before.jpg/)).toBeInTheDocument()
 
     const fieldContext = screen.getByLabelText('field context review')
@@ -164,11 +173,19 @@ describe('JobDetailPage', () => {
     expect(screen.getByText('Field context is ready for clock-in.')).toBeInTheDocument()
   })
 
-  it('lets technicians submit a part request without pricing, billing, catalog, or vendor fields', async () => {
+  it('lets technicians select an existing part from the ticket and mark it needs ordered without pricing fields', async () => {
     mockEmployeeAuth()
     mockJob()
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(partsApi.list).mockResolvedValue([
+      {
+        id: 'part-1',
+        partNumber: 'HYD-100',
+        name: 'Hydraulic Hose',
+        description: 'Two wire hose assembly'
+      }
+    ])
     vi.mocked(filesApi.list).mockResolvedValue([])
     vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
       throw { status: 404 }
@@ -178,12 +195,13 @@ describe('JobDetailPage', () => {
       jobTicketId: 'job-1',
       jobTicketNumber: 'JT-2026-000101',
       jobTicketTitle: 'Hydraulic Repair',
-      partId: null,
-      partNumber: 'Hydraulic hose',
-      partName: 'Hydraulic hose',
+      partId: 'part-1',
+      partNumber: 'HYD-100',
+      partName: 'Hydraulic Hose',
       quantity: 2,
-      notes: 'Used on lift cylinder',
+      notes: 'Need hose at the lift',
       isBillable: false,
+      needsOrdered: true,
       status: 1,
       requestedAtUtc: '2026-04-28T11:00:00Z'
     })
@@ -191,27 +209,30 @@ describe('JobDetailPage', () => {
     renderJobDetail()
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Part name or description')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Part number')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Find existing part or enter new part')).toBeInTheDocument()
+    expect(screen.getByLabelText('Existing parts match')).toBeInTheDocument()
     expect(screen.queryByLabelText('Unit cost')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Billable price')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Catalog part')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Vendor')).not.toBeInTheDocument()
     expect(screen.queryByText(/sale price/i)).not.toBeInTheDocument()
 
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Part name or description'), 'Hydraulic hose')
+    await user.type(screen.getByLabelText('Find existing part or enter new part'), 'hyd')
+    await user.selectOptions(screen.getByLabelText('Existing parts match'), 'part-1')
+    expect(screen.getByText('Selected existing part: HYD-100 - Hydraulic Hose')).toBeInTheDocument()
     await user.clear(screen.getByLabelText('Quantity'))
     await user.type(screen.getByLabelText('Quantity'), '2')
-    await user.type(screen.getByLabelText('Notes'), 'Used on lift cylinder')
+    await user.type(screen.getByLabelText('Notes'), 'Need hose at the lift')
     await user.selectOptions(screen.getByLabelText('Urgency'), 'Urgent')
-    await user.click(screen.getByRole('button', { name: 'Submit Part Request' }))
+    await user.click(screen.getByRole('button', { name: 'Add / Request Part' }))
 
     await waitFor(() => {
       expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('job-1', {
-        partDescription: 'Hydraulic hose',
+        partDescription: 'Hydraulic Hose',
+        partId: 'part-1',
+        needsOrdered: true,
         quantity: 2,
-        notes: 'Used on lift cylinder',
+        notes: 'Need hose at the lift',
         urgency: 'Urgent',
         neededByUtc: null
       })
@@ -219,7 +240,56 @@ describe('JobDetailPage', () => {
     expect(jobTicketsApi.quickAddPart).not.toHaveBeenCalled()
   })
 
-  it('shows technician-added unlisted parts as needing office review without part-number-heavy labels', async () => {
+  it('lets technicians enter an unlisted part and add it without creating an order request', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
+      throw { status: 404 }
+    })
+    vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({
+      id: 'request-2',
+      jobTicketId: 'job-1',
+      jobTicketNumber: 'JT-2026-000101',
+      jobTicketTitle: 'Hydraulic Repair',
+      partId: null,
+      partNumber: 'Temporary cap plug',
+      partName: 'Temporary cap plug',
+      quantity: 1,
+      notes: 'Used from service kit',
+      isBillable: false,
+      needsOrdered: false,
+      status: 1,
+      requestedAtUtc: '2026-04-28T11:00:00Z'
+    })
+
+    renderJobDetail()
+
+    expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Find existing part or enter new part'), 'Temporary cap plug')
+    await user.click(screen.getByLabelText('Needs ordered'))
+    expect(screen.queryByLabelText('Urgency')).not.toBeInTheDocument()
+    await user.type(screen.getByLabelText('Notes'), 'Used from service kit')
+    await user.click(screen.getByRole('button', { name: 'Add / Request Part' }))
+
+    await waitFor(() => {
+      expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('job-1', {
+        partDescription: 'Temporary cap plug',
+        partId: null,
+        needsOrdered: false,
+        quantity: 1,
+        notes: 'Used from service kit',
+        urgency: null,
+        neededByUtc: null
+      })
+    })
+  })
+
+  it('shows technician-added unlisted parts and needs-ordered status without part-number-heavy labels', async () => {
     mockEmployeeAuth()
     mockJob()
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
@@ -248,7 +318,7 @@ describe('JobDetailPage', () => {
 
     renderJobDetail()
 
-    expect(await screen.findByText(/Hydraulic hose \(needs office review\) - Qty 2 - Used on lift cylinder/)).toBeInTheDocument()
+    expect(await screen.findByText(/Hydraulic hose \(unlisted\) - Qty 2 - Used on lift cylinder - Needs ordered - Pending review/)).toBeInTheDocument()
     expect(screen.queryByText(/Hydraulic hose - Hydraulic hose/)).not.toBeInTheDocument()
   })
 

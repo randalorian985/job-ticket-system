@@ -24,7 +24,7 @@ describe('PartRequestsPage', () => {
     vi.clearAllMocks()
   })
 
-  it('loads the queue and lets back office update status, notes, price, and catalog match', async () => {
+  it('loads the filtered queue and lets back office update status, notes, price, and catalog match', async () => {
     vi.mocked(partRequestsApi.listQueue).mockResolvedValue([
       {
         id: 'request-1',
@@ -42,6 +42,7 @@ describe('PartRequestsPage', () => {
         unitCostSnapshot: 0,
         salePriceSnapshot: 0,
         isBillable: false,
+        needsOrdered: true,
         status: 1,
         requestedAtUtc: '2026-06-01T15:00:00Z'
       }
@@ -72,6 +73,7 @@ describe('PartRequestsPage', () => {
       unitCostSnapshot: 50,
       salePriceSnapshot: 75,
       isBillable: true,
+      needsOrdered: true,
       status: 2,
       requestedAtUtc: '2026-06-01T15:00:00Z'
     })
@@ -81,8 +83,18 @@ describe('PartRequestsPage', () => {
     expect(await screen.findByRole('heading', { name: 'Parts Request Queue' })).toBeInTheDocument()
     expect(screen.getAllByText(/JT-2026-000101/)).toHaveLength(2)
     expect(screen.getByText('Urgency: Urgent')).toBeInTheDocument()
+    expect(screen.getByText(/Qty 2 · Needs ordered/)).toBeInTheDocument()
+    expect(partRequestsApi.listQueue).toHaveBeenCalledWith({ status: '', search: '' })
 
     const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Search requests'), 'hose')
+    await user.selectOptions(screen.getByLabelText('Status filter'), '1')
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
+
+    await waitFor(() => {
+      expect(partRequestsApi.listQueue).toHaveBeenLastCalledWith({ status: 1, search: 'hose' })
+    })
+
     await user.selectOptions(screen.getByLabelText('Catalog part match'), 'part-1')
     await user.selectOptions(screen.getByLabelText('Status'), '2')
     await user.type(screen.getByLabelText('Internal status notes'), 'Matched and approved.')

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Security;
@@ -24,6 +25,7 @@ public sealed class PartRequestsServiceTests
 
         Assert.Equal("Hydraulic hose", created.PartName);
         Assert.Equal(2m, created.Quantity);
+        Assert.True(created.NeedsOrdered);
         Assert.Equal(JobPartApprovalStatus.Pending, created.Status);
         Assert.False(created.IsBillable);
         Assert.Equal(0m, created.UnitCostSnapshot);
@@ -37,6 +39,118 @@ public sealed class PartRequestsServiceTests
         Assert.Equal(0m, persisted.UnitCostSnapshot);
         Assert.Equal(0m, persisted.SalePriceSnapshot);
         Assert.Contains("Urgency: High", persisted.OfficeOrderNotes);
+    }
+
+    [Fact]
+    public async Task Assigned_employee_can_select_existing_part_without_exposing_cost_or_price()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new PartRequestsService(context, new TestUserContext(refs.Employee.Id, SystemRoles.Employee));
+
+        var created = await service.CreateForJobTicketAsync(
+            refs.JobTicket.Id,
+            new CreatePartRequestDto(
+                refs.Part.Name,
+                1m,
+                "Need the catalog hose ordered for this ticket.",
+                PartId: refs.Part.Id,
+                NeedsOrdered: true));
+
+        Assert.Equal(refs.Part.Id, created.PartId);
+        Assert.Equal(refs.Part.PartNumber, created.PartNumber);
+        Assert.Equal(refs.Part.Name, created.PartName);
+        Assert.True(created.NeedsOrdered);
+        Assert.False(created.IsBillable);
+        Assert.Equal(0m, created.UnitCostSnapshot);
+        Assert.Equal(0m, created.SalePriceSnapshot);
+
+        var persisted = await context.JobTicketParts.SingleAsync(x => x.Id == created.Id);
+        Assert.False(persisted.IsUnlistedPart);
+        Assert.True(persisted.OfficeOrderRequested);
+        Assert.Equal(refs.Part.Id, persisted.PartId);
+        Assert.Equal(0m, persisted.UnitCostSnapshot);
+        Assert.Equal(0m, persisted.SalePriceSnapshot);
+    }
+
+    [Fact]
+    public async Task Needs_ordered_false_records_ticket_part_without_back_office_queue_item()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var employeeService = new PartRequestsService(context, new TestUserContext(refs.Employee.Id, SystemRoles.Employee));
+
+        var created = await employeeService.CreateForJobTicketAsync(
+            refs.JobTicket.Id,
+            new CreatePartRequestDto(
+                refs.Part.Name,
+                1m,
+                "Installed from truck stock; no order needed.",
+                PartId: refs.Part.Id,
+                NeedsOrdered: false));
+
+        Assert.False(created.NeedsOrdered);
+        Assert.Equal(refs.Part.Id, created.PartId);
+        Assert.Equal(JobPartApprovalStatus.Pending, created.Status);
+        Assert.Equal(0m, created.UnitCostSnapshot);
+        Assert.Equal(0m, created.SalePriceSnapshot);
+
+        var persisted = await context.JobTicketParts.SingleAsync(x => x.Id == created.Id);
+        Assert.False(persisted.OfficeOrderRequested);
+        Assert.Null(persisted.OfficeOrderRequestedAtUtc);
+        Assert.Null(persisted.OfficeOrderNotes);
+
+        var managerService = new PartRequestsService(context, new TestUserContext(refs.Manager.Id, SystemRoles.Manager));
+        var queue = await managerService.ListQueueAsync();
+        Assert.Empty(queue);
+    }
+
+    [Fact]
+    public async Task Technician_safe_part_lookup_does_not_return_pricing_or_inventory_fields()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new PartsService(context);
+
+        var lookup = await service.ListLookupAsync(new PagedQuery(0, 10));
+        var item = Assert.Single(lookup);
+        Assert.Equal(refs.Part.Id, item.Id);
+        Assert.Equal(refs.Part.PartNumber, item.PartNumber);
+        Assert.Equal(refs.Part.Name, item.Name);
+
+        var json = JsonSerializer.Serialize(item, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        Assert.DoesNotContain("unitCost", json);
+        Assert.DoesNotContain("unitPrice", json);
+        Assert.DoesNotContain("quantityOnHand", json);
+        Assert.DoesNotContain("reorderThreshold", json);
+        Assert.DoesNotContain("vendor", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Queue_filters_by_status_and_search_for_back_office_review()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var employeeService = new PartRequestsService(context, new TestUserContext(refs.Employee.Id, SystemRoles.Employee));
+        await employeeService.CreateForJobTicketAsync(
+            refs.JobTicket.Id,
+            new CreatePartRequestDto("Hydraulic hose", 2m, "Need replacement hose"));
+        var rejected = await employeeService.CreateForJobTicketAsync(
+            refs.JobTicket.Id,
+            new CreatePartRequestDto("Seal kit", 1m, "Wrong size on truck"));
+
+        var managerService = new PartRequestsService(context, new TestUserContext(refs.Manager.Id, SystemRoles.Manager));
+        await managerService.UpdateBackOfficeAsync(
+            rejected.Id,
+            new UpdatePartRequestDto("Seal kit", 1m, JobPartApprovalStatus.Rejected, "Need more detail.", 0m, 0m, false));
+
+        var pendingHose = await managerService.ListQueueAsync(new PartRequestQueueQuery(JobPartApprovalStatus.Pending, "Hydraulic hose"));
+        var rejectedSeal = await managerService.ListQueueAsync(new PartRequestQueueQuery(JobPartApprovalStatus.Rejected, "Seal kit"));
+
+        Assert.Single(pendingHose);
+        Assert.Equal("Hydraulic hose", pendingHose[0].PartName);
+        Assert.Single(rejectedSeal);
+        Assert.Equal(JobPartApprovalStatus.Rejected, rejectedSeal[0].Status);
     }
 
     [Fact]
@@ -94,6 +208,7 @@ public sealed class PartRequestsServiceTests
         Assert.Equal(refs.Part.Name, updated.PartName);
         Assert.Equal(JobPartApprovalStatus.Approved, updated.Status);
         Assert.True(updated.IsBillable);
+        Assert.True(updated.NeedsOrdered);
         Assert.Equal(50m, updated.UnitCostSnapshot);
         Assert.Equal(75m, updated.SalePriceSnapshot);
         Assert.Equal("Matched to catalog and approved for billing.", updated.InternalStatusNotes);

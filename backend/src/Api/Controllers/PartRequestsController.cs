@@ -1,5 +1,6 @@
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,11 +28,14 @@ public sealed class PartRequestsController(IPartRequestsService service) : Contr
 
     [HttpGet]
     [Authorize(Policy = "ManagerOrAdmin")]
-    public async Task<ActionResult<IReadOnlyList<PartRequestDto>>> ListQueueAsync(CancellationToken cancellationToken = default)
+    public async Task<ActionResult<IReadOnlyList<PartRequestDto>>> ListQueueAsync(
+        [FromQuery] JobPartApprovalStatus? status,
+        [FromQuery] string? search,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            return Ok(await service.ListQueueAsync(cancellationToken));
+            return Ok(await service.ListQueueAsync(new PartRequestQueueQuery(status, search), cancellationToken));
         }
         catch (Exception exception)
         {

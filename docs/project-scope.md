@@ -15,19 +15,23 @@ Core scope:
 
 ## Current Control State
 - The implemented baseline includes auth, employee mobile workflow, Manager/Admin job-ticket workflow, reporting/time review, master data, purchasing support, and inventory foundation already present on `main`.
-- Parts Request Workflow Phase 1 is added as a job-ticket-first workflow.
-- Technicians can submit part requests from inside an assigned service/job ticket using only part name/description, quantity, notes, urgency, and optional needed-by context.
-- Manager/Admin back-office users can review a parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
-- No dedicated Parts Manager role is added in Phase 1; existing Manager/Admin access remains the back-office authorization boundary.
-- No schema migration is required for Phase 1 because the workflow uses existing job-ticket part office-review fields.
+- Parts Request Workflow Phase 2 is added as a job-ticket-first workflow.
+- Technicians can search/select an existing catalog part through a safe lookup or type a new/unlisted part from inside an assigned service/job ticket.
+- Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
+- If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
+- Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
+- No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
+- No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
 
 ## Technician Boundary
 Technician-facing parts request screens must stay simple and field-focused.
 
 Allowed technician fields:
-- part name or description;
+- safe part lookup/search by part number, name, or description;
+- typed unlisted part name or description;
 - quantity;
 - notes;
+- `Needs ordered` flag;
 - urgency;
 - needed-by date.
 
@@ -43,9 +47,9 @@ Technicians must not enter or see:
 - invoice-facing billing controls.
 
 ## Back-Office Boundary
-Manager/Admin users may review and update part requests as an operational ticket-support workflow.
+Manager/Admin users may review and update Needs ordered part requests as an operational ticket-support workflow.
 
-Allowed back-office fields in Phase 1:
+Allowed back-office fields in Phase 2:
 - request status;
 - internal status notes;
 - part cost snapshot;
@@ -68,7 +72,7 @@ The following must remain stable:
 - README, API contract, project scope, and roadmap alignment.
 
 ## Not Approved Right Now
-The following are not approved as part of Parts Request Workflow Phase 1:
+The following are not approved as part of Parts Request Workflow Phase 2:
 - purchase orders;
 - receiving;
 - vendor invoice tracking;
