@@ -147,6 +147,32 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             ReorderThreshold = 2m
         };
 
+        var hose = new Part
+        {
+            PartCategory = category,
+            Vendor = vendor,
+            PartNumber = "PILOT-HOSE-003",
+            Name = "Hydraulic return hose",
+            Description = "Technician-searchable hose example for in-ticket part selection.",
+            UnitCost = 64m,
+            UnitPrice = 139m,
+            QuantityOnHand = 3m,
+            ReorderThreshold = 1m
+        };
+
+        var sealKit = new Part
+        {
+            PartCategory = category,
+            Vendor = vendor,
+            PartNumber = "PILOT-SEAL-004",
+            Name = "Cylinder seal kit",
+            Description = "Catalog match example for back-office parts request review.",
+            UnitCost = 34m,
+            UnitPrice = 78m,
+            QuantityOnHand = 8m,
+            ReorderThreshold = 2m
+        };
+
         var completedTicket = BuildTicket("PILOT-READY-001", customer, billingCustomer, serviceLocation, equipment, manager, JobTicketStatus.Completed, JobTicketPriority.High, now.AddDays(-5), now.AddDays(-2), now.AddDays(-1), "Completed compressor PM ready for invoice review");
         completedTicket.CompletedAtUtc = now.AddDays(-1);
         completedTicket.CustomerFacingNotes = "Preventive maintenance completed and ready for invoice review.";
@@ -204,6 +230,29 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             ApprovedByUserId = manager.Id,
             ApprovedAtUtc = now.AddDays(-1).AddMinutes(35)
         });
+        completedTicket.Parts.Add(new JobTicketPart
+        {
+            Part = sealKit,
+            PartNumberSnapshot = sealKit.PartNumber,
+            PartNameSnapshot = sealKit.Name,
+            Equipment = equipment,
+            Quantity = 1m,
+            UnitCostSnapshot = sealKit.UnitCost,
+            SalePriceSnapshot = sealKit.UnitPrice,
+            TechnicianNotes = "Back office matched this ordered request to the catalog seal kit.",
+            Notes = "Seed approved Needs ordered request for parts manager queue demo.",
+            OfficeOrderRequested = true,
+            OfficeOrderRequestedAtUtc = now.AddDays(-2),
+            OfficeOrderNotes = "Technician notes: seal kit needed for return visit.",
+            IsBillable = true,
+            Status = PartTransactionStatus.Reserved,
+            ApprovalStatus = JobPartApprovalStatus.Approved,
+            AddedAtUtc = now.AddDays(-2),
+            AddedByUserId = technician.Id,
+            AddedByEmployee = technician,
+            ApprovedByUserId = manager.Id,
+            ApprovedAtUtc = now.AddDays(-1).AddMinutes(40)
+        });
         completedTicket.InvoiceSummary = new InvoiceSummary
         {
             Customer = customer,
@@ -226,6 +275,24 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             Notes = "Pilot active job seeded for clock-in, work note, parts, and photo walkthrough.",
             PerformedAtUtc = now.AddHours(-12)
         });
+        assignedTicket.Parts.Add(new JobTicketPart
+        {
+            Part = hose,
+            PartNumberSnapshot = hose.PartNumber,
+            PartNameSnapshot = hose.Name,
+            Equipment = equipment,
+            Quantity = 1m,
+            UnitCostSnapshot = 0m,
+            SalePriceSnapshot = 0m,
+            TechnicianNotes = "Selected existing part from the ticket. No order needed.",
+            Notes = "Seed in-ticket existing part selection without Needs ordered.",
+            IsBillable = false,
+            Status = PartTransactionStatus.Used,
+            ApprovalStatus = JobPartApprovalStatus.Pending,
+            AddedAtUtc = now.AddHours(-6),
+            AddedByUserId = technician.Id,
+            AddedByEmployee = technician
+        });
 
         var waitingTicket = BuildTicket("PILOT-PARTS-003", customer, billingCustomer, serviceLocation, equipment, manager, JobTicketStatus.WaitingOnParts, JobTicketPriority.Urgent, now.AddDays(-3), now.AddDays(2), now.AddDays(5), "Waiting-on-parts follow-up for manager review");
         waitingTicket.AssignedEmployees.Add(new JobTicketEmployee { Employee = technician, AssignedAtUtc = now.AddDays(-3), AssignedByUserId = manager.Id, IsLead = true });
@@ -236,22 +303,70 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             PartNameSnapshot = belt.Name,
             Equipment = equipment,
             Quantity = 1m,
-            UnitCostSnapshot = belt.UnitCost,
-            SalePriceSnapshot = belt.UnitPrice,
+            UnitCostSnapshot = 0m,
+            SalePriceSnapshot = 0m,
             ComponentCategory = "Drive system",
             FailureDescription = "Existing belt is near replacement threshold.",
             RepairDescription = "Reserve belt kit before return visit.",
-            TechnicianNotes = "Manager approval pending in demo data.",
-            Notes = "Seed pending part for approval queue walkthrough.",
-            IsBillable = true,
+            TechnicianNotes = "Selected existing belt kit and marked Needs ordered.",
+            Notes = "Seed pending Needs ordered part for approval queue walkthrough.",
+            OfficeOrderRequested = true,
+            OfficeOrderRequestedAtUtc = now.AddDays(-2),
+            OfficeOrderNotes = "Urgency: Soon\nTechnician notes: selected existing belt kit from ticket.",
+            IsBillable = false,
             Status = PartTransactionStatus.Reserved,
             ApprovalStatus = JobPartApprovalStatus.Pending,
             AddedAtUtc = now.AddDays(-2),
             AddedByUserId = technician.Id,
             AddedByEmployee = technician
         });
+        waitingTicket.Parts.Add(new JobTicketPart
+        {
+            PartNumberSnapshot = "Unlisted pendant harness",
+            PartNameSnapshot = "Unlisted pendant harness",
+            IsUnlistedPart = true,
+            Equipment = equipment,
+            Quantity = 1m,
+            UnitCostSnapshot = 0m,
+            SalePriceSnapshot = 0m,
+            TechnicianNotes = "Need replacement pendant harness; exact catalog part unknown.",
+            Notes = "Seed unlisted Needs ordered request waiting on back-office catalog match.",
+            OfficeOrderRequested = true,
+            OfficeOrderRequestedAtUtc = now.AddDays(-1),
+            OfficeOrderNotes = "Urgency: Urgent\nTechnician notes: exact harness unknown.",
+            IsBillable = false,
+            Status = PartTransactionStatus.Reserved,
+            ApprovalStatus = JobPartApprovalStatus.Pending,
+            AddedAtUtc = now.AddDays(-1),
+            AddedByUserId = technician.Id,
+            AddedByEmployee = technician
+        });
+        waitingTicket.Parts.Add(new JobTicketPart
+        {
+            PartNumberSnapshot = "Unlisted pressure switch",
+            PartNameSnapshot = "Unlisted pressure switch",
+            IsUnlistedPart = true,
+            Equipment = equipment,
+            Quantity = 1m,
+            UnitCostSnapshot = 0m,
+            SalePriceSnapshot = 0m,
+            TechnicianNotes = "Pressure switch request had incomplete model details.",
+            Notes = "Seed rejected unlisted request for review-state demo.",
+            OfficeOrderRequested = true,
+            OfficeOrderRequestedAtUtc = now.AddDays(-2),
+            OfficeOrderNotes = "Technician notes: pressure switch request needs model verification.",
+            IsBillable = false,
+            Status = PartTransactionStatus.Reserved,
+            ApprovalStatus = JobPartApprovalStatus.Rejected,
+            RejectionReason = "Need equipment model verification before ordering.",
+            RejectedByUserId = manager.Id,
+            RejectedAtUtc = now.AddDays(-1),
+            AddedAtUtc = now.AddDays(-2),
+            AddedByUserId = technician.Id,
+            AddedByEmployee = technician
+        });
 
-        dbContext.AddRange(admin, manager, technician, customer, billingCustomer, serviceLocation, equipment, vendor, category, filter, belt, completedTicket, assignedTicket, waitingTicket);
+        dbContext.AddRange(admin, manager, technician, customer, billingCustomer, serviceLocation, equipment, vendor, category, filter, belt, hose, sealKit, completedTicket, assignedTicket, waitingTicket);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await BuildSummaryAsync(true, cancellationToken);
