@@ -29,11 +29,14 @@ Parts Request Workflow Phase 2 is merged and protected on `main`. It builds on P
 - no Parts Manager role added in Phase 2;
 - no purchasing, receiving, vendor invoice, landed cost, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
 
-The current active slice is frontend UI polish and responsive workflow stabilization across existing Employee and Manager/Admin surfaces:
+Shared frontend UI polish and responsive workflow stabilization across existing Employee and Manager/Admin surfaces is merged and protected on `main`:
 - shared spacing, wrapping, and mobile layout hardening;
 - clearer responsive manager navigation and compact operational panels;
+- contained admin/report table overflow on narrow screens;
 - no backend API, DTO, schema, migration, enum, auth, role, purchasing, inventory, recommendation, AI/scoring, accounting, payment, invoice-generation, or hard-delete changes;
 - no new business workflow beyond the existing implemented screens.
+
+There is no active feature PR at this checkpoint. The next roadmap task should be selected only after any open audit or validation follow-up is resolved and required GitHub checks are passing.
 
 ## Implemented Baseline That Remains Protected
 - Core backend/API workflows.
@@ -45,17 +48,17 @@ The current active slice is frontend UI polish and responsive workflow stabiliza
 - Parts usage history visibility with cautious non-recommendation wording.
 - Existing purchasing support and inventory foundation already present on `main`.
 
-## Current UI Polish Merge Readiness Checklist
-Before merge, confirm:
-- scope stayed limited to frontend UI/responsive polish and docs alignment;
-- no deferred purchasing, receiving, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior was added;
+## Daily Audit Guardrails Before Next Feature Work
+Before starting the next feature PR, confirm:
+- no active stabilization, validation, or audit PR is still open;
+- no deferred purchasing, receiving, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior is being pulled forward accidentally;
 - no hard deletes were added;
 - no backend enum numeric values changed;
-- no migration was added;
-- no authorization boundaries or route guards were changed;
-- existing technician parts/request screens still do not expose cost, billable price, vendor, purchase, inventory, catalog cleanup, or billing controls;
+- no migration was added unless a schema/index change requires it;
+- no authorization boundaries or route guards were weakened;
+- technician parts/request screens still do not expose cost, billable price, vendor, purchase, inventory, catalog cleanup, or billing controls;
 - existing Employee and Manager/Admin workflows remain reachable and responsive on narrow screens;
-- README, project scope, and roadmap docs no longer describe Phase 2 as an unmerged active PR;
+- README, project scope, API contract, and roadmap docs align with the implemented `main` state;
 - validation commands pass in CI or a checkout-capable environment.
 
 ## Validation Requirements Before Merge
