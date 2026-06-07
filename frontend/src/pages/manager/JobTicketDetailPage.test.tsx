@@ -271,6 +271,33 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('Part request added to the back-office queue.')).toBeInTheDocument()
   })
 
+  it('clears a selected catalog part when Manager/Admin changes the typed part search', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Find existing part or enter new part'), { target: { value: 'pendant' } })
+    fireEvent.change(screen.getByLabelText('Existing parts match'), { target: { value: 'part-2' } })
+    expect(screen.getByText('Selected existing part: P-200 - Pendant harness')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Find existing part or enter new part'), { target: { value: 'Field-cut gasket' } })
+    expect(screen.queryByText('Selected existing part: P-200 - Pendant harness')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add / Request Part' }))
+
+    await waitFor(() => {
+      expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('j1', {
+        partDescription: 'Field-cut gasket',
+        partId: null,
+        needsOrdered: true,
+        quantity: 1,
+        notes: null,
+        urgency: null,
+        neededByUtc: null
+      })
+    })
+  })
+
   it('lets Manager/Admin add a ticket-only unlisted part without sending order context', async () => {
     renderPage()
 
