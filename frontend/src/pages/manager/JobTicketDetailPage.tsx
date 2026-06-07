@@ -648,6 +648,11 @@ export function JobTicketDetailPage() {
     }
   };
 
+  const onPartDescriptionChange = (value: string) => {
+    setPartDescription(value);
+    setSelectedCatalogPartId("");
+  };
+
   const onSubmitPart = async (event: FormEvent) => {
     event.preventDefault();
     const selectedPartName = selectedCatalogPart?.name ?? null;
@@ -1227,7 +1232,7 @@ export function JobTicketDetailPage() {
             Find existing part or enter new part
             <input
               value={partDescription}
-              onChange={(event) => setPartDescription(event.target.value)}
+              onChange={(event) => onPartDescriptionChange(event.target.value)}
               placeholder="Search part number, name, or type a new part"
             />
           </label>
