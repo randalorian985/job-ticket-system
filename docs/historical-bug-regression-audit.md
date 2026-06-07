@@ -1,5 +1,31 @@
 # Historical Bug Regression Audit
 
+Date: 2026-06-07 (UTC)
+
+## Current Control-Point Addendum
+This addendum aligns the historical audit notes with the current `main` control point after Parts Request Workflow Phase 2, shared UI polish stabilization, and the stale Manager/Admin catalog-part selection fix were merged.
+
+Scope:
+- documentation alignment only;
+- no runtime behavior changes;
+- no schema changes or migrations;
+- no auth weakening;
+- no enum renumbering;
+- no hard deletes;
+- no purchasing expansion, receiving expansion, inventory expansion, compatibility recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
+
+Current source-of-truth alignment:
+- `README.md`, `docs/build-roadmap.md`, `docs/project-scope.md`, and `docs/api-contract.md` now describe no active feature PR at this checkpoint.
+- Existing purchasing support and inventory foundation remain part of the protected baseline, but purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory, replenishment, compatibility recommendations, AI/scoring, automatic compatibility decisions, and automatic approval remain deferred until explicitly re-approved.
+- Parts Request Workflow Phase 2 remains a job-ticket-first parts request/review workflow, not a purchasing or inventory expansion workflow.
+
+Follow-up guidance:
+1. Do not carry the older Job Ticket Dispatch & Assignment Readiness Polish lane as the current active lane.
+2. Keep the next workstream in stabilization, validation, observability, or documentation hygiene unless a new business capability is explicitly approved in the scope docs and roadmap.
+3. Continue using this audit as a regression watchlist for known historical bugs, not as approval to expand deferred domains.
+
+---
+
 Date: 2026-05-28 (UTC)
 
 ## Post-Reports Checkpoint Status
@@ -19,7 +45,7 @@ Current evidence from latest `main`:
 - `backend/tests/Infrastructure.Tests/AuthIntegrationTests.cs` still covers Manager/Admin report access, employee report denial, Manager/Admin time-entry approval/rejection access, Manager/Admin master-data role boundaries, controlled Admin user invalid-payload `400 Bad Request` responses, Admin-only user management behavior, and employee job-part approval protection.
 - `backend/tests/Infrastructure.Tests/ReportingServiceTests.cs` still covers approved-only invoice labor and parts, snapshot-first labor totals, legacy fallback for null snapshots, invoice-status exclusions, and export-oriented lifecycle date fields.
 - `frontend/src/routes/__tests__/AppRouter.auth.test.tsx` still covers unauthenticated redirects, employee workflow routing, employee denial from `/manage` and `/manage/reports`, Manager/Admin routing to the manager shell, Manager denial from `/manage/users`, Manager/Admin denial from employee-only routes, and Admin access to `/manage/users`.
-- `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, and `docs/build-roadmap.md` now consistently describe the job-ticket-first product boundary, the implemented reports/time-review and closeout/readiness baseline, the current Job Ticket Dispatch & Assignment Readiness Polish lane, and the protected deferred-domain boundaries.
+- `README.md`, `docs/project-scope.md`, `docs/api-contract.md`, and `docs/build-roadmap.md` consistently described the job-ticket-first product boundary, the implemented reports/time-review and closeout/readiness baseline, the then-current Job Ticket Dispatch & Assignment Readiness Polish lane, and the protected deferred-domain boundaries.
 
 Environment and validation evidence:
 - This scheduled workspace could not clone the public GitHub repository because the outbound GitHub tunnel returned HTTP 403.
@@ -43,11 +69,11 @@ Environment and validation evidence:
 | J. Master data archive/unarchive | No new regression found in docs review | The docs still preserve soft-delete/archive requirements and no checkpoint changes alter master-data behavior. |
 | K. Manager/Admin UI | Protected by tests | Route boundaries and Admin-only user access remain covered; reports/time-review baseline remains documented. |
 | L. Deferred scope | Open-deferred | New inventory expansion, truck inventory, replenishment, compatibility recommendations, and AI/scoring remain not approved. |
-| M. Documentation discipline | Updated after this checkpoint | Core docs are aligned around the completed audit checkpoint, implemented closeout/readiness baseline, current dispatch-readiness lane, and protected deferred-domain boundaries. |
+| M. Documentation discipline | Updated after this checkpoint | Core docs were aligned around the completed audit checkpoint, implemented closeout/readiness baseline, then-current dispatch-readiness lane, and protected deferred-domain boundaries. |
 
 ## Follow-Up Needed
 1. Job Ticket Closeout & Invoice-Readiness Workflow Polish has since been implemented and validated as part of the Manager/Admin job review baseline.
-2. The current job-ticket-first lane is Job Ticket Dispatch & Assignment Readiness Polish. Continue evaluating the next dispatch/assignment readiness gap from the latest `main` branch, and keep any follow-up PR limited to that lane or a clearly necessary stabilization fix.
+2. The prior Job Ticket Dispatch & Assignment Readiness Polish lane should no longer be treated as current active work. Continue evaluating the latest `main` branch for narrow stabilization, validation, observability, or documentation hygiene unless a new business capability is explicitly approved.
 3. Do not start purchasing expansion, inventory expansion, compatibility recommendations, AI/scoring, accounting, invoice generation, or payment tracking unless the scope docs and roadmap explicitly approve that phase.
 
 ## Validation Commands Covered By GitHub Actions
