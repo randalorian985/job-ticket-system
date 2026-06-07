@@ -240,6 +240,67 @@ describe('JobDetailPage', () => {
     expect(jobTicketsApi.quickAddPart).not.toHaveBeenCalled()
   })
 
+  it('clears a selected existing part when technicians change the typed part search', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(partsApi.list).mockResolvedValue([
+      {
+        id: 'part-1',
+        partNumber: 'HYD-100',
+        name: 'Hydraulic Hose',
+        description: 'Two wire hose assembly'
+      }
+    ])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
+      throw { status: 404 }
+    })
+    vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({
+      id: 'request-2',
+      jobTicketId: 'job-1',
+      jobTicketNumber: 'JT-2026-000101',
+      jobTicketTitle: 'Hydraulic Repair',
+      partId: null,
+      partNumber: 'Field-cut gasket',
+      partName: 'Field-cut gasket',
+      quantity: 1,
+      notes: null,
+      isBillable: false,
+      needsOrdered: true,
+      status: 1,
+      requestedAtUtc: '2026-04-28T11:00:00Z'
+    })
+
+    renderJobDetail()
+
+    expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Find existing part or enter new part'), 'hyd')
+    await user.selectOptions(screen.getByLabelText('Existing parts match'), 'part-1')
+    expect(screen.getByText('Selected existing part: HYD-100 - Hydraulic Hose')).toBeInTheDocument()
+
+    await user.clear(screen.getByLabelText('Find existing part or enter new part'))
+    await user.type(screen.getByLabelText('Find existing part or enter new part'), 'Field-cut gasket')
+    expect(screen.queryByText('Selected existing part: HYD-100 - Hydraulic Hose')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Add / Request Part' }))
+
+    await waitFor(() => {
+      expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('job-1', {
+        partDescription: 'Field-cut gasket',
+        partId: null,
+        needsOrdered: true,
+        quantity: 1,
+        notes: null,
+        urgency: null,
+        neededByUtc: null
+      })
+    })
+  })
+
   it('lets technicians enter an unlisted part and add it without creating an order request', async () => {
     mockEmployeeAuth()
     mockJob()
