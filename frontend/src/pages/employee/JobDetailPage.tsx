@@ -98,6 +98,13 @@ export function JobDetailPage() {
       .slice(0, 8)
   }, [partLookupItems, partRequestDescription])
 
+  const onPartRequestDescriptionChange = (value: string) => {
+    setPartRequestDescription(value)
+    if (selectedPartId) {
+      setSelectedPartId('')
+    }
+  }
+
   const employeeFieldContext = useMemo(() => {
     const hasJobInstructions = Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim())
     const isActiveFieldWork = Boolean(job && activeFieldWorkStatuses.has(job.status))
@@ -513,7 +520,7 @@ export function JobDetailPage() {
         <form onSubmit={onSubmitPartRequest} className="stack">
           <label>
             Find existing part or enter new part
-            <input value={partRequestDescription} onChange={(event) => setPartRequestDescription(event.target.value)} placeholder="Search part number, name, or type a new part" />
+            <input value={partRequestDescription} onChange={(event) => onPartRequestDescriptionChange(event.target.value)} placeholder="Search part number, name, or type a new part" />
           </label>
           <label>
             Existing parts match
