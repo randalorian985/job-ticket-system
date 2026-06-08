@@ -67,4 +67,4 @@ cd frontend && npm test
 - Keep Employee and Manager/Admin route boundaries intact.
 - Treat `/manage` as Manager/Admin-only and `/manage/users` as Admin-only.
 - Do not expose cost, price, vendor, purchase, inventory, catalog-admin, or billing controls to technicians.
-- Keep deferred purchasing, inventory expansion, recommendation, AI/scoring, and automatic compatibility domains deferred until explicitly selected.
+- Keep deferred purchasing expansion, inventory expansion, recommendation, AI/scoring, and automatic compatibility domains deferred until explicitly selected.
