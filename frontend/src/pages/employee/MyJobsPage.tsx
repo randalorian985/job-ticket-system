@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { ApiError } from '../../api/httpClient'
@@ -26,7 +26,9 @@ function getAssignedJobListFieldContext(job: JobTicketListItemDto) {
     label: !isActiveFieldWork
       ? 'Not active field work'
       : warnings.length ? 'Needs field-context review' : 'Ready for field-context review',
-    nextStep: warnings[0] ?? 'No field-context blockers are visible from the assigned-jobs list.'
+    nextStep: warnings[0] ?? 'No field-context blockers are visible from the assigned-jobs list.',
+    openItems: warnings.length,
+    isActiveFieldWork
   }
 }
 
@@ -77,43 +79,80 @@ export function MyJobsPage() {
     }
   }, [logout, navigate])
 
+  const jobSummaries = useMemo(
+    () => jobs.map((job) => ({ job, fieldContext: getAssignedJobListFieldContext(job) })),
+    [jobs]
+  )
+
+  const activeCount = jobSummaries.filter((item) => item.fieldContext.isActiveFieldWork).length
+  const needsReviewCount = jobSummaries.filter((item) => item.fieldContext.openItems > 0).length
+  const nextJob = jobSummaries[0]
+
   return (
-    <main className="mobile-shell">
-      <header className="card">
-        <h1>My Jobs</h1>
-        <p className="muted">
-          {user?.firstName} {user?.lastName}
-        </p>
-        <button onClick={logout}>Logout</button>
+    <main className="mobile-shell employee-workspace">
+      <header className="card employee-work-header">
+        <div>
+          <p className="muted employee-eyebrow">Assigned work</p>
+          <h1>My Jobs</h1>
+          <p className="muted">
+            {user?.firstName} {user?.lastName}
+          </p>
+        </div>
+        <button className="secondary-button logout-button" onClick={logout}>Logout</button>
       </header>
 
-      {isLoading ? <p>Loading assigned jobs...</p> : null}
+      {isLoading ? <p className="muted" role="status">Loading assigned jobs...</p> : null}
       {error ? <p className="error">{error}</p> : null}
 
-      <section className="stack">
-        {jobs.map((job) => {
-          const fieldContext = getAssignedJobListFieldContext(job)
+      {!isLoading && !error && jobs.length ? (
+        <section className="employee-work-summary" aria-label="assigned jobs summary">
+          <div><span>Assigned</span><strong>{jobs.length}</strong></div>
+          <div><span>Active field work</span><strong>{activeCount}</strong></div>
+          <div><span>Needs context review</span><strong>{needsReviewCount}</strong></div>
+        </section>
+      ) : null}
+
+      {nextJob && !error ? (
+        <section className="card employee-next-job" aria-label="next assigned job">
+          <span className="muted employee-eyebrow">Next up</span>
+          <h2>{nextJob.job.ticketNumber}</h2>
+          <p>{nextJob.job.title}</p>
+          <p className="muted">{nextJob.fieldContext.label}: {nextJob.fieldContext.nextStep}</p>
+          <Link className="button-link" to={`/jobs/${nextJob.job.id}`}>Open Job</Link>
+        </section>
+      ) : null}
+
+      <section className="stack" aria-label="assigned job list">
+        {jobSummaries.map(({ job, fieldContext }) => {
+          const readinessClass = fieldContext.openItems ? 'readiness-review' : 'readiness-ready'
 
           return (
-            <article key={job.id} className="card">
-              <h2>{job.ticketNumber}</h2>
-              <p>{job.title}</p>
-              <p className="muted">
-                Status: {getJobTicketStatusLabel(job.status)} | Priority: {getJobTicketPriorityLabel(job.priority)}
-              </p>
-              <p className="muted">Customer ID: {job.customerId}</p>
-              <p className="muted">Service Location ID: {job.serviceLocationId}</p>
-              <p className="muted">Scheduled: {formatOptionalDateTime(job.scheduledStartAtUtc)}</p>
-              <p className="muted">Due: {formatOptionalDateTime(job.dueAtUtc)}</p>
-              <p className="muted">Field context: {fieldContext.label}</p>
+            <article key={job.id} className={`card assigned-job-card ${readinessClass}`}>
+              <div className="assigned-job-heading">
+                <div>
+                  <h2>{job.ticketNumber}</h2>
+                  <p>{job.title}</p>
+                </div>
+                <span className={`status-pill readiness-pill ${readinessClass}`}>{fieldContext.label}</span>
+              </div>
+              <div className="assigned-job-meta">
+                <div><strong>Status</strong><span>{getJobTicketStatusLabel(job.status)}</span></div>
+                <div><strong>Priority</strong><span>{getJobTicketPriorityLabel(job.priority)}</span></div>
+                <div><strong>Scheduled</strong><span>{formatOptionalDateTime(job.scheduledStartAtUtc)}</span></div>
+                <div><strong>Due</strong><span>{formatOptionalDateTime(job.dueAtUtc)}</span></div>
+              </div>
+              <div className="assigned-job-context">
+                <div><strong>Customer ref</strong><span>{job.customerId}</span></div>
+                <div><strong>Location ref</strong><span>{job.serviceLocationId}</span></div>
+                <div><strong>Equipment</strong><span>Summary unavailable from assigned-jobs API</span></div>
+              </div>
               <p className="muted">Next field-context fix: {fieldContext.nextStep}</p>
-              <p className="muted">Equipment: Summary unavailable from assigned-jobs API</p>
-              <Link to={`/jobs/${job.id}`}>Open Job</Link>
+              <Link className="button-link secondary-link" to={`/jobs/${job.id}`}>Open Job</Link>
             </article>
           )
         })}
 
-        {!isLoading && !jobs.length ? <p>No assigned jobs found.</p> : null}
+        {!isLoading && !jobs.length ? <p className="muted">No assigned jobs found.</p> : null}
       </section>
     </main>
   )
