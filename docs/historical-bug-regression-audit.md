@@ -3,7 +3,7 @@
 Date: 2026-06-07 (UTC)
 
 ## Current Control-Point Addendum
-This addendum aligns the historical audit notes with the current `main` control point after Parts Request Workflow Phase 2, shared UI polish stabilization, and the stale Manager/Admin catalog-part selection fix were merged.
+This addendum aligns the historical audit notes with the current `main` control point after Parts Request Workflow Phase 2, shared UI polish stabilization, and stale catalog-part selection guards for both Manager/Admin and Employee in-ticket part forms were merged.
 
 Scope:
 - documentation alignment only;
@@ -18,6 +18,7 @@ Current source-of-truth alignment:
 - `README.md`, `docs/build-roadmap.md`, `docs/project-scope.md`, and `docs/api-contract.md` now describe no active feature PR at this checkpoint.
 - Existing purchasing support and inventory foundation remain part of the protected baseline, but purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory, replenishment, compatibility recommendations, AI/scoring, automatic compatibility decisions, and automatic approval remain deferred until explicitly re-approved.
 - Parts Request Workflow Phase 2 remains a job-ticket-first parts request/review workflow, not a purchasing or inventory expansion workflow.
+- Manager/Admin and Employee Add / Request Part forms now clear any selected catalog part when the typed search changes, protecting unlisted-part submissions from stale `partId` values.
 
 Follow-up guidance:
 1. Do not carry the older Job Ticket Dispatch & Assignment Readiness Polish lane as the current active lane.

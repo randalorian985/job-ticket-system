@@ -33,6 +33,7 @@ Shared frontend UI polish and responsive workflow stabilization across existing 
 - shared spacing, wrapping, and mobile layout hardening;
 - clearer responsive manager navigation and compact operational panels;
 - contained admin/report table overflow on narrow screens;
+- stale catalog-part selection guards on Manager/Admin and Employee in-ticket Add / Request Part forms;
 - no backend API, DTO, schema, migration, enum, auth, role, purchasing, inventory, recommendation, AI/scoring, accounting, payment, invoice-generation, or hard-delete changes;
 - no new business workflow beyond the existing implemented screens.
 
