@@ -124,6 +124,9 @@ export function MyJobsPage() {
       <section className="stack" aria-label="assigned job list">
         {jobSummaries.map(({ job, fieldContext }) => {
           const readinessClass = fieldContext.openItems ? 'readiness-review' : 'readiness-ready'
+          const statusLabel = getJobTicketStatusLabel(job.status)
+          const priorityLabel = getJobTicketPriorityLabel(job.priority)
+          const dueLabel = formatOptionalDateTime(job.dueAtUtc)
 
           return (
             <article key={job.id} className={`card assigned-job-card ${readinessClass}`}>
@@ -134,11 +137,14 @@ export function MyJobsPage() {
                 </div>
                 <span className={`status-pill readiness-pill ${readinessClass}`}>{fieldContext.label}</span>
               </div>
+              <p className="muted assigned-job-summary-line">Status: {statusLabel} | Priority: {priorityLabel}</p>
+              <p className="muted assigned-job-summary-line">Due: {dueLabel}</p>
+              <p className="muted assigned-job-summary-line">Field context: {fieldContext.label}</p>
               <div className="assigned-job-meta">
-                <div><strong>Status</strong><span>{getJobTicketStatusLabel(job.status)}</span></div>
-                <div><strong>Priority</strong><span>{getJobTicketPriorityLabel(job.priority)}</span></div>
+                <div><strong>Status</strong><span>{statusLabel}</span></div>
+                <div><strong>Priority</strong><span>{priorityLabel}</span></div>
                 <div><strong>Scheduled</strong><span>{formatOptionalDateTime(job.scheduledStartAtUtc)}</span></div>
-                <div><strong>Due</strong><span>{formatOptionalDateTime(job.dueAtUtc)}</span></div>
+                <div><strong>Due</strong><span>{dueLabel}</span></div>
               </div>
               <div className="assigned-job-context">
                 <div><strong>Customer ref</strong><span>{job.customerId}</span></div>
