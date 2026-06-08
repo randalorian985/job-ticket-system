@@ -1,0 +1,191 @@
+/* UI smoothness pass: additive layout refinements for existing workflows. */
+.manager-nav-groups {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+}
+
+.manager-nav-group {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.manager-nav-group-label,
+.employee-eyebrow {
+  color: var(--muted-ink);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.2;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.manager-nav-group .inline-links {
+  padding: 0;
+}
+
+.manager-nav-group .inline-links a {
+  min-width: max-content;
+}
+
+.employee-workspace {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.employee-work-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.employee-work-header h1,
+.employee-next-job h2,
+.assigned-job-heading h2 {
+  margin-bottom: 0.2rem;
+}
+
+.employee-work-header .logout-button {
+  flex: 0 0 auto;
+}
+
+.employee-work-summary {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.employee-work-summary div {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.25rem;
+  min-height: 4.8rem;
+  padding: 0.7rem;
+}
+
+.employee-work-summary span,
+.assigned-job-meta strong,
+.assigned-job-context strong {
+  color: #505766;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.employee-work-summary strong {
+  color: var(--ink);
+  font-size: 1.75rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.employee-next-job {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.employee-next-job p,
+.assigned-job-card p {
+  margin: 0;
+}
+
+.assigned-job-card {
+  display: grid;
+  gap: 0.8rem;
+  overflow: hidden;
+}
+
+.assigned-job-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.assigned-job-heading > div {
+  min-width: 0;
+}
+
+.assigned-job-meta,
+.assigned-job-context {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.assigned-job-meta div,
+.assigned-job-context div {
+  background: var(--surface-panel);
+  border: 1px solid #e5ebf3;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.6rem;
+}
+
+.assigned-job-meta span,
+.assigned-job-context span {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.secondary-link {
+  background: #f2f5fa;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.secondary-link:hover {
+  background: #e7edf7;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .manager-header .manager-nav-groups {
+    padding: 0 0.75rem 0.75rem;
+  }
+
+  .manager-nav-group .inline-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manager-nav-group .inline-links a {
+    min-width: 0;
+  }
+
+  .employee-work-header,
+  .assigned-job-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .employee-work-header .logout-button {
+    max-width: none;
+    width: 100%;
+  }
+
+  .employee-work-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .assigned-job-meta,
+  .assigned-job-context {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 440px) {
+  .manager-nav-group .inline-links {
+    grid-template-columns: 1fr;
+  }
+}
