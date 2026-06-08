@@ -54,6 +54,17 @@ Older review and gap-analysis documents are retained for audit history only. The
 
 Historical documents that mention pre-Manager/Admin, Phase 3C/3D pickup, scaffold-era, or local-snapshot guidance should be read as dated evidence from their original review window, not as current task-selection instructions. Current work must start from latest `main`, follow the checkpoint above, and keep deferred purchasing expansion, receiving expansion, inventory expansion, recommendations, AI/scoring, automatic compatibility, and automatic approval out of scope unless explicitly re-approved.
 
+Dated review records that are historical evidence only include:
+- `docs/project-pickup-review.md`;
+- `docs/scope-code-review.md`;
+- `docs/remote-provenance-merge-readiness.md`;
+- `docs/post-merge-roadmap-reset.md`;
+- `docs/current-state-code-review.md`;
+- `docs/full-code-review-gap-analysis.md`;
+- `docs/code-review-stabilization.md`.
+
+When any of those files use words like "current", "active", "next", or "pickup", interpret that wording in the context of the document date, not as present-day roadmap approval.
+
 ## Daily Audit Guardrails Before Next Feature Work
 Before starting the next feature PR, confirm:
 - no active stabilization, validation, or audit PR is still open;
