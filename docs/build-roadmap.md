@@ -52,7 +52,7 @@ There is no active feature PR at this checkpoint. The next roadmap task should b
 ## Daily Audit Guardrails Before Next Feature Work
 Before starting the next feature PR, confirm:
 - no active stabilization, validation, or audit PR is still open;
-- no deferred purchasing, receiving, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior is being pulled forward accidentally;
+- no deferred purchasing expansion, receiving, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior is being pulled forward accidentally;
 - no hard deletes were added;
 - no backend enum numeric values changed;
 - no migration was added unless a schema/index change requires it;
@@ -82,12 +82,12 @@ Merge readiness requires:
 - no scope drift back into deferred domains.
 
 ## Deferred Until Explicitly Re-Approved
-- purchase orders or purchasing expansion;
+- new purchase-order expansion beyond the existing purchasing-support baseline;
 - receiving expansion;
 - vendor invoice tracking expansion;
 - landed-cost expansion;
-- warehouse inventory;
-- truck inventory;
+- warehouse inventory expansion beyond the existing inventory-foundation baseline;
+- truck inventory expansion;
 - inventory transactions beyond the existing baseline;
 - low-stock alerts;
 - replenishment workflows;
