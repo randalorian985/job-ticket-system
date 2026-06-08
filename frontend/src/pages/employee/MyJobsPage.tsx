@@ -115,10 +115,9 @@ export function MyJobsPage() {
       {nextJob && !error ? (
         <section className="card employee-next-job" aria-label="next assigned job">
           <span className="muted employee-eyebrow">Next up</span>
-          <h2>{nextJob.job.ticketNumber}</h2>
-          <p>{nextJob.job.title}</p>
+          <h2>Start with the first assigned job</h2>
           <p className="muted">{nextJob.fieldContext.label}: {nextJob.fieldContext.nextStep}</p>
-          <Link className="button-link" to={`/jobs/${nextJob.job.id}`}>Open Job</Link>
+          <Link className="button-link" to={`/jobs/${nextJob.job.id}`}>Open First Job</Link>
         </section>
       ) : null}
 
