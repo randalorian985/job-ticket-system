@@ -114,6 +114,68 @@ The parts request API is a job-ticket-first workflow for technician-added ticket
 - Existing employee-safe job-ticket part responses continue to hide price snapshots when returned through employee contexts.
 - Technicians must not receive UI controls for part cost, billable price, vendor cost, purchase history, inventory transactions, catalog administration, or billing decisions.
 
+## Existing Purchasing Support
+The purchasing API is an implemented Manager/Admin baseline workflow. It supports purchase-order coordination, receipt recording, vendor invoice metadata, and landed-cost fields already present on `main`.
+
+Authorization: `ManagerOrAdmin`.
+
+Endpoints:
+- `GET /api/purchase-orders?includeArchived={bool}&vendorId={vendorId}&status={status}`
+- `GET /api/purchase-orders/{id}`
+- `POST /api/purchase-orders`
+- `PUT /api/purchase-orders/{id}`
+- `POST /api/purchase-orders/{id}/submit`
+- `POST /api/purchase-orders/{id}/receive`
+- `POST /api/purchase-orders/{id}/cancel`
+- `POST /api/purchase-orders/{id}/close`
+- `POST /api/purchase-orders/{id}/archive`
+- `POST /api/purchase-orders/{id}/unarchive`
+
+Request/response DTOs include:
+- `CreatePurchaseOrderDto` with `vendorId`, optional `purchaseOrderNumber`, optional ordered/expected dates, notes, and line requests.
+- `UpdatePurchaseOrderDto` with purchase-order metadata, vendor invoice metadata, landed-cost fields, notes, and line requests.
+- `ReceivePurchaseOrderDto` with optional received date and received line quantities.
+- `PurchaseOrderDto`, `PurchaseOrderListItemDto`, and `PurchaseOrderLineDto` for Manager/Admin review screens.
+
+Behavior:
+- create/update paths validate vendor, part, line, date, invoice, and non-negative cost fields;
+- submit, receive, cancel, and close are explicit state transitions;
+- receive records inventory receipt transactions for newly received quantities;
+- archive/unarchive preserve soft-delete behavior.
+
+This section documents the existing baseline only. It does not approve new purchasing expansion, new receiving expansion, vendor invoice workflow expansion, accounting integration, invoice generation, payment tracking, replenishment, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior.
+
+## Existing Inventory Foundation
+The inventory API is an implemented Manager/Admin baseline workflow for stock locations, current stock visibility, transaction review, purchase-order receipt transactions, and manual adjustments.
+
+Authorization: `ManagerOrAdmin`.
+
+Endpoints:
+- `GET /api/inventory/stock-locations?offset={offset}&limit={limit}&includeArchived={bool}`
+- `GET /api/inventory/stock-locations/{id}`
+- `POST /api/inventory/stock-locations`
+- `PUT /api/inventory/stock-locations/{id}`
+- `POST /api/inventory/stock-locations/{id}/archive`
+- `POST /api/inventory/stock-locations/{id}/unarchive`
+- `GET /api/inventory/stock?stockLocationId={stockLocationId}&partId={partId}`
+- `GET /api/inventory/transactions?stockLocationId={stockLocationId}&partId={partId}&limit={limit}`
+- `POST /api/inventory/adjustments`
+
+Request/response DTOs include:
+- `StockLocationDto`, `CreateStockLocationDto`, and `UpdateStockLocationDto`.
+- `InventoryStockSummaryDto` for current on-hand summaries.
+- `InventoryTransactionDto` for receipt and manual-adjustment history.
+- `CreateManualInventoryAdjustmentDto` for Manager/Admin manual adjustments.
+
+Behavior:
+- stock-location create/update validates required name and unique code;
+- archive/unarchive preserve soft-delete behavior;
+- stock summaries aggregate recorded inventory transactions by stock location and part;
+- transaction review is filterable by stock location and part;
+- manual adjustments require stock location, part, non-zero quantity delta, and reason.
+
+This section documents the existing inventory foundation only. It does not approve warehouse/truck inventory expansion, transfer workflows, low-stock alerts, replenishment, average-cost or landed-cost inventory accounting expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval behavior.
+
 ## Protected Boundaries
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
