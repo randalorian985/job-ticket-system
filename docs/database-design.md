@@ -1,4 +1,4 @@
-# Database Design (Initial)
+# Database Design
 
 ## Engine
 Microsoft SQL Server
@@ -6,7 +6,14 @@ Microsoft SQL Server
 ## ORM
 Entity Framework Core
 
-## Core Entities (Scaffold Phase)
+## Current Baseline
+This document summarizes the implemented database shape for the current Job Ticket Management System baseline. It is descriptive documentation only; schema changes still require scoped EF Core migrations and roadmap approval.
+
+The implemented model supports the protected job-ticket baseline, Manager/Admin workflows, reporting/time review, file uploads, parts request review, existing purchasing support, and the existing inventory foundation.
+
+This document does not approve purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory expansion, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
+
+## Core Entities
 - `Customer`
 - `ServiceLocation`
 - `Employee`
@@ -14,6 +21,10 @@ Entity Framework Core
 - `Vendor`
 - `PartCategory`
 - `Part`
+- `PurchaseOrder`
+- `PurchaseOrderLine`
+- `StockLocation`
+- `InventoryTransaction`
 - `JobTicket`
 - `JobTicketEmployee`
 - `TimeEntry`
@@ -52,8 +63,8 @@ Use a standard SQL Server connection string via:
 }
 ```
 
-## Future Parts Compatibility Engine Data Capture
-- Data model changes are focused on collecting historical compatibility signals, not generating recommendations.
+## Parts Compatibility Data Capture
+- Data model changes are focused on collecting historical compatibility signals for visibility and later analysis, not generating recommendations.
 - `Equipment` includes optional structured attributes for `Manufacturer`, `ModelNumber`, `SerialNumber`, `EquipmentType`, `UnitNumber`, and `Year`.
 - `JobTicketPart` includes optional compatibility context fields:
   - `EquipmentId` (nullable FK to `Equipment`)
@@ -66,7 +77,8 @@ Use a standard SQL Server connection string via:
   - `RemovedAtUtc`
   - `ReplacedByJobTicketPartId` (nullable self-reference FK)
   - `CompatibilityNotes`
-- Added indexes support future analytical/recommendation workloads:
+- Added indexes support historical lookup and analysis:
   - `Equipment`: `Manufacturer`, `ModelNumber`, `SerialNumber`
   - `JobTicketPart`: `EquipmentId`, `ComponentCategory`, `WasSuccessful`, `InstalledAtUtc`
-- Recommendation logic, AI/ML inference, and suggestion APIs are intentionally out of scope in this phase.
+- Allowed wording for current product behavior is cautious: previously used, commonly used, technician-confirmed, possible match based on similar jobs, or needs verification.
+- Recommendation logic, scoring, AI/ML inference, suggestion APIs, guaranteed compatibility claims, automatic compatibility decisions, and automatic approval remain deferred until explicitly approved in the roadmap and scope docs.
