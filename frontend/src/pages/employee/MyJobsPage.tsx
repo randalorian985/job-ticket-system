@@ -85,7 +85,9 @@ export function MyJobsPage() {
   )
 
   const activeCount = jobSummaries.filter((item) => item.fieldContext.isActiveFieldWork).length
-  const needsReviewCount = jobSummaries.filter((item) => item.fieldContext.openItems > 0).length
+  const needsReviewCount = jobSummaries.filter(
+    (item) => item.fieldContext.isActiveFieldWork && item.fieldContext.openItems > 0
+  ).length
   const nextJob = jobSummaries[0]
 
   return (
