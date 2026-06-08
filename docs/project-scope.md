@@ -61,7 +61,7 @@ Allowed back-office fields in Phase 2:
 
 Manager/Admin ticket detail may show and create ticket parts/requests, summarize waiting-on-parts state, and route Needs ordered work into the back-office review queue. This remains a ticket-support workflow, not a purchasing or inventory workflow.
 
-This does not approve or implement purchase orders, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory, inventory transactions, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
+This does not approve new or expanded purchase-order behavior beyond the existing purchasing-support baseline, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory expansion, inventory transactions beyond the existing inventory-foundation baseline, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
 
 ## Protected Baseline
 The following must remain stable:
@@ -77,13 +77,13 @@ The following must remain stable:
 
 ## Not Approved Right Now
 The following are not approved as part of Parts Request Workflow Phase 2 or UI polish stabilization:
-- purchase orders;
-- receiving;
-- vendor invoice tracking;
-- landed cost;
-- warehouse inventory;
-- truck inventory;
-- inventory transactions;
+- new purchase-order expansion beyond the existing purchasing-support baseline;
+- receiving expansion;
+- vendor invoice tracking expansion;
+- landed-cost expansion;
+- warehouse inventory expansion beyond the existing inventory-foundation baseline;
+- truck inventory expansion;
+- inventory transactions beyond the existing inventory-foundation baseline;
 - low-stock alerts;
 - replenishment workflows;
 - recommendation engine;
