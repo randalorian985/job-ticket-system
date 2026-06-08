@@ -49,6 +49,11 @@ There is no active feature PR at this checkpoint. The next roadmap task should b
 - Parts usage history visibility with cautious non-recommendation wording.
 - Existing purchasing support and inventory foundation already present on `main`.
 
+## Historical Review Documents
+Older review and gap-analysis documents are retained for audit history only. They do not override this roadmap, the README, the project scope, or the API contract.
+
+Historical documents that mention pre-Manager/Admin, Phase 3C/3D pickup, scaffold-era, or local-snapshot guidance should be read as dated evidence from their original review window, not as current task-selection instructions. Current work must start from latest `main`, follow the checkpoint above, and keep deferred purchasing expansion, receiving expansion, inventory expansion, recommendations, AI/scoring, automatic compatibility, and automatic approval out of scope unless explicitly re-approved.
+
 ## Daily Audit Guardrails Before Next Feature Work
 Before starting the next feature PR, confirm:
 - no active stabilization, validation, or audit PR is still open;
