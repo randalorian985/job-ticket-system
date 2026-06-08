@@ -36,6 +36,23 @@ mkdir -p /workspace/job-ticket-system
 tar -xzf scheduled-runner-workspace.tar.gz -C /workspace/job-ticket-system
 ```
 
+## Connector Publishing Flow
+
+A missing `.git` directory in the reconstructed bundle is not a blocker. Use the extracted tree as the source of truth for search, edits, generated diffs, and final file contents.
+
+For large or coordinated patches:
+
+1. Confirm no active PR or draft PR already owns the current task.
+2. Reconstruct latest `main` from the newest issue #166 bundle before editing.
+3. Make the complete local file changes in the reconstructed workspace.
+4. Publish the final changed files through GitHub connector writes only after comparing the local diff.
+5. Prefer Git object writes for multi-file or large-file changes when contents API replacement is awkward: create blobs for complete post-patch files, create a tree from latest `main`, create a commit, move one branch ref, and open or update exactly one draft PR.
+6. Use connector contents updates only for small complete-file replacements where the full final file body is safe to handle.
+7. Never publish temporary workflow files, helper-only branches, or partial hand-reconstructed large files as a workaround.
+8. Use GitHub Actions on the PR head as validation authority when local validation is unavailable.
+
+Record a blocker only after connector inspection, bundle reconstruction, local patch generation, connector publishing, draft PR creation or update, and GitHub Actions validation handoff have all been attempted or ruled out for the current task.
+
 ## Guardrails
 
 This bridge does not weaken the normal project rules:
