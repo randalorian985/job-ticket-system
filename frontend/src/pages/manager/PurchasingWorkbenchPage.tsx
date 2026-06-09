@@ -88,7 +88,7 @@ export function PurchasingWorkbenchPage() {
 
   const reorderCandidates = useMemo(() => activeParts
     .filter((part) => part.quantityOnHand <= part.reorderThreshold)
-    .map((part) => ({ ...part, recommendedReorderQuantity: Math.max(part.reorderThreshold - part.quantityOnHand, 1), statusLabel: getStockStatus(part) })), [activeParts])
+    .map((part) => ({ ...part, manualReorderQuantity: Math.max(part.reorderThreshold - part.quantityOnHand, 1), statusLabel: getStockStatus(part) })), [activeParts])
 
   const refresh = async () => {
     const [partList, vendorList, orderList] = await Promise.all([
@@ -115,7 +115,7 @@ export function PurchasingWorkbenchPage() {
         ...current,
         vendorId: current.vendorId || firstCandidate.vendorId || activeVendors[0]?.id || '',
         partId: firstCandidate.id,
-        quantityOrdered: String('recommendedReorderQuantity' in firstCandidate ? firstCandidate.recommendedReorderQuantity : 1),
+        quantityOrdered: String('manualReorderQuantity' in firstCandidate ? firstCandidate.manualReorderQuantity : 1),
         unitCost: String(firstCandidate.unitCost ?? 0)
       }))
     }
@@ -347,7 +347,7 @@ export function PurchasingWorkbenchPage() {
         <h3>Reorder candidates from parts master data</h3>
         <p className="muted">Used only as purchasing context; no replenishment automation or recommendation scoring is performed.</p>
         <ul>
-          {reorderCandidates.map((part) => <li key={part.id}>{part.partNumber} · {part.name}: {part.statusLabel}, suggested manual order quantity {quantityFormatter.format(part.recommendedReorderQuantity)}</li>)}
+          {reorderCandidates.map((part) => <li key={part.id}>{part.partNumber} · {part.name}: {part.statusLabel}, manual reorder quantity {quantityFormatter.format(part.manualReorderQuantity)}</li>)}
         </ul>
       </article>
     </section>

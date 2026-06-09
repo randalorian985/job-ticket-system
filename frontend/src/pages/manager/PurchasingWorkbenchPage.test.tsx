@@ -92,7 +92,8 @@ describe('PurchasingWorkbenchPage', () => {
     expect(screen.getByText(/purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording/i)).toBeInTheDocument()
     expect(screen.getByText('PO-1001')).toBeInTheDocument()
     expect(screen.getByText(/replenishment automation or recommendation scoring/i)).toBeInTheDocument()
-    expect(screen.getByText(/SEAL-1 · Seal Kit: Out of stock/i)).toBeInTheDocument()
+    expect(screen.getByText(/SEAL-1 · Seal Kit: Out of stock, manual reorder quantity 4/i)).toBeInTheDocument()
+    expect(screen.queryByText(/suggested manual order quantity/i)).not.toBeInTheDocument()
   })
 
   it('creates a purchase order from selected vendor and part fields', async () => {
