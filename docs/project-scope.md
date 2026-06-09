@@ -19,17 +19,18 @@ Core scope:
 - Technicians can search/select an existing catalog part through a safe lookup or type a new/unlisted part from inside an assigned service/job ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
-- Manager/Admin job-ticket detail includes a clear Parts panel, waiting-on-parts summary, current part/request labels, and in-ticket Add / Request Part controls backed by the existing parts request API.
+- Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
+- Manager/Admin ticket detail uses focused in-page panels for ticket editing, status changes, archive review, and Add / Request Part actions backed by existing APIs.
 - Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
 - Shared Employee and Manager/Admin UI polish is allowed as stabilization when it only improves spacing, wrapping, responsive layout, visual consistency, loading/empty/error state presentation, and workflow smoothness on existing screens.
-- Manager/Admin Service Ticket Workspace Redesign is approved as the next UI workflow direction: a more coherent ticket workbench that improves service-ticket flow without expanding into deferred purchasing, inventory, payment, client portal, or recommendation domains.
+- Manager/Admin Service Ticket Workspace Redesign is implemented for the ticket detail/workspace flow without expanding into deferred purchasing, inventory, payment, client portal, notification, approval automation, recommendation, or scoring domains.
 
 ## Service Ticket Workspace Direction
 The Manager/Admin service-ticket side should move toward a field-service operations workbench rather than a collection of disconnected forms.
 
-Allowed redesign focus:
+Implemented redesign focus:
 - ticket overview and status/priority clarity;
 - customer, service location, and equipment context near the top of the ticket;
 - technician assignments and scheduling/visit context where existing APIs support it;
@@ -39,7 +40,7 @@ Allowed redesign focus:
 - file/photo visibility from the ticket workspace;
 - invoice-ready summary and closeout readiness using existing reporting/closeout behavior;
 - responsive Manager/Admin layout that stays scannable on narrow screens;
-- inline actions, focused modals, drawers, or panels when they reduce unnecessary page switching.
+- focused in-page action panels when they reduce unnecessary page switching.
 
 The design may take inspiration from field-service lifecycle products and dense repair-ticket detail views, but it must be adapted to Crane's actual job-ticket workflow. The intended flow is work queue to ticket workspace to closeout/invoice-ready review.
 

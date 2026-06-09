@@ -6,6 +6,7 @@ import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { partRequestsApi } from '../../api/partRequestsApi'
+import { reportsApi } from '../../api/reportsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
@@ -19,6 +20,7 @@ vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn() } }))
 vi.mock('../../api/partRequestsApi', () => ({ partRequestsApi: { createForJobTicket: vi.fn() } }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn() } }))
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
+vi.mock('../../api/reportsApi', () => ({ reportsApi: { getInvoiceReadySummary: vi.fn() } }))
 
 describe('JobTicketDetailPage', () => {
   const setupBaseMocks = () => {
@@ -96,6 +98,32 @@ describe('JobTicketDetailPage', () => {
       }
     ] as any)
     vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({ id: 'request-1' } as any)
+    vi.mocked(reportsApi.getInvoiceReadySummary).mockResolvedValue({
+      jobTicketId: 'j1',
+      jobTicketNumber: 'JT-1',
+      customer: 'Acme',
+      billingPartyCustomer: 'Acme',
+      serviceLocation: 'HQ',
+      equipment: 'Truck 7',
+      jobStatus: 7,
+      invoiceStatus: 1,
+      customerFacingNotes: 'Call before arrival.',
+      workDescriptions: ['Checked motor'],
+      approvedLaborEntries: [
+        { timeEntryId: 't-ready', employeeId: 'e1', employeeName: 'Riley Tech', laborHours: 1.5, billableHours: 1, costRate: 40, billRate: 95 }
+      ],
+      approvedParts: [
+        { jobTicketPartId: 'p-ready', partId: 'part-1', partNumber: 'P-100', partName: 'Hydraulic hose', quantity: 2, unitCostSnapshot: 12, unitPriceSnapshot: 25 }
+      ],
+      laborHours: 1.5,
+      laborCostTotal: 60,
+      laborBillableTotal: 95,
+      partsCostTotal: 24,
+      partsBillableTotal: 50,
+      miscCharges: 0,
+      tax: 7.5,
+      grandTotal: 152.5
+    } as any)
   }
 
   beforeEach(() => {
@@ -117,24 +145,54 @@ describe('JobTicketDetailPage', () => {
     expect(renderedPageText()).toContain(text)
   }
 
-  it('renders dispatch, closeout, archive, parts, and review sections alongside job details', async () => {
+  const clickFirstButton = (name: string | RegExp) => {
+    fireEvent.click(screen.getAllByRole('button', { name })[0])
+  }
+
+  const openPartPanel = () => clickFirstButton('Open Add / Request Part Panel')
+  const openStatusPanel = () => clickFirstButton('Open Status Review')
+  const openArchivePanel = () => clickFirstButton('Archive Review')
+
+  it('renders the Manager/Admin ticket workbench sections and focused action panels', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Workbench Actions' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ticket Overview' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Assignments' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Status / Priority' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Time / Labor' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Parts' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Files / Photos' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Activity' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Invoice-ready Summary' })).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
     expectRenderedText('Next Dispatch FixNo dispatch blockers found.')
     expectRenderedText('Assigned employees: e1.')
     expectRenderedText('Lead tech is e1.')
     expectRenderedText('Current lead: e1')
-    expectRenderedText('e1 (Lead Tech)')
-    expect(screen.getByText('Closeout & Invoice Readiness')).toBeInTheDocument()
-    expect(screen.getByText('Status Review')).toBeInTheDocument()
-    expect(screen.getByText('Archive Review')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
+    expectRenderedText('e1 Lead Tech')
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
-    expect(screen.getByLabelText('ticket parts panel')).toBeInTheDocument()
-    expect(screen.getByText('Files / Photos')).toBeInTheDocument()
+    expect(screen.getByRole('article', { name: 'ticket parts panel' })).toBeInTheDocument()
+
+    openStatusPanel()
+    expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
+
+    openArchivePanel()
+    expect(screen.getByRole('heading', { name: 'Archive Review' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Archive Reason')).toBeInTheDocument()
+  })
+
+  it('renders invoice-ready report totals in the ticket workspace', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(reportsApi.getInvoiceReadySummary).toHaveBeenCalledWith('j1')
+    expect(screen.getAllByText('$152.50').length).toBeGreaterThan(0)
+    expect(screen.getByText('Approved Labor Lines')).toBeInTheDocument()
+    expect(screen.getByText('Riley Tech')).toBeInTheDocument()
+    expect(screen.getAllByText('P-100 - Hydraulic hose').length).toBeGreaterThan(0)
   })
 
   it('shows invoice handoff readiness when closeout signals are complete', async () => {
@@ -227,21 +285,25 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByLabelText('waiting on parts summary')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'waiting on parts summary' })).toBeInTheDocument()
     expectRenderedText('Parts StatusWaiting on parts review')
     expectRenderedText('Open Blockers2')
     expectRenderedText('Needs Ordered2')
     expectRenderedText('Pending Review1')
     expectRenderedText('Review pending Needs ordered items in the parts request queue.')
-    expectRenderedText('P-200 - Pendant harness · Qty 1 · Needs ordered · Pending review · Urgency: Urgent · Need for return visit')
-    expectRenderedText('Unlisted pressure switch - Unlisted pressure switch (unlisted) · Qty 1 · Ticket part only · Approved · Used from truck stock')
-    expectRenderedText('Unlisted gasket - Unlisted gasket (unlisted) · Qty 1 · Needs ordered · Rejected · Rejection: Need model verification before ordering.')
+    expect(screen.getByText('P-200 - Pendant harness')).toBeInTheDocument()
+    expectRenderedText('Qty 1 - Needs ordered - Pending review - Urgency: Urgent - Need for return visit')
+    expect(screen.getByText('Unlisted pressure switch - Unlisted pressure switch (unlisted)')).toBeInTheDocument()
+    expectRenderedText('Qty 1 - Ticket part only - Approved - Used from truck stock')
+    expect(screen.getByText('Unlisted gasket - Unlisted gasket (unlisted)')).toBeInTheDocument()
+    expectRenderedText('Qty 1 - Needs ordered - Rejected - Rejection: Need model verification before ordering.')
   })
 
   it('lets Manager/Admin add or request a part from the ticket detail without pricing fields', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    openPartPanel()
     expect(screen.getByLabelText('add or request ticket part')).toBeInTheDocument()
     expect(screen.queryByLabelText('Unit cost')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Billable price')).not.toBeInTheDocument()
@@ -255,7 +317,7 @@ describe('JobTicketDetailPage', () => {
     fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'Needed before return visit' } })
     fireEvent.change(screen.getByLabelText('Urgency'), { target: { value: 'Urgent' } })
     fireEvent.change(screen.getByLabelText('Needed by'), { target: { value: '2026-04-05' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Add / Request Part' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit Part Request' }))
 
     await waitFor(() => {
       expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('j1', {
@@ -275,6 +337,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    openPartPanel()
 
     fireEvent.change(screen.getByLabelText('Find existing part or enter new part'), { target: { value: 'pendant' } })
     fireEvent.change(screen.getByLabelText('Existing parts match'), { target: { value: 'part-2' } })
@@ -283,7 +346,7 @@ describe('JobTicketDetailPage', () => {
     fireEvent.change(screen.getByLabelText('Find existing part or enter new part'), { target: { value: 'Field-cut gasket' } })
     expect(screen.queryByText('Selected existing part: P-200 - Pendant harness')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add / Request Part' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit Part Request' }))
 
     await waitFor(() => {
       expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('j1', {
@@ -302,12 +365,13 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    openPartPanel()
 
     fireEvent.change(screen.getByLabelText('Find existing part or enter new part'), { target: { value: 'Temporary cap plug' } })
     fireEvent.click(screen.getByLabelText('Needs ordered'))
     expect(screen.queryByLabelText('Urgency')).not.toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'Used from service kit' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Add / Request Part' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit Part Request' }))
 
     await waitFor(() => {
       expect(partRequestsApi.createForJobTicket).toHaveBeenCalledWith('j1', {
@@ -373,7 +437,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Not active dispatch')
     expectRenderedText('Next Dispatch FixTicket is outside the active dispatch queue.')
-    expectRenderedText('Dispatch status: Ticket is outside the active dispatch queue.')
+    expectRenderedText('Dispatch statusTicket is outside the active dispatch queue.')
   })
 
   it('shows assigned employee names when admin employee records are loaded', async () => {
@@ -391,7 +455,7 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
-    expectRenderedText('Alex Rivera (Lead Tech)')
+    expectRenderedText('Alex Rivera Lead Tech')
     expect(screen.getByRole('option', { name: 'Blair Stone' })).toBeInTheDocument()
     expect(screen.queryByRole('option', { name: 'Alex Rivera' })).not.toBeInTheDocument()
     expect(screen.queryByRole('option', { name: 'Maya Manager' })).not.toBeInTheDocument()
@@ -410,7 +474,7 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
-    expectRenderedText('Alex Rivera (Lead Tech)')
+    expectRenderedText('Alex Rivera Lead Tech')
   })
 
   it('warns when dispatch coverage is incomplete', async () => {
@@ -448,7 +512,7 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('Next Dispatch FixAssignment data could not be loaded. Refresh or retry before dispatch review.')
     expect(screen.getByRole('alert')).toHaveTextContent('Assignment data could not be loaded. Refresh before editing assignments or dispatch review.')
     expect(screen.getByRole('button', { name: 'Assign Employee' })).toBeDisabled()
-    expectRenderedText('Assignment data: Assignment data could not be loaded. Refresh or retry before dispatch review.')
+    expectRenderedText('Assignment dataAssignment data could not be loaded. Refresh or retry before dispatch review.')
   })
 
   it('prevents adding a second lead without clearing the current one first', async () => {
@@ -467,18 +531,19 @@ describe('JobTicketDetailPage', () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
+    openStatusPanel()
     fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '4' } })
     fireEvent.click(screen.getByRole('button', { name: 'Update to In Progress' }))
 
     await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('j1', { status: 4 }))
     expect(await screen.findByText('Status updated.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
   })
 
   it('feeds closeout warnings into invoice status review', async () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
+    openStatusPanel()
     fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '9' } })
 
     expect(screen.getByText('Invoice readiness: Some loaded time entries still need approval review.')).toBeInTheDocument()
@@ -491,6 +556,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
+    openStatusPanel()
     fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '9' } })
     fireEvent.click(screen.getByRole('button', { name: 'Update to Invoiced' }))
 
@@ -510,8 +576,9 @@ describe('JobTicketDetailPage', () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
+    openArchivePanel()
     fireEvent.change(screen.getByLabelText('Archive Reason'), { target: { value: 'Duplicate ticket' } })
-    fireEvent.click(screen.getByText('Review Archive'))
+    fireEvent.click(screen.getByRole('button', { name: 'Review Archive' }))
 
     expect(screen.getByLabelText('archive confirmation')).toBeInTheDocument()
     expect(jobTicketsApi.archive).not.toHaveBeenCalled()
@@ -525,8 +592,9 @@ describe('JobTicketDetailPage', () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
+    openArchivePanel()
     fireEvent.change(screen.getByLabelText('Archive Reason'), { target: { value: 'Completed and closed' } })
-    fireEvent.click(screen.getByText('Review Archive'))
+    fireEvent.click(screen.getByRole('button', { name: 'Review Archive' }))
     fireEvent.click(screen.getByText('Confirm Archive'))
 
     expect(await screen.findByText('Ticket archived.')).toBeInTheDocument()
@@ -537,8 +605,9 @@ describe('JobTicketDetailPage', () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
 
+    openArchivePanel()
     fireEvent.change(screen.getByLabelText('Archive Reason'), { target: { value: 'Invalid closure' } })
-    fireEvent.click(screen.getByText('Review Archive'))
+    fireEvent.click(screen.getByRole('button', { name: 'Review Archive' }))
     fireEvent.click(screen.getByText('Confirm Archive'))
 
     expect(await screen.findByText('Archive blocked')).toBeInTheDocument()

@@ -10,16 +10,17 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Technicians can search/select existing parts through a technician-safe lookup or type a new/unlisted part from inside an assigned service ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office order/request queue item.
-- Manager/Admin job-ticket detail shows a clear Parts panel, waiting-on-parts summary, current request/review labels, and ticket-level Add / Request Part controls.
+- Manager/Admin service-ticket detail now presents a cohesive field-service workbench with ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
+- Manager/Admin ticket actions use focused panels for ticket editing, status review, archive review, and Add / Request Part while staying on existing ticket, part-request, assignment, file, time, and reporting APIs.
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
 - Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - Shared Employee and Manager/Admin UI polish keeps the existing workflows responsive, scannable, and aligned with the operations-board visual direction.
 
 ## Current UI Direction
-The next approved UI workflow direction is Manager/Admin Service Ticket Workspace Redesign.
+The Manager/Admin Service Ticket Workspace Redesign is implemented for the job-ticket detail/workspace flow.
 
-The goal is to make the service-ticket side feel less clunky and more like one coherent field-service workbench: work queue, ticket workspace, technician assignment, service scope, labor, parts, files/photos, status, and invoice-ready closeout. The design direction may take inspiration from field-service lifecycle tools and dense repair-ticket detail views, but it must stay adapted to Crane's job-ticket scope.
+The service-ticket side now centers on a coherent field-service workbench: work queue, ticket workspace, technician assignment, service scope, labor, parts, files/photos, status, and invoice-ready closeout. The design direction remains adapted to Crane's job-ticket scope.
 
 This UI direction does not approve external client portals, online payments, quote approval automation, customer notification automation, purchasing expansion, inventory expansion, parts recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
