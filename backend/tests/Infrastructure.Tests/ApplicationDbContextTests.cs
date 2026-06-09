@@ -71,6 +71,34 @@ public sealed class ApplicationDbContextTests
     }
 
     [Fact]
+    public void Model_keeps_job_ticket_part_replacement_self_reference_sql_server_safe()
+    {
+        using var context = CreateContext();
+        var entityType = GetEntityType<JobTicketPart>(context);
+
+        var foreignKey = entityType
+            .GetForeignKeys()
+            .SingleOrDefault(fk => fk.Properties.Any(property => property.Name == nameof(JobTicketPart.ReplacedByJobTicketPartId)));
+
+        Assert.NotNull(foreignKey);
+        Assert.Equal(DeleteBehavior.NoAction, foreignKey.DeleteBehavior);
+    }
+
+    [Fact]
+    public void Model_keeps_job_ticket_file_work_entry_reference_sql_server_safe()
+    {
+        using var context = CreateContext();
+        var entityType = GetEntityType<JobTicketFile>(context);
+
+        var foreignKey = entityType
+            .GetForeignKeys()
+            .SingleOrDefault(fk => fk.Properties.Any(property => property.Name == nameof(JobTicketFile.WorkEntryId)));
+
+        Assert.NotNull(foreignKey);
+        Assert.Equal(DeleteBehavior.NoAction, foreignKey.DeleteBehavior);
+    }
+
+    [Fact]
     public void Model_applies_soft_delete_query_filter_to_service_location()
     {
         using var context = CreateContext();

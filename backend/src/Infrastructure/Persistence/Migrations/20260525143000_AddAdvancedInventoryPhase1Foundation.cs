@@ -1,10 +1,14 @@
 using System;
+using JobTicketSystem.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Infrastructure.Persistence.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260525143000_AddAdvancedInventoryPhase1Foundation")]
     public partial class AddAdvancedInventoryPhase1Foundation : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
