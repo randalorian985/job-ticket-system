@@ -16,6 +16,13 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - Shared Employee and Manager/Admin UI polish keeps the existing workflows responsive, scannable, and aligned with the operations-board visual direction.
 
+## Current UI Direction
+The next approved UI workflow direction is Manager/Admin Service Ticket Workspace Redesign.
+
+The goal is to make the service-ticket side feel less clunky and more like one coherent field-service workbench: work queue, ticket workspace, technician assignment, service scope, labor, parts, files/photos, status, and invoice-ready closeout. The design direction may take inspiration from field-service lifecycle tools and dense repair-ticket detail views, but it must stay adapted to Crane's job-ticket scope.
+
+This UI direction does not approve external client portals, online payments, quote approval automation, customer notification automation, purchasing expansion, inventory expansion, parts recommendations, AI/scoring, automatic compatibility, or automatic approval.
+
 ## Scope Boundary
 The project remains centered on the job-ticket workflow:
 - assign mechanics to tickets;

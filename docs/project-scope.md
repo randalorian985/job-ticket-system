@@ -24,6 +24,41 @@ Core scope:
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
 - Shared Employee and Manager/Admin UI polish is allowed as stabilization when it only improves spacing, wrapping, responsive layout, visual consistency, loading/empty/error state presentation, and workflow smoothness on existing screens.
+- Manager/Admin Service Ticket Workspace Redesign is approved as the next UI workflow direction: a more coherent ticket workbench that improves service-ticket flow without expanding into deferred purchasing, inventory, payment, client portal, or recommendation domains.
+
+## Service Ticket Workspace Direction
+The Manager/Admin service-ticket side should move toward a field-service operations workbench rather than a collection of disconnected forms.
+
+Allowed redesign focus:
+- ticket overview and status/priority clarity;
+- customer, service location, and equipment context near the top of the ticket;
+- technician assignments and scheduling/visit context where existing APIs support it;
+- service scope, notes, and activity organized around how work actually happens;
+- time-entry and labor summary visibility, including labor-rate snapshot labels where relevant;
+- parts used or requested from within the ticket, preserving technician-safe and back-office boundaries;
+- file/photo visibility from the ticket workspace;
+- invoice-ready summary and closeout readiness using existing reporting/closeout behavior;
+- responsive Manager/Admin layout that stays scannable on narrow screens;
+- inline actions, focused modals, drawers, or panels when they reduce unnecessary page switching.
+
+The design may take inspiration from field-service lifecycle products and dense repair-ticket detail views, but it must be adapted to Crane's actual job-ticket workflow. The intended flow is work queue to ticket workspace to closeout/invoice-ready review.
+
+This redesign does not approve:
+- external customer portal or Client Hub workflow;
+- online payments or payment collection;
+- quote approval automation;
+- customer notification automation;
+- new or expanded purchasing behavior;
+- receiving expansion;
+- vendor invoice tracking;
+- landed cost;
+- warehouse/truck inventory expansion;
+- low-stock alerts;
+- replenishment;
+- automatic parts recommendations;
+- AI/scoring;
+- automatic compatibility decisions;
+- automatic approval.
 
 ## Technician Boundary
 Technician-facing parts request screens must stay simple and field-focused.
@@ -76,7 +111,11 @@ The following must remain stable:
 - README, API contract, project scope, and roadmap alignment.
 
 ## Not Approved Right Now
-The following are not approved as part of Parts Request Workflow Phase 2 or UI polish stabilization:
+The following are not approved as part of Parts Request Workflow Phase 2, UI polish stabilization, or Manager/Admin Service Ticket Workspace Redesign:
+- external customer portal or Client Hub workflow;
+- online payments or payment collection;
+- quote approval automation;
+- customer notification automation;
 - new purchase-order expansion beyond the existing purchasing-support baseline;
 - receiving expansion;
 - vendor invoice tracking expansion;
