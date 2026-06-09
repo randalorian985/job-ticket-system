@@ -1482,12 +1482,14 @@ td {
 }
 
 .workbench-panel-heading > div {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .workbench-panel-heading button,
 .workbench-panel-heading .status-chip {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  width: auto;
 }
 
 .workbench-drawer {
