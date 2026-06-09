@@ -37,9 +37,9 @@ Shared frontend UI polish and responsive workflow stabilization across existing 
 - no backend API, DTO, schema, migration, enum, auth, role, purchasing, inventory, recommendation, AI/scoring, accounting, payment, invoice-generation, or hard-delete changes;
 - no new business workflow beyond the existing implemented screens.
 
-There is no active feature PR at this checkpoint. The next approved feature direction is Manager/Admin Service Ticket Workspace Redesign, a UI workflow phase that uses field-service lifecycle inspiration and dense repair-ticket detail views to make service tickets feel like one coherent workbench instead of scattered forms.
+Manager/Admin Service Ticket Workspace Redesign is active as the approved UI workflow direction. The first ticket-detail slice is a CSS-led workbench treatment that keeps existing APIs and actions intact while making the current Manager/Admin ticket detail, dispatch review, assignments, parts, closeout readiness, status/archive review, labor/time, notes, service context, billing handoff, and files/photos read as a more coherent service-ticket workspace.
 
-## Next Approved Feature Task: Manager/Admin Service Ticket Workspace Redesign
+## Current Approved Feature Task: Manager/Admin Service Ticket Workspace Redesign
 This is a feature/UI workflow PR, not a purchasing, inventory, payment, client-portal, or recommendation PR.
 
 Design inspiration may come from mature service-repair and field-service tools, especially:
@@ -62,6 +62,8 @@ Documentation expectations for the implementation PR:
 - update project scope when the redesign is implemented or partially implemented;
 - update API contract only if API behavior changes;
 - keep this roadmap aligned with the accepted outcome.
+
+The first slice is frontend styling only. It does not change API behavior, DTOs, schemas, authorization, enum values, purchasing, receiving, inventory, recommendations, AI/scoring, automatic compatibility, automatic approval, invoice generation, payments, hard-delete behavior, or technician-safe part lookup boundaries.
 
 ## Implemented Baseline That Remains Protected
 - Core backend/API workflows.
