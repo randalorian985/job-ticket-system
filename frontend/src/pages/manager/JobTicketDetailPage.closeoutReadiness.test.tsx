@@ -2,8 +2,10 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../api/filesApi'
+import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
+import { reportsApi } from '../../api/reportsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
@@ -16,6 +18,7 @@ vi.mock('../../api/filesApi', () => ({ filesApi: { list: vi.fn(), getDownloadUrl
 vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn() } }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn() } }))
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
+vi.mock('../../api/reportsApi', () => ({ reportsApi: { getInvoiceReadySummary: vi.fn() } }))
 
 describe('JobTicketDetailPage closeout readiness semantics', () => {
   const renderPage = () => {
@@ -50,6 +53,7 @@ describe('JobTicketDetailPage closeout readiness semantics', () => {
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Truck 7' }] as any)
     vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
     vi.mocked(usersApi.list).mockResolvedValue([] as any)
+    vi.mocked(reportsApi.getInvoiceReadySummary).mockRejectedValue(new ApiError('Not found', 404, undefined))
   }
 
   beforeEach(() => {
