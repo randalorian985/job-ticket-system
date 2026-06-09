@@ -37,31 +37,41 @@ Shared frontend UI polish and responsive workflow stabilization across existing 
 - no backend API, DTO, schema, migration, enum, auth, role, purchasing, inventory, recommendation, AI/scoring, accounting, payment, invoice-generation, or hard-delete changes;
 - no new business workflow beyond the existing implemented screens.
 
-There is no active feature PR at this checkpoint. The next approved feature direction is Manager/Admin Service Ticket Workspace Redesign, a UI workflow phase that uses field-service lifecycle inspiration and dense repair-ticket detail views to make service tickets feel like one coherent workbench instead of scattered forms.
+Manager/Admin Service Ticket Workspace Redesign is merged and protected on `main` for the job-ticket detail/workspace flow:
+- the Manager/Admin ticket detail page is organized as a field-service workbench rather than scattered forms;
+- ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary are visible as coordinated panels;
+- ticket editing, status review, archive review, and Add / Request Part actions use focused in-page panels backed by existing APIs;
+- Employee mobile workflow remains unchanged;
+- `/manage` remains Manager/Admin-only and `/manage/users` remains Admin-only;
+- no backend API behavior, schema, migration, enum, auth, purchasing expansion, inventory expansion, portal, payment, notification, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior was added.
 
-## Next Approved Feature Task: Manager/Admin Service Ticket Workspace Redesign
-This is a feature/UI workflow PR, not a purchasing, inventory, payment, client-portal, or recommendation PR.
+Manager/Admin assignment stabilization is merged and protected on `main`:
+- `GET /api/users/assignable-employees` provides a narrow Manager/Admin-safe lookup for active, non-archived Employee-role users;
+- full `/api/users` user-management endpoints remain Admin-only;
+- the Manager/Admin job-ticket assignment dropdown uses the narrow lookup instead of relying on the Admin-only user list;
+- service, integration, and frontend route/workbench tests cover the authorization and dropdown behavior.
 
-Design inspiration may come from mature service-repair and field-service tools, especially:
+There is no active feature PR at this checkpoint. Before selecting another feature lane, run the daily audit guardrails below and confirm the source-of-truth docs still align with `main`. Any next feature task must be explicitly approved by the current roadmap/scope documents and must not pull deferred purchasing expansion, inventory expansion, client portal, payment, notification automation, recommendation, AI/scoring, automatic compatibility, or automatic approval scope forward.
+
+## Implemented Feature Direction: Manager/Admin Service Ticket Workspace
+This implemented UI workflow phase used field-service lifecycle inspiration and dense repair-ticket detail views to make service tickets feel like one coherent workbench instead of scattered forms.
+
+Design inspiration came from mature service-repair and field-service tools, especially:
 - field-service lifecycle flow: schedule, assign, perform work, close out, and invoice-ready review;
 - dense ticket-detail workbenches: ticket header, customer/location/equipment context, line-item work sections, parts, files/photos, and a right-side operational summary.
 
-The Crane implementation should adapt those ideas to this system's actual scope:
-- keep the Manager/Admin ticket detail page as the primary service-ticket workspace;
-- organize the workspace around real operating flow: ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts used or requested, files/photos, activity, and invoice-ready summary;
-- prefer inline editing, focused modals, panels, or drawers over unnecessary full-page jumps when existing APIs already support the action;
-- keep Employee mobile workflow simple and field-focused;
-- keep Manager/Admin routes protected and `/manage/users` Admin-only;
-- keep technician-safe part lookup from exposing cost, billable price, vendor, purchase, inventory, catalog-admin, or billing controls;
-- keep cautious parts-history wording and avoid automatic recommendation language.
+The Crane implementation adapts those ideas to this system's actual scope:
+- keeps the Manager/Admin ticket detail page as the primary service-ticket workspace;
+- organizes the workspace around real operating flow: ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts used or requested, files/photos, activity, and invoice-ready summary;
+- uses focused in-page action panels where existing APIs already support the action;
+- keeps Employee mobile workflow simple and field-focused;
+- keeps Manager/Admin routes protected and `/manage/users` Admin-only;
+- keeps technician-safe part lookup from exposing cost, billable price, vendor, purchase, inventory, catalog-admin, or billing controls;
+- keeps cautious parts-history wording and avoids automatic recommendation language.
 
-The redesign should not copy a POS/retail flavor directly. Crane's service-ticket side should feel like an internal field-service operations surface: work queue, ticket workspace, technician assignment, labor/parts/photos, and invoice-ready closeout.
+The redesign does not copy a POS/retail flavor directly. Crane's service-ticket side remains an internal field-service operations surface: work queue, ticket workspace, technician assignment, labor/parts/photos, and invoice-ready closeout.
 
-Documentation expectations for the implementation PR:
-- update README if completed UI scope changes;
-- update project scope when the redesign is implemented or partially implemented;
-- update API contract only if API behavior changes;
-- keep this roadmap aligned with the accepted outcome.
+Future service-ticket workspace follow-up PRs must be stabilization, validation, or explicitly approved feature slices. They should update README, project scope, API contract, and this roadmap only when implemented behavior or scope changes.
 
 ## Implemented Baseline That Remains Protected
 - Core backend/API workflows.
