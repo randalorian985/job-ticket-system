@@ -24,7 +24,8 @@ Core scope:
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
 - Shared Employee and Manager/Admin UI polish is allowed as stabilization when it only improves spacing, wrapping, responsive layout, visual consistency, loading/empty/error state presentation, and workflow smoothness on existing screens.
-- Manager/Admin Service Ticket Workspace Redesign is approved as the next UI workflow direction: a more coherent ticket workbench that improves service-ticket flow without expanding into deferred purchasing, inventory, payment, client portal, or recommendation domains.
+- Manager/Admin Service Ticket Workspace Redesign is active as the current UI workflow direction: a more coherent ticket workbench that improves service-ticket flow without expanding into deferred purchasing, inventory, payment, client portal, or recommendation domains.
+- The first ticket-detail slice is CSS-led and organizational. It visually groups the existing Manager/Admin ticket-detail workflow around status, dispatch, assignments, service context, billing handoff, notes, parts, labor, time entries, files/photos, closeout readiness, and archive review without changing APIs, authorization, schemas, or technician-safe part boundaries.
 
 ## Service Ticket Workspace Direction
 The Manager/Admin service-ticket side should move toward a field-service operations workbench rather than a collection of disconnected forms.
