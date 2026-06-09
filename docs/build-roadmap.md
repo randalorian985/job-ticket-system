@@ -37,7 +37,31 @@ Shared frontend UI polish and responsive workflow stabilization across existing 
 - no backend API, DTO, schema, migration, enum, auth, role, purchasing, inventory, recommendation, AI/scoring, accounting, payment, invoice-generation, or hard-delete changes;
 - no new business workflow beyond the existing implemented screens.
 
-There is no active feature PR at this checkpoint. The next roadmap task should be selected only after any open audit or validation follow-up is resolved and required GitHub checks are passing.
+There is no active feature PR at this checkpoint. The next approved feature direction is Manager/Admin Service Ticket Workspace Redesign, a UI workflow phase that uses field-service lifecycle inspiration and dense repair-ticket detail views to make service tickets feel like one coherent workbench instead of scattered forms.
+
+## Next Approved Feature Task: Manager/Admin Service Ticket Workspace Redesign
+This is a feature/UI workflow PR, not a purchasing, inventory, payment, client-portal, or recommendation PR.
+
+Design inspiration may come from mature service-repair and field-service tools, especially:
+- field-service lifecycle flow: schedule, assign, perform work, close out, and invoice-ready review;
+- dense ticket-detail workbenches: ticket header, customer/location/equipment context, line-item work sections, parts, files/photos, and a right-side operational summary.
+
+The Crane implementation should adapt those ideas to this system's actual scope:
+- keep the Manager/Admin ticket detail page as the primary service-ticket workspace;
+- organize the workspace around real operating flow: ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts used or requested, files/photos, activity, and invoice-ready summary;
+- prefer inline editing, focused modals, panels, or drawers over unnecessary full-page jumps when existing APIs already support the action;
+- keep Employee mobile workflow simple and field-focused;
+- keep Manager/Admin routes protected and `/manage/users` Admin-only;
+- keep technician-safe part lookup from exposing cost, billable price, vendor, purchase, inventory, catalog-admin, or billing controls;
+- keep cautious parts-history wording and avoid automatic recommendation language.
+
+The redesign should not copy a POS/retail flavor directly. Crane's service-ticket side should feel like an internal field-service operations surface: work queue, ticket workspace, technician assignment, labor/parts/photos, and invoice-ready closeout.
+
+Documentation expectations for the implementation PR:
+- update README if completed UI scope changes;
+- update project scope when the redesign is implemented or partially implemented;
+- update API contract only if API behavior changes;
+- keep this roadmap aligned with the accepted outcome.
 
 ## Implemented Baseline That Remains Protected
 - Core backend/API workflows.
@@ -107,6 +131,10 @@ Merge readiness requires:
 - inventory transactions beyond the existing baseline;
 - low-stock alerts;
 - replenishment workflows;
+- external client portal or Client Hub workflow;
+- online payments or payment collection;
+- quote approval automation;
+- customer notification automation;
 - compatibility recommendation engine;
 - AI/scoring;
 - automatic compatibility decisions;
