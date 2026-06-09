@@ -10,6 +10,7 @@
 ## Implemented API Groups
 - Authentication (`/api/auth/*`)
 - User management (`/api/users/*`)
+- Assignable employee lookup (`/api/users/assignable-employees`)
 - Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)
 - Technician-safe part lookup (`/api/parts/lookup`)
 - Job tickets (`/api/job-tickets/*`)
@@ -20,6 +21,18 @@
 - Parts request workflow Phase 2 (`/api/part-requests/*`)
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory foundation (`/api/inventory/*`)
+
+## Assignable Employee Lookup
+- `GET /api/users/assignable-employees`
+- Authorization: `ManagerOrAdmin`
+- Response DTO: `AssignableEmployeeDto`
+  - `id`
+  - `firstName`
+  - `lastName`
+- Behavior:
+  - returns only active, non-archived users with role `Employee`;
+  - intended for Manager/Admin job-ticket assignment controls;
+  - does not return username, email, role-management data, password hash, user status, archive metadata, or reset-password/user-management fields.
 
 ## Technician-Safe Part Lookup
 - `GET /api/parts/lookup?offset=0&limit=50`
@@ -179,6 +192,7 @@ This section documents the existing inventory foundation only. It does not appro
 ## Protected Boundaries
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
+- User-management endpoints under `/api/users` remain Admin-only except for the narrow Manager/Admin `GET /api/users/assignable-employees` lookup documented above.
 - No backend enum numeric values are changed.
 - No hard deletes are introduced.
 - Deferred domains remain deferred unless explicitly selected: purchasing expansion, receiving expansion, vendor invoice expansion, landed cost expansion, warehouse/truck inventory, replenishment, recommendation engine, AI/scoring, automatic compatibility decisions, and automatic approval.

@@ -15,7 +15,7 @@ import { JobTicketDetailPage } from './JobTicketDetailPage'
 vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn() } }))
 vi.mock('../../api/filesApi', () => ({ filesApi: { list: vi.fn(), getDownloadUrl: vi.fn(() => '#') } }))
-vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn() } }))
+vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn(), listAssignableEmployees: vi.fn() } }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn() } }))
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
 vi.mock('../../api/reportsApi', () => ({ reportsApi: { getInvoiceReadySummary: vi.fn() } }))
@@ -53,6 +53,7 @@ describe('JobTicketDetailPage closeout readiness semantics', () => {
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Truck 7' }] as any)
     vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
     vi.mocked(usersApi.list).mockResolvedValue([] as any)
+    vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([] as any)
     vi.mocked(reportsApi.getInvoiceReadySummary).mockRejectedValue(new ApiError('Not found', 404, undefined))
   }
 

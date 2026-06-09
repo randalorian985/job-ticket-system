@@ -7,14 +7,20 @@ namespace JobTicketSystem.Api.Controllers;
 
 [ApiController]
 [Route("api/users")]
-[Authorize(Policy = "AdminOnly")]
 public sealed class UsersController(IUsersService usersService) : ControllerBase
 {
     [HttpGet]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<IReadOnlyList<UserDto>>> ListAsync(CancellationToken cancellationToken = default)
         => Ok(await usersService.ListAsync(cancellationToken));
 
+    [HttpGet("assignable-employees")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult<IReadOnlyList<AssignableEmployeeDto>>> ListAssignableEmployeesAsync(CancellationToken cancellationToken = default)
+        => Ok(await usersService.ListAssignableEmployeesAsync(cancellationToken));
+
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<UserDto>> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var user = await usersService.GetAsync(id, cancellationToken);
@@ -22,6 +28,7 @@ public sealed class UsersController(IUsersService usersService) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<UserDto>> CreateAsync([FromBody] CreateUserDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -36,6 +43,7 @@ public sealed class UsersController(IUsersService usersService) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<UserDto>> UpdateAsync(Guid id, [FromBody] UpdateUserDto request, CancellationToken cancellationToken = default)
     {
         try
@@ -50,6 +58,7 @@ public sealed class UsersController(IUsersService usersService) : ControllerBase
     }
 
     [HttpPost("{id:guid}/archive")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<UserDto>> ArchiveAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var user = await usersService.ArchiveAsync(id, cancellationToken);
@@ -57,6 +66,7 @@ public sealed class UsersController(IUsersService usersService) : ControllerBase
     }
 
     [HttpPost("{id:guid}/reset-password")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<UserDto>> ResetPasswordAsync(Guid id, [FromBody] ResetPasswordDto request, CancellationToken cancellationToken = default)
     {
         try
