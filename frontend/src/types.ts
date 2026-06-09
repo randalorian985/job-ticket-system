@@ -530,6 +530,12 @@ export type UserDto = {
   isArchived: boolean
 }
 
+export type AssignableEmployeeDto = {
+  id: string
+  firstName: string
+  lastName: string
+}
+
 
 export type ReportQueryFilters = {
   dateFromUtc?: string

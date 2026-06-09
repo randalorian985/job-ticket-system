@@ -16,7 +16,7 @@ import { JobTicketDetailPage } from './JobTicketDetailPage'
 vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn() } }))
 vi.mock('../../api/filesApi', () => ({ filesApi: { list: vi.fn(), getDownloadUrl: vi.fn(() => '#') } }))
-vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn() } }))
+vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn(), listAssignableEmployees: vi.fn() } }))
 vi.mock('../../api/partRequestsApi', () => ({ partRequestsApi: { createForJobTicket: vi.fn() } }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn() } }))
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
@@ -69,6 +69,10 @@ describe('JobTicketDetailPage', () => {
     ] as any)
     vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:00:00Z', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
     vi.mocked(filesApi.list).mockResolvedValue([{ id: 'f1', jobTicketId: 'j1', originalFileName: 'photo.jpg' }] as any)
+    vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([
+      { id: 'e1', firstName: 'Alex', lastName: 'Rivera' },
+      { id: 'e2', firstName: 'Blair', lastName: 'Stone' }
+    ] as any)
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's1', locationName: 'HQ' }] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Truck 7' }] as any)
@@ -168,10 +172,10 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByRole('heading', { name: 'Invoice-ready Summary' })).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
     expectRenderedText('Next Dispatch FixNo dispatch blockers found.')
-    expectRenderedText('Assigned employees: e1.')
-    expectRenderedText('Lead tech is e1.')
-    expectRenderedText('Current lead: e1')
-    expectRenderedText('e1 Lead Tech')
+    expectRenderedText('Assigned employees: Alex Rivera.')
+    expectRenderedText('Lead tech is Alex Rivera.')
+    expectRenderedText('Current lead: Alex Rivera')
+    expectRenderedText('Alex Rivera Lead Tech')
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
     expect(screen.getByRole('article', { name: 'ticket parts panel' })).toBeInTheDocument()
 
@@ -440,29 +444,26 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('Dispatch statusTicket is outside the active dispatch queue.')
   })
 
-  it('shows assigned employee names when admin employee records are loaded', async () => {
-    vi.mocked(useAuth).mockReturnValue({ user: { role: 'Admin' } } as any)
-    vi.mocked(usersApi.list).mockResolvedValue([
-      { id: 'e1', firstName: 'Alex', lastName: 'Rivera', role: 'Employee', isArchived: false },
-      { id: 'e2', firstName: 'Blair', lastName: 'Stone', role: 'Employee', isArchived: false },
-      { id: 'm1', firstName: 'Maya', lastName: 'Manager', role: 'Manager', isArchived: false },
-      { id: 'e3', firstName: 'Old', lastName: 'Worker', role: 'Employee', isArchived: true }
+  it('loads assignable technicians for manager assignment dropdown without calling the admin users endpoint', async () => {
+    vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([
+      { id: 'e1', firstName: 'Alex', lastName: 'Rivera' },
+      { id: 'e2', firstName: 'Blair', lastName: 'Stone' }
     ] as any)
 
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(usersApi.list).not.toHaveBeenCalled()
+    expect(usersApi.listAssignableEmployees).toHaveBeenCalled()
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
     expectRenderedText('Alex Rivera Lead Tech')
     expect(screen.getByRole('option', { name: 'Blair Stone' })).toBeInTheDocument()
     expect(screen.queryByRole('option', { name: 'Alex Rivera' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: 'Maya Manager' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: 'Old Worker' })).not.toBeInTheDocument()
   })
 
-  it('shows assignment response names for managers without loading admin user records', async () => {
+  it('shows assignment response names for managers while using the assignable employee lookup', async () => {
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([
       { employeeId: 'e1', employeeName: 'Alex Rivera', assignedAtUtc: '2026-04-01T08:15:00Z', isLead: true }
     ] as any)
@@ -471,6 +472,7 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(usersApi.list).not.toHaveBeenCalled()
+    expect(usersApi.listAssignableEmployees).toHaveBeenCalled()
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')

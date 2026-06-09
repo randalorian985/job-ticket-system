@@ -120,6 +120,36 @@ public sealed class UsersServiceTests
             SystemRoles.Employee)));
     }
 
+    [Fact]
+    public async Task List_assignable_employees_returns_only_active_non_archived_employee_role_users()
+    {
+        await using var context = CreateContext();
+        var techOne = SeedEmployee(context, userName: "technician.one", email: "tech.one@example.test", firstName: "Tech", lastName: "One");
+        var techTwo = SeedEmployee(context, userName: "technician.two", email: "tech.two@example.test", firstName: "Tech", lastName: "Two");
+        SeedEmployee(context, userName: "manager.one", email: "manager.one@example.test", role: SystemRoles.Manager);
+        SeedEmployee(context, userName: "inactive.one", email: "inactive.one@example.test", status: EmployeeStatus.Inactive);
+        SeedEmployee(context, userName: "archived.one", email: "archived.one@example.test", isArchived: true);
+        await context.SaveChangesAsync();
+        var service = CreateService(context);
+
+        var assignable = await service.ListAssignableEmployeesAsync();
+
+        Assert.Collection(
+            assignable,
+            item =>
+            {
+                Assert.Equal(techOne.Id, item.Id);
+                Assert.Equal("Tech", item.FirstName);
+                Assert.Equal("One", item.LastName);
+            },
+            item =>
+            {
+                Assert.Equal(techTwo.Id, item.Id);
+                Assert.Equal("Tech", item.FirstName);
+                Assert.Equal("Two", item.LastName);
+            });
+    }
+
     private static UsersService CreateService(ApplicationDbContext context)
     {
         var authService = new AuthService(context, new TestCurrentUserContext(Guid.NewGuid(), SystemRoles.Admin));
@@ -134,17 +164,26 @@ public sealed class UsersServiceTests
         return new ApplicationDbContext(options);
     }
 
-    private static Employee SeedEmployee(ApplicationDbContext context, string userName, string email)
+    private static Employee SeedEmployee(
+        ApplicationDbContext context,
+        string userName,
+        string email,
+        string firstName = "Existing",
+        string lastName = "User",
+        string role = SystemRoles.Employee,
+        EmployeeStatus status = EmployeeStatus.Active,
+        bool isArchived = false)
     {
         var employee = new Employee
         {
-            FirstName = "Existing",
-            LastName = "User",
+            FirstName = firstName,
+            LastName = lastName,
             UserName = userName,
             Email = email,
             PasswordHash = "hash",
-            Role = SystemRoles.Employee,
-            Status = EmployeeStatus.Active
+            Role = role,
+            Status = status,
+            IsDeleted = isArchived
         };
         context.Employees.Add(employee);
         return employee;

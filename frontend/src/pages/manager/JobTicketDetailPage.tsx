@@ -22,7 +22,7 @@ import type {
   PartDto,
   ServiceLocationDto,
   TimeEntryDto,
-  UserDto,
+  AssignableEmployeeDto,
 } from "../../types";
 import {
   getJobTicketPriorityLabel,
@@ -135,7 +135,7 @@ export function JobTicketDetailPage() {
   const [customers, setCustomers] = useState<CustomerDto[]>([]);
   const [locations, setLocations] = useState<ServiceLocationDto[]>([]);
   const [equipment, setEquipment] = useState<EquipmentDto[]>([]);
-  const [employees, setEmployees] = useState<UserDto[]>([]);
+  const [employees, setEmployees] = useState<AssignableEmployeeDto[]>([]);
   const [statusValue, setStatusValue] = useState("1");
   const [archiveReason, setArchiveReason] = useState("");
   const [archiveConfirmationOpen, setArchiveConfirmationOpen] = useState(false);
@@ -642,11 +642,8 @@ export function JobTicketDetailPage() {
     setEquipment(equipmentResponse);
     setCatalogParts(catalogPartResponse.filter((part) => !part.isArchived));
 
-    if (user?.role === "Admin") {
-      const userList = await usersApi.list().catch(() => []);
-      setEmployees(
-        userList.filter((x) => !x.isArchived && x.role === "Employee"),
-      );
+    if (user?.role === "Admin" || user?.role === "Manager") {
+      setEmployees(await usersApi.listAssignableEmployees().catch(() => []));
     }
 
     setError(null);

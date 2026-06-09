@@ -21,6 +21,7 @@ vi.mock('../../api/jobTicketsApi', () => ({
 vi.mock('../../api/usersApi', () => ({
   usersApi: {
     list: vi.fn(),
+    listAssignableEmployees: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     archive: vi.fn(),
@@ -61,6 +62,7 @@ describe('AppRouter authentication rendering', () => {
     vi.clearAllMocks()
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
     vi.mocked(usersApi.list).mockResolvedValue([])
+    vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([])
   })
 
   it('renders the public UX preview readiness route without authentication', async () => {

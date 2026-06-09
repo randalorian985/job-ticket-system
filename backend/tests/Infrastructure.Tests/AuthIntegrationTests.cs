@@ -342,6 +342,33 @@ public sealed class AuthIntegrationTests
     }
 
     [Fact]
+    public async Task Assignable_employee_lookup_allows_manager_without_opening_admin_user_list()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedUsersAsync(db, auth));
+
+        var managerClient = factory.CreateClient();
+        await managerClient.SetBearerTokenAsync("manager", "ManagerPass!123");
+
+        var adminOnlyUsers = await managerClient.GetAsync("/api/users");
+        Assert.Equal(HttpStatusCode.Forbidden, adminOnlyUsers.StatusCode);
+
+        var assignableResponse = await managerClient.GetAsync("/api/users/assignable-employees");
+        Assert.Equal(HttpStatusCode.OK, assignableResponse.StatusCode);
+
+        var assignable = await assignableResponse.Content.ReadFromJsonAsync<List<AssignableEmployeeDto>>();
+        var technician = Assert.Single(assignable!);
+        Assert.Equal("Employee", technician.FirstName);
+        Assert.Equal("User", technician.LastName);
+
+        var employeeClient = factory.CreateClient();
+        await employeeClient.SetBearerTokenAsync("employee", "EmployeePass!123");
+
+        var employeeLookup = await employeeClient.GetAsync("/api/users/assignable-employees");
+        Assert.Equal(HttpStatusCode.Forbidden, employeeLookup.StatusCode);
+    }
+
+    [Fact]
     public async Task Admin_user_invalid_payloads_return_controlled_bad_request_responses()
     {
         await using var factory = new TestApiFactory();

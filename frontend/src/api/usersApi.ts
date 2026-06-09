@@ -1,8 +1,9 @@
-import type { CreateUserDto, ResetPasswordDto, UpdateUserDto, UserDto } from '../types'
+import type { AssignableEmployeeDto, CreateUserDto, ResetPasswordDto, UpdateUserDto, UserDto } from '../types'
 import { apiRequest } from './httpClient'
 
 export const usersApi = {
   list: () => apiRequest<UserDto[]>('/api/users'),
+  listAssignableEmployees: () => apiRequest<AssignableEmployeeDto[]>('/api/users/assignable-employees'),
   create: (payload: CreateUserDto) => apiRequest<UserDto>('/api/users', { method: 'POST', body: JSON.stringify(payload) }),
   update: (id: string, payload: UpdateUserDto) => apiRequest<UserDto>(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   archive: (id: string) => apiRequest<UserDto>(`/api/users/${id}/archive`, { method: 'POST' }),

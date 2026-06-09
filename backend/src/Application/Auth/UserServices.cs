@@ -10,6 +10,7 @@ namespace JobTicketSystem.Application.Auth;
 public interface IUsersService
 {
     Task<IReadOnlyList<UserDto>> ListAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AssignableEmployeeDto>> ListAssignableEmployeesAsync(CancellationToken cancellationToken = default);
     Task<UserDto?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<UserDto> CreateAsync(CreateUserDto request, CancellationToken cancellationToken = default);
     Task<UserDto?> UpdateAsync(Guid id, UpdateUserDto request, CancellationToken cancellationToken = default);
@@ -21,6 +22,14 @@ public sealed class UsersService(ApplicationDbContext dbContext, IAuthService au
 {
     public async Task<IReadOnlyList<UserDto>> ListAsync(CancellationToken cancellationToken = default)
         => await dbContext.Employees.OrderBy(x => x.LastName).ThenBy(x => x.FirstName).Select(MapUser).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<AssignableEmployeeDto>> ListAssignableEmployeesAsync(CancellationToken cancellationToken = default)
+        => await dbContext.Employees
+            .Where(x => !x.IsDeleted && x.Status == EmployeeStatus.Active && x.Role == SystemRoles.Employee)
+            .OrderBy(x => x.LastName)
+            .ThenBy(x => x.FirstName)
+            .Select(x => new AssignableEmployeeDto(x.Id, x.FirstName, x.LastName))
+            .ToListAsync(cancellationToken);
 
     public Task<UserDto?> GetAsync(Guid id, CancellationToken cancellationToken = default)
         => dbContext.Employees.Where(x => x.Id == id).Select(MapUser).SingleOrDefaultAsync(cancellationToken);
@@ -161,6 +170,7 @@ public sealed class UsersService(ApplicationDbContext dbContext, IAuthService au
 }
 
 public sealed record UserDto(Guid Id, string? UserName, string? Email, string FirstName, string LastName, string Role, EmployeeStatus Status, bool IsArchived);
+public sealed record AssignableEmployeeDto(Guid Id, string FirstName, string LastName);
 public sealed record CreateUserDto(string UserName, string? Email, string FirstName, string LastName, string Role, string Password);
 public sealed record UpdateUserDto(string UserName, string? Email, string FirstName, string LastName, string Role);
 public sealed record ResetPasswordDto(string NewPassword);
