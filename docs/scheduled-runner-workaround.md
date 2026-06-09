@@ -45,11 +45,13 @@ For large or coordinated patches:
 1. Confirm no active PR or draft PR already owns the current task.
 2. Reconstruct latest `main` from the newest issue #166 bundle before editing.
 3. Make the complete local file changes in the reconstructed workspace.
-4. Publish the final changed files through GitHub connector writes only after comparing the local diff.
-5. Prefer Git object writes for multi-file or large-file changes when contents API replacement is awkward: create blobs for complete post-patch files, create a tree from latest `main`, create a commit, move one branch ref, and open or update exactly one draft PR.
-6. Use connector contents updates only for small complete-file replacements where the full final file body is safe to handle.
-7. Never publish temporary workflow files, helper-only branches, or partial hand-reconstructed large files as a workaround.
-8. Use GitHub Actions on the PR head as validation authority when local validation is unavailable.
+4. Compare the local post-edit files against the connector-fetched `main` files so the final diff is understood before publishing.
+5. Publish the final changed files through GitHub connector writes only after the local diff is reviewed.
+6. Prefer Git object writes for multi-file or large-file changes when contents API replacement is awkward: create blobs for complete post-patch files, create a tree from latest `main`, create a commit, move one branch ref, and open or update exactly one draft PR.
+7. Use connector contents updates only for small complete-file replacements where the full final file body is safe to handle.
+8. Never publish temporary workflow files, helper-only branches, no-product-diff branches, or partial hand-reconstructed large files as a workaround.
+9. If a proposed large-file patch cannot be published safely through complete final file contents or Git object writes, leave that patch local and switch to a safer coherent task rather than opening a misleading PR.
+10. Use GitHub Actions on the PR head as validation authority when local validation is unavailable.
 
 Record a blocker only after connector inspection, bundle reconstruction, local patch generation, connector publishing, draft PR creation or update, and GitHub Actions validation handoff have all been attempted or ruled out for the current task.
 
