@@ -21,6 +21,9 @@ Core scope:
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
 - Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket detail uses focused in-page panels for ticket editing, status changes, archive review, and Add / Request Part actions backed by existing APIs.
+- Manager/Admin reporting is implemented as a bounded reports hub for the existing reporting domains: invoice/closeout review, job cost summaries, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history.
+- Reporting UI polish includes clear sections, shared filters, required source-ID validation, loading/empty/error states, export-friendly tables, and client-side CSV export from currently loaded rows only.
+- Labor reporting labels totals as time-entry labor-rate snapshot values and keeps the existing API behavior that falls back only for legacy entries without captured snapshots.
 - Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.

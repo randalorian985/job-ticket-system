@@ -280,8 +280,18 @@ pre {
 }
 
 .report-card h3,
+.report-card h4,
 .report-results-heading h3 {
   margin: 0 0 0.35rem;
+}
+
+.report-section-heading {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.report-section-heading h3 {
+  margin: 0;
 }
 
 .report-results-heading {
@@ -289,6 +299,16 @@ pre {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.report-state-panel {
+  align-items: start;
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
 }
 
 .button-link {
@@ -930,6 +950,7 @@ textarea:focus-visible {
 .card > h2:first-child,
 .card > h3:first-child,
 .report-card > h3:first-child,
+.report-card > h4:first-child,
 .readiness-panel > h3:first-child,
 .quick-add-panel > h3:first-child,
 .queue-results-heading,
@@ -943,6 +964,7 @@ textarea:focus-visible {
 .card > h2:first-child,
 .card > h3:first-child,
 .report-card > h3:first-child,
+.report-card > h4:first-child,
 .readiness-panel > h3:first-child,
 .quick-add-panel > h3:first-child {
   background: var(--accent-navy);
@@ -1234,6 +1256,7 @@ td {
   .card > h2:first-child,
   .card > h3:first-child,
   .report-card > h3:first-child,
+  .report-card > h4:first-child,
   .readiness-panel > h3:first-child,
   .quick-add-panel > h3:first-child {
     text-align: left;
