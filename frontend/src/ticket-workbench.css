@@ -1,0 +1,99 @@
+.print-review.card {
+  background: #ffffff;
+  border-color: #dbe4ef;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.print-review > .review-heading {
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  margin: 0;
+  padding: 1rem;
+}
+
+.print-review > .review-heading h2 {
+  color: #0b1220;
+  font-size: 1.8rem;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+.print-review > p:first-of-type {
+  color: #334155;
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.print-review > .review-grid[aria-label="job status and approvals"] {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.print-review > .review-grid[aria-label="job status and approvals"] > div,
+.print-review > section.stack,
+.print-review > .review-grid[aria-label="assignment ownership summary"],
+.print-review > .review-grid[aria-label="job dispatch details"],
+.print-review > .review-grid[aria-label="billing contact details"],
+.print-review > .review-grid[aria-label="job notes"],
+.print-review > div:not(.review-heading, .review-grid),
+.review-section.card {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 1rem;
+}
+
+.print-review > .review-grid[aria-label="assignment ownership summary"],
+.print-review > .review-grid[aria-label="job dispatch details"],
+.print-review > .review-grid[aria-label="billing contact details"],
+.print-review > .review-grid[aria-label="job notes"] {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.print-review > section.stack h3,
+.review-section.card h3 {
+  color: #0b1220;
+  margin: 0;
+}
+
+.print-review > section.stack[aria-label="dispatch readiness checklist"],
+.print-review > section.stack[aria-label="waiting on parts summary"],
+.print-review > section.stack[aria-label="closeout invoice readiness review"] {
+  border-left: 5px solid var(--accent-dark);
+}
+
+.print-review > section.stack[aria-label="status workflow review"],
+.print-review > section.stack[aria-label="archive workflow review"] {
+  background: #f8fafc;
+}
+
+.print-review > .review-grid[aria-label="job dispatch details"],
+.print-review > .review-grid[aria-label="billing contact details"],
+.print-review > .review-grid[aria-label="job notes"] {
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+}
+
+.review-section.card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.review-section.card > .review-heading {
+  border-bottom: 1px solid #e5ebf3;
+  margin: -1rem -1rem 0;
+  padding: 1rem;
+}
+
+@media (max-width: 720px) {
+  .print-review > .review-grid[aria-label="job dispatch details"],
+  .print-review > .review-grid[aria-label="billing contact details"],
+  .print-review > .review-grid[aria-label="job notes"] {
+    grid-template-columns: 1fr;
+  }
+}
