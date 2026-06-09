@@ -40,6 +40,7 @@ type ReportColumn<T extends ReportRow> = CsvColumn<T> & {
 }
 
 const defaultFilters: ReportQueryFilters = { offset: 0, limit: 50 }
+const snapshotLabel = 'time-entry labor-rate snapshot'
 
 const reportTitleMap: Record<ReportMode, string> = {
   invoiceReady: 'Invoice-ready Summary',
@@ -53,24 +54,42 @@ const reportTitleMap: Record<ReportMode, string> = {
 }
 
 const reportDescriptions: Record<ReportMode, string> = {
-  invoiceReady: 'One invoice-ready job summary with approved labor and approved parts totals.',
-  jobCost: 'One job cost summary showing labor, parts, and grand total.',
+  invoiceReady: 'One invoice-ready job summary using the implemented job-ticket reporting API.',
+  jobCost: 'One job cost summary using approved labor, approved parts, and the current API totals.',
   jobsReady: 'Jobs that have approved billable activity and are ready for invoice review.',
-  laborJob: 'Approved labor totals grouped by job ticket.',
-  laborEmployee: 'Approved labor totals grouped by employee.',
+  laborJob: `Approved labor totals grouped by job ticket with ${snapshotLabel} values.`,
+  laborEmployee: `Approved labor totals grouped by employee with ${snapshotLabel} values.`,
   partsJob: 'Approved job-part quantity and snapshot price totals grouped by job.',
   customerHistory: 'Service history for a selected customer.',
   equipmentHistory: 'Service history for selected equipment.'
 }
 
+const reportSections: Array<{ title: string, description: string, modes: ReportMode[] }> = [
+  {
+    title: 'Invoice and Closeout',
+    description: 'Review invoice-ready jobs and single-ticket invoice/cost summaries from existing report APIs.',
+    modes: ['invoiceReady', 'jobCost', 'jobsReady']
+  },
+  {
+    title: 'Labor and Parts',
+    description: 'Audit approved time and parts totals with export-friendly columns for operational review.',
+    modes: ['laborJob', 'laborEmployee', 'partsJob']
+  },
+  {
+    title: 'Service History',
+    description: 'Review customer and equipment service history by source record ID.',
+    modes: ['customerHistory', 'equipmentHistory']
+  }
+]
+
 const money = (value?: number | null) =>
-  typeof value === 'number' ? value.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : '—'
+  typeof value === 'number' ? value.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : '-'
 const quantity = (value?: number | null) =>
-  typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'
+  typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '-'
 const hours = (value?: number | null) =>
-  typeof value === 'number' ? `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} h` : '—'
+  typeof value === 'number' ? `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} h` : '-'
 const dateForExport = (value?: string | null) => (value ? value.slice(0, 10) : '')
-const dateUtc = (value?: string | null) => (value ? dateForExport(value) : '—')
+const dateUtc = (value?: string | null) => (value ? dateForExport(value) : '-')
 
 const getJobStatusLabel = (value: number) => {
   switch (value) {
@@ -119,7 +138,7 @@ const getInvoiceStatusLabel = (value: number) => {
 }
 
 const jobLink = (id: string, label: string) => <Link to={`/manage/job-tickets/${id}`}>{label}</Link>
-const managerListLink = (to: string, label?: string | null) => (label ? <Link to={to}>{label}</Link> : '—')
+const managerListLink = (to: string, label?: string | null) => (label ? <Link to={to}>{label}</Link> : '-')
 
 const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
   invoiceReady: [
@@ -131,7 +150,7 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Job Status', value: (row: InvoiceReadySummaryDto) => getJobStatusLabel(row.jobStatus) },
     { header: 'Invoice Status', value: (row: InvoiceReadySummaryDto) => getInvoiceStatusLabel(row.invoiceStatus) },
     { header: 'Approved Labor Hours', value: (row: InvoiceReadySummaryDto) => row.laborHours, render: (row) => hours(row.laborHours), align: 'number' },
-    { header: 'Labor Billable (Snapshot-first)', value: (row: InvoiceReadySummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: InvoiceReadySummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Parts Billable', value: (row: InvoiceReadySummaryDto) => row.partsBillableTotal, render: (row) => money(row.partsBillableTotal), align: 'number' },
     { header: 'Tax', value: (row: InvoiceReadySummaryDto) => row.tax, render: (row) => money(row.tax), align: 'number' },
     { header: 'Grand Total', value: (row: InvoiceReadySummaryDto) => row.grandTotal, render: (row) => money(row.grandTotal), align: 'number' }
@@ -139,8 +158,8 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
   jobCost: [
     { header: 'Job Ticket', value: (row: JobCostSummaryDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
     { header: 'Approved Labor Hours', value: (row: JobCostSummaryDto) => row.laborHours, render: (row) => hours(row.laborHours), align: 'number' },
-    { header: 'Labor Cost (Snapshot-first)', value: (row: JobCostSummaryDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (Snapshot-first)', value: (row: JobCostSummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: JobCostSummaryDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: JobCostSummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Parts Cost', value: (row: JobCostSummaryDto) => row.partsCostTotal, render: (row) => money(row.partsCostTotal), align: 'number' },
     { header: 'Parts Billable', value: (row: JobCostSummaryDto) => row.partsBillableTotal, render: (row) => money(row.partsBillableTotal), align: 'number' },
     { header: 'Grand Total', value: (row: JobCostSummaryDto) => row.grandTotal, render: (row) => money(row.grandTotal), align: 'number' }
@@ -161,16 +180,16 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Job Ticket', value: (row: LaborByJobDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
     { header: 'Customer', value: (row: LaborByJobDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
     { header: 'Approved Labor Hours', value: (row: LaborByJobDto) => row.approvedLaborHours, render: (row) => hours(row.approvedLaborHours), align: 'number' },
-    { header: 'Labor Cost (Snapshot-first)', value: (row: LaborByJobDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (Snapshot-first)', value: (row: LaborByJobDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: LaborByJobDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: LaborByJobDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Created (UTC)', value: (row: LaborByJobDto) => dateForExport(row.createdAtUtc), render: (row) => dateUtc(row.createdAtUtc) },
     { header: 'Completed (UTC)', value: (row: LaborByJobDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ],
   laborEmployee: [
     { header: 'Employee', value: (row: LaborByEmployeeDto) => row.employeeName },
     { header: 'Approved Labor Hours', value: (row: LaborByEmployeeDto) => row.approvedLaborHours, render: (row) => hours(row.approvedLaborHours), align: 'number' },
-    { header: 'Labor Cost (Snapshot-first)', value: (row: LaborByEmployeeDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (Snapshot-first)', value: (row: LaborByEmployeeDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: LaborByEmployeeDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: LaborByEmployeeDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Job Count', value: (row: LaborByEmployeeDto) => row.jobCount, align: 'number' }
   ],
   partsJob: [
@@ -201,17 +220,6 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Completed (UTC)', value: (row: ReportServiceHistoryItemDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ]
 }
-
-const reportModes: ReportMode[] = [
-  'invoiceReady',
-  'jobCost',
-  'jobsReady',
-  'laborJob',
-  'laborEmployee',
-  'partsJob',
-  'customerHistory',
-  'equipmentHistory'
-]
 
 const userMessageForReportError = (requestError: unknown) => {
   if (requestError instanceof ApiError) {
@@ -245,6 +253,9 @@ const buildFilterSummary = (filters: ReportQueryFilters, jobId: string, customer
   return summary.length ? summary.join(' | ') : 'No extra filters are active. Results reflect the default visible window of loaded rows.'
 }
 
+const csvFileName = (title: string) =>
+  `report-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loaded-rows'}.csv`
+
 export function ReportsPage() {
   const [filters, setFilters] = useState<ReportQueryFilters>(defaultFilters)
   const [customerId, setCustomerId] = useState('')
@@ -265,19 +276,25 @@ export function ReportsPage() {
     setError(null)
   }
 
+  const requireSourceId = (message: string) => {
+    setRows([])
+    setMode(null)
+    setError(message)
+  }
+
   const apply = async (nextMode: ReportMode) => {
     if ((nextMode === 'invoiceReady' || nextMode === 'jobCost') && !jobId.trim()) {
-      setError('Enter a job ticket id before running this report.')
+      requireSourceId('Enter a job ticket id before running this report.')
       return
     }
 
     if (nextMode === 'customerHistory' && !customerId.trim()) {
-      setError('Enter a customer id before running customer service history.')
+      requireSourceId('Enter a customer id before running customer service history.')
       return
     }
 
     if (nextMode === 'equipmentHistory' && !equipmentId.trim()) {
-      setError('Enter an equipment id before running equipment service history.')
+      requireSourceId('Enter an equipment id before running equipment service history.')
       return
     }
 
@@ -306,6 +323,7 @@ export function ReportsPage() {
 
       setRows(data as ReportRow[])
     } catch (requestError) {
+      setRows([])
       setError(userMessageForReportError(requestError))
     } finally {
       setLoadingMode(null)
@@ -320,39 +338,50 @@ export function ReportsPage() {
   const filterSummary = useMemo(() => buildFilterSummary(filters, jobId, customerId, equipmentId), [filters, jobId, customerId, equipmentId])
 
   return (
-    <section className="card stack">
-      <h2>Reports</h2>
-      <p className="muted">
-        Manager/Admin report hub for invoice readiness, job costs, labor, parts, customer history, and equipment history.
-      </p>
-      <p className="muted">
-        Snapshot-first labor labels mean approved time entries use captured cost and bill rates first, then fall back only for legacy entries without snapshots.
-      </p>
+    <section className="stack">
+      <header className="card stack">
+        <h2>Reports</h2>
+        <p className="muted">
+          Manager/Admin report hub for invoice readiness, job costs, labor, parts, customer history, and equipment history.
+        </p>
+        <p className="muted">
+          Labor totals are labeled as time-entry labor-rate snapshot values. The implemented API uses captured time-entry cost and bill rates first, then falls back only for legacy entries without snapshots.
+        </p>
+      </header>
       <Errorable error={error} />
 
-      <div className="report-grid" aria-label="Available reports">
-        {reportModes.map((reportMode) => (
-          <article className="report-card" key={reportMode}>
-            <h3>{reportTitleMap[reportMode]}</h3>
-            <p className="muted">{reportDescriptions[reportMode]}</p>
-            <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
-              {loadingMode === reportMode ? 'Loading…' : `Run ${reportTitleMap[reportMode]}`}
-            </button>
-          </article>
-        ))}
-      </div>
+      {reportSections.map((section) => (
+        <section className="report-section stack" key={section.title} aria-label={section.title}>
+          <div className="report-section-heading">
+            <h3>{section.title}</h3>
+            <p className="muted">{section.description}</p>
+          </div>
+          <div className="report-grid">
+            {section.modes.map((reportMode) => (
+              <article className="report-card" key={reportMode} aria-busy={loadingMode === reportMode}>
+                <h4>{reportTitleMap[reportMode]}</h4>
+                <p className="muted">{reportDescriptions[reportMode]}</p>
+                <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
+                  {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
 
-      <article className="card stack">
+      <section className="card stack" aria-labelledby="report-filter-heading">
         <div className="report-results-heading">
           <div>
-            <h3>Shared Filters</h3>
+            <h3 id="report-filter-heading">Report Filters</h3>
             <p className="muted">
-              Shared report endpoints support UTC date range, customer, billing party, service location, employee, job status, invoice status, offset, and limit.
+              Shared list reports support UTC date range, customer, billing party, service location, employee, job status, invoice status, offset, and limit. Single-ticket and history reports also require their source IDs.
             </p>
           </div>
           <button type="button" onClick={clearFilters}>Reset filters</button>
         </div>
         <p className="muted">{filterSummary}</p>
+        <h4>Shared filters</h4>
         <div className="report-filters">
           <label>
             From date
@@ -458,6 +487,7 @@ export function ReportsPage() {
             />
           </label>
         </div>
+        <h4>Report source IDs</h4>
         <div className="report-filters">
           <label>
             Job ticket id
@@ -472,9 +502,9 @@ export function ReportsPage() {
             <input aria-label="Equipment history id" value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)} placeholder="Equipment id for service history" />
           </label>
         </div>
-      </article>
+      </section>
 
-      <article className="card stack" aria-live="polite">
+      <section className="card stack" aria-live="polite" aria-busy={loadingMode !== null}>
         <div className="report-results-heading">
           <div>
             <h3>{title || 'Select a report'}</h3>
@@ -485,17 +515,24 @@ export function ReportsPage() {
             </p>
           </div>
           {hasRows ? (
-            <a className="button-link" href={csvHref} download={`report-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`}>
+            <a className="button-link" href={csvHref} download={csvFileName(title)}>
               Export loaded rows as CSV
             </a>
           ) : null}
         </div>
-        {mode ? <p className="muted">Loaded report review: {filterSummary}</p> : null}
-        {loadingMode ? <p className="muted">Loading {reportTitleMap[loadingMode]}…</p> : null}
-        {mode && !loadingMode && !hasRows && !error ? <p className="muted">No rows match the current report and filters.</p> : null}
+        {mode ? (
+          <div className="report-state-panel">
+            <strong>Loaded report review</strong>
+            <span>{filterSummary}</span>
+          </div>
+        ) : null}
+        {loadingMode ? <p className="muted" role="status">Loading {reportTitleMap[loadingMode]}...</p> : null}
+        {mode && !loadingMode && !hasRows && !error ? (
+          <p className="muted">No rows match the current report and filters. Adjust the filters or source ID, then run the report again.</p>
+        ) : null}
         {hasRows ? (
           <div className="table-scroll">
-            <table>
+            <table aria-label={`${title} results`}>
               <thead>
                 <tr>
                   {columns.map((column) => (
@@ -519,7 +556,7 @@ export function ReportsPage() {
             </table>
           </div>
         ) : null}
-      </article>
+      </section>
     </section>
   )
 }

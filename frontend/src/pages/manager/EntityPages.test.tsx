@@ -322,7 +322,7 @@ describe('ReportsPage', () => {
     expect(screen.getByText('Parts by Job')).toBeInTheDocument()
     expect(screen.getByText('Customer Service History')).toBeInTheDocument()
     expect(screen.getByText('Equipment Service History')).toBeInTheDocument()
-    expect(screen.getByText(/Snapshot-first labor labels mean approved time entries use captured cost and bill rates first/i)).toBeInTheDocument()
+    expect(screen.getByText(/Labor totals are labeled as time-entry labor-rate snapshot values/i)).toBeInTheDocument()
   })
 
   it('applies supported filters, renders jobs ready to invoice rows, and exports escaped CSV', async () => {
@@ -357,10 +357,10 @@ describe('ReportsPage', () => {
     renderReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Employee' }))
-    expect(await screen.findByText('Loading Labor by Employee…')).toBeInTheDocument()
+    expect(await screen.findByText('Loading Labor by Employee...')).toBeInTheDocument()
 
     resolveReport([])
-    expect(await screen.findByText('No rows match the current report and filters.')).toBeInTheDocument()
+    expect(await screen.findByText('No rows match the current report and filters. Adjust the filters or source ID, then run the report again.')).toBeInTheDocument()
   })
 
   it('renders labor by employee success data with snapshot labeling', async () => {
@@ -372,7 +372,7 @@ describe('ReportsPage', () => {
     expect(await screen.findByText('Casey Tech')).toBeInTheDocument()
     expect(screen.getByText('4 h')).toBeInTheDocument()
     expect(screen.getByText('$160.00')).toBeInTheDocument()
-    expect(screen.getByText(/then fall back only for legacy entries without snapshots/i)).toBeInTheDocument()
+    expect(screen.getByText(/then falls back only for legacy entries without snapshots/i)).toBeInTheDocument()
   })
 
   it('renders parts by job rows with job detail drill-in', async () => {

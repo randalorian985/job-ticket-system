@@ -44,6 +44,54 @@
   - `description`
 - This endpoint is safe for technician in-ticket search. It does not return part cost, billable price, vendor cost, purchase history, inventory quantity, reorder thresholds, billing controls, or catalog-admin fields.
 
+## Reporting
+Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports UI groups the existing endpoints into invoice/closeout, labor/parts, and service-history sections, then performs client-side CSV export from the currently loaded table rows. There is no server-side export job, invoice generation, payment workflow, customer portal workflow, recommendation engine, AI/scoring, automatic compatibility decision, or automatic approval behavior in this reporting slice.
+
+Authorization: `ManagerOrAdmin`.
+
+Shared list filters where supported:
+- `dateFromUtc`
+- `dateToUtc`
+- `customerId`
+- `billingPartyCustomerId`
+- `serviceLocationId`
+- `employeeId`
+- `jobStatus`
+- `invoiceStatus`
+- `offset`
+- `limit`
+
+Endpoints:
+- `GET /api/reports/job-tickets/{jobTicketId}/invoice-ready`
+  - Returns `InvoiceReadySummaryDto` for the selected job ticket or `404 Not Found`.
+  - Uses approved labor entries and approved parts already captured for the ticket.
+  - Labor cost/billable totals use time-entry labor-rate snapshots first, with legacy fallback to employee rate fields when a snapshot is absent.
+  - This is invoice-ready reporting only; it does not generate invoices or collect payment.
+- `GET /api/reports/job-tickets/{jobTicketId}/cost-summary`
+  - Returns `JobCostSummaryDto` for the selected job ticket or `404 Not Found`.
+  - Uses the same implemented invoice-ready summary behavior for approved labor, approved parts, and totals.
+- `GET /api/reports/jobs-ready-to-invoice`
+  - Returns `JobsReadyToInvoiceItemDto[]`.
+  - Includes completed/reviewed, not-invoiced jobs with approved billable labor and/or approved parts according to existing service rules.
+- `GET /api/reports/labor/by-job`
+  - Returns `LaborByJobDto[]`.
+  - Groups approved time-entry labor by job ticket and labels totals as time-entry labor-rate snapshot values.
+- `GET /api/reports/labor/by-employee`
+  - Returns `LaborByEmployeeDto[]`.
+  - Groups approved time-entry labor by employee and labels totals as time-entry labor-rate snapshot values.
+- `GET /api/reports/parts/by-job`
+  - Returns `PartsByJobDto[]`.
+  - Groups approved job parts by job using captured part cost and sale-price snapshots.
+- `GET /api/reports/customers/{customerId}/service-history`
+  - Returns `ServiceHistoryItemDto[]` for the selected customer.
+- `GET /api/reports/equipment/{equipmentId}/service-history`
+  - Returns `ServiceHistoryItemDto[]` for the selected equipment record.
+
+Client CSV export behavior:
+- CSV is produced in the Manager/Admin frontend from the rows currently loaded in the browser.
+- CSV values use raw DTO values and report labels, not localized display formatting.
+- Empty reports do not expose an export action.
+
 ## Parts Request Workflow Phase 2
 The parts request API is a job-ticket-first workflow for technician-added ticket parts and back-office review. It uses DTOs and application services. No schema migration is required for Phase 2 because the existing job-ticket part model already stores catalog matches, unlisted parts, approval status, and office-order request flags.
 
