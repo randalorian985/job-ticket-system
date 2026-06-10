@@ -13,6 +13,7 @@ public interface ITimeEntriesService
     Task<TimeEntryDto> ClockOutAsync(ClockOutRequestDto request, CancellationToken cancellationToken = default);
     Task<TimeEntryDto?> GetOpenEntryAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TimeEntryDto>> ListForJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TimeEntryDto>> ListForReviewAsync(TimeEntryReviewFilters filters, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TimeEntryDto>> ListForEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<TimeEntryDto?> ApproveAsync(Guid id, ApproveTimeEntryRequestDto request, CancellationToken cancellationToken = default);
     Task<TimeEntryDto?> RejectAsync(Guid id, RejectTimeEntryRequestDto request, CancellationToken cancellationToken = default);
@@ -126,6 +127,26 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
 
         return await dbContext.TimeEntries
             .Where(x => x.JobTicketId == jobTicketId)
+            .OrderByDescending(x => x.StartedAtUtc)
+            .Select(MapProjection)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TimeEntryDto>> ListForReviewAsync(TimeEntryReviewFilters filters, CancellationToken cancellationToken = default)
+    {
+        EnsureManagerOrAdmin();
+
+        if (filters.DateFromUtc.HasValue && filters.DateToUtc.HasValue && filters.DateFromUtc > filters.DateToUtc)
+        {
+            throw new ValidationException("DateFromUtc must be before or equal to DateToUtc.");
+        }
+
+        return await dbContext.TimeEntries
+            .Where(x => !filters.JobTicketId.HasValue || x.JobTicketId == filters.JobTicketId.Value)
+            .Where(x => !filters.EmployeeId.HasValue || x.EmployeeId == filters.EmployeeId.Value)
+            .Where(x => !filters.ApprovalStatus.HasValue || x.ApprovalStatus == filters.ApprovalStatus.Value)
+            .Where(x => !filters.DateFromUtc.HasValue || x.StartedAtUtc >= filters.DateFromUtc.Value)
+            .Where(x => !filters.DateToUtc.HasValue || x.StartedAtUtc <= filters.DateToUtc.Value)
             .OrderByDescending(x => x.StartedAtUtc)
             .Select(MapProjection)
             .ToListAsync(cancellationToken);
@@ -464,6 +485,13 @@ public sealed record AdjustTimeEntryRequestDto(
     decimal? BillableHours,
     decimal? HourlyRate,
     string? Notes);
+
+public sealed record TimeEntryReviewFilters(
+    Guid? JobTicketId = null,
+    Guid? EmployeeId = null,
+    TimeEntryApprovalStatus? ApprovalStatus = TimeEntryApprovalStatus.Pending,
+    DateTime? DateFromUtc = null,
+    DateTime? DateToUtc = null);
 
 public sealed record TimeEntryDto(
     Guid Id,

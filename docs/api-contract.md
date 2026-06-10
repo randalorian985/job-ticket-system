@@ -22,6 +22,20 @@
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory foundation (`/api/inventory/*`)
 
+## Manager/Admin Time Approval Review
+- `GET /api/time-entries/review`
+- Authorization: `ManagerOrAdmin`
+- Response DTO: `TimeEntryDto[]`
+- Optional query filters:
+  - `jobTicketId`
+  - `employeeId`
+  - `approvalStatus` (`1` Pending, `2` Approved, `3` Rejected)
+  - `dateFromUtc`
+  - `dateToUtc`
+- The Manager/Admin screen requests `approvalStatus=1` on initial load, so its pending work queue appears without requiring a job ticket ID. Omitting `approvalStatus` from the endpoint returns all statuses.
+- Results are ordered by newest `startedAtUtc` first. Approval and rejection continue to use the existing Manager/Admin-only action endpoints.
+- Existing enum numeric values are unchanged.
+
 ## Assignable Employee Lookup
 - `GET /api/users/assignable-employees`
 - Authorization: `ManagerOrAdmin`

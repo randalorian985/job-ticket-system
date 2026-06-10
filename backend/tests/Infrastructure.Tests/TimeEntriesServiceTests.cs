@@ -11,6 +11,81 @@ namespace JobTicketSystem.Infrastructure.Tests;
 public sealed class TimeEntriesServiceTests
 {
     [Fact]
+    public async Task Review_queue_defaults_to_pending_and_supports_optional_filters()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var secondTicket = new JobTicket
+        {
+            TicketNumber = "JT-2026-000002",
+            CustomerId = refs.JobTicket.CustomerId,
+            ServiceLocationId = refs.JobTicket.ServiceLocationId,
+            BillingPartyCustomerId = refs.JobTicket.BillingPartyCustomerId,
+            Title = "Second Test Ticket",
+            Status = JobTicketStatus.InProgress
+        };
+        context.JobTickets.Add(secondTicket);
+        await context.SaveChangesAsync();
+
+        var included = new TimeEntry
+        {
+            JobTicketId = refs.JobTicket.Id,
+            EmployeeId = refs.Employee.Id,
+            StartedAtUtc = new DateTime(2026, 5, 20, 13, 0, 0, DateTimeKind.Utc),
+            EndedAtUtc = new DateTime(2026, 5, 20, 15, 0, 0, DateTimeKind.Utc),
+            LaborHours = 2m,
+            BillableHours = 2m,
+            ApprovalStatus = TimeEntryApprovalStatus.Pending
+        };
+        var approved = new TimeEntry
+        {
+            JobTicketId = refs.JobTicket.Id,
+            EmployeeId = refs.Employee.Id,
+            StartedAtUtc = new DateTime(2026, 5, 21, 13, 0, 0, DateTimeKind.Utc),
+            EndedAtUtc = new DateTime(2026, 5, 21, 14, 0, 0, DateTimeKind.Utc),
+            LaborHours = 1m,
+            BillableHours = 1m,
+            ApprovalStatus = TimeEntryApprovalStatus.Approved
+        };
+        var otherJob = new TimeEntry
+        {
+            JobTicketId = secondTicket.Id,
+            EmployeeId = refs.Employee.Id,
+            StartedAtUtc = new DateTime(2026, 5, 20, 16, 0, 0, DateTimeKind.Utc),
+            EndedAtUtc = new DateTime(2026, 5, 20, 17, 0, 0, DateTimeKind.Utc),
+            LaborHours = 1m,
+            BillableHours = 1m,
+            ApprovalStatus = TimeEntryApprovalStatus.Pending
+        };
+        context.TimeEntries.AddRange(included, approved, otherJob);
+        await context.SaveChangesAsync();
+
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var defaultQueue = await service.ListForReviewAsync(new TimeEntryReviewFilters());
+        var filteredQueue = await service.ListForReviewAsync(new TimeEntryReviewFilters(
+            refs.JobTicket.Id,
+            refs.Employee.Id,
+            TimeEntryApprovalStatus.Pending,
+            new DateTime(2026, 5, 20, 0, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 5, 20, 23, 59, 59, DateTimeKind.Utc)));
+
+        Assert.Equal(2, defaultQueue.Count);
+        Assert.Single(filteredQueue);
+        Assert.Equal(included.Id, filteredQueue[0].Id);
+    }
+
+    [Fact]
+    public async Task Review_queue_requires_manager_or_admin_access()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+
+        await Assert.ThrowsAsync<ValidationException>(() => service.ListForReviewAsync(new TimeEntryReviewFilters()));
+    }
+
+    [Fact]
     public async Task Clock_in_with_valid_assigned_employee_succeeds()
     {
         await using var context = CreateContext();
