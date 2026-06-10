@@ -245,15 +245,6 @@ export type TimeEntryDto = {
   clockInNote?: string | null
   clockOutNote?: string | null
   clockInDeviceMetadata?: string | null
-  employeeName?: string | null
-  jobTicketNumber?: string | null
-  jobName?: string | null
-  laborType?: string | null
-  customerName?: string | null
-  siteName?: string | null
-  locationName?: string | null
-  locationAddress?: string | null
-  managerNotes?: string | null
 }
 
 export type ClockInRequestDto = {
@@ -276,19 +267,37 @@ export type ClockOutRequestDto = {
   note?: string | null
 }
 
-export type ApproveTimeEntryRequestDto = {
-  approvedByUserId: string
+export type TimeApprovalQueueItemDto = {
+  id: string
+  jobTicketId: string
+  employeeId: string
+  employeeName: string
+  startedAtUtc: string
+  endedAtUtc?: string | null
+  totalMinutes?: number | null
+  laborHours: number
+  billableHours: number
+  approvalStatus: number
+  rejectionReason?: string | null
+  workSummary?: string | null
+  clockInNote?: string | null
+  clockOutNote?: string | null
+  managerNotes?: string | null
+  jobTicketNumber: string
+  jobName: string
+  laborType?: string | null
+  customerName: string
+  siteName: string
+  locationName: string
+  locationAddress: string
 }
 
 export type RejectTimeEntryRequestDto = {
-  rejectedByUserId: string
   reason: string
 }
 
 export type AdjustTimeEntryRequestDto = {
-  adjustedByUserId: string
   reason: string
-  managerOverride: boolean
   startedAtUtc?: string | null
   endedAtUtc?: string | null
   laborHours?: number | null

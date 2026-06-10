@@ -1,9 +1,9 @@
 import type {
   AdjustTimeEntryRequestDto,
-  ApproveTimeEntryRequestDto,
   ClockInRequestDto,
   ClockOutRequestDto,
   RejectTimeEntryRequestDto,
+  TimeApprovalQueueItemDto,
   TimeEntryDto
 } from '../types'
 import { apiRequest } from './httpClient'
@@ -41,16 +41,13 @@ export const timeEntriesApi = {
     }),
   getOpen: (employeeId: string) => apiRequest<TimeEntryDto>(`/api/time-entries/open?employeeId=${employeeId}`),
   listByJob: (jobTicketId: string) => apiRequest<TimeEntryDto[]>(`/api/time-entries/job/${jobTicketId}`),
-  listForReview: (filters: TimeEntryReviewFilters) => apiRequest<TimeEntryDto[]>(`/api/time-entries/review?${reviewQuery(filters)}`),
-  approve: (id: string, payload: ApproveTimeEntryRequestDto) =>
-    apiRequest<TimeEntryDto>(`/api/time-entries/${id}/approve`, {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    }),
+  listForReview: (filters: TimeEntryReviewFilters) => apiRequest<TimeApprovalQueueItemDto[]>(`/api/time-entries/review?${reviewQuery(filters)}`),
+  approve: (id: string) =>
+    apiRequest<TimeEntryDto>(`/api/time-entries/${id}/approve`, { method: 'POST' }),
   bulkApprove: (timeEntryIds: string[]) =>
     apiRequest<TimeEntryDto[]>('/api/time-entries/bulk-approve', {
       method: 'POST',
-      body: JSON.stringify({ timeEntryIds, approvedByUserId: '' })
+      body: JSON.stringify({ timeEntryIds })
     }),
   editAndApprove: (id: string, payload: AdjustTimeEntryRequestDto) =>
     apiRequest<TimeEntryDto>(`/api/time-entries/${id}/edit-and-approve`, {

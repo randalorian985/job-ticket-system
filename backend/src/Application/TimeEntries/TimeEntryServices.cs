@@ -13,13 +13,13 @@ public interface ITimeEntriesService
     Task<TimeEntryDto> ClockOutAsync(ClockOutRequestDto request, CancellationToken cancellationToken = default);
     Task<TimeEntryDto?> GetOpenEntryAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TimeEntryDto>> ListForJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<TimeEntryDto>> ListForReviewAsync(TimeEntryReviewFilters filters, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<TimeEntryDto>> BulkApproveAsync(BulkApproveTimeEntriesRequestDto request, CancellationToken cancellationToken = default);
-    Task<TimeEntryDto?> EditAndApproveAsync(Guid id, AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TimeApprovalQueueItemDto>> ListForReviewAsync(TimeEntryReviewFilters filters, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TimeEntryDto>> BulkApproveAsync(BulkApproveTimeEntriesRequestDto request, Guid approvedByUserId, CancellationToken cancellationToken = default);
+    Task<TimeEntryDto?> EditAndApproveAsync(Guid id, AdjustTimeEntryRequestDto request, Guid adjustedByUserId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TimeEntryDto>> ListForEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
-    Task<TimeEntryDto?> ApproveAsync(Guid id, ApproveTimeEntryRequestDto request, CancellationToken cancellationToken = default);
-    Task<TimeEntryDto?> RejectAsync(Guid id, RejectTimeEntryRequestDto request, CancellationToken cancellationToken = default);
-    Task<TimeEntryDto?> AdjustAsync(Guid id, AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default);
+    Task<TimeEntryDto?> ApproveAsync(Guid id, Guid approvedByUserId, CancellationToken cancellationToken = default);
+    Task<TimeEntryDto?> RejectAsync(Guid id, RejectTimeEntryRequestDto request, Guid rejectedByUserId, CancellationToken cancellationToken = default);
+    Task<TimeEntryDto?> AdjustAsync(Guid id, AdjustTimeEntryRequestDto request, Guid adjustedByUserId, bool managerOverride, CancellationToken cancellationToken = default);
 }
 
 public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : ITimeEntriesService
@@ -134,7 +134,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<TimeEntryDto>> ListForReviewAsync(TimeEntryReviewFilters filters, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TimeApprovalQueueItemDto>> ListForReviewAsync(TimeEntryReviewFilters filters, CancellationToken cancellationToken = default)
     {
         EnsureManagerOrAdmin();
 
@@ -173,10 +173,10 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<TimeEntryDto>> BulkApproveAsync(BulkApproveTimeEntriesRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TimeEntryDto>> BulkApproveAsync(BulkApproveTimeEntriesRequestDto request, Guid approvedByUserId, CancellationToken cancellationToken = default)
     {
         EnsureManagerOrAdmin();
-        if (request.ApprovedByUserId == Guid.Empty) throw new ValidationException("ApprovedByUserId is required.");
+        EnsureActorId(approvedByUserId, "ApprovedByUserId");
         if (request.TimeEntryIds is null || request.TimeEntryIds.Count == 0) throw new ValidationException("At least one time entry is required.");
 
         var ids = request.TimeEntryIds.Distinct().ToArray();
@@ -185,27 +185,36 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             .ToListAsync(cancellationToken);
 
         if (entries.Count != ids.Length) throw new ValidationException("One or more time entries were not found.");
-        if (entries.Any(x => x.ApprovalStatus != TimeEntryApprovalStatus.Pending || !x.EndedAtUtc.HasValue))
+
+        foreach (var entry in entries)
         {
-            throw new ValidationException("Bulk approval only supports completed pending time entries.");
+            EnsureEligibleForApproval(entry);
         }
 
         var approvedAtUtc = DateTime.UtcNow;
         foreach (var entry in entries)
         {
-            ApproveEntry(entry, request.ApprovedByUserId, approvedAtUtc);
+            ApplyApproval(entry, approvedByUserId, approvedAtUtc);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return entries.Select(Map).ToList();
     }
 
-    public async Task<TimeEntryDto?> EditAndApproveAsync(Guid id, AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<TimeEntryDto?> EditAndApproveAsync(Guid id, AdjustTimeEntryRequestDto request, Guid adjustedByUserId, CancellationToken cancellationToken = default)
     {
-        var adjusted = await AdjustAsync(id, request, cancellationToken);
-        return adjusted is null
-            ? null
-            : await ApproveAsync(id, new ApproveTimeEntryRequestDto(request.AdjustedByUserId), cancellationToken);
+        EnsureManagerOrAdmin();
+        ValidateAdjustmentRequest(request, adjustedByUserId);
+
+        var entry = await LoadTimeEntryForAdjustmentAsync(id, cancellationToken);
+        if (entry is null) return null;
+
+        EnsureEligibleForApproval(entry);
+        ApplyAdjustment(entry, request, adjustedByUserId, managerOverride: true);
+        ApplyApproval(entry, adjustedByUserId, DateTime.UtcNow);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Map(entry);
     }
 
     public async Task<IReadOnlyList<TimeEntryDto>> ListForEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default)
@@ -220,25 +229,26 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<TimeEntryDto?> ApproveAsync(Guid id, ApproveTimeEntryRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<TimeEntryDto?> ApproveAsync(Guid id, Guid approvedByUserId, CancellationToken cancellationToken = default)
     {
         EnsureManagerOrAdmin();
-        if (request.ApprovedByUserId == Guid.Empty) throw new ValidationException("ApprovedByUserId is required.");
+        EnsureActorId(approvedByUserId, "ApprovedByUserId");
 
         var entry = await dbContext.TimeEntries.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entry is null) return null;
 
-        ApproveEntry(entry, request.ApprovedByUserId, DateTime.UtcNow);
+        EnsureEligibleForApproval(entry);
+        ApplyApproval(entry, approvedByUserId, DateTime.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Map(entry);
     }
 
-    public async Task<TimeEntryDto?> RejectAsync(Guid id, RejectTimeEntryRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<TimeEntryDto?> RejectAsync(Guid id, RejectTimeEntryRequestDto request, Guid rejectedByUserId, CancellationToken cancellationToken = default)
     {
         EnsureManagerOrAdmin();
         ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
-        if (request.RejectedByUserId == Guid.Empty) throw new ValidationException("RejectedByUserId is required.");
+        EnsureActorId(rejectedByUserId, "RejectedByUserId");
 
         var entry = await dbContext.TimeEntries.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entry is null) return null;
@@ -248,25 +258,34 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         entry.ApprovedByUserId = null;
         entry.ApprovedAtUtc = null;
 
-        AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Update, null, $"{{\"Action\":\"Reject\",\"RejectedByUserId\":\"{request.RejectedByUserId}\"}}");
+        AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Update, null, $"{{\"Action\":\"Reject\",\"RejectedByUserId\":\"{rejectedByUserId}\"}}");
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Map(entry);
     }
 
-    public async Task<TimeEntryDto?> AdjustAsync(Guid id, AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<TimeEntryDto?> AdjustAsync(Guid id, AdjustTimeEntryRequestDto request, Guid adjustedByUserId, bool managerOverride, CancellationToken cancellationToken = default)
     {
         EnsureManagerOrAdmin();
-        ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
-        if (request.AdjustedByUserId == Guid.Empty) throw new ValidationException("AdjustedByUserId is required.");
+        ValidateAdjustmentRequest(request, adjustedByUserId);
 
-        var entry = await dbContext.TimeEntries
+        var entry = await LoadTimeEntryForAdjustmentAsync(id, cancellationToken);
+        if (entry is null) return null;
+
+        ApplyAdjustment(entry, request, adjustedByUserId, managerOverride);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Map(entry);
+    }
+
+    private Task<TimeEntry?> LoadTimeEntryForAdjustmentAsync(Guid id, CancellationToken cancellationToken)
+        => dbContext.TimeEntries
             .Include(x => x.JobTicket)
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
 
-        if (entry is null) return null;
-
-        if (!request.ManagerOverride)
+    private void ApplyAdjustment(TimeEntry entry, AdjustTimeEntryRequestDto request, Guid adjustedByUserId, bool managerOverride)
+    {
+        if (!managerOverride)
         {
             if (entry.ApprovalStatus == TimeEntryApprovalStatus.Approved)
             {
@@ -286,40 +305,17 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         var originalHourlyRate = entry.HourlyRate;
         var originalNotes = entry.Notes;
 
-        if (request.StartedAtUtc.HasValue)
+        if (request.StartedAtUtc.HasValue) entry.StartedAtUtc = request.StartedAtUtc.Value;
+        if (request.EndedAtUtc.HasValue) entry.EndedAtUtc = request.EndedAtUtc;
+        if (entry.EndedAtUtc.HasValue && entry.EndedAtUtc <= entry.StartedAtUtc)
         {
-            entry.StartedAtUtc = request.StartedAtUtc.Value;
+            throw new ValidationException("EndedAtUtc must be after StartedAtUtc.");
         }
 
-        if (request.EndedAtUtc.HasValue)
-        {
-            entry.EndedAtUtc = request.EndedAtUtc;
-        }
-
-        if (entry.EndedAtUtc.HasValue && entry.EndedAtUtc < entry.StartedAtUtc)
-        {
-            throw new ValidationException("EndedAtUtc cannot be before StartedAtUtc.");
-        }
-
-        if (request.LaborHours.HasValue)
-        {
-            entry.LaborHours = request.LaborHours.Value;
-        }
-
-        if (request.BillableHours.HasValue)
-        {
-            entry.BillableHours = request.BillableHours.Value;
-        }
-
-        if (request.HourlyRate.HasValue)
-        {
-            entry.HourlyRate = request.HourlyRate.Value;
-        }
-
-        if (request.Notes is not null)
-        {
-            entry.Notes = ValidationHelpers.NullIfWhitespace(request.Notes);
-        }
+        if (request.LaborHours.HasValue) entry.LaborHours = request.LaborHours.Value;
+        if (request.BillableHours.HasValue) entry.BillableHours = request.BillableHours.Value;
+        if (request.HourlyRate.HasValue) entry.HourlyRate = request.HourlyRate.Value;
+        if (request.Notes is not null) entry.Notes = ValidationHelpers.NullIfWhitespace(request.Notes);
 
         if (entry.EndedAtUtc.HasValue)
         {
@@ -343,7 +339,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             AdjustmentType = AdjustmentType.Override,
             Hours = entry.LaborHours - originalLabor,
             Reason = request.Reason.Trim(),
-            AdjustedByUserId = request.AdjustedByUserId,
+            AdjustedByUserId = adjustedByUserId,
             OriginalStartedAtUtc = originalStarted,
             OriginalEndedAtUtc = originalEnded,
             OriginalLaborHours = originalLabor,
@@ -358,10 +354,13 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             NewNotes = entry.Notes
         });
 
-        AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Update, null, $"{{\"Action\":\"Adjust\",\"ManagerOverride\":{request.ManagerOverride.ToString().ToLowerInvariant()}}}");
-        await dbContext.SaveChangesAsync(cancellationToken);
+        AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Update, null, $"{{\"Action\":\"Adjust\",\"ManagerOverride\":{managerOverride.ToString().ToLowerInvariant()}}}");
+    }
 
-        return Map(entry);
+    private static void ValidateAdjustmentRequest(AdjustTimeEntryRequestDto request, Guid adjustedByUserId)
+    {
+        ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
+        EnsureActorId(adjustedByUserId, "AdjustedByUserId");
     }
 
 
@@ -400,20 +399,29 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         }
     }
 
-    private static readonly System.Linq.Expressions.Expression<Func<TimeEntry, TimeEntryDto>> ReviewMapProjection = x => new TimeEntryDto(
-        x.Id, x.JobTicketId, x.EmployeeId, x.StartedAtUtc, x.EndedAtUtc, x.TotalMinutes, x.LaborHours, x.BillableHours,
-        x.ApprovalStatus, x.ApprovedByUserId, x.ApprovedAtUtc, x.RejectionReason, x.ClockInLatitude, x.ClockInLongitude,
-        x.ClockInAccuracy, x.ClockOutLatitude, x.ClockOutLongitude, x.ClockOutAccuracy, x.WorkSummary, x.ClockInNote,
-        x.ClockOutNote, x.ClockInDeviceMetadata,
+    private static readonly System.Linq.Expressions.Expression<Func<TimeEntry, TimeApprovalQueueItemDto>> ReviewMapProjection = x => new TimeApprovalQueueItemDto(
+        x.Id,
+        x.JobTicketId,
+        x.EmployeeId,
         x.Employee.FirstName + " " + x.Employee.LastName,
+        x.StartedAtUtc,
+        x.EndedAtUtc,
+        x.TotalMinutes,
+        x.LaborHours,
+        x.BillableHours,
+        x.ApprovalStatus,
+        x.RejectionReason,
+        x.WorkSummary,
+        x.ClockInNote,
+        x.ClockOutNote,
+        x.Notes,
         x.JobTicket.TicketNumber,
         x.JobTicket.Title,
         x.JobTicket.JobType,
         x.JobTicket.Customer.Name,
         x.JobTicket.ServiceLocation.CompanyName,
         x.JobTicket.ServiceLocation.LocationName,
-        x.JobTicket.ServiceLocation.AddressLine1 + ", " + x.JobTicket.ServiceLocation.City + ", " + x.JobTicket.ServiceLocation.State,
-        x.Notes);
+        x.JobTicket.ServiceLocation.AddressLine1 + ", " + x.JobTicket.ServiceLocation.City + ", " + x.JobTicket.ServiceLocation.State);
 
     private static readonly System.Linq.Expressions.Expression<Func<TimeEntry, TimeEntryDto>> MapProjection = x => new TimeEntryDto(
         x.Id,
@@ -437,8 +445,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         x.WorkSummary,
         x.ClockInNote,
         x.ClockOutNote,
-        x.ClockInDeviceMetadata,
-        null, null, null, null, null, null, null, null, null);
+        x.ClockInDeviceMetadata);
 
     private static TimeEntryDto Map(TimeEntry entry) => new(
         entry.Id,
@@ -464,7 +471,25 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         entry.ClockOutNote,
         entry.ClockInDeviceMetadata);
 
-    private void ApproveEntry(TimeEntry entry, Guid approvedByUserId, DateTime approvedAtUtc)
+    private static void EnsureEligibleForApproval(TimeEntry entry)
+    {
+        if (entry.ApprovalStatus != TimeEntryApprovalStatus.Pending)
+        {
+            throw new ValidationException("Only pending time entries can be approved.");
+        }
+
+        if (!entry.EndedAtUtc.HasValue)
+        {
+            throw new ValidationException("Open time entries cannot be approved.");
+        }
+    }
+
+    private static void EnsureActorId(Guid actorId, string fieldName)
+    {
+        if (actorId == Guid.Empty) throw new ValidationException($"{fieldName} is required.");
+    }
+
+    private void ApplyApproval(TimeEntry entry, Guid approvedByUserId, DateTime approvedAtUtc)
     {
         entry.ApprovalStatus = TimeEntryApprovalStatus.Approved;
         entry.ApprovedByUserId = approvedByUserId;
@@ -554,14 +579,11 @@ public sealed record ClockOutRequestDto(
     string WorkSummary,
     string? Note);
 
-public sealed record ApproveTimeEntryRequestDto(Guid ApprovedByUserId);
-public sealed record BulkApproveTimeEntriesRequestDto(IReadOnlyList<Guid> TimeEntryIds, Guid ApprovedByUserId);
-public sealed record RejectTimeEntryRequestDto(Guid RejectedByUserId, string Reason);
+public sealed record BulkApproveTimeEntriesRequestDto(IReadOnlyList<Guid> TimeEntryIds);
+public sealed record RejectTimeEntryRequestDto(string Reason);
 
 public sealed record AdjustTimeEntryRequestDto(
-    Guid AdjustedByUserId,
     string Reason,
-    bool ManagerOverride,
     DateTime? StartedAtUtc,
     DateTime? EndedAtUtc,
     decimal? LaborHours,
@@ -599,13 +621,28 @@ public sealed record TimeEntryDto(
     string? WorkSummary,
     string? ClockInNote,
     string? ClockOutNote,
-    string? ClockInDeviceMetadata,
-    string? EmployeeName = null,
-    string? JobTicketNumber = null,
-    string? JobName = null,
-    string? LaborType = null,
-    string? CustomerName = null,
-    string? SiteName = null,
-    string? LocationName = null,
-    string? LocationAddress = null,
-    string? ManagerNotes = null);
+    string? ClockInDeviceMetadata);
+
+public sealed record TimeApprovalQueueItemDto(
+    Guid Id,
+    Guid JobTicketId,
+    Guid EmployeeId,
+    string EmployeeName,
+    DateTime StartedAtUtc,
+    DateTime? EndedAtUtc,
+    int? TotalMinutes,
+    decimal LaborHours,
+    decimal BillableHours,
+    TimeEntryApprovalStatus ApprovalStatus,
+    string? RejectionReason,
+    string? WorkSummary,
+    string? ClockInNote,
+    string? ClockOutNote,
+    string? ManagerNotes,
+    string JobTicketNumber,
+    string JobName,
+    string? LaborType,
+    string CustomerName,
+    string SiteName,
+    string LocationName,
+    string LocationAddress);

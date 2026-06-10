@@ -54,7 +54,7 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
 
     [HttpGet("review")]
     [Authorize(Policy = "ManagerOrAdmin")]
-    public async Task<ActionResult<IReadOnlyList<TimeEntryDto>>> ListForReviewAsync(
+    public async Task<ActionResult<IReadOnlyList<TimeApprovalQueueItemDto>>> ListForReviewAsync(
         [FromQuery] Guid? jobTicketId,
         [FromQuery] Guid? employeeId,
         [FromQuery] TimeEntryApprovalStatus? approvalStatus,
@@ -102,11 +102,11 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
 
     [HttpPost("{id:guid}/approve")]
     [Authorize(Policy = "ManagerOrAdmin")]
-    public async Task<ActionResult<TimeEntryDto>> ApproveAsync(Guid id, [FromBody] ApproveTimeEntryRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<TimeEntryDto>> ApproveAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var entry = await service.ApproveAsync(id, new ApproveTimeEntryRequestDto(currentUserContext.EmployeeId), cancellationToken);
+            var entry = await service.ApproveAsync(id, currentUserContext.EmployeeId, cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
         }
         catch (Exception exception)
@@ -121,7 +121,7 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
     {
         try
         {
-            return Ok(await service.BulkApproveAsync(request with { ApprovedByUserId = currentUserContext.EmployeeId }, cancellationToken));
+            return Ok(await service.BulkApproveAsync(request, currentUserContext.EmployeeId, cancellationToken));
         }
         catch (Exception exception)
         {
@@ -135,7 +135,7 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
     {
         try
         {
-            var entry = await service.EditAndApproveAsync(id, request with { AdjustedByUserId = currentUserContext.EmployeeId, ManagerOverride = true }, cancellationToken);
+            var entry = await service.EditAndApproveAsync(id, request, currentUserContext.EmployeeId, cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
         }
         catch (Exception exception)
@@ -150,7 +150,7 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
     {
         try
         {
-            var entry = await service.RejectAsync(id, new RejectTimeEntryRequestDto(currentUserContext.EmployeeId, request.Reason), cancellationToken);
+            var entry = await service.RejectAsync(id, request, currentUserContext.EmployeeId, cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
         }
         catch (Exception exception)
@@ -165,7 +165,7 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
     {
         try
         {
-            var entry = await service.AdjustAsync(id, request with { AdjustedByUserId = currentUserContext.EmployeeId }, cancellationToken);
+            var entry = await service.AdjustAsync(id, request, currentUserContext.EmployeeId, managerOverride: true, cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
         }
         catch (Exception exception)

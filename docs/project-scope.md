@@ -153,5 +153,5 @@ The following are not approved as part of Parts Request Workflow Phase 2, UI pol
 ### Manager-first Time Approval refinement
 - Time Approval is an automatically loaded pending queue; date, employee-name, status, and broad job/customer/site/location search controls only narrow the loaded queue.
 - Managers review contextual employee/job/customer/location information in the table, can approve clean completed entries in bulk, and use individual review for rejection or adjustments.
-- Manager edits reuse the existing `TimeEntryAdjustment` audit model. The current scaffold has no dedicated break-duration or labor-type assignment fields, so no break editor/column is presented and labor type is populated from the job type when present; no payroll/billing schema was expanded for unsupported concepts.
+- Manager edits reuse the existing `TimeEntryAdjustment` audit model and commit adjustment plus approval atomically. The current scaffold has no dedicated break-duration or labor-type assignment fields, so no break editor/column is presented and labor type is populated from the job type when present; no payroll/billing schema was expanded for unsupported concepts.
 - No pay-period aggregate exists in the current model, so default dates remain blank while all pending entries are shown.

@@ -25,7 +25,7 @@
 ## Manager/Admin Time Approval Review
 - `GET /api/time-entries/review`
 - Authorization: `ManagerOrAdmin`
-- Response DTO: `TimeEntryDto[]`
+- Response DTO: `TimeApprovalQueueItemDto[]`
 - Optional query filters:
   - `jobTicketId`
   - `employeeId`
@@ -262,7 +262,7 @@ This section documents the existing inventory foundation only. It does not appro
 
 ### Manager-first approval queue contract
 - `GET /api/time-entries/review` accepts optional `employeeId`, `approvalStatus`, `dateFromUtc`, `dateToUtc`, and `search` filters. The `search` value matches job ticket ID/number, job title/type/description, customer, site, and location fields.
-- Review results retain internal IDs for commands but also include manager-facing employee, ticket, customer, site, location, job name, labor type, and manager-note fields when available.
-- `POST /api/time-entries/bulk-approve` approves only completed entries that are still pending. The authenticated Manager/Admin identity is used as the approver; client-supplied actor IDs are ignored.
-- `POST /api/time-entries/{id}/edit-and-approve` records a `TimeEntryAdjustment` with original/new values, manager identity, timestamp, and reason before approving the adjusted entry.
-- Existing single approve, reject, and adjust endpoints remain available and retain the `ManagerOrAdmin` authorization policy.
+- Review results use the dedicated `TimeApprovalQueueItemDto`, retaining internal command IDs while exposing manager-facing employee, ticket, customer, site, location, job name, labor type, and note context.
+- `POST /api/time-entries/bulk-approve` accepts only `{ timeEntryIds }` and approves completed entries that are still pending. The authenticated Manager/Admin identity is the approver.
+- `POST /api/time-entries/{id}/edit-and-approve` accepts editable values plus a reason, then records the adjustment and approval atomically in one save. Actor identity and manager override authority are server-owned.
+- Single approve has no request body, reject accepts only `{ reason }`, and adjustment requests contain only editable values plus the reason. All actions retain the `ManagerOrAdmin` authorization policy, and single/bulk approval share the same completed-pending eligibility rule.
