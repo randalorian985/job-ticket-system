@@ -272,11 +272,52 @@ pre {
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
 }
 
+.report-action-grid {
+  align-items: start;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
 .report-card {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 0.85rem;
   background: #f8fafc;
+}
+
+.report-run-card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.report-card-controls,
+.report-filter-details {
+  border-top: 1px solid #e5ebf3;
+  padding-top: 0.75rem;
+}
+
+.report-filter-details summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.report-inline-filters {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-top: 0.7rem;
+}
+
+.report-run-card label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.report-run-card input,
+.report-run-card select,
+.report-run-card button {
+  width: 100%;
 }
 
 .report-card h3,
@@ -1280,7 +1321,9 @@ td {
   .ticket-meta-grid,
   .review-grid,
   .report-grid,
+  .report-action-grid,
   .report-filters,
+  .report-inline-filters,
   .form-grid,
   .quick-add-grid {
     grid-template-columns: 1fr;

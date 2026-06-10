@@ -1,17 +1,25 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../../api/httpClient'
+import { jobTicketsApi } from '../../../api/jobTicketsApi'
+import { masterDataApi } from '../../../api/masterDataApi'
 import { reportsApi } from '../../../api/reportsApi'
+import { usersApi } from '../../../api/usersApi'
 import { csvDataUri, toCsv, type CsvColumn } from '../../../utils/csv'
 import type {
+  AssignableEmployeeDto,
+  CustomerDto,
+  EquipmentDto,
   InvoiceReadySummaryDto,
   JobCostSummaryDto,
+  JobTicketListItemDto,
   JobsReadyToInvoiceItemDto,
   LaborByEmployeeDto,
   LaborByJobDto,
   PartsByJobDto,
   ReportQueryFilters,
-  ReportServiceHistoryItemDto
+  ReportServiceHistoryItemDto,
+  ServiceLocationDto
 } from '../../../types'
 import { Errorable } from '../common/Errorable'
 
@@ -38,6 +46,16 @@ type ReportColumn<T extends ReportRow> = CsvColumn<T> & {
   render?: (row: T) => string | JSX.Element
   align?: 'text' | 'number'
 }
+
+type FilterField =
+  | 'dateRange'
+  | 'customer'
+  | 'billingParty'
+  | 'serviceLocation'
+  | 'employee'
+  | 'jobStatus'
+  | 'invoiceStatus'
+  | 'paging'
 
 const defaultFilters: ReportQueryFilters = { offset: 0, limit: 50 }
 const snapshotLabel = 'time-entry labor-rate snapshot'
@@ -81,6 +99,17 @@ const reportSections: Array<{ title: string, description: string, modes: ReportM
     modes: ['customerHistory', 'equipmentHistory']
   }
 ]
+
+const reportFilterFields: Record<ReportMode, FilterField[]> = {
+  invoiceReady: [],
+  jobCost: [],
+  jobsReady: ['dateRange', 'customer', 'billingParty', 'serviceLocation', 'jobStatus', 'invoiceStatus', 'paging'],
+  laborJob: ['dateRange', 'customer', 'serviceLocation', 'employee', 'jobStatus', 'paging'],
+  laborEmployee: ['dateRange', 'customer', 'employee', 'jobStatus', 'paging'],
+  partsJob: ['dateRange', 'customer', 'serviceLocation', 'jobStatus', 'paging'],
+  customerHistory: ['dateRange', 'jobStatus', 'paging'],
+  equipmentHistory: ['dateRange', 'jobStatus', 'paging']
+}
 
 const money = (value?: number | null) =>
   typeof value === 'number' ? value.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : '-'
@@ -232,9 +261,34 @@ const userMessageForReportError = (requestError: unknown) => {
   return 'Unable to load report data.'
 }
 
-const buildFilterSummary = (filters: ReportQueryFilters, jobId: string, customerId: string, equipmentId: string) => {
+const reportUsesField = (mode: ReportMode, field: FilterField) => reportFilterFields[mode].includes(field)
+
+const filtersForMode = (mode: ReportMode, filters: ReportQueryFilters): ReportQueryFilters => {
+  if (!reportFilterFields[mode].length) return {}
+
+  const scoped: ReportQueryFilters = {
+    offset: filters.offset ?? defaultFilters.offset,
+    limit: filters.limit ?? defaultFilters.limit
+  }
+
+  if (reportUsesField(mode, 'dateRange')) {
+    scoped.dateFromUtc = filters.dateFromUtc
+    scoped.dateToUtc = filters.dateToUtc
+  }
+  if (reportUsesField(mode, 'customer')) scoped.customerId = filters.customerId
+  if (reportUsesField(mode, 'billingParty')) scoped.billingPartyCustomerId = filters.billingPartyCustomerId
+  if (reportUsesField(mode, 'serviceLocation')) scoped.serviceLocationId = filters.serviceLocationId
+  if (reportUsesField(mode, 'employee')) scoped.employeeId = filters.employeeId
+  if (reportUsesField(mode, 'jobStatus')) scoped.jobStatus = filters.jobStatus
+  if (reportUsesField(mode, 'invoiceStatus')) scoped.invoiceStatus = filters.invoiceStatus
+
+  return scoped
+}
+
+const buildFilterSummary = (mode: ReportMode, filters: ReportQueryFilters, sourceLabel?: string) => {
   const summary: string[] = []
 
+  if (sourceLabel) summary.push(`Source: ${sourceLabel}`)
   if (filters.dateFromUtc || filters.dateToUtc) {
     summary.push(`Dates: ${dateUtc(filters.dateFromUtc)} to ${dateUtc(filters.dateToUtc)}`)
   }
@@ -244,13 +298,14 @@ const buildFilterSummary = (filters: ReportQueryFilters, jobId: string, customer
   if (filters.employeeId) summary.push(`Employee: ${filters.employeeId}`)
   if (typeof filters.jobStatus === 'number') summary.push(`Job status: ${getJobStatusLabel(filters.jobStatus)}`)
   if (typeof filters.invoiceStatus === 'number') summary.push(`Invoice status: ${getInvoiceStatusLabel(filters.invoiceStatus)}`)
-  if (jobId.trim()) summary.push(`Job ticket source: ${jobId.trim()}`)
-  if (customerId.trim()) summary.push(`Customer history source: ${customerId.trim()}`)
-  if (equipmentId.trim()) summary.push(`Equipment history source: ${equipmentId.trim()}`)
   if (filters.offset) summary.push(`Offset: ${filters.offset}`)
   if ((filters.limit ?? defaultFilters.limit) !== defaultFilters.limit) summary.push(`Limit: ${filters.limit}`)
 
-  return summary.length ? summary.join(' | ') : 'No extra filters are active. Results reflect the default visible window of loaded rows.'
+  return summary.length
+    ? summary.join(' | ')
+    : reportFilterFields[mode].length
+      ? 'No optional filters are active. Results reflect the default visible window of loaded rows.'
+      : 'This report is scoped to the selected source record.'
 }
 
 const csvFileName = (title: string) =>
@@ -258,19 +313,79 @@ const csvFileName = (title: string) =>
 
 export function ReportsPage() {
   const [filters, setFilters] = useState<ReportQueryFilters>(defaultFilters)
-  const [customerId, setCustomerId] = useState('')
-  const [equipmentId, setEquipmentId] = useState('')
-  const [jobId, setJobId] = useState('')
+  const [sourceCustomerId, setSourceCustomerId] = useState('')
+  const [sourceEquipmentId, setSourceEquipmentId] = useState('')
+  const [sourceJobTicketId, setSourceJobTicketId] = useState('')
+  const [jobTickets, setJobTickets] = useState<JobTicketListItemDto[]>([])
+  const [customers, setCustomers] = useState<CustomerDto[]>([])
+  const [serviceLocations, setServiceLocations] = useState<ServiceLocationDto[]>([])
+  const [equipment, setEquipment] = useState<EquipmentDto[]>([])
+  const [employees, setEmployees] = useState<AssignableEmployeeDto[]>([])
+  const [referenceLoading, setReferenceLoading] = useState(true)
+  const [referenceError, setReferenceError] = useState<string | null>(null)
   const [rows, setRows] = useState<ReportRow[]>([])
   const [mode, setMode] = useState<ReportMode | null>(null)
   const [loadingMode, setLoadingMode] = useState<ReportMode | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    let isMounted = true
+
+    const loadReferences = async () => {
+      try {
+        setReferenceError(null)
+        const [jobTicketRows, customerRows, serviceLocationRows, equipmentRows, employeeRows] = await Promise.all([
+          jobTicketsApi.listAll(),
+          masterDataApi.listCustomers(),
+          masterDataApi.listServiceLocations(),
+          masterDataApi.listEquipment(),
+          usersApi.listAssignableEmployees()
+        ])
+
+        if (!isMounted) return
+        setJobTickets(jobTicketRows)
+        setCustomers(customerRows)
+        setServiceLocations(serviceLocationRows)
+        setEquipment(equipmentRows)
+        setEmployees(employeeRows)
+      } catch {
+        if (isMounted) {
+          setReferenceError('Report selectors could not be loaded. Refresh the page before running source-specific reports.')
+        }
+      } finally {
+        if (isMounted) setReferenceLoading(false)
+      }
+    }
+
+    loadReferences()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const activeCustomers = useMemo(() => customers.filter((customer) => !customer.isArchived), [customers])
+  const activeServiceLocations = useMemo(() => serviceLocations.filter((location) => !location.isArchived && location.isActive), [serviceLocations])
+  const activeEquipment = useMemo(() => equipment.filter((item) => !item.isArchived), [equipment])
+
+  const jobTicketLabelById = useMemo(
+    () => new Map(jobTickets.map((job) => [job.id, `${job.ticketNumber} - ${job.title}`])),
+    [jobTickets]
+  )
+  const customerLabelById = useMemo(
+    () => new Map(customers.map((customer) => [customer.id, customer.accountNumber ? `${customer.name} (${customer.accountNumber})` : customer.name])),
+    [customers]
+  )
+  const equipmentLabelById = useMemo(
+    () => new Map(equipment.map((item) => [item.id, item.equipmentNumber ? `${item.name} (${item.equipmentNumber})` : item.name])),
+    [equipment]
+  )
+
   const clearFilters = () => {
     setFilters(defaultFilters)
-    setCustomerId('')
-    setEquipmentId('')
-    setJobId('')
+    setSourceCustomerId('')
+    setSourceEquipmentId('')
+    setSourceJobTicketId('')
     setRows([])
     setMode(null)
     setError(null)
@@ -283,18 +398,18 @@ export function ReportsPage() {
   }
 
   const apply = async (nextMode: ReportMode) => {
-    if ((nextMode === 'invoiceReady' || nextMode === 'jobCost') && !jobId.trim()) {
-      requireSourceId('Enter a job ticket id before running this report.')
+    if ((nextMode === 'invoiceReady' || nextMode === 'jobCost') && !sourceJobTicketId.trim()) {
+      requireSourceId(`Select a job ticket before running ${reportTitleMap[nextMode]}.`)
       return
     }
 
-    if (nextMode === 'customerHistory' && !customerId.trim()) {
-      requireSourceId('Enter a customer id before running customer service history.')
+    if (nextMode === 'customerHistory' && !sourceCustomerId.trim()) {
+      requireSourceId('Select a customer before running Customer Service History.')
       return
     }
 
-    if (nextMode === 'equipmentHistory' && !equipmentId.trim()) {
-      requireSourceId('Enter an equipment id before running equipment service history.')
+    if (nextMode === 'equipmentHistory' && !sourceEquipmentId.trim()) {
+      requireSourceId('Select equipment before running Equipment Service History.')
       return
     }
 
@@ -304,22 +419,23 @@ export function ReportsPage() {
       setRows([])
       setMode(nextMode)
 
+      const scopedFilters = filtersForMode(nextMode, filters)
       const data =
         nextMode === 'invoiceReady'
-          ? [await reportsApi.getInvoiceReadySummary(jobId.trim())]
+          ? [await reportsApi.getInvoiceReadySummary(sourceJobTicketId.trim())]
           : nextMode === 'jobsReady'
-            ? await reportsApi.getJobsReadyToInvoice(filters)
+            ? await reportsApi.getJobsReadyToInvoice(scopedFilters)
             : nextMode === 'laborJob'
-              ? await reportsApi.getLaborByJob(filters)
+              ? await reportsApi.getLaborByJob(scopedFilters)
               : nextMode === 'laborEmployee'
-                ? await reportsApi.getLaborByEmployee(filters)
+                ? await reportsApi.getLaborByEmployee(scopedFilters)
                 : nextMode === 'partsJob'
-                  ? await reportsApi.getPartsByJob(filters)
+                  ? await reportsApi.getPartsByJob(scopedFilters)
                   : nextMode === 'jobCost'
-                    ? [await reportsApi.getCostSummary(jobId.trim())]
+                    ? [await reportsApi.getCostSummary(sourceJobTicketId.trim())]
                     : nextMode === 'customerHistory'
-                      ? await reportsApi.getCustomerHistory(customerId.trim(), filters)
-                      : await reportsApi.getEquipmentHistory(equipmentId.trim(), filters)
+                      ? await reportsApi.getCustomerHistory(sourceCustomerId.trim(), scopedFilters)
+                      : await reportsApi.getEquipmentHistory(sourceEquipmentId.trim(), scopedFilters)
 
       setRows(data as ReportRow[])
     } catch (requestError) {
@@ -335,19 +451,302 @@ export function ReportsPage() {
   const csv = useMemo(() => toCsv(rows, columns), [rows, columns])
   const csvHref = useMemo(() => csvDataUri(csv), [csv])
   const hasRows = rows.length > 0
-  const filterSummary = useMemo(() => buildFilterSummary(filters, jobId, customerId, equipmentId), [filters, jobId, customerId, equipmentId])
+  const sourceLabel = mode === 'invoiceReady' || mode === 'jobCost'
+    ? jobTicketLabelById.get(sourceJobTicketId)
+    : mode === 'customerHistory'
+      ? customerLabelById.get(sourceCustomerId)
+      : mode === 'equipmentHistory'
+        ? equipmentLabelById.get(sourceEquipmentId)
+        : undefined
+  const filterSummary = useMemo(
+    () => (mode ? buildFilterSummary(mode, filtersForMode(mode, filters), sourceLabel) : ''),
+    [filters, mode, sourceLabel]
+  )
+
+  const updateFilters = (nextFilters: Partial<ReportQueryFilters>) => {
+    setFilters((current) => ({ ...current, ...nextFilters }))
+  }
+
+  const renderSourceControl = (reportMode: ReportMode) => {
+    const titleForMode = reportTitleMap[reportMode]
+
+    if (reportMode === 'invoiceReady' || reportMode === 'jobCost') {
+      return (
+        <div className="report-card-controls">
+          <label>
+            Job ticket
+            <select
+              aria-label={`${titleForMode} job ticket`}
+              value={sourceJobTicketId}
+              onChange={(event) => setSourceJobTicketId(event.target.value)}
+              disabled={referenceLoading}
+            >
+              <option value="">{referenceLoading ? 'Loading job tickets...' : 'Select job ticket'}</option>
+              {jobTickets.map((job) => (
+                <option key={job.id} value={job.id}>{job.ticketNumber} - {job.title}</option>
+              ))}
+            </select>
+          </label>
+          <small className="muted">Required for this single-ticket report.</small>
+        </div>
+      )
+    }
+
+    if (reportMode === 'customerHistory') {
+      return (
+        <div className="report-card-controls">
+          <label>
+            Customer
+            <select
+              aria-label="Customer Service History customer"
+              value={sourceCustomerId}
+              onChange={(event) => setSourceCustomerId(event.target.value)}
+              disabled={referenceLoading}
+            >
+              <option value="">{referenceLoading ? 'Loading customers...' : 'Select customer'}</option>
+              {activeCustomers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.accountNumber ? `${customer.name} (${customer.accountNumber})` : customer.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <small className="muted">Required for this service-history report.</small>
+        </div>
+      )
+    }
+
+    if (reportMode === 'equipmentHistory') {
+      return (
+        <div className="report-card-controls">
+          <label>
+            Equipment
+            <select
+              aria-label="Equipment Service History equipment"
+              value={sourceEquipmentId}
+              onChange={(event) => setSourceEquipmentId(event.target.value)}
+              disabled={referenceLoading}
+            >
+              <option value="">{referenceLoading ? 'Loading equipment...' : 'Select equipment'}</option>
+              {activeEquipment.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.equipmentNumber ? `${item.name} (${item.equipmentNumber})` : item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <small className="muted">Required for this service-history report.</small>
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  const renderFilterControls = (reportMode: ReportMode) => {
+    const fields = reportFilterFields[reportMode]
+    if (!fields.length) return null
+
+    const titleForMode = reportTitleMap[reportMode]
+    const controls: JSX.Element[] = []
+
+    if (fields.includes('dateRange')) {
+      controls.push(
+        <label key="dateFrom">
+          From date
+          <input
+            aria-label={`${titleForMode} from date filter`}
+            type="date"
+            value={filters.dateFromUtc?.slice(0, 10) ?? ''}
+            onChange={(event) => updateFilters({ dateFromUtc: event.target.value ? `${event.target.value}T00:00:00Z` : undefined })}
+          />
+        </label>,
+        <label key="dateTo">
+          To date
+          <input
+            aria-label={`${titleForMode} to date filter`}
+            type="date"
+            value={filters.dateToUtc?.slice(0, 10) ?? ''}
+            onChange={(event) => updateFilters({ dateToUtc: event.target.value ? `${event.target.value}T23:59:59Z` : undefined })}
+          />
+        </label>
+      )
+    }
+
+    if (fields.includes('customer')) {
+      controls.push(
+        <label key="customer">
+          Customer
+          <select
+            aria-label={`${titleForMode} customer filter`}
+            value={filters.customerId ?? ''}
+            onChange={(event) => updateFilters({ customerId: event.target.value || undefined })}
+            disabled={referenceLoading}
+          >
+            <option value="">Any customer</option>
+            {activeCustomers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.accountNumber ? `${customer.name} (${customer.accountNumber})` : customer.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )
+    }
+
+    if (fields.includes('billingParty')) {
+      controls.push(
+        <label key="billingParty">
+          Billing party
+          <select
+            aria-label={`${titleForMode} billing party filter`}
+            value={filters.billingPartyCustomerId ?? ''}
+            onChange={(event) => updateFilters({ billingPartyCustomerId: event.target.value || undefined })}
+            disabled={referenceLoading}
+          >
+            <option value="">Any billing party</option>
+            {activeCustomers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.accountNumber ? `${customer.name} (${customer.accountNumber})` : customer.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )
+    }
+
+    if (fields.includes('serviceLocation')) {
+      controls.push(
+        <label key="serviceLocation">
+          Service location
+          <select
+            aria-label={`${titleForMode} service location filter`}
+            value={filters.serviceLocationId ?? ''}
+            onChange={(event) => updateFilters({ serviceLocationId: event.target.value || undefined })}
+            disabled={referenceLoading}
+          >
+            <option value="">Any service location</option>
+            {activeServiceLocations.map((location) => (
+              <option key={location.id} value={location.id}>
+                {location.companyName} - {location.locationName}
+              </option>
+            ))}
+          </select>
+        </label>
+      )
+    }
+
+    if (fields.includes('employee')) {
+      controls.push(
+        <label key="employee">
+          Technician
+          <select
+            aria-label={`${titleForMode} employee filter`}
+            value={filters.employeeId ?? ''}
+            onChange={(event) => updateFilters({ employeeId: event.target.value || undefined })}
+            disabled={referenceLoading}
+          >
+            <option value="">Any technician</option>
+            {employees.map((employee) => (
+              <option key={employee.id} value={employee.id}>{employee.firstName} {employee.lastName}</option>
+            ))}
+          </select>
+        </label>
+      )
+    }
+
+    if (fields.includes('jobStatus')) {
+      controls.push(
+        <label key="jobStatus">
+          Job status
+          <select
+            aria-label={`${titleForMode} job status filter`}
+            value={filters.jobStatus ?? ''}
+            onChange={(event) => updateFilters({ jobStatus: event.target.value ? Number(event.target.value) : undefined })}
+          >
+            <option value="">Any job status</option>
+            <option value="7">Completed</option>
+            <option value="9">Invoiced</option>
+            <option value="10">Reviewed</option>
+          </select>
+        </label>
+      )
+    }
+
+    if (fields.includes('invoiceStatus')) {
+      controls.push(
+        <label key="invoiceStatus">
+          Invoice status
+          <select
+            aria-label={`${titleForMode} invoice status filter`}
+            value={filters.invoiceStatus ?? ''}
+            onChange={(event) => updateFilters({ invoiceStatus: event.target.value ? Number(event.target.value) : undefined })}
+          >
+            <option value="">Any invoice status</option>
+            <option value="1">Not Ready</option>
+            <option value="2">Ready</option>
+            <option value="3">Drafted</option>
+            <option value="4">Sent</option>
+            <option value="5">Paid</option>
+            <option value="6">Void</option>
+          </select>
+        </label>
+      )
+    }
+
+    if (fields.includes('paging')) {
+      controls.push(
+        <label key="offset">
+          Offset
+          <input
+            aria-label={`${titleForMode} offset filter`}
+            type="number"
+            min={0}
+            value={filters.offset ?? 0}
+            onChange={(event) => updateFilters({ offset: Number(event.target.value) || 0 })}
+          />
+        </label>,
+        <label key="limit">
+          Limit
+          <input
+            aria-label={`${titleForMode} limit filter`}
+            type="number"
+            min={1}
+            value={filters.limit ?? 50}
+            onChange={(event) => updateFilters({ limit: Number(event.target.value) || 50 })}
+          />
+        </label>
+      )
+    }
+
+    return (
+      <details className="report-filter-details">
+        <summary>Optional filters</summary>
+        <div className="report-inline-filters">
+          {controls}
+        </div>
+      </details>
+    )
+  }
 
   return (
     <section className="stack">
       <header className="card stack">
-        <h2>Reports</h2>
-        <p className="muted">
-          Manager/Admin report hub for invoice readiness, job costs, labor, parts, customer history, and equipment history.
-        </p>
+        <div className="report-results-heading">
+          <div>
+            <h2>Reports</h2>
+            <p className="muted">
+              Pick the report you need, set its source or optional filters in the same panel, then run it.
+            </p>
+          </div>
+          <button type="button" onClick={clearFilters}>Reset report inputs</button>
+        </div>
         <p className="muted">
           Labor totals are labeled as time-entry labor-rate snapshot values. The implemented API uses captured time-entry cost and bill rates first, then falls back only for legacy entries without snapshots.
         </p>
+        {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
+      <Errorable error={referenceError} />
       <Errorable error={error} />
 
       {reportSections.map((section) => (
@@ -356,11 +755,13 @@ export function ReportsPage() {
             <h3>{section.title}</h3>
             <p className="muted">{section.description}</p>
           </div>
-          <div className="report-grid">
+          <div className="report-action-grid">
             {section.modes.map((reportMode) => (
-              <article className="report-card" key={reportMode} aria-busy={loadingMode === reportMode}>
+              <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
                 <h4>{reportTitleMap[reportMode]}</h4>
                 <p className="muted">{reportDescriptions[reportMode]}</p>
+                {renderSourceControl(reportMode)}
+                {renderFilterControls(reportMode)}
                 <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
                   {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
                 </button>
@@ -369,140 +770,6 @@ export function ReportsPage() {
           </div>
         </section>
       ))}
-
-      <section className="card stack" aria-labelledby="report-filter-heading">
-        <div className="report-results-heading">
-          <div>
-            <h3 id="report-filter-heading">Report Filters</h3>
-            <p className="muted">
-              Shared list reports support UTC date range, customer, billing party, service location, employee, job status, invoice status, offset, and limit. Single-ticket and history reports also require their source IDs.
-            </p>
-          </div>
-          <button type="button" onClick={clearFilters}>Reset filters</button>
-        </div>
-        <p className="muted">{filterSummary}</p>
-        <h4>Shared filters</h4>
-        <div className="report-filters">
-          <label>
-            From date
-            <input
-              aria-label="From date"
-              type="date"
-              value={filters.dateFromUtc?.slice(0, 10) ?? ''}
-              onChange={(event) => setFilters({ ...filters, dateFromUtc: event.target.value ? `${event.target.value}T00:00:00Z` : undefined })}
-            />
-          </label>
-          <label>
-            To date
-            <input
-              aria-label="To date"
-              type="date"
-              value={filters.dateToUtc?.slice(0, 10) ?? ''}
-              onChange={(event) => setFilters({ ...filters, dateToUtc: event.target.value ? `${event.target.value}T23:59:59Z` : undefined })}
-            />
-          </label>
-          <label>
-            Customer id
-            <input
-              aria-label="Customer id"
-              placeholder="Customer id"
-              value={filters.customerId ?? ''}
-              onChange={(event) => setFilters({ ...filters, customerId: event.target.value || undefined })}
-            />
-          </label>
-          <label>
-            Billing customer id
-            <input
-              aria-label="Billing customer id"
-              placeholder="Billing customer id"
-              value={filters.billingPartyCustomerId ?? ''}
-              onChange={(event) => setFilters({ ...filters, billingPartyCustomerId: event.target.value || undefined })}
-            />
-          </label>
-          <label>
-            Service location id
-            <input
-              aria-label="Service location id"
-              placeholder="Service location id"
-              value={filters.serviceLocationId ?? ''}
-              onChange={(event) => setFilters({ ...filters, serviceLocationId: event.target.value || undefined })}
-            />
-          </label>
-          <label>
-            Employee id
-            <input
-              aria-label="Employee id"
-              placeholder="Employee id"
-              value={filters.employeeId ?? ''}
-              onChange={(event) => setFilters({ ...filters, employeeId: event.target.value || undefined })}
-            />
-          </label>
-          <label>
-            Job status
-            <select
-              aria-label="Job status"
-              value={filters.jobStatus ?? ''}
-              onChange={(event) => setFilters({ ...filters, jobStatus: event.target.value ? Number(event.target.value) : undefined })}
-            >
-              <option value="">Any job status</option>
-              <option value="7">Completed</option>
-              <option value="9">Invoiced</option>
-              <option value="10">Reviewed</option>
-            </select>
-          </label>
-          <label>
-            Invoice status
-            <select
-              aria-label="Invoice status"
-              value={filters.invoiceStatus ?? ''}
-              onChange={(event) => setFilters({ ...filters, invoiceStatus: event.target.value ? Number(event.target.value) : undefined })}
-            >
-              <option value="">Any invoice status</option>
-              <option value="1">Not Ready</option>
-              <option value="2">Ready</option>
-              <option value="3">Drafted</option>
-              <option value="4">Sent</option>
-              <option value="5">Paid</option>
-              <option value="6">Void</option>
-            </select>
-          </label>
-          <label>
-            Offset
-            <input
-              aria-label="Offset"
-              type="number"
-              min={0}
-              value={filters.offset ?? 0}
-              onChange={(event) => setFilters({ ...filters, offset: Number(event.target.value) || 0 })}
-            />
-          </label>
-          <label>
-            Limit
-            <input
-              aria-label="Limit"
-              type="number"
-              min={1}
-              value={filters.limit ?? 50}
-              onChange={(event) => setFilters({ ...filters, limit: Number(event.target.value) || 50 })}
-            />
-          </label>
-        </div>
-        <h4>Report source IDs</h4>
-        <div className="report-filters">
-          <label>
-            Job ticket id
-            <input aria-label="Job ticket id" value={jobId} onChange={(event) => setJobId(event.target.value)} placeholder="Job ticket id" />
-          </label>
-          <label>
-            Customer history id
-            <input aria-label="Customer history id" value={customerId} onChange={(event) => setCustomerId(event.target.value)} placeholder="Customer id for service history" />
-          </label>
-          <label>
-            Equipment history id
-            <input aria-label="Equipment history id" value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)} placeholder="Equipment id for service history" />
-          </label>
-        </div>
-      </section>
 
       <section className="card stack" aria-live="polite" aria-busy={loadingMode !== null}>
         <div className="report-results-heading">

@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { ApiError } from '../../api/httpClient'
+import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { reportsApi } from '../../api/reportsApi'
+import { usersApi } from '../../api/usersApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { CustomersPage, EquipmentPage, PartsPage, ReportsPage, ServiceLocationsPage } from './EntityPages'
+
+vi.mock('../../api/jobTicketsApi', () => ({
+  jobTicketsApi: {
+    listAll: vi.fn()
+  }
+}))
 
 vi.mock('../../api/masterDataApi', () => ({
   masterDataApi: {
@@ -54,9 +62,30 @@ vi.mock('../../api/reportsApi', () => ({
   }
 }))
 
+vi.mock('../../api/usersApi', () => ({
+  usersApi: {
+    listAssignableEmployees: vi.fn()
+  }
+}))
+
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
+  vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+    { id: 'j2', ticketNumber: 'JT-200', title: 'Gamma invoice summary', status: 7, priority: 2, customerId: 'c1', serviceLocationId: 'loc-1' }
+  ] as any)
+  vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+    { id: 'cust-bill-1', name: 'Acme Billing', accountNumber: 'BILL', isArchived: false }
+  ] as any)
+  vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+    { id: 'loc-1', customerId: 'c1', companyName: 'Acme', locationName: 'Plant', addressLine1: '100 Main', city: 'Austin', state: 'TX', postalCode: '78701', country: 'USA', isActive: true, isArchived: false }
+  ] as any)
+  vi.mocked(masterDataApi.listEquipment).mockResolvedValue([
+    { id: 'eq-1', customerId: 'c1', serviceLocationId: 'loc-1', name: 'Pump', equipmentNumber: 'EQ-1', isArchived: false }
+  ] as any)
+  vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([
+    { id: 'emp-1', firstName: 'Casey', lastName: 'Tech' }
+  ])
 })
 
 describe('CustomersPage', () => {
@@ -329,11 +358,14 @@ describe('ReportsPage', () => {
     vi.mocked(reportsApi.getJobsReadyToInvoice).mockResolvedValue([{ jobTicketId: 'j1', jobTicketNumber: 'JT-100', customer: 'Acme, "North"\nRegion', billingPartyCustomer: 'Acme Billing', jobStatus: 7, invoiceStatus: 2, approvedLaborHours: 2.5, approvedPartsCount: 3, estimatedBillableTotal: 120.5, createdAtUtc: '2026-03-31T12:00:00Z', completedAtUtc: '2026-04-01T12:00:00Z' }] as any)
     renderReports()
 
-    fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-04-01' } })
-    fireEvent.change(screen.getByLabelText('Billing customer id'), { target: { value: 'cust-bill-1' } })
-    fireEvent.change(screen.getByLabelText('Service location id'), { target: { value: 'loc-1' } })
-    fireEvent.change(screen.getByLabelText('Invoice status'), { target: { value: '2' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Run Jobs Ready to Invoice' }))
+    const jobsReadyCard = screen.getByLabelText('Jobs Ready to Invoice report')
+    await waitFor(() => expect(within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice billing party filter')).not.toBeDisabled())
+    fireEvent.click(within(jobsReadyCard).getByText('Optional filters'))
+    fireEvent.change(within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice from date filter'), { target: { value: '2026-04-01' } })
+    fireEvent.change(within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice billing party filter'), { target: { value: 'cust-bill-1' } })
+    fireEvent.change(within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice service location filter'), { target: { value: 'loc-1' } })
+    fireEvent.change(within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice invoice status filter'), { target: { value: '2' } })
+    fireEvent.click(within(jobsReadyCard).getByRole('button', { name: 'Run Jobs Ready to Invoice' }))
 
     expect(await screen.findByRole('link', { name: 'JT-100' })).toHaveAttribute('href', '/manage/job-tickets/j1')
     expect(screen.getAllByText('Ready').length).toBeGreaterThan(0)
@@ -369,7 +401,8 @@ describe('ReportsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Employee' }))
 
-    expect(await screen.findByText('Casey Tech')).toBeInTheDocument()
+    const table = await screen.findByRole('table', { name: 'Labor by Employee results' })
+    expect(within(table).getByRole('cell', { name: 'Casey Tech' })).toBeInTheDocument()
     expect(screen.getByText('4 h')).toBeInTheDocument()
     expect(screen.getByText('$160.00')).toBeInTheDocument()
     expect(screen.getByText(/then falls back only for legacy entries without snapshots/i)).toBeInTheDocument()
@@ -389,8 +422,10 @@ describe('ReportsPage', () => {
     vi.mocked(reportsApi.getInvoiceReadySummary).mockResolvedValue({ jobTicketId: 'j2', jobTicketNumber: 'JT-200', customer: 'Gamma', billingPartyCustomer: 'Gamma AP', serviceLocation: 'Plant', equipment: 'Pump', jobStatus: 7, invoiceStatus: 1, workDescriptions: [], approvedLaborEntries: [], approvedParts: [], laborHours: 1, laborCostTotal: 40, laborBillableTotal: 95, partsCostTotal: 10, partsBillableTotal: 20, miscCharges: 0, tax: 2, grandTotal: 117 } as any)
     renderReports()
 
-    fireEvent.change(screen.getByLabelText('Job ticket id'), { target: { value: 'j2' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Run Invoice-ready Summary' }))
+    const invoiceCard = screen.getByLabelText('Invoice-ready Summary report')
+    expect(await within(invoiceCard).findByRole('option', { name: 'JT-200 - Gamma invoice summary' })).toBeInTheDocument()
+    fireEvent.change(within(invoiceCard).getByLabelText('Invoice-ready Summary job ticket'), { target: { value: 'j2' } })
+    fireEvent.click(within(invoiceCard).getByRole('button', { name: 'Run Invoice-ready Summary' }))
 
     expect(await screen.findByRole('link', { name: 'JT-200' })).toBeInTheDocument()
     expect(reportsApi.getInvoiceReadySummary).toHaveBeenCalledWith('j2')

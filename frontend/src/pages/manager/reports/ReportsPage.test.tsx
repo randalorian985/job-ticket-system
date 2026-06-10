@@ -1,9 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { ApiError } from '../../../api/httpClient'
+import { jobTicketsApi } from '../../../api/jobTicketsApi'
+import { masterDataApi } from '../../../api/masterDataApi'
 import { renderWithRouter } from '../../../test/renderWithRouter'
 import { reportsApi } from '../../../api/reportsApi'
+import { usersApi } from '../../../api/usersApi'
 import { ReportsPage } from './ReportsPage'
+
+vi.mock('../../../api/jobTicketsApi', () => ({
+  jobTicketsApi: {
+    listAll: vi.fn()
+  }
+}))
+
+vi.mock('../../../api/masterDataApi', () => ({
+  masterDataApi: {
+    listCustomers: vi.fn(),
+    listServiceLocations: vi.fn(),
+    listEquipment: vi.fn()
+  }
+}))
 
 vi.mock('../../../api/reportsApi', () => ({
   reportsApi: {
@@ -18,6 +35,12 @@ vi.mock('../../../api/reportsApi', () => ({
   }
 }))
 
+vi.mock('../../../api/usersApi', () => ({
+  usersApi: {
+    listAssignableEmployees: vi.fn()
+  }
+}))
+
 const readCsvFromExportLink = () => {
   const href = screen.getByRole('link', { name: 'Export loaded rows as CSV' }).getAttribute('href') ?? ''
   return decodeURIComponent(href.replace('data:text/csv;charset=utf-8,', ''))
@@ -26,6 +49,74 @@ const readCsvFromExportLink = () => {
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
+  vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+    {
+      id: 'job-invoice-1',
+      ticketNumber: 'JT-READY',
+      title: 'Ready compressor PM',
+      status: 7,
+      priority: 3,
+      customerId: 'customer-1',
+      serviceLocationId: 'location-1',
+      requestedAtUtc: null,
+      scheduledStartAtUtc: null,
+      dueAtUtc: null,
+      completedAtUtc: null
+    },
+    {
+      id: 'job-1',
+      ticketNumber: 'JT-2026-000123',
+      title: 'Labor review job',
+      status: 7,
+      priority: 2,
+      customerId: 'customer-1',
+      serviceLocationId: 'location-1',
+      requestedAtUtc: null,
+      scheduledStartAtUtc: null,
+      dueAtUtc: null,
+      completedAtUtc: null
+    }
+  ])
+  vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+    { id: 'customer-1', name: 'Acme Service', accountNumber: 'ACME', contactName: null, email: null, phone: null, isArchived: false },
+    { id: 'billing-1', name: 'Acme Billing', accountNumber: 'AP', contactName: null, email: null, phone: null, isArchived: false }
+  ])
+  vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+    {
+      id: 'location-1',
+      customerId: 'customer-1',
+      companyName: 'Acme Service',
+      locationName: 'Plant 4',
+      addressLine1: '100 Main',
+      city: 'Austin',
+      state: 'TX',
+      postalCode: '78701',
+      country: 'USA',
+      isActive: true,
+      isArchived: false
+    }
+  ])
+  vi.mocked(masterDataApi.listEquipment).mockResolvedValue([
+    {
+      id: 'equipment-1',
+      customerId: 'customer-1',
+      serviceLocationId: 'location-1',
+      ownerCustomerId: null,
+      responsibleBillingCustomerId: null,
+      name: 'Compressor',
+      equipmentNumber: 'EQ-1',
+      unitNumber: null,
+      manufacturer: null,
+      modelNumber: null,
+      serialNumber: null,
+      equipmentType: null,
+      year: null,
+      isArchived: false
+    }
+  ])
+  vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([
+    { id: 'emp-7', firstName: 'Taylor', lastName: 'Technician' }
+  ])
 })
 
 describe('ReportsPage', () => {
@@ -39,6 +130,7 @@ describe('ReportsPage', () => {
     expect(within(invoiceSection).getByText('Invoice-ready Summary')).toBeInTheDocument()
     expect(within(invoiceSection).getByText('Job Cost Summary')).toBeInTheDocument()
     expect(within(invoiceSection).getByText('Jobs Ready to Invoice')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('Invoice-ready Summary report')).getByLabelText('Invoice-ready Summary job ticket')).toBeInTheDocument()
 
     const laborSection = screen.getByLabelText('Labor and Parts')
     expect(within(laborSection).getByText('Labor by Job')).toBeInTheDocument()
@@ -48,6 +140,8 @@ describe('ReportsPage', () => {
     const historySection = screen.getByLabelText('Service History')
     expect(within(historySection).getByText('Customer Service History')).toBeInTheDocument()
     expect(within(historySection).getByText('Equipment Service History')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('Customer Service History report')).getByLabelText('Customer Service History customer')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Report Filters' })).not.toBeInTheDocument()
   })
 
   it('applies supported filters, renders scan-friendly rows, and exports loaded raw CSV values', async () => {
@@ -66,9 +160,12 @@ describe('ReportsPage', () => {
 
     renderWithRouter(<ReportsPage />)
 
-    fireEvent.change(screen.getByLabelText('Employee id'), { target: { value: 'emp-7' } })
-    fireEvent.change(screen.getByLabelText('Limit'), { target: { value: '75' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Job' }))
+    const laborByJobCard = screen.getByLabelText('Labor by Job report')
+    expect(await within(laborByJobCard).findByRole('option', { name: 'Taylor Technician' })).toBeInTheDocument()
+    fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job employee filter'), { target: { value: 'emp-7' } })
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job limit filter'), { target: { value: '75' } })
+    fireEvent.click(within(laborByJobCard).getByRole('button', { name: 'Run Labor by Job' }))
 
     expect(await screen.findByRole('link', { name: 'JT-2026-000123' })).toHaveAttribute('href', '/manage/job-tickets/job-1')
     expect(screen.getByRole('columnheader', { name: 'Labor Billable (time-entry labor-rate snapshot)' })).toBeInTheDocument()
@@ -86,9 +183,9 @@ describe('ReportsPage', () => {
     expect(csv).not.toContain('$300.00')
     await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledWith({ offset: 0, limit: 75, employeeId: 'emp-7' }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }))
-    expect(screen.getByLabelText('Employee id')).toHaveValue('')
-    expect(screen.getByLabelText('Limit')).toHaveValue(50)
+    fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
+    expect(within(laborByJobCard).getByLabelText('Labor by Job employee filter')).toHaveValue('')
+    expect(within(laborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(50)
     expect(screen.getByText('Select a report')).toBeInTheDocument()
   })
 
@@ -99,7 +196,7 @@ describe('ReportsPage', () => {
     renderWithRouter(<ReportsPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Employee' }))
-    expect(await screen.findByRole('status')).toHaveTextContent('Loading Labor by Employee...')
+    expect(await screen.findByText('Loading Labor by Employee...')).toBeInTheDocument()
 
     resolveReport([])
 
@@ -123,7 +220,7 @@ describe('ReportsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Invoice-ready Summary' }))
 
-    expect(screen.getByText('Enter a job ticket id before running this report.')).toBeInTheDocument()
+    expect(screen.getByText('Select a job ticket before running Invoice-ready Summary.')).toBeInTheDocument()
     expect(reportsApi.getInvoiceReadySummary).not.toHaveBeenCalled()
     expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
   })
@@ -158,8 +255,10 @@ describe('ReportsPage', () => {
 
     renderWithRouter(<ReportsPage />)
 
-    fireEvent.change(screen.getByLabelText('Job ticket id'), { target: { value: 'job-invoice-1' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Run Invoice-ready Summary' }))
+    const invoiceCard = screen.getByLabelText('Invoice-ready Summary report')
+    expect(await within(invoiceCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
+    fireEvent.change(within(invoiceCard).getByLabelText('Invoice-ready Summary job ticket'), { target: { value: 'job-invoice-1' } })
+    fireEvent.click(within(invoiceCard).getByRole('button', { name: 'Run Invoice-ready Summary' }))
 
     expect(await screen.findByRole('table', { name: 'Invoice-ready Summary results' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'JT-READY' })).toHaveAttribute('href', '/manage/job-tickets/job-invoice-1')
