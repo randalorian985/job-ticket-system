@@ -142,3 +142,10 @@ The following are not approved as part of Parts Request Workflow Phase 2, UI pol
 - auth weakening;
 - backend enum renumbering;
 - historical migration edits.
+
+## Manager/Admin Time Approval Workflow Clarification
+- The Time Approval screen is a queue-first Manager/Admin workflow: pending time entries load by default without requiring a job ticket ID.
+- Date range, employee ID, job ticket ID, and approval status are optional review filters.
+- Managers/Admins can open entry details and approve or reject pending entries from the queue.
+- Existing Manager/Admin authorization boundaries and time-entry approval enum numeric values remain unchanged.
+- This clarification does not add payroll, inventory, vendor cost tracking, purchase orders, or parts recommendation scope.

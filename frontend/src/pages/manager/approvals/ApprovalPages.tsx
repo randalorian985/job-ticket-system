@@ -1,15 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { ApiError } from '../../../api/httpClient'
-import { timeEntriesApi } from '../../../api/timeEntriesApi'
+import { timeEntriesApi, type TimeEntryReviewFilters } from '../../../api/timeEntriesApi'
 import type { JobTicketPartDto, TimeEntryDto } from '../../../types'
 import { csvDataUri, toCsv, type CsvColumn } from '../../../utils/csv'
 import { Errorable } from '../common/Errorable'
 import { formatDate, getApprovalLabel } from '../managerDisplay'
 
-type TimeApprovalFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'invoiced'
+type TimeApprovalFilter = 'all' | 'pending' | 'approved' | 'rejected'
 
 const timeApprovalColumns: CsvColumn<TimeEntryDto>[] = [
+  { header: 'Job Ticket Id', value: (entry) => entry.jobTicketId },
   { header: 'Employee Id', value: (entry) => entry.employeeId },
   { header: 'Started At UTC', value: (entry) => entry.startedAtUtc },
   { header: 'Ended At UTC', value: (entry) => entry.endedAtUtc ?? '' },
@@ -28,10 +29,8 @@ const getTimeApprovalFilterValue = (value: TimeApprovalFilter) => {
       return 2
     case 'rejected':
       return 3
-    case 'invoiced':
-      return 4
     default:
-      return null
+      return undefined
   }
 }
 
@@ -44,35 +43,50 @@ const managerTimeError = (requestError: unknown, fallback: string) => {
   return fallback
 }
 
+const startOfUtcDay = (date: string) => date ? `${date}T00:00:00.000Z` : undefined
+const endOfUtcDay = (date: string) => date ? `${date}T23:59:59.999Z` : undefined
+
 export function TimeApprovalPage() {
   const [jobId, setJobId] = useState('')
   const [entries, setEntries] = useState<TimeEntryDto[]>([])
-  const [approvalFilter, setApprovalFilter] = useState<TimeApprovalFilter>('all')
+  const [approvalFilter, setApprovalFilter] = useState<TimeApprovalFilter>('pending')
   const [employeeFilter, setEmployeeFilter] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [selectedEntry, setSelectedEntry] = useState<TimeEntryDto | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
-  const load = async () => {
-    if (!jobId.trim()) {
-      setError('Enter a job ticket id before loading time review.')
-      setMessage(null)
-      return
-    }
+  const currentFilters = (): TimeEntryReviewFilters => ({
+    jobTicketId: jobId.trim() || undefined,
+    employeeId: employeeFilter.trim() || undefined,
+    approvalStatus: getTimeApprovalFilterValue(approvalFilter),
+    dateFromUtc: startOfUtcDay(dateFrom),
+    dateToUtc: endOfUtcDay(dateTo)
+  })
 
+  const load = async (filters: TimeEntryReviewFilters = currentFilters()) => {
     try {
       setLoading(true)
       setError(null)
-      const data = await timeEntriesApi.listByJob(jobId.trim())
+      const data = await timeEntriesApi.listForReview(filters)
       setEntries(data)
+      setSelectedEntry((current) => current ? data.find((entry) => entry.id === current.id) ?? null : null)
       setMessage(`Loaded ${data.length} time entr${data.length === 1 ? 'y' : 'ies'} for review.`)
     } catch (requestError) {
-      setError(managerTimeError(requestError, 'Unable to load time entries for job.'))
+      setError(managerTimeError(requestError, 'Unable to load the time approval queue.'))
       setMessage(null)
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    void load({ approvalStatus: 1 })
+    // The initial queue intentionally loads once with the default pending status.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const approve = async (id: string) => {
     try {
@@ -98,28 +112,10 @@ export function TimeApprovalPage() {
     }
   }
 
-  const visibleEntries = useMemo(() => {
-    const approvalStatus = getTimeApprovalFilterValue(approvalFilter)
-    const normalizedEmployee = employeeFilter.trim().toLowerCase()
-
-    return entries.filter((entry) => {
-      if (approvalStatus !== null && entry.approvalStatus !== approvalStatus) return false
-      if (normalizedEmployee && !entry.employeeId.toLowerCase().includes(normalizedEmployee)) return false
-      return true
-    })
-  }, [approvalFilter, employeeFilter, entries])
-
   const summary = useMemo(() => {
-    const counts = {
-      visible: visibleEntries.length,
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-      hours: 0,
-      billableHours: 0
-    }
+    const counts = { visible: entries.length, pending: 0, approved: 0, rejected: 0, hours: 0, billableHours: 0 }
 
-    for (const entry of visibleEntries) {
+    for (const entry of entries) {
       if (entry.approvalStatus === 1) counts.pending += 1
       if (entry.approvalStatus === 2) counts.approved += 1
       if (entry.approvalStatus === 3) counts.rejected += 1
@@ -128,120 +124,123 @@ export function TimeApprovalPage() {
     }
 
     return counts
-  }, [visibleEntries])
+  }, [entries])
 
-  const csv = useMemo(() => toCsv(visibleEntries, timeApprovalColumns), [visibleEntries])
+  const csv = useMemo(() => toCsv(entries, timeApprovalColumns), [entries])
   const csvHref = useMemo(() => csvDataUri(csv), [csv])
 
   return (
     <section className="card stack">
       <h2>Time Approval</h2>
       <p className="muted">
-        Load a job ticket, review the visible time-entry slice, filter the rows you care about, export that same slice to CSV, and approve or reject pending entries.
+        Review pending time entries across job tickets, narrow the queue with optional filters, open entry details, and approve or reject pending work.
       </p>
-      <div className="report-filters">
-        <label>
-          Job ticket id
-          <input value={jobId} onChange={(event) => setJobId(event.target.value)} placeholder="Job ticket id" />
-        </label>
-        <button type="button" onClick={() => void load()} disabled={loading}>
-          {loading ? 'Loading…' : 'Load Time Entries'}
-        </button>
-      </div>
-      <Errorable error={error} />
-      {message ? <p className="muted">{message}</p> : null}
 
       <article className="card stack">
         <div className="report-results-heading">
           <div>
-            <h3>Visible review filters</h3>
-            <p className="muted">Adjust the visible slice without reloading the job.</p>
+            <h3>Approval queue filters</h3>
+            <p className="muted">Pending entries load automatically. Every filter below is optional.</p>
           </div>
-          {visibleEntries.length ? (
-            <a className="button-link" href={csvHref} download={`time-review-${jobId.trim() || 'job'}.csv`}>
-              Export visible rows as CSV
-            </a>
-          ) : null}
+          {entries.length ? <a className="button-link" href={csvHref} download="time-approval-review.csv">Export visible rows as CSV</a> : null}
         </div>
         <div className="report-filters">
           <label>
+            Date from
+            <input aria-label="Date from" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+          </label>
+          <label>
+            Date to
+            <input aria-label="Date to" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+          </label>
+          <label>
+            Employee id
+            <input aria-label="Employee id filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)} placeholder="Optional employee id" />
+          </label>
+          <label>
+            Job ticket id
+            <input aria-label="Job ticket id filter" value={jobId} onChange={(event) => setJobId(event.target.value)} placeholder="Optional job ticket id" />
+          </label>
+          <label>
             Approval status
             <select aria-label="Approval status filter" value={approvalFilter} onChange={(event) => setApprovalFilter(event.target.value as TimeApprovalFilter)}>
-              <option value="all">All statuses</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
-              <option value="invoiced">Invoiced</option>
+              <option value="all">All statuses</option>
             </select>
           </label>
-          <label>
-            Employee contains
-            <input aria-label="Employee contains" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)} placeholder="Employee id filter" />
-          </label>
-        </div>
-        <div className="report-grid" aria-label="Time review summary">
-          <article className="report-card"><h3>{summary.visible}</h3><p className="muted">Visible entries</p></article>
-          <article className="report-card"><h3>{summary.pending}</h3><p className="muted">Pending approvals</p></article>
-          <article className="report-card"><h3>{summary.approved}</h3><p className="muted">Approved entries</p></article>
-          <article className="report-card"><h3>{summary.rejected}</h3><p className="muted">Rejected entries</p></article>
-          <article className="report-card"><h3>{summary.hours.toLocaleString(undefined, { maximumFractionDigits: 2 })} h</h3><p className="muted">Visible labor hours</p></article>
-          <article className="report-card"><h3>{summary.billableHours.toLocaleString(undefined, { maximumFractionDigits: 2 })} h</h3><p className="muted">Visible billable hours</p></article>
+          <button type="button" onClick={() => void load()} disabled={loading}>{loading ? 'Loading…' : 'Apply Filters'}</button>
         </div>
       </article>
+
+      <Errorable error={error} />
+      {message ? <p className="muted">{message}</p> : null}
+
+      <div className="report-grid" aria-label="Time review summary">
+        <article className="report-card"><h3>{summary.visible}</h3><p className="muted">Queue entries</p></article>
+        <article className="report-card"><h3>{summary.pending}</h3><p className="muted">Pending approvals</p></article>
+        <article className="report-card"><h3>{summary.approved}</h3><p className="muted">Approved entries</p></article>
+        <article className="report-card"><h3>{summary.rejected}</h3><p className="muted">Rejected entries</p></article>
+        <article className="report-card"><h3>{summary.hours.toLocaleString(undefined, { maximumFractionDigits: 2 })} h</h3><p className="muted">Queue labor hours</p></article>
+        <article className="report-card"><h3>{summary.billableHours.toLocaleString(undefined, { maximumFractionDigits: 2 })} h</h3><p className="muted">Queue billable hours</p></article>
+      </div>
 
       <article className="card stack" aria-live="polite">
         <div className="report-results-heading">
           <div>
-            <h3>Loaded Time Review</h3>
-            <p className="muted">
-              {visibleEntries.length
-                ? `${visibleEntries.length} visible entr${visibleEntries.length === 1 ? 'y' : 'ies'} for manager review.`
-                : 'Load a job ticket to review export-friendly time-entry rows.'}
-            </p>
+            <h3>Time Entry Approval Queue</h3>
+            <p className="muted">{entries.length ? `${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} match the current filters.` : 'No time entries match the current filters.'}</p>
           </div>
         </div>
-        {visibleEntries.length ? (
+        {entries.length ? (
           <div className="table-scroll">
             <table>
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Started</th>
-                  <th>Ended</th>
-                  <th className="numeric-cell">Labor Hours</th>
-                  <th className="numeric-cell">Billable Hours</th>
-                  <th>Status</th>
-                  <th>Work Summary</th>
-                  <th>Rejection Reason</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Job Ticket</th><th>Employee</th><th>Started</th><th>Ended</th><th className="numeric-cell">Labor Hours</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
-                {visibleEntries.map((entry) => (
+                {entries.map((entry) => (
                   <tr key={entry.id}>
+                    <td>{entry.jobTicketId}</td>
                     <td>{entry.employeeId}</td>
                     <td>{formatDate(entry.startedAtUtc)}</td>
                     <td>{formatDate(entry.endedAtUtc)}</td>
                     <td className="numeric-cell">{entry.laborHours.toLocaleString(undefined, { maximumFractionDigits: 2 })} h</td>
-                    <td className="numeric-cell">{entry.billableHours.toLocaleString(undefined, { maximumFractionDigits: 2 })} h</td>
                     <td>{getApprovalLabel(entry.approvalStatus)}</td>
-                    <td>{entry.workSummary ?? '—'}</td>
-                    <td>{entry.rejectionReason ?? '—'}</td>
-                    <td>
-                      <div className="row">
-                        <button type="button" disabled={entry.approvalStatus !== 1} onClick={() => void approve(entry.id)}>Approve</button>
-                        <button type="button" disabled={entry.approvalStatus !== 1} onClick={() => void reject(entry.id)}>Reject</button>
-                      </div>
-                    </td>
+                    <td><div className="row">
+                      <button type="button" onClick={() => setSelectedEntry(entry)}>View Details</button>
+                      <button type="button" disabled={entry.approvalStatus !== 1} onClick={() => void approve(entry.id)}>Approve</button>
+                      <button type="button" disabled={entry.approvalStatus !== 1} onClick={() => void reject(entry.id)}>Reject</button>
+                    </div></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        ) : (
-          <p className="muted">No time entries match the current review filters.</p>
-        )}
+        ) : null}
       </article>
+
+      {selectedEntry ? (
+        <article className="card stack" aria-label="Time entry details">
+          <div className="report-results-heading"><div><h3>Time Entry Details</h3><p className="muted">Entry {selectedEntry.id}</p></div><button type="button" onClick={() => setSelectedEntry(null)}>Close Details</button></div>
+          <dl className="detail-grid">
+            <div><dt>Job ticket</dt><dd>{selectedEntry.jobTicketId}</dd></div>
+            <div><dt>Employee</dt><dd>{selectedEntry.employeeId}</dd></div>
+            <div><dt>Started</dt><dd>{formatDate(selectedEntry.startedAtUtc)}</dd></div>
+            <div><dt>Ended</dt><dd>{formatDate(selectedEntry.endedAtUtc)}</dd></div>
+            <div><dt>Labor hours</dt><dd>{selectedEntry.laborHours}</dd></div>
+            <div><dt>Billable hours</dt><dd>{selectedEntry.billableHours}</dd></div>
+            <div><dt>Status</dt><dd>{getApprovalLabel(selectedEntry.approvalStatus)}</dd></div>
+            <div><dt>Work summary</dt><dd>{selectedEntry.workSummary ?? '—'}</dd></div>
+            <div><dt>Clock-in note</dt><dd>{selectedEntry.clockInNote ?? '—'}</dd></div>
+            <div><dt>Clock-out note</dt><dd>{selectedEntry.clockOutNote ?? '—'}</dd></div>
+            <div><dt>Rejection reason</dt><dd>{selectedEntry.rejectionReason ?? '—'}</dd></div>
+          </dl>
+          <div className="row">
+            <button type="button" disabled={selectedEntry.approvalStatus !== 1} onClick={() => void approve(selectedEntry.id)}>Approve Entry</button>
+            <button type="button" disabled={selectedEntry.approvalStatus !== 1} onClick={() => void reject(selectedEntry.id)}>Reject Entry</button>
+          </div>
+        </article>
+      ) : null}
     </section>
   )
 }

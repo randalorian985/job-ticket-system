@@ -1,6 +1,7 @@
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.TimeEntries;
 using JobTicketSystem.Application.Security;
+using JobTicketSystem.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -44,6 +45,27 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
         {
             var entry = await service.GetOpenEntryAsync(employeeId, cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpGet("review")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult<IReadOnlyList<TimeEntryDto>>> ListForReviewAsync(
+        [FromQuery] Guid? jobTicketId,
+        [FromQuery] Guid? employeeId,
+        [FromQuery] TimeEntryApprovalStatus? approvalStatus,
+        [FromQuery] DateTime? dateFromUtc,
+        [FromQuery] DateTime? dateToUtc,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var filters = new TimeEntryReviewFilters(jobTicketId, employeeId, approvalStatus, dateFromUtc, dateToUtc);
+            return Ok(await service.ListForReviewAsync(filters, cancellationToken));
         }
         catch (Exception exception)
         {
