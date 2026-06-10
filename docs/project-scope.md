@@ -19,6 +19,7 @@ Core scope:
 - Technicians can search/select an existing catalog part through a safe lookup or type a new/unlisted part from inside an assigned service/job ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
+- Technician field recording now requires an open time entry for the selected job ticket before an Employee records work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
 - Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket detail uses focused in-page panels for ticket editing, status changes, archive review, and Add / Request Part actions backed by existing APIs.
 - Manager/Admin reporting is implemented as a bounded reports hub for the existing reporting domains: invoice/closeout review, job cost summaries, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history.
@@ -44,7 +45,7 @@ Implemented redesign focus:
 - file/photo visibility from the ticket workspace;
 - invoice-ready summary and closeout readiness using existing reporting/closeout behavior;
 - responsive Manager/Admin layout that stays scannable on narrow screens;
-- focused in-page action panels when they reduce unnecessary page switching.
+- focused in-page action panels when they reduce unnecessary page switching;
 - shareable queue URLs for status, priority, customer, dispatch readiness, and search filters;
 - dashboard summary links that open the corresponding filtered queue;
 - queue-aware breadcrumbs that preserve the originating job queue across ticket review;
@@ -79,7 +80,13 @@ Allowed technician fields:
 - notes;
 - `Needs ordered` flag;
 - urgency;
-- needed-by date.
+- needed-by date;
+- file/photo uploads that support the assigned ticket work.
+
+Technician field recording rules:
+- Employees must have an open time entry for the selected job ticket before recording work notes, adding ticket parts, creating part requests, or uploading ticket files/photos.
+- Employees clocked into another job must open that active ticket or clock out before recording field work on a different ticket.
+- Manager/Admin back-office review and coordination actions are not gated by an employee clock-in.
 
 Technicians must not enter or see:
 - part cost;
