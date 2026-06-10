@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
+import './ManagerShell.css'
 
 type ManagerNavItem = {
   label: string
@@ -50,9 +51,30 @@ const navGroups: ManagerNavGroup[] = [
 
 const navLinkClassName = ({ isActive }: { isActive: boolean }) => (isActive ? 'active-nav-link' : undefined)
 
+const isRouteActive = (pathname: string, item: ManagerNavItem) => {
+  if (item.end) {
+    return pathname === item.to
+  }
+
+  return pathname === item.to || pathname.startsWith(`${item.to}/`)
+}
+
 export function ManagerShell() {
   const { user, logout } = useAuth()
   const isAdmin = user?.role === 'Admin'
+  const location = useLocation()
+  const navigate = useNavigate()
+  const visibleNavGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !item.adminOnly || isAdmin)
+    }))
+    .filter((group) => group.items.length)
+  const visibleNavItems = visibleNavGroups.flatMap((group) => group.items)
+  const activeNavItem = [...visibleNavItems]
+    .sort((left, right) => right.to.length - left.to.length)
+    .find((item) => isRouteActive(location.pathname, item))
+  const selectedNavValue = activeNavItem?.to ?? '/manage'
 
   return (
     <main className="desktop-shell manager-shell">
@@ -64,26 +86,36 @@ export function ManagerShell() {
           </div>
           <button className="secondary-button logout-button" onClick={logout}>Logout</button>
         </div>
+        <div className="manager-mobile-nav">
+          <label htmlFor="manager-mobile-section">Current section</label>
+          <select
+            aria-label="Manager section navigation"
+            id="manager-mobile-section"
+            onChange={(event) => navigate(event.target.value)}
+            value={selectedNavValue}
+          >
+            {visibleNavGroups.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.items.map((item) => (
+                  <option key={item.to} value={item.to}>{item.label}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
         <nav className="manager-nav-groups" aria-label="manager navigation">
-          {navGroups.map((group) => {
-            const visibleItems = group.items.filter((item) => !item.adminOnly || isAdmin)
-            if (!visibleItems.length) {
-              return null
-            }
-
-            return (
-              <section className="manager-nav-group" aria-label={group.label} key={group.label}>
-                <span className="manager-nav-group-label">{group.label}</span>
-                <div className="inline-links">
-                  {visibleItems.map((item) => (
-                    <NavLink className={navLinkClassName} end={item.end} key={item.to} to={item.to}>
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </div>
-              </section>
-            )
-          })}
+          {visibleNavGroups.map((group) => (
+            <section className="manager-nav-group" aria-label={group.label} key={group.label}>
+              <span className="manager-nav-group-label">{group.label}</span>
+              <div className="inline-links">
+                {group.items.map((item) => (
+                  <NavLink className={navLinkClassName} end={item.end} key={item.to} to={item.to}>
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            </section>
+          ))}
         </nav>
       </header>
       <Outlet />
