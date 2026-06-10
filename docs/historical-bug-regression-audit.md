@@ -1,5 +1,59 @@
 # Historical Bug Regression Audit
 
+Date: 2026-06-10 (UTC)
+
+## Post-Mobile-Navigation Stabilization Checkpoint
+This checkpoint records the scheduled-runner audit after PR #255 (`fix manager mobile navigation hide rule`) merged on `main` at `5b39450ac3827f6dfd9426cdc64ca1993c0169f5`.
+
+Scope:
+- documentation/audit alignment only;
+- no runtime behavior changes;
+- no schema changes or migrations;
+- no auth weakening;
+- no enum renumbering;
+- no hard deletes;
+- no purchasing expansion, receiving expansion, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
+
+Current evidence from latest `main`:
+- Live GitHub state showed no open pull requests after PR #255 merged.
+- `README.md`, `docs/build-roadmap.md`, `docs/project-scope.md`, and `docs/api-contract.md` remained aligned around the protected job-ticket baseline, implemented Manager/Admin service-ticket workspace, implemented Phase 3C reporting polish/export workflow, and deferred expansion domains.
+- The scheduled-runner source bundle bridge on issue #166 reconstructed latest `main` successfully for local read-only inspection.
+- `/manage` remains Manager/Admin-only, `/manage/users` remains Admin-only, and `GET /api/users/assignable-employees` remains a narrow Manager/Admin lookup for active, non-archived Employee-role users.
+- Technician-safe part lookup still returns `PartLookupDto` without cost, price, vendor, purchase, inventory, catalog-admin, or billing fields.
+- Part request and job-ticket part approval/review paths remain Manager/Admin back-office workflows; technician paths continue to avoid pricing and billing controls.
+- File/photo upload, health endpoint, malformed password hash, inactive/archived user, token revalidation, labor-rate snapshot reporting, explicit enum map, and Manager/Admin route regression coverage remains present in the inspected test suite.
+
+Environment and validation evidence:
+- Local checkout remains unavailable in the scheduled runner through normal GitHub network paths, so source inspection used the issue #166 bundle workaround.
+- Local backend validation could not run because `dotnet` is not installed in this scheduled runner.
+- Local frontend validation was not run from the reconstructed bundle because dependencies are not installed in the runner workspace.
+- GitHub Actions on any PR created from this checkpoint remains the validation authority before merge.
+
+## Status Matrix (Post-Mobile-Navigation Checkpoint)
+
+| Group | Current status | Notes |
+|---|---|---|
+| A. File/photo uploads | Protected by tests | Deterministic `201 Created`, safe relative `Location`, and non-leaking storage behavior remain covered. |
+| B. Time tracking | Protected by tests | Manager/Admin approval and employee assignment boundaries remain covered. |
+| C. Job parts | Protected by tests | Employee approval bypass protection and Manager/Admin review boundaries remain covered. |
+| D. Frontend enum/display | No new regression found | No enum numeric-value or label-map drift was found in this checkpoint. |
+| E. Auth/routing | Protected by tests | `/manage`, `/manage/users`, employee routes, and Manager/Admin routing boundaries remain covered. |
+| F. Environment/dependencies | CI authority required | Scheduled-runner local validation remains blocked; GitHub Actions must validate PR heads. |
+| G. Health endpoint | Protected by tests | `/health` remains documented as public and covered by integration tests. |
+| H. Password/auth hardening | Protected by tests | Malformed hash, inactive login rejection, archived user boundaries, and token revalidation coverage remain present. |
+| I. Reporting/labor | Protected by tests/docs | Snapshot-first labor totals and existing legacy fallback behavior remain documented and covered. |
+| J. Master data archive/unarchive | No new regression found | Archive/soft-delete requirements remain documented and represented in service/test coverage. |
+| K. Manager/Admin UI | Protected by recent stabilization | Mobile Manager/Admin navigation was hardened by PR #254 and PR #255. |
+| L. Deferred scope | Open-deferred | Purchasing expansion, receiving expansion, inventory expansion, recommendations, AI/scoring, automatic compatibility, and automatic approval remain deferred. |
+| M. Documentation discipline | Updated by this checkpoint | This addendum records the latest clean scheduled-runner audit state. |
+
+Follow-up guidance:
+1. Keep the build lane on one active PR at a time.
+2. Do not start another feature lane until the source-of-truth docs explicitly approve that lane and daily audit guardrails remain clean.
+3. Continue treating GitHub Actions as validation authority while scheduled-runner checkout and local toolchain limitations remain unresolved.
+
+---
+
 Date: 2026-06-07 (UTC)
 
 ## Current Control-Point Addendum
