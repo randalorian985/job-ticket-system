@@ -4,6 +4,7 @@ import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import type { JobTicketAssignmentDto, JobTicketListItemDto } from '../../types'
+import { buildJobTicketDetailPath } from './managerTaskNavigation'
 import './ManagerDashboardPage.css'
 
 const openStatuses = new Set([1, 2, 3, 4, 5, 6])
@@ -118,23 +119,24 @@ export function ManagerDashboardPage() {
       needsDispatchReview: activeDispatchReadiness.filter((item) => item.openItems.length).length,
       nextDispatchFocus: nextDispatchFocus
         ? `${nextDispatchFocus.job.ticketNumber}: ${nextDispatchFocus.openItems[0]}`
-        : 'No dispatch blockers are visible from the dashboard data.'
+        : 'No dispatch blockers are visible from the dashboard data.',
+      nextDispatchFocusId: nextDispatchFocus?.job.id ?? null
     }
   }, [assignmentMap, jobs])
 
   const maxStatusCount = Math.max(summary.open, summary.submitted, summary.assigned, summary.inProgress, summary.waitingOnParts, summary.completedReviewReady, summary.invoiceReady, 1)
   const statusRows = [
-    { label: 'Open jobs', count: summary.open },
-    { label: 'Submitted', count: summary.submitted },
-    { label: 'Assigned', count: summary.assigned },
-    { label: 'In progress', count: summary.inProgress },
-    { label: 'Waiting on parts', count: summary.waitingOnParts },
-    { label: 'Completed / review-ready', count: summary.completedReviewReady },
-    { label: 'Invoice-ready', count: summary.invoiceReady }
+    { label: 'Open jobs', count: summary.open, to: '/manage/job-tickets?status=active' },
+    { label: 'Submitted', count: summary.submitted, to: '/manage/job-tickets?status=2' },
+    { label: 'Assigned', count: summary.assigned, to: '/manage/job-tickets?status=3' },
+    { label: 'In progress', count: summary.inProgress, to: '/manage/job-tickets?status=4' },
+    { label: 'Waiting on parts', count: summary.waitingOnParts, to: '/manage/job-tickets?status=5' },
+    { label: 'Completed / review-ready', count: summary.completedReviewReady, to: '/manage/job-tickets?status=7' },
+    { label: 'Invoice-ready', count: summary.invoiceReady, to: '/manage/job-tickets?status=10' }
   ]
   const readinessRows = [
-    { label: 'Dispatch-ready', count: summary.dispatchReady },
-    { label: 'Needs dispatch review', count: summary.needsDispatchReview }
+    { label: 'Dispatch-ready', count: summary.dispatchReady, to: '/manage/job-tickets?status=active&readiness=ready' },
+    { label: 'Needs dispatch review', count: summary.needsDispatchReview, to: '/manage/job-tickets?status=active&readiness=needs-review' }
   ]
   const maxReadinessCount = Math.max(summary.dispatchReady, summary.needsDispatchReview, 1)
 
@@ -156,12 +158,12 @@ export function ManagerDashboardPage() {
         {summaryError ? <p className="error">{summaryError}</p> : null}
         {!isLoadingSummary && !summaryError ? (
           <>
-            <div className="operations-kpi-tile"><span>Open Jobs</span><strong>{summary.open}</strong></div>
-            <div className="operations-kpi-tile"><span>Assigned</span><strong>{summary.assigned}</strong></div>
-            <div className="operations-kpi-tile"><span>In Progress</span><strong>{summary.inProgress}</strong></div>
-            <div className="operations-kpi-tile"><span>Waiting on Parts</span><strong>{summary.waitingOnParts}</strong></div>
-            <div className="operations-kpi-tile"><span>Dispatch-ready</span><strong>{summary.dispatchReady}</strong></div>
-            <div className="operations-kpi-tile"><span>All Jobs</span><strong>{summary.allJobs}</strong></div>
+            <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=active"><span>Open Jobs</span><strong>{summary.open}</strong></Link>
+            <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=3"><span>Assigned</span><strong>{summary.assigned}</strong></Link>
+            <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=4"><span>In Progress</span><strong>{summary.inProgress}</strong></Link>
+            <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=5"><span>Waiting on Parts</span><strong>{summary.waitingOnParts}</strong></Link>
+            <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=active&readiness=ready"><span>Dispatch-ready</span><strong>{summary.dispatchReady}</strong></Link>
+            <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets"><span>All Jobs</span><strong>{summary.allJobs}</strong></Link>
           </>
         ) : null}
       </section>
@@ -172,13 +174,13 @@ export function ManagerDashboardPage() {
             <h3>Unresolved Jobs by Status</h3>
             <div className="operations-bar-list">
               {statusRows.map((row) => (
-                <div className="operations-bar-row" key={row.label}>
+                <Link className="operations-bar-row operations-queue-link" key={row.label} to={row.to}>
                   <span>{row.label}</span>
                   <div className="operations-bar-track" aria-hidden="true">
                     <div className="operations-bar-fill" style={{ width: `${getPercent(row.count, maxStatusCount)}%` }} />
                   </div>
                   <strong>{row.count}</strong>
-                </div>
+                </Link>
               ))}
             </div>
           </article>
@@ -187,24 +189,29 @@ export function ManagerDashboardPage() {
             <h3>Dispatch Readiness</h3>
             <div className="operations-bar-list">
               {readinessRows.map((row) => (
-                <div className="operations-bar-row" key={row.label}>
+                <Link className="operations-bar-row operations-queue-link" key={row.label} to={row.to}>
                   <span>{row.label}</span>
                   <div className="operations-bar-track" aria-hidden="true">
                     <div className="operations-bar-fill operations-bar-fill-accent" style={{ width: `${getPercent(row.count, maxReadinessCount)}%` }} />
                   </div>
                   <strong>{row.count}</strong>
-                </div>
+                </Link>
               ))}
             </div>
-            <p className="muted">Next dispatch focus: {summary.nextDispatchFocus}</p>
+            <p className="muted">
+              Next dispatch focus:{' '}
+              {summary.nextDispatchFocusId ? (
+                <Link to={buildJobTicketDetailPath(summary.nextDispatchFocusId, "/manage")}>{summary.nextDispatchFocus}</Link>
+              ) : summary.nextDispatchFocus}
+            </p>
           </article>
 
           <article className="operations-panel">
             <h3>Back Office Review</h3>
             <div className="operations-review-grid">
-              <div><strong>{summary.completedReviewReady}</strong><span>Completed / review-ready</span></div>
-              <div><strong>{summary.invoiceReady}</strong><span>Invoice-ready</span></div>
-              <div><strong>{summary.needsDispatchReview}</strong><span>Needs dispatch review</span></div>
+              <Link className="operations-queue-link" to="/manage/job-tickets?status=7"><strong>{summary.completedReviewReady}</strong><span>Completed / review-ready</span></Link>
+              <Link className="operations-queue-link" to="/manage/job-tickets?status=10"><strong>{summary.invoiceReady}</strong><span>Invoice-ready</span></Link>
+              <Link className="operations-queue-link" to="/manage/job-tickets?status=active&readiness=needs-review"><strong>{summary.needsDispatchReview}</strong><span>Needs dispatch review</span></Link>
             </div>
           </article>
         </section>

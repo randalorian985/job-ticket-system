@@ -61,7 +61,11 @@ describe('ManagerDashboardPage', () => {
     expect(screen.getByRole('heading', { name: 'Unresolved Jobs by Status' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Back Office Review' })).toBeInTheDocument()
-    expect(screen.getByText('Next dispatch focus: JT-1: Assign at least one employee before dispatch.')).toBeInTheDocument()
+    expect(screen.getByText('Next dispatch focus:')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'JT-1: Assign at least one employee before dispatch.' })).toHaveAttribute(
+      'href',
+      '/manage/job-tickets/j1?returnTo=%2Fmanage'
+    )
     expect(jobTicketsApi.listAssignments).toHaveBeenCalledTimes(5)
   })
 

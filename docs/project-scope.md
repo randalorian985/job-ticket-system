@@ -29,6 +29,7 @@ Core scope:
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
 - Shared Employee and Manager/Admin UI polish is allowed as stabilization when it only improves spacing, wrapping, responsive layout, visual consistency, loading/empty/error state presentation, and workflow smoothness on existing screens.
 - Manager/Admin Service Ticket Workspace Redesign is implemented for the ticket detail/workspace flow without expanding into deferred purchasing, inventory, payment, client portal, notification, approval automation, recommendation, or scoring domains.
+- Manager/Admin task navigation now uses URL-backed job-ticket queue filters, dashboard links into exact queues, queue-aware return links, and workflow tabs on ticket detail; these are frontend navigation contracts only and do not change backend APIs or business rules.
 
 ## Service Ticket Workspace Direction
 The Manager/Admin service-ticket side should move toward a field-service operations workbench rather than a collection of disconnected forms.
@@ -44,6 +45,10 @@ Implemented redesign focus:
 - invoice-ready summary and closeout readiness using existing reporting/closeout behavior;
 - responsive Manager/Admin layout that stays scannable on narrow screens;
 - focused in-page action panels when they reduce unnecessary page switching.
+- shareable queue URLs for status, priority, customer, dispatch readiness, and search filters;
+- dashboard summary links that open the corresponding filtered queue;
+- queue-aware breadcrumbs that preserve the originating job queue across ticket review;
+- ticket workflow tabs for Overview, Dispatch, Time, Parts, Files, Closeout, and Activity, with a visible recommended next action.
 
 The design may take inspiration from field-service lifecycle products and dense repair-ticket detail views, but it must be adapted to Crane's actual job-ticket workflow. The intended flow is work queue to ticket workspace to closeout/invoice-ready review.
 

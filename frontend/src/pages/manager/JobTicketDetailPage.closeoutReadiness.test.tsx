@@ -80,7 +80,7 @@ describe('JobTicketDetailPage closeout readiness semantics', () => {
     renderPage()
 
     expect(await screen.findByText('Needs closeout review')).toBeInTheDocument()
-    expect(screen.getByText('Some loaded time entries still need approval review.')).toBeInTheDocument()
+    expect(screen.getAllByText('Some loaded time entries still need approval review.').length).toBeGreaterThan(0)
   })
 
   it('does not count approved open time as invoice ready', async () => {
@@ -89,7 +89,7 @@ describe('JobTicketDetailPage closeout readiness semantics', () => {
     renderPage()
 
     expect(await screen.findByText('Needs closeout review')).toBeInTheDocument()
-    expect(screen.getByText('Approved time entries must be clocked out before invoice handoff.')).toBeInTheDocument()
+    expect(screen.getAllByText('Approved time entries must be clocked out before invoice handoff.').length).toBeGreaterThan(0)
   })
 
   it('does not count pending or rejected-only parts as invoice ready', async () => {
@@ -101,6 +101,6 @@ describe('JobTicketDetailPage closeout readiness semantics', () => {
     renderPage()
 
     expect(await screen.findByText('Needs closeout review')).toBeInTheDocument()
-    expect(screen.getByText('Parts are recorded, but none are approved for invoice review.')).toBeInTheDocument()
+    expect(screen.getAllByText('Parts are recorded, but none are approved for invoice review.').length).toBeGreaterThan(0)
   })
 })

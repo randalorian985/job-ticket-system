@@ -1,5 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { filesApi } from "../../api/filesApi";
 import { ApiError } from "../../api/httpClient";
 import { jobTicketsApi } from "../../api/jobTicketsApi";
@@ -36,8 +36,33 @@ import {
   TIME_ENTRY_APPROVAL_STATUS,
 } from "./managerDisplay";
 import { JobTicketEditorForm } from "./JobTicketEditorForm";
+import { activeDispatchStatusValues, getSafeManagerReturnContext } from "./managerTaskNavigation";
 
 type WorkbenchDrawer = "ticket" | "status" | "archive" | "part" | null;
+type WorkflowTab = "overview" | "dispatch" | "time" | "parts" | "files" | "closeout" | "activity";
+
+const workflowTabs: Array<{ value: WorkflowTab; label: string }> = [
+  { value: "overview", label: "Overview" },
+  { value: "dispatch", label: "Dispatch" },
+  { value: "time", label: "Time" },
+  { value: "parts", label: "Parts" },
+  { value: "files", label: "Files" },
+  { value: "closeout", label: "Closeout" },
+  { value: "activity", label: "Activity" },
+];
+
+const isWorkflowTab = (value: string | null): value is WorkflowTab =>
+  workflowTabs.some((tab) => tab.value === value);
+
+const primaryWorkflowPanelNames: Record<WorkflowTab, string> = {
+  overview: "ticket-overview",
+  dispatch: "assignments",
+  time: "time-labor",
+  parts: "parts",
+  files: "files",
+  closeout: "closeout",
+  activity: "activity",
+};
 
 type ActivityItem = {
   id: string;
@@ -47,7 +72,6 @@ type ActivityItem = {
   detail?: string | null;
 };
 
-const activeDispatchStatusValues = new Set([2, 3, 4, 5, 6]);
 const emptyDisplay = "-";
 const displayValue = (value?: string | null) => value?.trim() ? value : emptyDisplay;
 
@@ -121,6 +145,10 @@ const sortActivityDescending = (left: ActivityItem, right: ActivityItem) => {
 
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab: WorkflowTab = isWorkflowTab(requestedTab) ? requestedTab : "overview";
+  const { returnTo, returnLabel } = getSafeManagerReturnContext(searchParams);
   const { user } = useAuth();
   const [job, setJob] = useState<JobTicketDto | null>(null);
   const [assignments, setAssignments] = useState<JobTicketAssignmentDto[]>([]);
@@ -884,13 +912,71 @@ export function JobTicketDetailPage() {
       }
     : null;
 
+  const selectWorkflowTab = (tab: WorkflowTab) => {
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      if (tab === "overview") {
+        nextParams.delete("tab");
+      } else {
+        nextParams.set("tab", tab);
+      }
+      return nextParams;
+    }, { replace: true });
+  };
+
+  const openWorkflowDrawer = (tab: WorkflowTab, drawer: Exclude<WorkbenchDrawer, null>) => {
+    selectWorkflowTab(tab);
+    toggleDrawer(drawer);
+  };
+
+  const handleWorkflowTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, currentTab: WorkflowTab) => {
+    const currentIndex = workflowTabs.findIndex((tab) => tab.value === currentTab);
+    let nextIndex = currentIndex;
+
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % workflowTabs.length;
+    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + workflowTabs.length) % workflowTabs.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = workflowTabs.length - 1;
+    else return;
+
+    event.preventDefault();
+    const nextTab = workflowTabs[nextIndex].value;
+    selectWorkflowTab(nextTab);
+    document.getElementById(`ticket-workflow-tab-${nextTab}`)?.focus();
+  };
+
+  const getWorkflowPanelProps = (tab: WorkflowTab, panelName: string) => ({
+    id: `ticket-workflow-panel-${panelName}`,
+    role: primaryWorkflowPanelNames[tab] === panelName ? "tabpanel" : "region",
+    "aria-labelledby": `ticket-workflow-tab-${tab}`,
+    hidden: activeTab !== tab,
+    className: "workbench-panel workflow-tab-panel",
+  });
+
+  const hasActiveDispatchBlocker = Boolean(job && activeDispatchStatusValues.has(job.status) && dispatchWarnings.length);
+  const recommendedWorkflow: WorkflowTab = hasActiveDispatchBlocker
+    ? "dispatch"
+    : partsReview.blockerCount
+      ? "parts"
+      : closeoutReview.warnings.length
+        ? "closeout"
+        : "overview";
+  const recommendedAction = hasActiveDispatchBlocker
+    ? dispatchWarnings[0]
+    : partsReview.blockerCount
+      ? partsReview.nextAction
+      : closeoutReview.warnings[0] ?? "Review the ticket overview and continue the current workflow.";
+
   if (!canShow) return <section className="card">Missing job id.</section>;
 
   return (
     <section className="ticket-workbench-page stack">
-      <p className="breadcrumb-line">
-        <Link to="/manage/job-tickets">Back to Job Tickets</Link>
-      </p>
+      <nav className="breadcrumb-line" aria-label="Breadcrumb">
+        <Link to="/manage">Dashboard</Link>
+        <span aria-hidden="true">/</span>
+        <Link to={returnTo}>Back to {returnLabel}</Link>
+        {job ? <><span aria-hidden="true">/</span><span aria-current="page">Ticket detail</span></> : null}
+      </nav>
       {isLoading ? (
         <p className="muted" role="status">
           Loading job review details...
@@ -956,6 +1042,35 @@ export function JobTicketDetailPage() {
             </div>
           </header>
 
+          <section className="ticket-recommended-action no-print" aria-label="recommended action">
+            <div>
+              <span>Recommended next action</span>
+              <strong>{recommendedAction}</strong>
+            </div>
+            <button type="button" onClick={() => selectWorkflowTab(recommendedWorkflow)}>Open workflow</button>
+          </section>
+
+          <nav className="ticket-workflow-tabs no-print" aria-label="ticket workflow sections">
+            <div role="tablist" aria-label="ticket workflow tabs">
+              {workflowTabs.map((tab) => (
+                <button
+                  id={`ticket-workflow-tab-${tab.value}`}
+                  type="button"
+                  role="tab"
+                  aria-controls={`ticket-workflow-panel-${primaryWorkflowPanelNames[tab.value]}`}
+                  aria-selected={activeTab === tab.value}
+                  tabIndex={activeTab === tab.value ? 0 : -1}
+                  className={activeTab === tab.value ? "ticket-workflow-tab-active" : ""}
+                  key={tab.value}
+                  onClick={() => selectWorkflowTab(tab.value)}
+                  onKeyDown={(event) => handleWorkflowTabKeyDown(event, tab.value)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </nav>
+
           <section className="ticket-workbench-kpis" aria-label="ticket workspace summary">
             <div className={dispatchWarnings.length ? "metric-tile metric-tile-review" : "metric-tile metric-tile-ready"}>
               <span>Dispatch</span>
@@ -995,7 +1110,7 @@ export function JobTicketDetailPage() {
                 <h3>Workbench Actions</h3>
                 <button type="button" onClick={() => toggleDrawer("ticket")}>Edit Ticket</button>
                 <button type="button" onClick={() => toggleDrawer("status")}>Change Status</button>
-                <button type="button" onClick={() => toggleDrawer("part")}>Open Add / Request Part Panel</button>
+                <button type="button" onClick={() => openWorkflowDrawer("parts", "part")}>Open Add / Request Part Panel</button>
                 <button type="button" className="secondary-button" onClick={() => toggleDrawer("archive")}>Archive Review</button>
               </section>
 
@@ -1199,7 +1314,7 @@ export function JobTicketDetailPage() {
                 </section>
               ) : null}
 
-              <article className="workbench-panel" aria-label="ticket overview, customer, location, and equipment">
+              <article {...getWorkflowPanelProps("overview", "ticket-overview")} aria-label="ticket overview, customer, location, and equipment">
                 <div className="workbench-panel-heading">
                   <div>
                     <h3>Ticket Overview</h3>
@@ -1277,7 +1392,7 @@ export function JobTicketDetailPage() {
                 </div>
               </article>
 
-              <article className="workbench-panel" aria-label="assignments panel">
+              <article {...getWorkflowPanelProps("dispatch", "assignments")} aria-label="assignments panel">
                 <div className="workbench-panel-heading">
                   <div>
                     <h3>Assignments</h3>
@@ -1355,7 +1470,7 @@ export function JobTicketDetailPage() {
                 </form>
               </article>
 
-              <article className="workbench-panel" aria-label="status and priority panel">
+              <article {...getWorkflowPanelProps("overview", "status-priority")} aria-label="status and priority panel">
                 <div className="workbench-panel-heading">
                   <div>
                     <h3>Status / Priority</h3>
@@ -1392,7 +1507,7 @@ export function JobTicketDetailPage() {
                 )}
               </article>
 
-              <article className="workbench-panel" aria-label="time and labor panel">
+              <article {...getWorkflowPanelProps("time", "time-labor")} aria-label="time and labor panel">
                 <div className="workbench-panel-heading">
                   <div>
                     <h3>Time / Labor</h3>
@@ -1467,7 +1582,7 @@ export function JobTicketDetailPage() {
                 </div>
               </article>
 
-              <article className="workbench-panel" aria-label="ticket parts panel">
+              <article {...getWorkflowPanelProps("parts", "parts")} aria-label="ticket parts panel">
                 <div className="workbench-panel-heading">
                   <div>
                     <h3>Parts</h3>
@@ -1600,7 +1715,7 @@ export function JobTicketDetailPage() {
                 )}
               </article>
 
-              <article className="workbench-panel" aria-label="files and photos panel">
+              <article {...getWorkflowPanelProps("files", "files")} aria-label="files and photos panel">
                 <div className="workbench-panel-heading">
                   <div>
                     <h3>Files / Photos</h3>
@@ -1627,7 +1742,7 @@ export function JobTicketDetailPage() {
                 )}
               </article>
 
-              <article className="workbench-panel" aria-label="activity panel">
+              <article {...getWorkflowPanelProps("activity", "activity")} aria-label="activity panel">
                 <div className="workbench-panel-heading">
                   <div>
                     <h3>Activity</h3>
@@ -1650,7 +1765,7 @@ export function JobTicketDetailPage() {
                 )}
               </article>
 
-              <article className="workbench-panel" aria-label="closeout invoice readiness review">
+              <article {...getWorkflowPanelProps("closeout", "closeout")} aria-label="closeout invoice readiness review">
                 <div className="workbench-panel-heading">
                   <div>
                     <h3>Invoice-ready Summary</h3>

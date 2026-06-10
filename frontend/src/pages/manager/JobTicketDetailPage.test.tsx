@@ -139,8 +139,8 @@ describe('JobTicketDetailPage', () => {
     cleanup()
   })
 
-  const renderPage = () => {
-    render(<MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
+  const renderPage = (initialEntry = '/manage/job-tickets/j1') => {
+    render(<MemoryRouter future={routerFuture} initialEntries={[initialEntry]}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
   }
 
   const renderedPageText = () => document.body.textContent?.replace(/\s+/g, ' ') ?? ''
@@ -153,8 +153,9 @@ describe('JobTicketDetailPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name })[0])
   }
 
+  const selectWorkflowTab = (name: string) => fireEvent.click(screen.getByRole('tab', { name }))
   const openPartPanel = () => clickFirstButton('Open Add / Request Part Panel')
-  const openStatusPanel = () => clickFirstButton('Open Status Review')
+  const openStatusPanel = () => clickFirstButton('Change Status')
   const openArchivePanel = () => clickFirstButton('Archive Review')
 
   it('renders the Manager/Admin ticket workbench sections and focused action panels', async () => {
@@ -163,12 +164,18 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Workbench Actions' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Overview' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Assignments' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Status / Priority' })).toBeInTheDocument()
+    selectWorkflowTab('Dispatch')
+    expect(screen.getByRole('heading', { name: 'Assignments' })).toBeInTheDocument()
+    selectWorkflowTab('Time')
     expect(screen.getByRole('heading', { name: 'Time / Labor' })).toBeInTheDocument()
+    selectWorkflowTab('Parts')
     expect(screen.getByRole('heading', { name: 'Parts' })).toBeInTheDocument()
+    selectWorkflowTab('Files')
     expect(screen.getByRole('heading', { name: 'Files / Photos' })).toBeInTheDocument()
+    selectWorkflowTab('Activity')
     expect(screen.getByRole('heading', { name: 'Activity' })).toBeInTheDocument()
+    selectWorkflowTab('Closeout')
     expect(screen.getByRole('heading', { name: 'Invoice-ready Summary' })).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
     expectRenderedText('Next Dispatch FixNo dispatch blockers found.')
@@ -177,7 +184,8 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('Current lead: Alex Rivera')
     expectRenderedText('Alex Rivera Lead Tech')
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
-    expect(screen.getByRole('article', { name: 'ticket parts panel' })).toBeInTheDocument()
+    selectWorkflowTab('Parts')
+    expect(screen.getByRole('tabpanel', { name: 'Parts' })).toHaveAttribute('aria-label', 'ticket parts panel')
 
     openStatusPanel()
     expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
@@ -289,6 +297,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    selectWorkflowTab('Parts')
     expect(screen.getByRole('region', { name: 'waiting on parts summary' })).toBeInTheDocument()
     expectRenderedText('Parts StatusWaiting on parts review')
     expectRenderedText('Open Blockers2')
@@ -455,6 +464,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(usersApi.list).not.toHaveBeenCalled()
     expect(usersApi.listAssignableEmployees).toHaveBeenCalled()
+    selectWorkflowTab('Dispatch')
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
@@ -512,6 +522,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Assignment data unavailable')
     expectRenderedText('Next Dispatch FixAssignment data could not be loaded. Refresh or retry before dispatch review.')
+    selectWorkflowTab('Dispatch')
     expect(screen.getByRole('alert')).toHaveTextContent('Assignment data could not be loaded. Refresh before editing assignments or dispatch review.')
     expect(screen.getByRole('button', { name: 'Assign Employee' })).toBeDisabled()
     expectRenderedText('Assignment dataAssignment data could not be loaded. Refresh or retry before dispatch review.')
@@ -614,4 +625,45 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('Archive blocked')).toBeInTheDocument()
   })
+  it('restores the originating queue breadcrumb and URL-selected workflow tab', async () => {
+    renderPage('/manage/job-tickets/j1?returnTo=%2Fmanage%2Fjob-tickets%3Fstatus%3Dactive%26readiness%3Dneeds-review&returnLabel=Spoofed+Label&tab=parts')
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to Needs Dispatch Review' })).toHaveAttribute(
+      'href',
+      '/manage/job-tickets?status=active&readiness=needs-review'
+    )
+    expect(screen.getByRole('tab', { name: 'Parts' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByLabelText('ticket parts panel')).not.toHaveAttribute('hidden')
+    expect(screen.getByLabelText('ticket overview, customer, location, and equipment')).toHaveAttribute('hidden')
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Parts' }), { key: 'ArrowRight' })
+    expect(screen.getByRole('tab', { name: 'Files' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Files' })).toHaveFocus()
+  })
+
+  it('recommends closeout work instead of dispatch for a completed ticket', async () => {
+    vi.mocked(jobTicketsApi.get).mockResolvedValue({
+      id: 'j1',
+      ticketNumber: 'JT-1',
+      customerId: 'c1',
+      serviceLocationId: 's1',
+      billingPartyCustomerId: 'c1',
+      equipmentId: 'eq1',
+      title: 'Completed issue',
+      description: 'Work is complete.',
+      priority: 2,
+      status: 7
+    } as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    const recommendation = screen.getByLabelText('recommended action')
+    expect(recommendation).toHaveTextContent('Some loaded time entries still need approval review.')
+    expect(recommendation).not.toHaveTextContent('Ticket is outside the active dispatch queue.')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open workflow' }))
+    expect(screen.getByRole('tab', { name: 'Closeout' })).toHaveAttribute('aria-selected', 'true')
+  })
+
 })

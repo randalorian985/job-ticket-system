@@ -1765,3 +1765,83 @@ td {
     justify-content: center;
   }
 }
+
+.breadcrumb-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ticket-recommended-action {
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  position: sticky;
+  top: 0.5rem;
+  z-index: 5;
+}
+
+.ticket-recommended-action div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.ticket-recommended-action span {
+  color: #3157c8;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ticket-recommended-action button {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.ticket-workflow-tabs {
+  background: #ffffff;
+  border: 1px solid #d6dde8;
+  border-radius: 8px;
+  overflow-x: auto;
+  padding: 0.45rem;
+}
+
+.ticket-workflow-tabs [role="tablist"] {
+  display: flex;
+  gap: 0.35rem;
+  min-width: max-content;
+}
+
+.ticket-workflow-tabs button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #475569;
+  width: auto;
+}
+
+.ticket-workflow-tabs button:hover,
+.ticket-workflow-tabs button:focus-visible,
+.ticket-workflow-tabs .ticket-workflow-tab-active {
+  background: #eef2ff;
+  border-color: #a5b4fc;
+  color: #243b8f;
+}
+
+
+@media (max-width: 760px) {
+  .ticket-recommended-action {
+    align-items: stretch;
+    flex-direction: column;
+    position: static;
+  }
+
+  .ticket-recommended-action button {
+    width: 100%;
+  }
+}
