@@ -1,5 +1,6 @@
 export { CustomersPage, EquipmentPage, PartsPage, ServiceLocationsPage } from './masterData/MasterDataPages'
-export { PartsApprovalPage, TimeApprovalPage } from './approvals/ApprovalPages'
+export { PartsApprovalPage } from './approvals/ApprovalPages'
+export { TimeApprovalPage } from './approvals/TimeApprovalPage'
 export { ReportsPage } from './reports/ReportsPage'
 export { UnauthorizedPage } from './users/UnauthorizedPage'
 export { UsersPage } from './users/UsersPage'

@@ -151,8 +151,14 @@ The following are not approved as part of Parts Request Workflow Phase 2, UI pol
 - historical migration edits.
 
 ## Manager/Admin Time Approval Workflow Clarification
-- The Time Approval screen is a queue-first Manager/Admin workflow: pending time entries load by default without requiring a job ticket ID.
-- Date range, employee ID, job ticket ID, and approval status are optional review filters.
-- Managers/Admins can open entry details and approve or reject pending entries from the queue.
+- The Time Approval screen is a queue-first Manager/Admin workflow: pending time entries load by default without requiring filter input.
+- Optional filters are date range, employee name (resolved to an internal employee ID), approval status, and broad job/customer/site/location search.
+- Managers/Admins can review contextual entry details, approve or reject one entry, edit and approve with an audit reason, or bulk approve eligible completed pending entries.
 - Existing Manager/Admin authorization boundaries and time-entry approval enum numeric values remain unchanged.
 - This clarification does not add payroll, inventory, vendor cost tracking, purchase orders, or parts recommendation scope.
+
+### Manager-first Time Approval refinement
+- Time Approval is an automatically loaded pending queue; date, employee-name, status, and broad job/customer/site/location search controls only narrow the loaded queue.
+- Managers review contextual employee/job/customer/location information in the table, can approve clean completed entries in bulk, and use individual review for rejection or adjustments.
+- Manager edits reuse the existing `TimeEntryAdjustment` audit model and commit adjustment plus approval atomically. The current scaffold has no dedicated break-duration or labor-type assignment fields, so no break editor/column is presented and labor type is populated from the job type when present; no payroll/billing schema was expanded for unsupported concepts.
+- No pay-period aggregate exists in the current model, so default dates remain blank while all pending entries are shown.

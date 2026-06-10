@@ -25,15 +25,16 @@
 ## Manager/Admin Time Approval Review
 - `GET /api/time-entries/review`
 - Authorization: `ManagerOrAdmin`
-- Response DTO: `TimeEntryDto[]`
+- Response DTO: `TimeApprovalQueueItemDto[]`
 - Optional query filters:
   - `jobTicketId`
   - `employeeId`
   - `approvalStatus` (`1` Pending, `2` Approved, `3` Rejected)
   - `dateFromUtc`
   - `dateToUtc`
-- The Manager/Admin screen requests `approvalStatus=1` on initial load, so its pending work queue appears without requiring a job ticket ID. Omitting `approvalStatus` from the endpoint returns all statuses.
-- Results are ordered by newest `startedAtUtc` first. Approval and rejection continue to use the existing Manager/Admin-only action endpoints.
+  - `search` (ticket ID/number, job fields, customer, site, and location)
+- The Manager/Admin screen requests `approvalStatus=1` on initial load, so its pending work queue appears without requiring filter input. Omitting `approvalStatus` from the endpoint returns all statuses.
+- Results include manager-facing employee/job/customer/location labels and are ordered by newest `startedAtUtc` first. Approval and rejection continue to use Manager/Admin-only action endpoints.
 - Existing enum numeric values are unchanged.
 
 ## Assignable Employee Lookup
@@ -280,3 +281,10 @@ This section documents the existing inventory foundation only. It does not appro
 - No backend enum numeric values are changed.
 - No hard deletes are introduced.
 - Deferred domains remain deferred unless explicitly selected: purchasing expansion, receiving expansion, vendor invoice expansion, landed cost expansion, warehouse/truck inventory, replenishment, recommendation engine, AI/scoring, automatic compatibility decisions, and automatic approval.
+
+### Manager-first approval queue contract
+- `GET /api/time-entries/review` accepts optional `employeeId`, `approvalStatus`, `dateFromUtc`, `dateToUtc`, and `search` filters. The `search` value matches job ticket ID/number, job title/type/description, customer, site, and location fields.
+- Review results use the dedicated `TimeApprovalQueueItemDto`, retaining internal command IDs while exposing manager-facing employee, ticket, customer, site, location, job name, labor type, and note context.
+- `POST /api/time-entries/bulk-approve` accepts only `{ timeEntryIds }` and approves completed entries that are still pending. The authenticated Manager/Admin identity is the approver.
+- `POST /api/time-entries/{id}/edit-and-approve` accepts editable values plus a reason, then records the adjustment and approval atomically in one save. Actor identity and manager override authority are server-owned.
+- Single approve has no request body, reject accepts only `{ reason }`, and adjustment requests contain only editable values plus the reason. All actions retain the `ManagerOrAdmin` authorization policy, and single/bulk approval share the same completed-pending eligibility rule.

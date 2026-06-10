@@ -300,9 +300,9 @@ public sealed class AuthIntegrationTests
         Assert.Equal(HttpStatusCode.Forbidden, employeeReport.StatusCode);
 
         var entryId = await factory.CreateTimeEntryAsync();
-        var approve = await managerClient.PostAsJsonAsync($"/api/time-entries/{entryId}/approve", new ApproveTimeEntryRequestDto(Guid.Empty));
+        var approve = await managerClient.PostAsync($"/api/time-entries/{entryId}/approve", content: null);
         Assert.Equal(HttpStatusCode.OK, approve.StatusCode);
-        var reject = await managerClient.PostAsJsonAsync($"/api/time-entries/{entryId}/reject", new RejectTimeEntryRequestDto(Guid.Empty, "Needs edits"));
+        var reject = await managerClient.PostAsJsonAsync($"/api/time-entries/{entryId}/reject", new RejectTimeEntryRequestDto("Needs edits"));
         Assert.Equal(HttpStatusCode.OK, reject.StatusCode);
     }
 

@@ -77,7 +77,7 @@ public sealed class PilotDemoSeedTests
         Assert.Equal(TimeEntryApprovalStatus.Pending, clockOut.ApprovalStatus);
 
         var managerTimeEntries = new TimeEntriesService(context, new TestCurrentUserContext(manager.Id, SystemRoles.Manager));
-        var approvedTime = await managerTimeEntries.ApproveAsync(clockOut.Id, new ApproveTimeEntryRequestDto(manager.Id));
+        var approvedTime = await managerTimeEntries.ApproveAsync(clockOut.Id, manager.Id);
         Assert.Equal(TimeEntryApprovalStatus.Approved, approvedTime!.ApprovalStatus);
 
         var managerJobs = new JobTicketsService(context, new TestCurrentUserContext(manager.Id, SystemRoles.Manager));
