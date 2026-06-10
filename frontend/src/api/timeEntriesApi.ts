@@ -14,6 +14,7 @@ export type TimeEntryReviewFilters = {
   approvalStatus?: number
   dateFromUtc?: string
   dateToUtc?: string
+  search?: string
 }
 
 const reviewQuery = (filters: TimeEntryReviewFilters) => {
@@ -23,6 +24,7 @@ const reviewQuery = (filters: TimeEntryReviewFilters) => {
   if (filters.approvalStatus) query.set('approvalStatus', String(filters.approvalStatus))
   if (filters.dateFromUtc) query.set('dateFromUtc', filters.dateFromUtc)
   if (filters.dateToUtc) query.set('dateToUtc', filters.dateToUtc)
+  if (filters.search) query.set('search', filters.search)
   return query.toString()
 }
 
@@ -42,6 +44,16 @@ export const timeEntriesApi = {
   listForReview: (filters: TimeEntryReviewFilters) => apiRequest<TimeEntryDto[]>(`/api/time-entries/review?${reviewQuery(filters)}`),
   approve: (id: string, payload: ApproveTimeEntryRequestDto) =>
     apiRequest<TimeEntryDto>(`/api/time-entries/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  bulkApprove: (timeEntryIds: string[]) =>
+    apiRequest<TimeEntryDto[]>('/api/time-entries/bulk-approve', {
+      method: 'POST',
+      body: JSON.stringify({ timeEntryIds, approvedByUserId: '' })
+    }),
+  editAndApprove: (id: string, payload: AdjustTimeEntryRequestDto) =>
+    apiRequest<TimeEntryDto>(`/api/time-entries/${id}/edit-and-approve`, {
       method: 'POST',
       body: JSON.stringify(payload)
     }),

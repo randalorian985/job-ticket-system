@@ -245,6 +245,15 @@ export type TimeEntryDto = {
   clockInNote?: string | null
   clockOutNote?: string | null
   clockInDeviceMetadata?: string | null
+  employeeName?: string | null
+  jobTicketNumber?: string | null
+  jobName?: string | null
+  laborType?: string | null
+  customerName?: string | null
+  siteName?: string | null
+  locationName?: string | null
+  locationAddress?: string | null
+  managerNotes?: string | null
 }
 
 export type ClockInRequestDto = {

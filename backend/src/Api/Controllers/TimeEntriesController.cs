@@ -60,11 +60,12 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
         [FromQuery] TimeEntryApprovalStatus? approvalStatus,
         [FromQuery] DateTime? dateFromUtc,
         [FromQuery] DateTime? dateToUtc,
+        [FromQuery] string? search,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var filters = new TimeEntryReviewFilters(jobTicketId, employeeId, approvalStatus, dateFromUtc, dateToUtc);
+            var filters = new TimeEntryReviewFilters(jobTicketId, employeeId, approvalStatus, dateFromUtc, dateToUtc, search);
             return Ok(await service.ListForReviewAsync(filters, cancellationToken));
         }
         catch (Exception exception)
@@ -106,6 +107,35 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
         try
         {
             var entry = await service.ApproveAsync(id, new ApproveTimeEntryRequestDto(currentUserContext.EmployeeId), cancellationToken);
+            return entry is null ? NotFound() : Ok(entry);
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpPost("bulk-approve")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult<IReadOnlyList<TimeEntryDto>>> BulkApproveAsync([FromBody] BulkApproveTimeEntriesRequestDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Ok(await service.BulkApproveAsync(request with { ApprovedByUserId = currentUserContext.EmployeeId }, cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpPost("{id:guid}/edit-and-approve")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult<TimeEntryDto>> EditAndApproveAsync(Guid id, [FromBody] AdjustTimeEntryRequestDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var entry = await service.EditAndApproveAsync(id, request with { AdjustedByUserId = currentUserContext.EmployeeId, ManagerOverride = true }, cancellationToken);
             return entry is null ? NotFound() : Ok(entry);
         }
         catch (Exception exception)

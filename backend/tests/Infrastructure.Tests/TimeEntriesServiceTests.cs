@@ -76,6 +76,36 @@ public sealed class TimeEntriesServiceTests
     }
 
     [Fact]
+    public async Task Review_queue_returns_manager_facing_context_and_searches_job_customer_and_location()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var entry = new TimeEntry
+        {
+            JobTicketId = refs.JobTicket.Id,
+            EmployeeId = refs.Employee.Id,
+            StartedAtUtc = new DateTime(2026, 6, 9, 13, 0, 0, DateTimeKind.Utc),
+            EndedAtUtc = new DateTime(2026, 6, 9, 15, 0, 0, DateTimeKind.Utc),
+            LaborHours = 2m,
+            BillableHours = 1.5m,
+            ApprovalStatus = TimeEntryApprovalStatus.Pending
+        };
+        context.TimeEntries.Add(entry);
+        await context.SaveChangesAsync();
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        foreach (var search in new[] { "JT-2026", "Customer A", "Main Site", "Austin", "Test Ticket" })
+        {
+            var result = await service.ListForReviewAsync(new TimeEntryReviewFilters(Search: search));
+            Assert.Single(result);
+            Assert.Equal("Tech One", result[0].EmployeeName);
+            Assert.Equal("JT-2026-000001", result[0].JobTicketNumber);
+            Assert.Equal("Customer A", result[0].CustomerName);
+            Assert.Equal("Main Site", result[0].LocationName);
+        }
+    }
+
+    [Fact]
     public async Task Review_queue_requires_manager_or_admin_access()
     {
         await using var context = CreateContext();
@@ -187,6 +217,37 @@ public sealed class TimeEntriesServiceTests
     }
 
     [Fact]
+    public async Task Bulk_approve_only_approves_completed_pending_entries()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var first = new TimeEntry { JobTicketId = refs.JobTicket.Id, EmployeeId = refs.Employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-3), EndedAtUtc = DateTime.UtcNow.AddHours(-2), LaborHours = 1m, BillableHours = 1m };
+        var second = new TimeEntry { JobTicketId = refs.JobTicket.Id, EmployeeId = refs.Employee.Id, StartedAtUtc = DateTime.UtcNow.AddHours(-2), EndedAtUtc = DateTime.UtcNow.AddHours(-1), LaborHours = 1m, BillableHours = 1m };
+        context.TimeEntries.AddRange(first, second);
+        await context.SaveChangesAsync();
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var approved = await service.BulkApproveAsync(new BulkApproveTimeEntriesRequestDto(new[] { first.Id, second.Id }, refs.Manager.Id));
+
+        Assert.Equal(2, approved.Count);
+        Assert.All(approved, entry => Assert.Equal(TimeEntryApprovalStatus.Approved, entry.ApprovalStatus));
+    }
+
+    [Fact]
+    public async Task Employee_cannot_bulk_approve_time_entries()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+
+        var entryId = Guid.NewGuid();
+        await Assert.ThrowsAsync<ValidationException>(() => service.ApproveAsync(entryId, new ApproveTimeEntryRequestDto(refs.Employee.Id)));
+        await Assert.ThrowsAsync<ValidationException>(() => service.RejectAsync(entryId, new RejectTimeEntryRequestDto(refs.Employee.Id, "Unauthorized")));
+        await Assert.ThrowsAsync<ValidationException>(() => service.EditAndApproveAsync(entryId, new AdjustTimeEntryRequestDto(refs.Employee.Id, "Unauthorized", true, null, null, 1m, 1m, null, null)));
+        await Assert.ThrowsAsync<ValidationException>(() => service.BulkApproveAsync(new BulkApproveTimeEntriesRequestDto(new[] { entryId }, refs.Employee.Id)));
+    }
+
+    [Fact]
     public async Task Reject_time_entry_with_reason()
     {
         await using var context = CreateContext();
@@ -223,6 +284,29 @@ public sealed class TimeEntriesServiceTests
         Assert.Equal(1m, audit.OriginalLaborHours);
         Assert.Equal(0.75m, audit.NewLaborHours);
         Assert.Equal("Manual correction", audit.Reason);
+    }
+
+    [Fact]
+    public async Task Edit_and_approve_preserves_original_values_in_adjustment_history()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var originalStart = DateTime.UtcNow.AddHours(-2);
+        var entry = new TimeEntry { JobTicketId = refs.JobTicket.Id, EmployeeId = refs.Employee.Id, StartedAtUtc = originalStart, EndedAtUtc = originalStart.AddHours(1), LaborHours = 1m, BillableHours = 1m };
+        context.TimeEntries.Add(entry);
+        await context.SaveChangesAsync();
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        var result = await service.EditAndApproveAsync(entry.Id, new AdjustTimeEntryRequestDto(refs.Manager.Id, "Corrected lunch overlap", true, originalStart.AddMinutes(15), entry.EndedAtUtc, 0.75m, 0.5m, null, "Manager corrected"));
+
+        Assert.NotNull(result);
+        Assert.Equal(TimeEntryApprovalStatus.Approved, result!.ApprovalStatus);
+        var adjustment = await context.TimeEntryAdjustments.SingleAsync(x => x.TimeEntryId == entry.Id);
+        Assert.Equal(originalStart, adjustment.OriginalStartedAtUtc);
+        Assert.Equal(1m, adjustment.OriginalLaborHours);
+        Assert.Equal(0.75m, adjustment.NewLaborHours);
+        Assert.Equal(refs.Manager.Id, adjustment.AdjustedByUserId);
+        Assert.Equal("Corrected lunch overlap", adjustment.Reason);
     }
 
     [Fact]

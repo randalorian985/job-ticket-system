@@ -1888,3 +1888,18 @@ td {
     width: 100%;
   }
 }
+
+/* Manager time approval intentionally favors scan-friendly columns over compressed IDs. */
+.time-approval-table {
+  min-width: 88rem !important;
+}
+
+.time-approval-table th,
+.time-approval-table td {
+  overflow-wrap: normal;
+}
+
+.time-approval-table th:nth-child(5),
+.time-approval-table td:nth-child(5) {
+  min-width: 18rem;
+}
