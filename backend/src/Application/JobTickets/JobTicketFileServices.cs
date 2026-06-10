@@ -56,6 +56,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
     public async Task<JobTicketFileDto> UploadAsync(Guid jobTicketId, UploadJobTicketFileDto request, CancellationToken cancellationToken = default)
     {
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureEmployeeClockedIntoJobTicketAsync(jobTicketId, cancellationToken);
 
         var jobTicket = await dbContext.JobTickets
             .Where(x => x.Id == jobTicketId)
@@ -194,6 +195,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
     {
         await EnsureActiveJobTicketAsync(jobTicketId, cancellationToken);
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureEmployeeClockedIntoJobTicketAsync(jobTicketId, cancellationToken);
 
         var entity = await dbContext.JobTicketFiles
             .SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == fileId, cancellationToken);
@@ -220,6 +222,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
     {
         await EnsureActiveJobTicketAsync(jobTicketId, cancellationToken);
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureEmployeeClockedIntoJobTicketAsync(jobTicketId, cancellationToken);
 
         var entity = await dbContext.JobTicketFiles
             .SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == fileId, cancellationToken);
@@ -251,6 +254,25 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
         if (!isAssigned)
         {
             throw new ValidationException("Current employee is not assigned to this job ticket.");
+        }
+    }
+
+    private async Task EnsureEmployeeClockedIntoJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken)
+    {
+        if (currentUserContext.IsManager)
+        {
+            return;
+        }
+
+        var hasOpenEntryForTicket = await dbContext.TimeEntries.AnyAsync(
+            x => x.JobTicketId == jobTicketId &&
+                 x.EmployeeId == currentUserContext.EmployeeId &&
+                 x.EndedAtUtc == null,
+            cancellationToken);
+
+        if (!hasOpenEntryForTicket)
+        {
+            throw new ValidationException("Clock in to this job ticket before recording field work.");
         }
     }
 

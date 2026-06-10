@@ -24,6 +24,7 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
     public async Task<PartRequestDto> CreateForJobTicketAsync(Guid jobTicketId, CreatePartRequestDto request, CancellationToken cancellationToken = default)
     {
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureEmployeeClockedIntoJobTicketAsync(jobTicketId, cancellationToken);
 
         var jobTicket = await dbContext.JobTickets.SingleOrDefaultAsync(x => x.Id == jobTicketId, cancellationToken);
         if (jobTicket is null)
@@ -252,6 +253,25 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
         if (!isAssigned)
         {
             throw new ValidationException("Current employee is not assigned to this job ticket.");
+        }
+    }
+
+    private async Task EnsureEmployeeClockedIntoJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken)
+    {
+        if (currentUserContext.IsManager)
+        {
+            return;
+        }
+
+        var hasOpenEntryForTicket = await dbContext.TimeEntries.AnyAsync(
+            x => x.JobTicketId == jobTicketId &&
+                 x.EmployeeId == currentUserContext.EmployeeId &&
+                 x.EndedAtUtc == null,
+            cancellationToken);
+
+        if (!hasOpenEntryForTicket)
+        {
+            throw new ValidationException("Clock in to this job ticket before recording field work.");
         }
     }
 

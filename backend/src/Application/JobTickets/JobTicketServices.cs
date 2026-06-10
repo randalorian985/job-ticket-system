@@ -317,6 +317,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
     {
         await EnsureJobTicketExists(jobTicketId, cancellationToken);
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureEmployeeClockedIntoJobTicketAsync(jobTicketId, cancellationToken);
         ValidationHelpers.ValidateRequired(request.Notes, nameof(request.Notes));
         if (!Enum.IsDefined(request.EntryType))
         {
@@ -359,6 +360,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
     public async Task<JobTicketPartDto> AddPartAsync(Guid jobTicketId, AddJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureEmployeeClockedIntoJobTicketAsync(jobTicketId, cancellationToken);
         var jobTicket = await dbContext.JobTickets.SingleOrDefaultAsync(x => x.Id == jobTicketId, cancellationToken);
         if (jobTicket is null)
         {
@@ -433,6 +435,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
     public async Task<JobTicketPartDto> QuickAddPartAsync(Guid jobTicketId, QuickAddJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureEmployeeClockedIntoJobTicketAsync(jobTicketId, cancellationToken);
         var jobTicket = await dbContext.JobTickets.SingleOrDefaultAsync(x => x.Id == jobTicketId, cancellationToken);
         if (jobTicket is null)
         {
@@ -532,6 +535,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
     public async Task<JobTicketPartDto?> UpdatePartAsync(Guid jobTicketId, Guid jobTicketPartId, UpdateJobTicketPartDto request, CancellationToken cancellationToken = default)
     {
         await EnsureCurrentUserCanAccessJobTicketAsync(jobTicketId, cancellationToken);
+        await EnsureEmployeeClockedIntoJobTicketAsync(jobTicketId, cancellationToken);
         ValidatePartUpdatePermissions(request);
 
         var entry = await dbContext.JobTicketParts.SingleOrDefaultAsync(x => x.JobTicketId == jobTicketId && x.Id == jobTicketPartId, cancellationToken);
@@ -681,6 +685,25 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         if (!isAssigned)
         {
             throw new ValidationException("Current employee is not assigned to this job ticket.");
+        }
+    }
+
+    private async Task EnsureEmployeeClockedIntoJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken)
+    {
+        if (currentUserContext.IsManager)
+        {
+            return;
+        }
+
+        var hasOpenEntryForTicket = await dbContext.TimeEntries.AnyAsync(
+            x => x.JobTicketId == jobTicketId &&
+                 x.EmployeeId == currentUserContext.EmployeeId &&
+                 x.EndedAtUtc == null,
+            cancellationToken);
+
+        if (!hasOpenEntryForTicket)
+        {
+            throw new ValidationException("Clock in to this job ticket before recording field work.");
         }
     }
 

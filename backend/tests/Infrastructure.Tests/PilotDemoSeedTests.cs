@@ -65,16 +65,16 @@ public sealed class PilotDemoSeedTests
 
         var timeEntries = new TimeEntriesService(context, new TestCurrentUserContext(technician.Id, SystemRoles.Employee));
         var clockIn = await timeEntries.ClockInAsync(new ClockInRequestDto(activeTicket.Id, technician.Id, 30.2672m, -97.7431m, 10m, "phase-4a-test", "Arrived for pilot validation."));
-        var clockOut = await timeEntries.ClockOutAsync(new ClockOutRequestDto(clockIn.Id, technician.Id, 30.2673m, -97.7430m, 8m, "Validated compressor inspection checklist.", "Leaving site."));
-
-        Assert.NotNull(clockOut.EndedAtUtc);
-        Assert.Equal(TimeEntryApprovalStatus.Pending, clockOut.ApprovalStatus);
-
         var workEntry = await employeeJobs.AddWorkEntryAsync(activeTicket.Id, new AddJobWorkEntryDto(technician.Id, WorkEntryType.Inspection, "Pilot E2E validation work note.", DateTime.UtcNow));
         Assert.Equal(activeTicket.Id, workEntry.JobTicketId);
 
         var addedPart = await employeeJobs.AddPartAsync(activeTicket.Id, new AddJobTicketPartDto(part.Id, 1m, "Pilot E2E validation part.", true, technician.Id, DateTime.UtcNow, AdjustInventory: false, EquipmentId: activeTicket.EquipmentId));
         Assert.Equal(JobPartApprovalStatus.Pending, addedPart.ApprovalStatus);
+
+        var clockOut = await timeEntries.ClockOutAsync(new ClockOutRequestDto(clockIn.Id, technician.Id, 30.2673m, -97.7430m, 8m, "Validated compressor inspection checklist.", "Leaving site."));
+
+        Assert.NotNull(clockOut.EndedAtUtc);
+        Assert.Equal(TimeEntryApprovalStatus.Pending, clockOut.ApprovalStatus);
 
         var managerTimeEntries = new TimeEntriesService(context, new TestCurrentUserContext(manager.Id, SystemRoles.Manager));
         var approvedTime = await managerTimeEntries.ApproveAsync(clockOut.Id, new ApproveTimeEntryRequestDto(manager.Id));

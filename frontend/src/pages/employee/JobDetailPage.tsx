@@ -164,6 +164,11 @@ export function JobDetailPage() {
         : 'Field context is complete for assigned work.'
     }
   }, [job])
+  const isClockedIntoThisJob = Boolean(openEntry && openEntry.jobTicketId === jobTicketId)
+  const isClockedIntoAnotherJob = Boolean(openEntry && openEntry.jobTicketId !== jobTicketId)
+  const fieldRecordGateMessage = isClockedIntoAnotherJob
+    ? 'You are clocked into another job. Open that ticket or clock out before recording field work here.'
+    : 'Clock in to this ticket before adding work notes, parts, or photos.'
 
   const refreshDetails = async () => {
     if (!jobTicketId || !user) {
@@ -280,7 +285,12 @@ export function JobDetailPage() {
   }
 
   const onClockOut = async () => {
-    if (!openEntry || !user) {
+    if (!user) {
+      return
+    }
+
+    if (!isClockedIntoThisJob || !openEntry) {
+      setError(isClockedIntoAnotherJob ? 'Open the active job ticket to clock out.' : 'Clock in to this ticket before clocking out.')
       return
     }
 
@@ -323,6 +333,11 @@ export function JobDetailPage() {
       return
     }
 
+    if (!isClockedIntoThisJob) {
+      setError(fieldRecordGateMessage)
+      return
+    }
+
     setIsSavingWork(true)
     setError(null)
     try {
@@ -345,6 +360,11 @@ export function JobDetailPage() {
     event.preventDefault()
     const partDescription = selectedPart?.name ?? partRequestDescription.trim()
     const quantity = Number(partRequestQuantity)
+
+    if (!isClockedIntoThisJob) {
+      setError(fieldRecordGateMessage)
+      return
+    }
 
     if (!jobTicketId || !partDescription) {
       setError('Select an existing part or enter a new part name or description.')
@@ -386,6 +406,11 @@ export function JobDetailPage() {
   const onUpload = async (event: FormEvent) => {
     event.preventDefault()
     if (!jobTicketId || !uploadFile) {
+      return
+    }
+
+    if (!isClockedIntoThisJob) {
+      setError(fieldRecordGateMessage)
       return
     }
 
@@ -476,19 +501,30 @@ export function JobDetailPage() {
 
       <section className="card stack">
         <h2>Clock In / Clock Out</h2>
-        <p className="muted">Open entry: {openEntry ? `Started ${new Date(openEntry.startedAtUtc).toLocaleString()}` : 'No open entry'}</p>
+        <p className="muted">
+          Open entry: {openEntry
+            ? isClockedIntoThisJob
+              ? `Started ${new Date(openEntry.startedAtUtc).toLocaleString()} for this ticket`
+              : `Started ${new Date(openEntry.startedAtUtc).toLocaleString()} on another ticket`
+            : 'No open entry'}
+        </p>
         <p className="muted">
           {employeeFieldContext.warnings.length
             ? 'Field context needs manager review before starting new work.'
             : 'Field context is ready for clock-in.'}
         </p>
+        {isClockedIntoAnotherJob ? (
+          <p className="warning">
+            You are already clocked into another ticket. <Link to={`/jobs/${openEntry?.jobTicketId}`}>Open active ticket</Link> to clock out before starting this one.
+          </p>
+        ) : null}
 
         <label>
           Clock note (optional)
-          <input value={clockNote} onChange={(event) => setClockNote(event.target.value)} />
+          <input value={clockNote} onChange={(event) => setClockNote(event.target.value)} disabled={isClockedIntoAnotherJob} />
         </label>
 
-        {openEntry ? (
+        {isClockedIntoThisJob ? (
           <>
             <label>
               Work summary (required)
@@ -499,7 +535,7 @@ export function JobDetailPage() {
             </button>
           </>
         ) : (
-          <button onClick={onClockIn} disabled={isClocking}>
+          <button onClick={onClockIn} disabled={isClocking || isClockedIntoAnotherJob}>
             {isClocking ? 'Clocking in...' : 'Clock In with GPS'}
           </button>
         )}
@@ -507,9 +543,10 @@ export function JobDetailPage() {
 
       <section className="card stack">
         <h2>Add Work Note</h2>
+        {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
         <form onSubmit={onAddWorkNote} className="stack">
-          <textarea value={workNote} onChange={(event) => setWorkNote(event.target.value)} required placeholder="Describe work performed" />
-          <button type="submit" disabled={isSavingWork}>
+          <textarea value={workNote} onChange={(event) => setWorkNote(event.target.value)} required placeholder="Describe work performed" disabled={!isClockedIntoThisJob} />
+          <button type="submit" disabled={isSavingWork || !isClockedIntoThisJob}>
             {isSavingWork ? 'Saving note...' : 'Save Work Note'}
           </button>
         </form>
@@ -517,14 +554,15 @@ export function JobDetailPage() {
 
       <section className="card stack">
         <h2>Add / Request Part</h2>
+        {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
         <form onSubmit={onSubmitPartRequest} className="stack">
           <label>
             Find existing part or enter new part
-            <input value={partRequestDescription} onChange={(event) => onPartRequestDescriptionChange(event.target.value)} placeholder="Search part number, name, or type a new part" />
+            <input value={partRequestDescription} onChange={(event) => onPartRequestDescriptionChange(event.target.value)} placeholder="Search part number, name, or type a new part" disabled={!isClockedIntoThisJob} />
           </label>
           <label>
             Existing parts match
-            <select value={selectedPartId} onChange={(event) => setSelectedPartId(event.target.value)}>
+            <select value={selectedPartId} onChange={(event) => setSelectedPartId(event.target.value)} disabled={!isClockedIntoThisJob}>
               <option value="">Use typed new/unlisted part</option>
               {partLookupMatches.map((part) => (
                 <option key={part.id} value={part.id}>
@@ -540,21 +578,21 @@ export function JobDetailPage() {
           )}
           <label>
             Quantity
-            <input type="number" min="0.01" step="0.01" value={partRequestQuantity} onChange={(event) => setPartRequestQuantity(event.target.value)} required />
+            <input type="number" min="0.01" step="0.01" value={partRequestQuantity} onChange={(event) => setPartRequestQuantity(event.target.value)} required disabled={!isClockedIntoThisJob} />
           </label>
           <label>
             Notes
-            <input value={partRequestNotes} onChange={(event) => setPartRequestNotes(event.target.value)} />
+            <input value={partRequestNotes} onChange={(event) => setPartRequestNotes(event.target.value)} disabled={!isClockedIntoThisJob} />
           </label>
           <label className="row">
-            <input type="checkbox" checked={partNeedsOrdered} onChange={(event) => setPartNeedsOrdered(event.target.checked)} />
+            <input type="checkbox" checked={partNeedsOrdered} onChange={(event) => setPartNeedsOrdered(event.target.checked)} disabled={!isClockedIntoThisJob} />
             Needs ordered
           </label>
           {partNeedsOrdered ? (
             <>
               <label>
                 Urgency
-                <select value={partRequestUrgency} onChange={(event) => setPartRequestUrgency(event.target.value)}>
+                <select value={partRequestUrgency} onChange={(event) => setPartRequestUrgency(event.target.value)} disabled={!isClockedIntoThisJob}>
                   <option value="">Routine</option>
                   <option value="Soon">Soon</option>
                   <option value="Urgent">Urgent</option>
@@ -562,11 +600,11 @@ export function JobDetailPage() {
               </label>
               <label>
                 Needed by
-                <input type="date" value={partRequestNeededBy} onChange={(event) => setPartRequestNeededBy(event.target.value)} />
+                <input type="date" value={partRequestNeededBy} onChange={(event) => setPartRequestNeededBy(event.target.value)} disabled={!isClockedIntoThisJob} />
               </label>
             </>
           ) : null}
-          <button type="submit" disabled={isSubmittingPartRequest}>
+          <button type="submit" disabled={isSubmittingPartRequest || !isClockedIntoThisJob}>
             {isSubmittingPartRequest ? 'Adding part...' : 'Add / Request Part'}
           </button>
         </form>
@@ -574,18 +612,20 @@ export function JobDetailPage() {
 
       <section className="card stack">
         <h2>Upload Photo / File</h2>
+        {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
         <form onSubmit={onUpload} className="stack">
           <input
             type="file"
             accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
             onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
             required
+            disabled={!isClockedIntoThisJob}
           />
           <label>
             Caption
-            <input value={uploadCaption} onChange={(event) => setUploadCaption(event.target.value)} />
+            <input value={uploadCaption} onChange={(event) => setUploadCaption(event.target.value)} disabled={!isClockedIntoThisJob} />
           </label>
-          <button type="submit" disabled={isUploading}>
+          <button type="submit" disabled={isUploading || !isClockedIntoThisJob}>
             {isUploading ? 'Uploading...' : 'Upload'}
           </button>
         </form>

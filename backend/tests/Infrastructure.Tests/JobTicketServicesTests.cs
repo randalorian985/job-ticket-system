@@ -225,6 +225,40 @@ public sealed class JobTicketServicesTests
     }
 
     [Fact]
+    public async Task Assigned_employee_work_entry_requires_open_time_entry_for_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedCoreReferencesAsync(context);
+        var managerService = CreateService(context);
+        var ticket = await managerService.CreateAsync(BuildCreateRequest(refs));
+        await managerService.AddAssignmentAsync(ticket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id, true));
+        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, SystemRoles.Employee));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => employeeService.AddWorkEntryAsync(
+            ticket.Id,
+            new AddJobWorkEntryDto(refs.Employee.Id, WorkEntryType.Note, "Started diagnostics", null)));
+
+        Assert.Equal("Clock in to this job ticket before recording field work.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Assigned_employee_can_add_work_entry_when_clocked_into_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedCoreReferencesAsync(context);
+        var managerService = CreateService(context);
+        var ticket = await managerService.CreateAsync(BuildCreateRequest(refs));
+        await managerService.AddAssignmentAsync(ticket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id, true));
+        SeedOpenTimeEntry(context, ticket.Id, refs.Employee.Id);
+        await context.SaveChangesAsync();
+        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, SystemRoles.Employee));
+
+        var entry = await employeeService.AddWorkEntryAsync(ticket.Id, new AddJobWorkEntryDto(refs.Employee.Id, WorkEntryType.Note, "Started diagnostics", null));
+
+        Assert.Equal("Started diagnostics", entry.Notes);
+    }
+
+    [Fact]
     public async Task Add_work_entry_rejects_invalid_entry_type()
     {
         await using var context = CreateContext();
@@ -317,6 +351,19 @@ public sealed class JobTicketServicesTests
             .Options;
 
         return new ApplicationDbContext(options);
+    }
+
+    private static void SeedOpenTimeEntry(ApplicationDbContext context, Guid jobTicketId, Guid employeeId)
+    {
+        context.TimeEntries.Add(new TimeEntry
+        {
+            JobTicketId = jobTicketId,
+            EmployeeId = employeeId,
+            StartedAtUtc = DateTime.UtcNow,
+            ClockInLatitude = 30m,
+            ClockInLongitude = -97m,
+            ClockInDeviceMetadata = "test"
+        });
     }
 
     private sealed record SeedRefs(Customer Customer, Customer BillingCustomer, ServiceLocation ServiceLocation, Equipment Equipment, Employee Manager, Employee Employee);

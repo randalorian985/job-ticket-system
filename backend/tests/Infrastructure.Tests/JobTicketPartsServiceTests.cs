@@ -104,6 +104,8 @@ public sealed class JobTicketPartsServiceTests
 
         var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
         var employeeListed = await employeeService.ListPartsAsync(refs.JobTicket.Id);
+        SeedOpenTimeEntry(context, refs.JobTicket.Id, refs.Employee.Id);
+        await context.SaveChangesAsync();
         var employeeUpdated = await employeeService.UpdatePartAsync(refs.JobTicket.Id, managerCreated.Id, new UpdateJobTicketPartDto(1m, "employee note", true, null, null, refs.Employee.Id));
 
         Assert.Equal(12.34m, managerCreated.UnitCostSnapshot);
@@ -113,6 +115,20 @@ public sealed class JobTicketPartsServiceTests
         Assert.NotNull(employeeUpdated);
         Assert.Null(employeeUpdated!.UnitCostSnapshot);
         Assert.Null(employeeUpdated.SalePriceSnapshot);
+    }
+
+    [Fact]
+    public async Task Employee_part_entry_requires_open_time_entry_for_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => employeeService.QuickAddPartAsync(
+            refs.JobTicket.Id,
+            new QuickAddJobTicketPartDto("MISC-FIELD", "Field part", 1m, 0m, 0m, "Used in field", false, refs.Employee.Id, null)));
+
+        Assert.Equal("Clock in to this job ticket before recording field work.", exception.Message);
     }
 
     [Fact]
@@ -447,6 +463,19 @@ public sealed class JobTicketPartsServiceTests
             .Options;
 
         return new ApplicationDbContext(options);
+    }
+
+    private static void SeedOpenTimeEntry(ApplicationDbContext context, Guid jobTicketId, Guid employeeId)
+    {
+        context.TimeEntries.Add(new TimeEntry
+        {
+            JobTicketId = jobTicketId,
+            EmployeeId = employeeId,
+            StartedAtUtc = DateTime.UtcNow,
+            ClockInLatitude = 30m,
+            ClockInLongitude = -97m,
+            ClockInDeviceMetadata = "test"
+        });
     }
 
     private sealed record SeedRefs(JobTicket JobTicket, Part Part, Employee Manager, Employee Employee, Equipment Equipment);

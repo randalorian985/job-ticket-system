@@ -39,6 +39,34 @@ public sealed class JobTicketFileServicesTests
     }
 
     [Fact]
+    public async Task Assigned_employee_upload_requires_open_time_entry_for_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+
+        await using var stream = new MemoryStream(CreateJpegBytes());
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
+            "photo.jpg", "image/jpeg", stream.Length, stream, null, FileVisibility.Internal, false, refs.Employee.Id, null, null)));
+
+        Assert.Equal("Clock in to this job ticket before recording field work.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Assigned_employee_can_upload_when_clocked_into_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        SeedOpenTimeEntry(context, refs.JobTicket.Id, refs.Employee.Id);
+        await context.SaveChangesAsync();
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+
+        var created = await UploadSimpleAsync(service, refs.JobTicket.Id, "clocked-in.jpg");
+
+        Assert.Equal("clocked-in.jpg", created.OriginalFileName);
+    }
+
+    [Fact]
     public async Task Upload_rejects_missing_job_ticket()
     {
         await using var context = CreateContext();
@@ -260,8 +288,28 @@ public sealed class JobTicketFileServicesTests
 
         context.AddRange(equipment, ticket, workEntry);
         await context.SaveChangesAsync();
+        context.JobTicketEmployees.Add(new JobTicketEmployee
+        {
+            JobTicketId = ticket.Id,
+            EmployeeId = employee.Id,
+            AssignedAtUtc = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
 
         return new SeedRefs(ticket, equipment, employee, workEntry);
+    }
+
+    private static void SeedOpenTimeEntry(ApplicationDbContext context, Guid jobTicketId, Guid employeeId)
+    {
+        context.TimeEntries.Add(new TimeEntry
+        {
+            JobTicketId = jobTicketId,
+            EmployeeId = employeeId,
+            StartedAtUtc = DateTime.UtcNow,
+            ClockInLatitude = 30m,
+            ClockInLongitude = -97m,
+            ClockInDeviceMetadata = "test"
+        });
     }
 
     private sealed record SeedRefs(JobTicket JobTicket, Equipment Equipment, Employee Employee, JobWorkEntry WorkEntry);

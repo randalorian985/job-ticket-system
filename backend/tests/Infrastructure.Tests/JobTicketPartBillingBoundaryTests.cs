@@ -143,6 +143,15 @@ public sealed class JobTicketPartBillingBoundaryTests
             AssignedByUserId = manager.Id,
             IsLead = true
         });
+        context.TimeEntries.Add(new TimeEntry
+        {
+            JobTicketId = ticket.Id,
+            EmployeeId = employee.Id,
+            StartedAtUtc = DateTime.UtcNow,
+            ClockInLatitude = 30m,
+            ClockInLongitude = -97m,
+            ClockInDeviceMetadata = "test"
+        });
 
         var jobTicketPart = new JobTicketPart
         {

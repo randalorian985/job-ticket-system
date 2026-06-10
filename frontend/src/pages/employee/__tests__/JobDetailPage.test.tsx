@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../../api/filesApi'
+import { ApiError } from '../../../api/httpClient'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { partRequestsApi } from '../../../api/partRequestsApi'
 import { partsApi } from '../../../api/partsApi'
@@ -96,6 +97,26 @@ const renderJobDetail = () =>
     </MemoryRouter>
   )
 
+const mockNoOpenEntry = () => {
+  vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
+    throw new ApiError('No open time entry.', 404)
+  })
+}
+
+const mockOpenEntry = (jobTicketId = 'job-1') => {
+  vi.mocked(timeEntriesApi.getOpen).mockResolvedValue({
+    id: 'time-1',
+    jobTicketId,
+    employeeId: 'employee-1',
+    startedAtUtc: '2026-04-28T09:00:00Z',
+    laborHours: 0,
+    billableHours: 0,
+    approvalStatus: 1,
+    clockInLatitude: 1,
+    clockInLongitude: 1
+  })
+}
+
 describe('JobDetailPage', () => {
   beforeEach(() => {
     cleanup()
@@ -148,9 +169,7 @@ describe('JobDetailPage', () => {
         caption: 'Before photo'
       }
     ])
-    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
-      throw { status: 404 }
-    })
+    mockNoOpenEntry()
 
     renderJobDetail()
 
@@ -173,6 +192,40 @@ describe('JobDetailPage', () => {
     expect(screen.getByText('Field context is ready for clock-in.')).toBeInTheDocument()
   })
 
+  it('keeps field recording disabled until the technician clocks into this ticket', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    mockNoOpenEntry()
+
+    renderJobDetail()
+
+    expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Save Work Note' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Add / Request Part' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled()
+    expect(screen.getAllByText('Clock in to this ticket before adding work notes, parts, or photos.').length).toBeGreaterThan(0)
+  })
+
+  it('does not show the clock-out form for an open entry on another ticket', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    mockOpenEntry('job-2')
+
+    renderJobDetail()
+
+    expect(await screen.findByText(/Open entry: Started/)).toHaveTextContent('on another ticket')
+    expect(screen.getByRole('link', { name: 'Open active ticket' })).toHaveAttribute('href', '/jobs/job-2')
+    expect(screen.queryByRole('button', { name: 'Clock Out with GPS' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeDisabled()
+  })
+
   it('lets technicians select an existing part from the ticket and mark it needs ordered without pricing fields', async () => {
     mockEmployeeAuth()
     mockJob()
@@ -187,9 +240,7 @@ describe('JobDetailPage', () => {
       }
     ])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
-      throw { status: 404 }
-    })
+    mockOpenEntry()
     vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({
       id: 'request-1',
       jobTicketId: 'job-1',
@@ -254,9 +305,7 @@ describe('JobDetailPage', () => {
       }
     ])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
-      throw { status: 404 }
-    })
+    mockOpenEntry()
     vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({
       id: 'request-2',
       jobTicketId: 'job-1',
@@ -307,9 +356,7 @@ describe('JobDetailPage', () => {
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
-      throw { status: 404 }
-    })
+    mockOpenEntry()
     vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({
       id: 'request-2',
       jobTicketId: 'job-1',
@@ -373,9 +420,7 @@ describe('JobDetailPage', () => {
       }
     ])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
-      throw { status: 404 }
-    })
+    mockNoOpenEntry()
 
     renderJobDetail()
 
@@ -399,17 +444,7 @@ describe('JobDetailPage', () => {
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => ({
-      id: 'time-1',
-      jobTicketId: 'job-1',
-      employeeId: 'employee-1',
-      startedAtUtc: '2026-04-28T09:00:00Z',
-      laborHours: 0,
-      billableHours: 0,
-      approvalStatus: 0,
-      clockInLatitude: 1,
-      clockInLongitude: 1
-    }))
+    mockOpenEntry()
 
     renderJobDetail()
 
@@ -450,9 +485,7 @@ describe('JobDetailPage', () => {
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    vi.mocked(timeEntriesApi.getOpen).mockImplementation(async () => {
-      throw { status: 404 }
-    })
+    mockNoOpenEntry()
 
     renderJobDetail()
 

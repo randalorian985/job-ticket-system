@@ -177,6 +177,23 @@ public sealed class PartRequestsServiceTests
     }
 
     [Fact]
+    public async Task Assigned_employee_cannot_create_part_request_until_clocked_into_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        context.TimeEntries.RemoveRange(context.TimeEntries);
+        await context.SaveChangesAsync();
+
+        var service = new PartRequestsService(context, new TestUserContext(refs.Employee.Id, SystemRoles.Employee));
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateForJobTicketAsync(
+            refs.JobTicket.Id,
+            new CreatePartRequestDto("Hydraulic hose", 1m, null)));
+
+        Assert.Equal("Clock in to this job ticket before recording field work.", exception.Message);
+    }
+
+    [Fact]
     public async Task Back_office_can_view_and_update_request_status_cost_price_and_catalog_match()
     {
         await using var context = CreateContext();
@@ -315,6 +332,15 @@ public sealed class PartRequestsServiceTests
             AssignedAtUtc = DateTime.UtcNow,
             AssignedByUserId = manager.Id,
             IsLead = true
+        });
+        context.TimeEntries.Add(new TimeEntry
+        {
+            JobTicketId = ticket.Id,
+            EmployeeId = employee.Id,
+            StartedAtUtc = DateTime.UtcNow,
+            ClockInLatitude = 30m,
+            ClockInLongitude = -97m,
+            ClockInDeviceMetadata = "test"
         });
         await context.SaveChangesAsync();
 

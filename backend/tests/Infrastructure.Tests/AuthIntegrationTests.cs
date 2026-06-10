@@ -179,6 +179,9 @@ public sealed class AuthIntegrationTests
         var unassigned = await factory.GetUnassignedJobIdAsync();
         var employeeId = await factory.GetEmployeeIdAsync();
 
+        var clockIn = await client.PostAsJsonAsync("/api/time-entries/clock-in", new ClockInRequestDto(assigned, employeeId, 30m, -97m, null, "Android", null));
+        Assert.Equal(HttpStatusCode.OK, clockIn.StatusCode);
+
         var assignedResponse = await client.PostAsJsonAsync(
             $"/api/job-tickets/{assigned}/work-entries",
             new AddJobWorkEntryDto(employeeId, WorkEntryType.Note, "Employee route check", null));
@@ -244,6 +247,10 @@ public sealed class AuthIntegrationTests
         var client = factory.CreateClient();
         await client.SetBearerTokenAsync("employee", "EmployeePass!123");
         var assigned = await factory.GetAssignedJobIdAsync();
+        var employeeId = await factory.GetEmployeeIdAsync();
+
+        var clockIn = await client.PostAsJsonAsync("/api/time-entries/clock-in", new ClockInRequestDto(assigned, employeeId, 30m, -97m, null, "Android", null));
+        Assert.Equal(HttpStatusCode.OK, clockIn.StatusCode);
 
         using var fileContent = new StreamContent(new MemoryStream([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46]));
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
