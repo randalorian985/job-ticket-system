@@ -45,6 +45,21 @@ Manager/Admin Service Ticket Workspace Redesign is merged and protected on `main
 - `/manage` remains Manager/Admin-only and `/manage/users` remains Admin-only;
 - no backend API behavior, schema, migration, enum, auth, purchasing expansion, inventory expansion, portal, payment, notification, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior was added.
 
+Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
+- Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
+- Manager dashboard summary links open the corresponding filtered queues;
+- ticket detail links preserve safe queue-aware return context;
+- ticket detail exposes workflow tabs for overview, dispatch, time, parts, files, closeout, and activity, with a visible recommended next action;
+- developer setup validation checks Docker Compose configuration even when `.env` is absent by using `.env.example` safely;
+- this polish is a frontend navigation/developer-setup improvement and does not change backend API behavior, business rules, authorization, schema, migrations, enums, purchasing expansion, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior.
+
+Employee field-recording clock-in guard is merged and protected on `main`:
+- assigned Employee users must have an open time entry for the selected job ticket before recording field work through work notes, ticket parts, part requests, or file/photo uploads;
+- Employee users clocked into a different job are directed to open that active ticket or clock out before recording field work elsewhere;
+- Manager/Admin back-office coordination and review actions are not gated by an employee clock-in;
+- focused backend, integration, and frontend tests were added for the guard and for the employee UI disabled states;
+- no schema migration, enum renumbering, auth weakening, purchasing expansion, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior was added.
+
 Manager/Admin assignment stabilization is merged and protected on `main`:
 - `GET /api/users/assignable-employees` provides a narrow Manager/Admin-safe lookup for active, non-archived Employee-role users;
 - full `/api/users` user-management endpoints remain Admin-only;
@@ -71,7 +86,9 @@ Design inspiration came from mature service-repair and field-service tools, espe
 
 The Crane implementation adapts those ideas to this system's actual scope:
 - keeps the Manager/Admin ticket detail page as the primary service-ticket workspace;
-- organizes the workspace around real operating flow: ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts used or requested, files/photos, activity, and invoice-ready summary;
+- organizes the workspace around real operating flow: ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts used or requested, files/photos, and invoice-ready summary;
+- adds shareable queue URLs, queue-aware breadcrumbs, dashboard-to-queue links, workflow tabs, and a recommended next action where the implemented UI supports them;
+- requires technicians to be clocked into the selected ticket before recording field work, preserving the link between time tracking and field records;
 - uses focused in-page action panels where existing APIs already support the action;
 - keeps Employee mobile workflow simple and field-focused;
 - keeps Manager/Admin routes protected and `/manage/users` Admin-only;
@@ -117,6 +134,7 @@ Before starting the next feature PR, confirm:
 - no migration was added unless a schema/index change requires it;
 - no authorization boundaries or route guards were weakened;
 - technician parts/request screens still do not expose cost, billable price, vendor, purchase, inventory, catalog cleanup, or billing controls;
+- technician field-recording paths remain tied to an open time entry for the same job ticket;
 - existing Employee and Manager/Admin workflows remain reachable and responsive on narrow screens;
 - README, project scope, API contract, and roadmap docs align with the implemented `main` state;
 - validation commands pass in CI or a checkout-capable environment.
