@@ -389,6 +389,52 @@ public sealed class AuthIntegrationTests
     }
 
     [Fact]
+    public async Task Admin_reset_password_replaces_credentials_without_exposing_password_hash()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedUsersAsync(db, auth));
+
+        Guid employeeId;
+        string originalHash;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var employee = await db.Employees.SingleAsync(x => x.UserName == "employee");
+            employeeId = employee.Id;
+            originalHash = employee.PasswordHash!;
+        }
+
+        var adminClient = factory.CreateClient();
+        await adminClient.SetBearerTokenAsync("admin", "AdminPass!123");
+
+        var resetResponse = await adminClient.PostAsJsonAsync($"/api/users/{employeeId}/reset-password", new ResetPasswordDto("NewEmployeePass!123"));
+
+        Assert.Equal(HttpStatusCode.OK, resetResponse.StatusCode);
+        var resetJson = await resetResponse.Content.ReadAsStringAsync();
+        using (var resetPayload = JsonDocument.Parse(resetJson))
+        {
+            Assert.Equal(employeeId, resetPayload.RootElement.GetProperty("id").GetGuid());
+        }
+        Assert.DoesNotContain("passwordHash", resetJson, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("NewEmployeePass!123", resetJson);
+
+        await using (var verifyScope = factory.Services.CreateAsyncScope())
+        {
+            var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var employee = await db.Employees.SingleAsync(x => x.Id == employeeId);
+            Assert.NotEqual(originalHash, employee.PasswordHash);
+            Assert.DoesNotContain("NewEmployeePass!123", employee.PasswordHash!);
+        }
+
+        var loginClient = factory.CreateClient();
+        var oldPasswordLogin = await loginClient.PostAsJsonAsync("/api/auth/login", new AuthLoginRequestDto("employee", "EmployeePass!123"));
+        Assert.Equal(HttpStatusCode.Unauthorized, oldPasswordLogin.StatusCode);
+
+        var newPasswordLogin = await loginClient.PostAsJsonAsync("/api/auth/login", new AuthLoginRequestDto("employee", "NewEmployeePass!123"));
+        Assert.Equal(HttpStatusCode.OK, newPasswordLogin.StatusCode);
+    }
+
+    [Fact]
     public async Task Employee_can_use_parts_lookup_without_manager_cost_fields()
     {
         await using var factory = new TestApiFactory();
