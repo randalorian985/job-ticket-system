@@ -12,8 +12,10 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Technicians can search/select existing parts through a technician-safe lookup or type a new/unlisted part from inside an assigned service ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office order/request queue item.
+- Technicians must be clocked into the selected job ticket before recording field work through work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
 - Manager/Admin service-ticket detail now presents a cohesive field-service workbench with ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket actions use focused panels for ticket editing, status review, archive review, and Add / Request Part while staying on existing ticket, part-request, assignment, file, time, and reporting APIs.
+- Manager/Admin task navigation uses URL-backed queue filters, dashboard links into filtered queues, queue-aware return links, workflow tabs, and a visible recommended next action on ticket detail.
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
 - Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.

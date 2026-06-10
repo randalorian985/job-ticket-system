@@ -58,6 +58,26 @@
   - `description`
 - This endpoint is safe for technician in-ticket search. It does not return part cost, billable price, vendor cost, purchase history, inventory quantity, reorder thresholds, billing controls, or catalog-admin fields.
 
+## Employee Field Recording Guard
+Employee field-recording APIs require the assigned employee to be clocked into the selected job ticket before recording new field work. Manager/Admin back-office actions are not gated by an employee clock-in.
+
+The guard applies to Employee calls that create or update ticket field records, including:
+- `POST /api/job-tickets/{jobTicketId}/work-entries`
+- `POST /api/job-tickets/{jobTicketId}/parts`
+- `POST /api/job-tickets/{jobTicketId}/parts/quick-add`
+- Employee-safe job-ticket part updates that record technician-side field changes
+- `POST /api/part-requests/job-ticket/{jobTicketId}`
+- job-ticket file/photo upload paths
+- job-ticket file/photo caption or visibility update paths
+- job-ticket file/photo archive paths
+
+Behavior:
+- the employee must have an open `TimeEntry` for the same `jobTicketId`;
+- an employee clocked into a different job ticket must open that ticket or clock out before recording field work on another ticket;
+- missing matching clock-in returns a controlled validation error: `Clock in to this job ticket before recording field work.`;
+- Manager/Admin users can continue back-office coordination and review actions without this employee clock-in gate;
+- this guard does not change DTO shapes, role policies, backend enum values, schema, migrations, purchasing behavior, inventory behavior, recommendations, AI/scoring, automatic compatibility, or automatic approval.
+
 ## Reporting
 Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports UI groups the existing endpoints into invoice/closeout, labor/parts, and service-history sections, then performs client-side CSV export from the currently loaded table rows. There is no server-side export job, invoice generation, payment workflow, customer portal workflow, recommendation engine, AI/scoring, automatic compatibility decision, or automatic approval behavior in this reporting slice.
 
@@ -122,6 +142,7 @@ The parts request API is a job-ticket-first workflow for technician-added ticket
   - `needsOrdered` optional, defaults to `true`
 - Response DTO: `PartRequestDto`
 - Behavior:
+  - Employee-created part requests require the assigned employee to be clocked into the same job ticket;
   - selecting `partId` records the existing catalog part number/name snapshot without exposing pricing to the technician;
   - omitting `partId` records the typed part as an unlisted ticket part;
   - `needsOrdered: true` marks the row for back-office/parts-manager review and includes it in `GET /api/part-requests`;
@@ -187,6 +208,7 @@ The parts request API is a job-ticket-first workflow for technician-added ticket
 ## Existing Job-Ticket Part Boundaries
 - `POST /api/job-tickets/{jobTicketId}/parts` remains Manager/Admin catalog-backed part usage.
 - Existing employee-safe job-ticket part responses continue to hide price snapshots when returned through employee contexts.
+- Employee-created or employee-updated job-ticket part field records require an open time entry on the same job ticket.
 - Technicians must not receive UI controls for part cost, billable price, vendor cost, purchase history, inventory transactions, catalog administration, or billing decisions.
 
 ## Existing Purchasing Support
