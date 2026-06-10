@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { ApiError } from '../../api/httpClient'
 import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto } from '../../types'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from '../employee/jobDisplay'
 import { formatDate, jobStatusOptions, priorityOptions } from './managerDisplay'
+import { activeDispatchStatusValues, buildJobTicketDetailPath, normalizeJobTicketQueueSearchParams, readJobTicketQueueFilters } from './managerTaskNavigation'
 
 const allFilterValue = 'all'
-const activeStatusValues = new Set([2, 3, 4, 5, 6])
+const activeStatusValues = activeDispatchStatusValues
 const waitingStatusValues = new Set([5, 6])
 const dispatchReadinessFilterOptions = [
   { value: allFilterValue, label: 'All dispatch readiness' },
@@ -103,13 +104,38 @@ export function JobTicketListPage() {
   const [assignmentDataUnavailable, setAssignmentDataUnavailable] = useState(false)
   const [customers, setCustomers] = useState<Record<string, CustomerDto>>({})
   const [locations, setLocations] = useState<Record<string, ServiceLocationDto>>({})
-  const [statusFilter, setStatusFilter] = useState(allFilterValue)
-  const [priorityFilter, setPriorityFilter] = useState(allFilterValue)
-  const [customerFilter, setCustomerFilter] = useState(allFilterValue)
-  const [dispatchReadinessFilter, setDispatchReadinessFilter] = useState(allFilterValue)
-  const [searchText, setSearchText] = useState('')
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const queueFilters = readJobTicketQueueFilters(searchParams)
+  const statusFilter = queueFilters.status
+  const priorityFilter = queueFilters.priority
+  const customerFilter = queueFilters.customer
+  const dispatchReadinessFilter = queueFilters.readiness
+  const searchText = queueFilters.search
+
+  const normalizedSearchParams = normalizeJobTicketQueueSearchParams(searchParams)
+  const normalizedSearch = normalizedSearchParams.toString()
+  const currentSearch = searchParams.toString()
+
+  const updateFilter = (name: string, value: string) => {
+    setSearchParams((currentParams) => {
+      const nextParams = normalizeJobTicketQueueSearchParams(currentParams)
+      if (!value || value === allFilterValue) {
+        nextParams.delete(name)
+      } else {
+        nextParams.set(name, value)
+      }
+      return nextParams
+    }, { replace: true })
+  }
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (normalizedSearch !== currentSearch) {
+      setSearchParams(new URLSearchParams(normalizedSearch), { replace: true })
+    }
+  }, [currentSearch, normalizedSearch, setSearchParams])
 
   useEffect(() => {
     let isCancelled = false
@@ -187,7 +213,8 @@ export function JobTicketListPage() {
       const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
       const assignmentNames = assignments?.map((item) => getAssignmentDisplayName(item)) ?? []
       const readiness = getDispatchReadiness(job, assignments)
-      const matchesStatus = statusFilter === allFilterValue || String(job.status) === statusFilter
+      const matchesStatus = statusFilter === allFilterValue
+        || (statusFilter === 'active' ? activeStatusValues.has(job.status) : String(job.status) === statusFilter)
       const matchesPriority = priorityFilter === allFilterValue || String(job.priority) === priorityFilter
       const matchesCustomer = customerFilter === allFilterValue || job.customerId === customerFilter
       const matchesDispatchReadiness = dispatchReadinessFilter === allFilterValue ||
@@ -232,13 +259,11 @@ export function JobTicketListPage() {
     dispatchReadinessFilter !== allFilterValue ||
     Boolean(searchText.trim())
 
-  const resetFilters = () => {
-    setStatusFilter(allFilterValue)
-    setPriorityFilter(allFilterValue)
-    setCustomerFilter(allFilterValue)
-    setDispatchReadinessFilter(allFilterValue)
-    setSearchText('')
-  }
+  const resetFilters = () => setSearchParams({}, { replace: true })
+
+  const queuePath = `${location.pathname}${normalizedSearch ? `?${normalizedSearch}` : ''}`
+  const getTicketDetailPath = (jobTicketId: string) =>
+    buildJobTicketDetailPath(jobTicketId, queuePath)
 
   return (
     <section className="job-ticket-queue-page stack" aria-label="manager job ticket queue">
@@ -277,32 +302,33 @@ export function JobTicketListPage() {
       <section className="filter-panel queue-filter-panel" aria-label="job ticket filters">
         <label className="sr-label">
           Search tickets
-          <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Ticket, title, customer, or location" />
+          <input value={searchText} onChange={(event) => updateFilter('q', event.target.value)} placeholder="Ticket, title, customer, or location" />
         </label>
         <label className="sr-label">
           Status
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+          <select value={statusFilter} onChange={(event) => updateFilter('status', event.target.value)}>
             <option value={allFilterValue}>All statuses</option>
+            <option value="active">Active statuses</option>
             {jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
         <label className="sr-label">
           Priority
-          <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}>
+          <select value={priorityFilter} onChange={(event) => updateFilter('priority', event.target.value)}>
             <option value={allFilterValue}>All priorities</option>
             {priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
         <label className="sr-label">
           Customer
-          <select value={customerFilter} onChange={(event) => setCustomerFilter(event.target.value)}>
+          <select value={customerFilter} onChange={(event) => updateFilter('customer', event.target.value)}>
             <option value={allFilterValue}>All customers</option>
             {customerOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
         </label>
         <label className="sr-label">
           Dispatch readiness
-          <select value={dispatchReadinessFilter} onChange={(event) => setDispatchReadinessFilter(event.target.value)} disabled={assignmentDataUnavailable}>
+          <select value={dispatchReadinessFilter} onChange={(event) => updateFilter('readiness', event.target.value)} disabled={assignmentDataUnavailable}>
             {dispatchReadinessFilterOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
@@ -333,7 +359,7 @@ export function JobTicketListPage() {
                 <li key={job.id} className={`ticket-list-item ${readinessClass}`}>
                   <div className="ticket-list-main">
                     <div>
-                      <Link className="ticket-number-link" to={`/manage/job-tickets/${job.id}`}>{job.ticketNumber}</Link>
+                      <Link className="ticket-number-link" to={getTicketDetailPath(job.id)}>{job.ticketNumber}</Link>
                       <div className="ticket-title">{job.title}</div>
                       <div className="muted">{getJobTicketStatusLabel(job.status)} · {getJobTicketPriorityLabel(job.priority)}</div>
                     </div>

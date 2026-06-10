@@ -192,6 +192,34 @@ ensure_docker() {
   fi
 }
 
+validate_compose_configuration() {
+  log "Docker Compose configuration"
+
+  if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
+    warn "Docker Compose is unavailable; configuration validation skipped."
+    return 0
+  fi
+
+  if [ -f "$repo_root/.env" ]; then
+    docker compose --project-directory "$repo_root" -f "$repo_root/docker-compose.yml" config --quiet
+    return
+  fi
+
+  if [ ! -f "$repo_root/.env.example" ]; then
+    warn ".env and .env.example are unavailable; Docker Compose configuration validation skipped."
+    return 0
+  fi
+
+  (
+    cleanup_temporary_env() {
+      rm -f "$repo_root/.env"
+    }
+    trap cleanup_temporary_env EXIT
+    cp "$repo_root/.env.example" "$repo_root/.env"
+    docker compose --project-directory "$repo_root" -f "$repo_root/docker-compose.yml" config --quiet
+  )
+}
+
 confirm_node_npm() {
   log "Node.js and npm"
   if command -v node >/dev/null 2>&1; then
@@ -263,6 +291,7 @@ repair_origin_and_fetch "initial"
 ensure_dotnet
 ensure_gh
 ensure_docker
+validate_compose_configuration
 confirm_node_npm
 run_backend_validation
 run_frontend_validation

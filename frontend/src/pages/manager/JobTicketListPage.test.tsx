@@ -46,9 +46,9 @@ describe('Manager list pages', () => {
     })
   })
 
-  const renderPage = () => {
+  const renderPage = (initialEntry = '/manage/job-tickets') => {
     render(
-      <MemoryRouter future={routerFuture}>
+      <MemoryRouter future={routerFuture} initialEntries={[initialEntry]}>
         <JobTicketListPage />
       </MemoryRouter>
     )
@@ -259,4 +259,22 @@ describe('Manager list pages', () => {
     await waitFor(() => expect(screen.getByText('You do not have permission to load this manager view.')).toBeInTheDocument())
     expect(screen.queryByText('Unable to load manager job tickets.')).not.toBeInTheDocument()
   })
+  it('loads filters from the URL and carries the exact queue into ticket detail links', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Ready compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Waiting pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2' }
+    ] as any)
+
+    renderPage('/manage/job-tickets?status=active&readiness=needs-review')
+
+    expect(await screen.findByText('JT-2')).toBeInTheDocument()
+    expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Status')).toHaveValue('active')
+    expect(screen.getByLabelText('Dispatch readiness')).toHaveValue('needs-review')
+    expect(screen.getByRole('link', { name: 'JT-2' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('returnTo=%2Fmanage%2Fjob-tickets%3Fstatus%3Dactive%26readiness%3Dneeds-review')
+    )
+  })
+
 })
