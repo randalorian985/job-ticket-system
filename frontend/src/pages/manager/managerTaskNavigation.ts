@@ -1,14 +1,16 @@
 export const activeDispatchStatusValues = new Set([2, 3, 4, 5, 6])
 
-const validStatusFilters = new Set(['active', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
+const validStatusFilters = new Set(['active', 'waiting', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
 const validPriorityFilters = new Set(['1', '2', '3', '4'])
 const validReadinessFilters = new Set(['ready', 'needs-review', 'not-active'])
+const validAttentionFilters = new Set(['unscheduled', 'missing-due', 'unassigned', 'needs-lead'])
 
 export type JobTicketQueueFilters = {
   status: string
   priority: string
   customer: string
   readiness: string
+  attention: string
   search: string
 }
 
@@ -20,6 +22,7 @@ export const readJobTicketQueueFilters = (searchParams: URLSearchParams): JobTic
   priority: validFilterOrAll(searchParams.get('priority'), validPriorityFilters),
   customer: searchParams.get('customer')?.trim() || 'all',
   readiness: validFilterOrAll(searchParams.get('readiness'), validReadinessFilters),
+  attention: validFilterOrAll(searchParams.get('attention'), validAttentionFilters),
   search: searchParams.get('q') ?? ''
 })
 
@@ -31,6 +34,7 @@ export const normalizeJobTicketQueueSearchParams = (searchParams: URLSearchParam
   if (filters.priority !== 'all') normalizedParams.set('priority', filters.priority)
   if (filters.customer !== 'all') normalizedParams.set('customer', filters.customer)
   if (filters.readiness !== 'all') normalizedParams.set('readiness', filters.readiness)
+  if (filters.attention !== 'all') normalizedParams.set('attention', filters.attention)
   if (filters.search) normalizedParams.set('q', filters.search)
 
   return normalizedParams
@@ -41,6 +45,11 @@ export const getJobTicketQueueLabel = (searchParams: URLSearchParams) => {
 
   if (filters.readiness === 'needs-review') return 'Needs Dispatch Review'
   if (filters.readiness === 'ready') return 'Dispatch-ready Queue'
+  if (filters.attention === 'unassigned') return 'Unassigned Tickets'
+  if (filters.attention === 'needs-lead') return 'Tickets Needing a Lead'
+  if (filters.attention === 'unscheduled') return 'Unscheduled Tickets'
+  if (filters.attention === 'missing-due') return 'Tickets Missing a Due Date'
+  if (filters.status === 'waiting') return 'Waiting Tickets'
   if (filters.status === '5') return 'Waiting on Parts'
   if (filters.status === '10') return 'Invoice-ready Queue'
   if (filters.status === 'active') return 'Active Job Queue'

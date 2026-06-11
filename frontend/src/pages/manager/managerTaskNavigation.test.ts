@@ -16,6 +16,7 @@ describe('manager task navigation', () => {
       priority: 'all',
       customer: 'all',
       readiness: 'all',
+      attention: 'all',
       search: 'pump'
     })
     expect(normalizeJobTicketQueueSearchParams(
@@ -26,6 +27,7 @@ describe('manager task navigation', () => {
   it('derives queue labels from validated filters', () => {
     expect(getJobTicketQueueLabel(new URLSearchParams('status=active&readiness=needs-review'))).toBe('Needs Dispatch Review')
     expect(getJobTicketQueueLabel(new URLSearchParams('status=5'))).toBe('Waiting on Parts')
+    expect(getJobTicketQueueLabel(new URLSearchParams('attention=unassigned'))).toBe('Unassigned Tickets')
   })
 
   it('builds detail links with only internal return context', () => {

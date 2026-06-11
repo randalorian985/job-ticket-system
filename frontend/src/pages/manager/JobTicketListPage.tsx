@@ -26,6 +26,13 @@ type DispatchReadiness = {
   isReady: boolean
 }
 
+type QueuePreset = {
+  status?: string
+  priority?: string
+  readiness?: string
+  attention?: string
+}
+
 const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[] | null): DispatchReadiness => {
   if (!activeStatusValues.has(job.status)) {
     return {
@@ -111,6 +118,7 @@ export function JobTicketListPage() {
   const priorityFilter = queueFilters.priority
   const customerFilter = queueFilters.customer
   const dispatchReadinessFilter = queueFilters.readiness
+  const attentionFilter = queueFilters.attention
   const searchText = queueFilters.search
 
   const normalizedSearchParams = normalizeJobTicketQueueSearchParams(searchParams)
@@ -125,6 +133,23 @@ export function JobTicketListPage() {
       } else {
         nextParams.set(name, value)
       }
+      return nextParams
+    }, { replace: true })
+  }
+  const applyQueuePreset = (preset: QueuePreset) => {
+    setSearchParams((currentParams) => {
+      const nextParams = normalizeJobTicketQueueSearchParams(currentParams)
+      nextParams.delete('status')
+      nextParams.delete('priority')
+      nextParams.delete('readiness')
+      nextParams.delete('attention')
+
+      Object.entries(preset).forEach(([name, value]) => {
+        if (value) {
+          nextParams.set(name, value)
+        }
+      })
+
       return nextParams
     }, { replace: true })
   }
@@ -214,24 +239,31 @@ export function JobTicketListPage() {
       const assignmentNames = assignments?.map((item) => getAssignmentDisplayName(item)) ?? []
       const readiness = getDispatchReadiness(job, assignments)
       const matchesStatus = statusFilter === allFilterValue
-        || (statusFilter === 'active' ? activeStatusValues.has(job.status) : String(job.status) === statusFilter)
+        || (statusFilter === 'active' && activeStatusValues.has(job.status))
+        || (statusFilter === 'waiting' && waitingStatusValues.has(job.status))
+        || String(job.status) === statusFilter
       const matchesPriority = priorityFilter === allFilterValue || String(job.priority) === priorityFilter
       const matchesCustomer = customerFilter === allFilterValue || job.customerId === customerFilter
       const matchesDispatchReadiness = dispatchReadinessFilter === allFilterValue ||
         (dispatchReadinessFilter === 'ready' && readiness.isReady) ||
         (dispatchReadinessFilter === 'needs-review' && readiness.openItems > 0) ||
         (dispatchReadinessFilter === 'not-active' && !activeStatusValues.has(job.status))
+      const matchesAttention = attentionFilter === allFilterValue ||
+        (attentionFilter === 'unscheduled' && activeStatusValues.has(job.status) && !job.scheduledStartAtUtc) ||
+        (attentionFilter === 'missing-due' && activeStatusValues.has(job.status) && !job.dueAtUtc) ||
+        (attentionFilter === 'unassigned' && activeStatusValues.has(job.status) && assignments !== null && !assignments.length) ||
+        (attentionFilter === 'needs-lead' && activeStatusValues.has(job.status) && assignments !== null && !assignments.some((assignment) => assignment.isLead))
       const matchesSearch = !normalizedSearch || [job.ticketNumber, job.title, customerName, locationName, ...assignmentNames]
         .some((value) => value.toLocaleLowerCase().includes(normalizedSearch))
 
-      return matchesStatus && matchesPriority && matchesCustomer && matchesDispatchReadiness && matchesSearch
+      return matchesStatus && matchesPriority && matchesCustomer && matchesDispatchReadiness && matchesAttention && matchesSearch
     })
-  }, [assignmentDataUnavailable, assignmentMap, customerFilter, customers, dispatchReadinessFilter, jobs, locations, priorityFilter, searchText, statusFilter])
+  }, [assignmentDataUnavailable, assignmentMap, attentionFilter, customerFilter, customers, dispatchReadinessFilter, jobs, locations, priorityFilter, searchText, statusFilter])
 
   const triageSummary = useMemo(() => {
-    const activeJobs = filteredJobs.filter((job) => activeStatusValues.has(job.status))
-    const urgentJobs = filteredJobs.filter((job) => job.priority === 4 && activeStatusValues.has(job.status))
-    const waitingJobs = filteredJobs.filter((job) => waitingStatusValues.has(job.status))
+    const activeJobs = jobs.filter((job) => activeStatusValues.has(job.status))
+    const urgentJobs = jobs.filter((job) => job.priority === 4 && activeStatusValues.has(job.status))
+    const waitingJobs = jobs.filter((job) => waitingStatusValues.has(job.status))
     const unscheduledJobs = activeJobs.filter((job) => !job.scheduledStartAtUtc)
     const missingDueDateJobs = activeJobs.filter((job) => !job.dueAtUtc)
     const unassignedJobs = assignmentDataUnavailable ? [] : activeJobs.filter((job) => !(assignmentMap[job.id]?.length))
@@ -251,12 +283,13 @@ export function JobTicketListPage() {
       dispatchReadyCount: dispatchReadyJobs.length,
       needsDispatchReviewCount: needsDispatchReviewJobs.length
     }
-  }, [assignmentDataUnavailable, assignmentMap, filteredJobs])
+  }, [assignmentDataUnavailable, assignmentMap, jobs])
 
   const hasActiveFilters = statusFilter !== allFilterValue ||
     priorityFilter !== allFilterValue ||
     customerFilter !== allFilterValue ||
     dispatchReadinessFilter !== allFilterValue ||
+    attentionFilter !== allFilterValue ||
     Boolean(searchText.trim())
 
   const resetFilters = () => setSearchParams({}, { replace: true })
@@ -275,32 +308,8 @@ export function JobTicketListPage() {
         <Link className="button-link" to="/manage/job-tickets/new">Create Ticket</Link>
       </header>
 
-      {!isLoading && !error && jobs.length ? (
-        <section className="queue-kpi-grid" aria-label="queue summary">
-          <div className="queue-kpi-card"><span>Active tickets</span><strong>{triageSummary.activeCount}</strong><span className="muted">Submitted through waiting statuses.</span></div>
-          <div className="queue-kpi-card queue-kpi-card-alert"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong><span className="muted">Urgent priority tickets still active.</span></div>
-          <div className="queue-kpi-card"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong><span className="muted">Waiting on parts or customer.</span></div>
-          <div className="queue-kpi-card"><span>Unscheduled active</span><strong>{triageSummary.unscheduledCount}</strong><span className="muted">Active tickets without a start time.</span></div>
-          <div className="queue-kpi-card"><span>Missing due date</span><strong>{triageSummary.missingDueDateCount}</strong><span className="muted">Active tickets without a due date.</span></div>
-          {assignmentDataUnavailable ? (
-            <div className="queue-kpi-card queue-kpi-card-review"><span>Assignment readiness</span><strong>Unavailable</strong><span className="muted">Assignment data must load before assignment-dependent dispatch counts are shown.</span></div>
-          ) : (
-            <>
-              <div className="queue-kpi-card"><span>Unassigned active</span><strong>{triageSummary.unassignedCount}</strong><span className="muted">Active tickets that still need an assigned tech.</span></div>
-              <div className="queue-kpi-card"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong><span className="muted">Active tickets without a lead tech flag.</span></div>
-              <div className="queue-kpi-card queue-kpi-card-ready"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong><span className="muted">Active tickets with assignment, lead, schedule, and due date.</span></div>
-              <div className="queue-kpi-card queue-kpi-card-review"><span>Needs dispatch review</span><strong>{triageSummary.needsDispatchReviewCount}</strong><span className="muted">Active tickets missing assignment, lead, schedule, or due date context.</span></div>
-            </>
-          )}
-        </section>
-      ) : null}
-
-      {!isLoading && !error && assignmentDataUnavailable ? (
-        <p className="queue-warning warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and dispatch-readiness filters are unavailable until assignments reload.</p>
-      ) : null}
-
       <section className="filter-panel queue-filter-panel" aria-label="job ticket filters">
-        <label className="sr-label">
+        <label className="sr-label queue-search-field">
           Search tickets
           <input value={searchText} onChange={(event) => updateFilter('q', event.target.value)} placeholder="Ticket, title, customer, or location" />
         </label>
@@ -309,6 +318,7 @@ export function JobTicketListPage() {
           <select value={statusFilter} onChange={(event) => updateFilter('status', event.target.value)}>
             <option value={allFilterValue}>All statuses</option>
             <option value="active">Active statuses</option>
+            <option value="waiting">Waiting on parts or customer</option>
             {jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
@@ -334,6 +344,39 @@ export function JobTicketListPage() {
         </label>
         <button type="button" className="secondary-button" onClick={resetFilters} disabled={!hasActiveFilters}>Reset Filters</button>
       </section>
+
+      {!isLoading && !error && jobs.length ? (
+        <section className="queue-shortcuts" aria-label="queue summary">
+          <div className="queue-shortcuts-heading">
+            <div>
+              <h3>Queue shortcuts</h3>
+              <p className="muted">Select a count to filter the ticket list.</p>
+            </div>
+            {hasActiveFilters ? <span className="status-pill">Filtered view</span> : null}
+          </div>
+          <div className="queue-kpi-grid">
+            <button aria-pressed={statusFilter === 'active' && priorityFilter === allFilterValue && dispatchReadinessFilter === allFilterValue && attentionFilter === allFilterValue} className="queue-kpi-card" onClick={() => applyQueuePreset({ status: 'active' })} title="Show submitted through waiting statuses" type="button"><span>Active tickets</span><strong>{triageSummary.activeCount}</strong></button>
+            <button aria-pressed={statusFilter === 'active' && priorityFilter === '4'} className="queue-kpi-card queue-kpi-card-alert" onClick={() => applyQueuePreset({ status: 'active', priority: '4' })} title="Show urgent active tickets" type="button"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong></button>
+            <button aria-pressed={statusFilter === 'waiting'} className="queue-kpi-card" onClick={() => applyQueuePreset({ status: 'waiting' })} title="Show tickets waiting on parts or customers" type="button"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong></button>
+            <button aria-pressed={attentionFilter === 'unscheduled'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'unscheduled' })} title="Show active tickets without a scheduled start" type="button"><span>Unscheduled</span><strong>{triageSummary.unscheduledCount}</strong></button>
+            <button aria-pressed={attentionFilter === 'missing-due'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'missing-due' })} title="Show active tickets without a due date" type="button"><span>Missing due</span><strong>{triageSummary.missingDueDateCount}</strong></button>
+            {assignmentDataUnavailable ? (
+              <div className="queue-kpi-card queue-kpi-card-review queue-kpi-card-static"><span>Assignments</span><strong>Unavailable</strong></div>
+            ) : (
+              <>
+                <button aria-pressed={attentionFilter === 'unassigned'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'unassigned' })} title="Show active tickets that need an assigned technician" type="button"><span>Unassigned</span><strong>{triageSummary.unassignedCount}</strong></button>
+                <button aria-pressed={attentionFilter === 'needs-lead'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'needs-lead' })} title="Show active tickets without a lead technician" type="button"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong></button>
+                <button aria-pressed={dispatchReadinessFilter === 'ready'} className="queue-kpi-card queue-kpi-card-ready" onClick={() => applyQueuePreset({ status: 'active', readiness: 'ready' })} title="Show dispatch-ready tickets" type="button"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong></button>
+                <button aria-pressed={dispatchReadinessFilter === 'needs-review'} className="queue-kpi-card queue-kpi-card-review" onClick={() => applyQueuePreset({ status: 'active', readiness: 'needs-review' })} title="Show tickets that need dispatch review" type="button"><span>Needs review</span><strong>{triageSummary.needsDispatchReviewCount}</strong></button>
+              </>
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {!isLoading && !error && assignmentDataUnavailable ? (
+        <p className="queue-warning warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and dispatch-readiness filters are unavailable until assignments reload.</p>
+      ) : null}
 
       {isLoading ? <p className="muted" role="status">Loading manager job tickets…</p> : null}
       {error ? <p className="error">{error}</p> : null}

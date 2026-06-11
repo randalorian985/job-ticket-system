@@ -54,6 +54,7 @@ describe('ManagerShell', () => {
     renderShell('/manage')
 
     expect(screen.queryByRole('option', { name: 'Users' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument()
   })
 
   it('shows admin-only navigation to admins', () => {
@@ -67,5 +68,15 @@ describe('ManagerShell', () => {
     const sectionPicker = screen.getByLabelText('Manager section navigation')
     expect(screen.getByRole('option', { name: 'Users' })).toBeInTheDocument()
     expect(sectionPicker).toHaveValue('/manage/users')
+    expect(screen.getByText('Admin')).toBeInTheDocument()
+  })
+
+  it('keeps primary operations visible and groups secondary navigation into compact menus', () => {
+    renderShell('/manage/reports')
+
+    expect(screen.getByRole('navigation', { name: 'manager navigation' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Job Tickets' })).toBeInTheDocument()
+    expect(screen.getByText('Customers & Equipment')).toBeInTheDocument()
+    expect(screen.getByText('Parts & Supply')).toBeInTheDocument()
   })
 })

@@ -261,46 +261,100 @@ td button {
   min-width: 5.5rem;
 }
 
-.manager-nav-groups {
-  gap: 0.65rem;
-  padding: 0.75rem 1rem 0.9rem;
-}
-
-.manager-nav-group {
+.manager-desktop-nav {
   align-items: center;
-  display: grid;
-  gap: 0.55rem;
-  grid-template-columns: 9.5rem minmax(0, 1fr);
+  background: #ffffff;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  padding: 0.55rem 1rem;
 }
 
-.manager-nav-group-label {
-  color: #6b7686;
+.manager-primary-links,
+.manager-nav-menus {
+  align-items: center;
+  display: flex;
+  gap: 0.3rem;
+  min-width: 0;
 }
 
-.manager-nav-group .inline-links {
-  gap: 0.35rem;
-}
-
-.inline-links a {
+.manager-primary-links a,
+.manager-nav-menu summary,
+.manager-nav-menu-panel a {
   align-items: center;
   border: 1px solid transparent;
   border-radius: 6px;
+  color: var(--text-strong);
+  cursor: pointer;
   display: inline-flex;
   font-size: 0.82rem;
   font-weight: 700;
   justify-content: center;
   min-height: 2rem;
   padding: 0.32rem 0.58rem;
+  text-decoration: none;
 }
 
-.inline-links a:hover {
+.manager-primary-links a:hover,
+.manager-nav-menu summary:hover,
+.manager-nav-menu-panel a:hover {
   background: var(--brand-soft);
   border-color: #c9d5f5;
 }
 
-.inline-links .active-nav-link {
+.manager-primary-links .active-nav-link,
+.manager-nav-menu-panel .active-nav-link {
   background: var(--brand);
   border-color: var(--brand);
+  color: #ffffff;
+}
+
+.manager-nav-menu {
+  position: relative;
+}
+
+.manager-nav-menu summary {
+  list-style: none;
+}
+
+.manager-nav-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.manager-nav-menu summary::after {
+  content: "";
+  border-bottom: 0;
+  border-left: 0.25rem solid transparent;
+  border-right: 0.25rem solid transparent;
+  border-top: 0.3rem solid currentColor;
+  margin-left: 0.45rem;
+}
+
+.manager-nav-menu-active summary {
+  background: #edf2ff;
+  border-color: #c9d5f5;
+  color: var(--brand);
+}
+
+.manager-nav-menu-panel {
+  background: #ffffff;
+  border: 1px solid #d8e0ec;
+  border-radius: 7px;
+  box-shadow: 0 12px 30px rgba(23, 32, 51, 0.14);
+  display: grid;
+  gap: 0.2rem;
+  min-width: 13rem;
+  padding: 0.4rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 40;
+}
+
+.manager-nav-menu-panel a {
+  justify-content: flex-start;
+  white-space: nowrap;
 }
 
 /* Page and section hierarchy */
@@ -394,28 +448,137 @@ td button {
   min-height: 5.4rem;
 }
 
-.summary-card > span:first-child,
-.summary-card > .muted:first-child,
+.queue-filter-panel {
+  grid-template-columns: minmax(17rem, 2fr) repeat(4, minmax(9rem, 1fr)) auto;
+}
+
+.queue-search-field {
+  min-width: 0;
+}
+
+.queue-shortcuts {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.queue-shortcuts-heading {
+  align-items: end;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.queue-shortcuts-heading h3,
+.queue-shortcuts-heading p {
+  margin: 0;
+}
+
+.queue-shortcuts-heading h3 {
+  font-size: 0.88rem;
+}
+
+.queue-shortcuts-heading p {
+  font-size: 0.78rem;
+}
+
+.queue-kpi-grid {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(9, minmax(6.8rem, 1fr));
+  overflow-x: auto;
+  padding: 0.05rem 0 0.25rem;
+}
+
+.queue-kpi-card {
+  align-content: center;
+  appearance: none;
+  background: #ffffff;
+  border: 1px solid #dbe3ee;
+  box-shadow: none;
+  color: var(--text-strong);
+  cursor: pointer;
+  display: grid;
+  gap: 0.2rem;
+  min-height: 4.65rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+}
+
+.queue-kpi-card:hover {
+  border-color: #9fb0c8;
+  box-shadow: 0 3px 10px rgba(23, 32, 51, 0.08);
+  transform: translateY(-1px);
+}
+
+.queue-kpi-card:focus-visible {
+  outline: 3px solid rgba(49, 87, 200, 0.22);
+  outline-offset: 1px;
+}
+
+.queue-kpi-card[aria-pressed="true"] {
+  background: #edf2ff;
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+
 .queue-kpi-card > span:first-child {
+  background: transparent;
+  color: #526078;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  padding: 0;
+  text-transform: none;
+}
+
+.queue-kpi-card strong {
+  color: var(--text-strong);
+  font-size: 1.65rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.queue-kpi-card-alert strong {
+  color: #a71d43;
+}
+
+.queue-kpi-card-ready strong {
+  color: #087153;
+}
+
+.queue-kpi-card-review strong {
+  color: #3157c8;
+}
+
+.queue-kpi-card-static {
+  cursor: default;
+}
+
+.queue-kpi-card-static:hover {
+  border-color: #dbe3ee;
+  box-shadow: none;
+  transform: none;
+}
+
+.summary-card > span:first-child,
+.summary-card > .muted:first-child {
   background: #edf2ff;
   color: #31456d;
   padding: 0.5rem 0.65rem;
 }
 
-.summary-card-ready > span:first-child,
-.queue-kpi-card-ready > span:first-child {
+.summary-card-ready > span:first-child {
   background: #e9f6f1;
   color: #087153;
 }
 
-.summary-card-review > span:first-child,
-.queue-kpi-card-review > span:first-child {
+.summary-card-review > span:first-child {
   background: #edf4ff;
   color: #3157c8;
 }
 
-.summary-card-alert > span:first-child,
-.queue-kpi-card-alert > span:first-child {
+.summary-card-alert > span:first-child {
   background: #fff0f4;
   color: #a71d43;
 }
@@ -650,9 +813,28 @@ tbody tr:hover td {
 }
 
 @media (max-width: 1080px) {
-  .manager-nav-group {
-    align-items: start;
-    grid-template-columns: 1fr;
+  .manager-desktop-nav {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .manager-nav-menus {
+    border-top: 1px solid #e5eaf1;
+    padding-top: 0.35rem;
+  }
+
+  .manager-nav-menu-panel {
+    left: 0;
+    right: auto;
+  }
+
+  .queue-filter-panel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .queue-search-field {
+    grid-column: span 2;
   }
 
   .operations-kpi-grid {
@@ -682,6 +864,10 @@ tbody tr:hover td {
     padding: 0.65rem 0.75rem 0.75rem;
   }
 
+  .manager-desktop-nav {
+    display: none;
+  }
+
   .row:not(label),
   .report-results-heading,
   .page-heading,
@@ -704,6 +890,14 @@ tbody tr:hover td {
   .form-grid,
   .quick-add-grid {
     grid-template-columns: 1fr;
+  }
+
+  .queue-search-field {
+    grid-column: auto;
+  }
+
+  .queue-kpi-grid {
+    grid-template-columns: repeat(9, minmax(7.25rem, 1fr));
   }
 
   .master-data-filters button,

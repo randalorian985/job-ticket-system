@@ -2,22 +2,6 @@
   display: none;
 }
 
-.manager-nav-groups {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0 1rem 1rem;
-}
-
-.manager-nav-group {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.manager-nav-group .inline-links {
-  padding: 0;
-}
-
-.manager-nav-group-label,
 .manager-mobile-nav label {
   color: #505766;
   font-size: 0.74rem;
@@ -72,7 +56,7 @@
     padding-block: 0.5rem;
   }
 
-  .manager-header .manager-nav-groups {
+  .manager-header .manager-desktop-nav {
     display: none;
   }
 }

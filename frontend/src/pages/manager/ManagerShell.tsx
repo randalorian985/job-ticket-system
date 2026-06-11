@@ -104,19 +104,32 @@ export function ManagerShell() {
             ))}
           </select>
         </div>
-        <nav className="manager-nav-groups" aria-label="manager navigation">
-          {visibleNavGroups.map((group) => (
-            <section className="manager-nav-group" aria-label={group.label} key={group.label}>
-              <span className="manager-nav-group-label">{group.label}</span>
-              <div className="inline-links">
-                {group.items.map((item) => (
-                  <NavLink className={navLinkClassName} end={item.end} key={item.to} to={item.to}>
-                    {item.label}
-                  </NavLink>
-                ))}
-              </div>
-            </section>
-          ))}
+        <nav className="manager-desktop-nav" aria-label="manager navigation">
+          <div className="manager-primary-links">
+            {visibleNavGroups[0]?.items.map((item) => (
+              <NavLink className={navLinkClassName} end={item.end} key={item.to} to={item.to}>
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+          <div className="manager-nav-menus">
+            {visibleNavGroups.slice(1).map((group) => {
+              const groupIsActive = group.items.some((item) => isRouteActive(location.pathname, item))
+
+              return (
+                <details className={`manager-nav-menu${groupIsActive ? ' manager-nav-menu-active' : ''}`} key={group.label}>
+                  <summary>{group.label}</summary>
+                  <div className="manager-nav-menu-panel">
+                    {group.items.map((item) => (
+                      <NavLink className={navLinkClassName} end={item.end} key={item.to} to={item.to}>
+                        {item.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                </details>
+              )
+            })}
+          </div>
         </nav>
       </header>
       <Outlet />

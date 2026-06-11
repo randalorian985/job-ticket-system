@@ -101,12 +101,12 @@ describe('Manager list pages', () => {
     expect(screen.getByLabelText('queue summary')).toBeInTheDocument()
     expect(screen.getByText('Urgent active')).toBeInTheDocument()
     expect(screen.getByText('Waiting')).toBeInTheDocument()
-    expect(screen.getByText('Unscheduled active')).toBeInTheDocument()
-    expect(screen.getByText('Missing due date')).toBeInTheDocument()
-    expect(screen.getByText('Unassigned active')).toBeInTheDocument()
+    expect(screen.getByText('Unscheduled')).toBeInTheDocument()
+    expect(screen.getByText('Missing due')).toBeInTheDocument()
+    expect(screen.getAllByText('Unassigned').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Needs lead').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Dispatch-ready').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Needs dispatch review').length).toBeGreaterThan(0)
+    expect(screen.getByText('Needs review')).toBeInTheDocument()
   })
 
   it('shows ready dispatch context when assignment, lead, schedule, and due date are present', async () => {
@@ -155,9 +155,8 @@ describe('Manager list pages', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText(/Assignment data could not be loaded for one or more tickets/)).toBeInTheDocument()
-    expect(screen.getByText('Assignment readiness')).toBeInTheDocument()
-    expect(screen.getByText('Assignment data must load before assignment-dependent dispatch counts are shown.')).toBeInTheDocument()
-    expect(screen.queryByText('Unassigned active')).not.toBeInTheDocument()
+    expect(screen.getByText('Assignments')).toBeInTheDocument()
+    expect(screen.queryByText('Unassigned')).not.toBeInTheDocument()
     expect(screen.queryByText('Needs lead')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Dispatch readiness')).toBeDisabled()
     expect(screen.getByText('Assigned: Assignment data unavailable · Lead: Assignment data unavailable')).toBeInTheDocument()
@@ -193,6 +192,34 @@ describe('Manager list pages', () => {
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(screen.getByText('JT-3')).toBeInTheDocument()
+  })
+
+  it('puts search before queue shortcuts and filters the list when a shortcut is selected', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Urgent compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Scheduled pump', status: 4, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    const filters = screen.getByLabelText('job ticket filters')
+    const shortcuts = screen.getByLabelText('queue summary')
+    expect(filters.compareDocumentPosition(shortcuts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: /Urgent active/ }))
+
+    expect(screen.getByText('JT-1')).toBeInTheDocument()
+    expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Status')).toHaveValue('active')
+    expect(screen.getByLabelText('Priority')).toHaveValue('4')
+    expect(screen.getByRole('button', { name: /Urgent active/ })).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: /Unscheduled/ }))
+
+    expect(screen.getByText('JT-1')).toBeInTheDocument()
+    expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Priority')).toHaveValue('all')
   })
 
   it('filters by search text, status, priority, and customer, then resets filters', async () => {
