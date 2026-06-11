@@ -4,6 +4,7 @@ import { AuthProvider } from './features/auth/AuthContext'
 import './styles.css'
 import './shell-overflow-fix.css'
 import './ui-smoothness.css'
+import './system-polish.css'
 import { routerFuture } from './routes/routerFuture'
 
 const App = () => (

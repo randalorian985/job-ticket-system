@@ -41,10 +41,16 @@ export function LoginPage() {
   }
 
   return (
-    <main className="mobile-shell">
-      <section className="card">
-        <h1>Employee Login</h1>
-        <p className="muted">Sign in to view your assigned jobs.</p>
+    <main className="mobile-shell login-page">
+      <section className="card login-card">
+        <header className="login-heading">
+          <span className="product-mark" aria-hidden="true">JT</span>
+          <div>
+            <p className="eyebrow">Field service workspace</p>
+            <h1>Sign in</h1>
+            <p className="muted">Open assigned jobs or the Manager/Admin console.</p>
+          </div>
+        </header>
 
         {user ? (
           <div className="stack">
@@ -77,7 +83,7 @@ export function LoginPage() {
 
           {error ? <p className="error">{error}</p> : null}
 
-          <button type="submit" disabled={isSubmitting}>
+          <button className="login-submit" type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Signing in...' : 'Sign In'}
           </button>
         </form>

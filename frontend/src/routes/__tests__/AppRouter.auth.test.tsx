@@ -87,7 +87,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Employee Login' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('routes unauthenticated users to login from root and unknown routes', async () => {
@@ -99,7 +99,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Employee Login' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
 
     view.rerender(
       <MemoryRouter future={routerFuture} initialEntries={['/missing']}>
@@ -107,7 +107,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Employee Login' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('routes employee users to employee workflow from root and unknown routes', async () => {
@@ -224,7 +224,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Service Operations' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Logout' }))
     expect(logout).toHaveBeenCalledTimes(1)
@@ -235,7 +235,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Employee Login' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('authenticated managers are routed to manager shell instead of login when hitting unknown routes', async () => {
@@ -252,7 +252,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Service Operations' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
   })
 
@@ -270,7 +270,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Service Operations' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
 
     vi.mocked(useAuth).mockReturnValue({
@@ -286,7 +286,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Manager/Admin Console' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Service Operations' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
   })
 

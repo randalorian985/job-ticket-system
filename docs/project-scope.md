@@ -28,7 +28,7 @@ Core scope:
 - Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
-- Shared Employee and Manager/Admin UI polish is allowed as stabilization when it only improves spacing, wrapping, responsive layout, visual consistency, loading/empty/error state presentation, and workflow smoothness on existing screens.
+- Shared Employee and Manager/Admin UI polish is implemented as a presentation-only stabilization layer across existing screens. It standardizes typography, compact actions, form density, tables, cards, navigation, responsive layout, and loading/empty/error presentation without changing workflow authorization or API behavior.
 - Manager/Admin Service Ticket Workspace Redesign is implemented for the ticket detail/workspace flow without expanding into deferred purchasing, inventory, payment, client portal, notification, approval automation, recommendation, or scoring domains.
 - Manager/Admin task navigation now uses URL-backed job-ticket queue filters, dashboard links into exact queues, queue-aware return links, and workflow tabs on ticket detail; these are frontend navigation contracts only and do not change backend APIs or business rules.
 

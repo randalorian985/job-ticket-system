@@ -434,10 +434,15 @@ public sealed class PartsService(ApplicationDbContext dbContext) : IPartsService
             .ToListAsync(cancellationToken);
     }
 
-    public Task<IReadOnlyList<PartLookupDto>> ListLookupAsync(PagedQuery query, CancellationToken cancellationToken = default) =>
-        dbContext.Parts.OrderBy(x => x.Name).Skip(query.NormalizedOffset).Take(query.NormalizedLimit)
+    public async Task<IReadOnlyList<PartLookupDto>> ListLookupAsync(PagedQuery query, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Parts
+            .OrderBy(x => x.Name)
+            .Skip(query.NormalizedOffset)
+            .Take(query.NormalizedLimit)
             .Select(x => new PartLookupDto(x.Id, x.PartNumber, x.Name, x.Description))
-            .ToListAsync(cancellationToken).ContinueWith(t => (IReadOnlyList<PartLookupDto>)t.Result, cancellationToken);
+            .ToListAsync(cancellationToken);
+    }
 
     public Task<PartDto?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         dbContext.Parts.Where(x => x.Id == id)

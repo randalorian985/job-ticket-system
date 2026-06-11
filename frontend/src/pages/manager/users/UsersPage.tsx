@@ -179,7 +179,7 @@ export function UsersPage() {
     <section className="stack">
       <article className="card stack">
         <div>
-          <p className="muted"><Link to="/manage">Manager/Admin Console</Link> / User Management</p>
+          <p className="muted"><Link to="/manage">Service Operations</Link> / User Management</p>
           <h2>User Management</h2>
           <p className="muted">Admin-only controls for account access, roles, deactivation, and password reset.</p>
         </div>

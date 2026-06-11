@@ -81,8 +81,9 @@ export function ManagerShell() {
       <header className="manager-header">
         <div className="manager-header-main">
           <div>
-            <h1>Manager/Admin Console</h1>
-            <p className="muted">{user?.firstName} {user?.lastName} ({user?.role})</p>
+            <p className="eyebrow">Job Ticket System</p>
+            <h1>Service Operations</h1>
+            <p className="muted">{user?.firstName} {user?.lastName} · {user?.role}</p>
           </div>
           <button className="secondary-button logout-button" onClick={logout}>Logout</button>
         </div>

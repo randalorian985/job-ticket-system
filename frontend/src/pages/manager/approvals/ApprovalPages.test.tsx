@@ -135,7 +135,32 @@ describe('TimeApprovalPage', () => {
 
 describe('PartsApprovalPage', () => {
   it('loads parts from a searchable job ticket choice without exposing a raw id field', async () => {
-    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([
+      {
+        id: 'part-pending',
+        jobTicketId: 'job-1',
+        partNumber: 'PILOT-SEAL-004',
+        partName: 'Cylinder seal kit',
+        quantity: 1,
+        unitCostSnapshot: 34,
+        salePriceSnapshot: 78,
+        approvalStatus: 1,
+        isUnlistedPart: false,
+        officeOrderRequested: true
+      },
+      {
+        id: 'part-approved',
+        jobTicketId: 'job-1',
+        partNumber: 'PILOT-FILTER-001',
+        partName: 'Compressor intake filter',
+        quantity: 1,
+        unitCostSnapshot: 42,
+        salePriceSnapshot: 85,
+        approvalStatus: 2,
+        isUnlistedPart: false,
+        officeOrderRequested: false
+      }
+    ] as any)
     renderWithRouter(<PartsApprovalPage />)
 
     await waitFor(() => expect(jobTicketsApi.listAll).toHaveBeenCalled())
@@ -146,5 +171,11 @@ describe('PartsApprovalPage', () => {
 
     await waitFor(() => expect(jobTicketsApi.listParts).toHaveBeenCalledWith('job-1'))
     expect(screen.queryByPlaceholderText(/job ticket id/i)).not.toBeInTheDocument()
+    expect(screen.getByText('Cylinder seal kit')).toBeInTheDocument()
+    expect(screen.getByText('$34.00')).toBeInTheDocument()
+    expect(screen.getByLabelText('Parts approval summary')).toHaveTextContent('2 loaded')
+    expect(screen.getByLabelText('Parts approval summary')).toHaveTextContent('1 pending')
+    expect(screen.getAllByRole('button', { name: 'Approve' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'Reject' })).toHaveLength(1)
   })
 })

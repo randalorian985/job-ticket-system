@@ -19,10 +19,10 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
 - Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
-- Shared Employee and Manager/Admin UI polish keeps the existing workflows responsive, scannable, and aligned with the operations-board visual direction.
+- A shared presentation system now polishes every existing Employee and Manager/Admin route with consistent typography, compact actions, form controls, tables, cards, navigation, responsive behavior, and loading/empty/error states.
 
 ## Current UI Direction
-The Manager/Admin Service Ticket Workspace Redesign is implemented for the job-ticket detail/workspace flow.
+The Manager/Admin Service Ticket Workspace Redesign is implemented for the job-ticket detail/workspace flow, and the same restrained operational design system is applied across the rest of the existing application.
 
 The service-ticket side now centers on a coherent field-service workbench: work queue, ticket workspace, technician assignment, service scope, labor, parts, files/photos, status, and invoice-ready closeout. The design direction remains adapted to Crane's job-ticket scope.
 
