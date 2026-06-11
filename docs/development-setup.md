@@ -7,7 +7,7 @@ Use `README.md`, `docs/build-roadmap.md`, `docs/project-scope.md`, and `docs/api
 ## Required tools
 
 - **.NET SDK 8.x** (repository pins SDK via `backend/global.json`)
-- **Node.js 20.0.0+ LTS**
+- **Node.js 20.19.0+ LTS**
 - **npm** (bundled with Node.js)
 - **Docker Desktop** or **Docker Engine + Compose plugin** for the local SQL Server walkthrough
 - Optional but recommended:
@@ -187,7 +187,7 @@ Health and compatibility endpoints should remain available at:
 
 ## Frontend validation commands
 
-Node.js requirement for frontend install, build, and test: **20.0.0+**.
+Node.js requirement for frontend install, build, and test: **20.19.0+**.
 
 From repository root:
 

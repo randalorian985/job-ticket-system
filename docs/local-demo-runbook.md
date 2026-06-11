@@ -37,7 +37,7 @@ If `dotnet run` chooses a different backend URL, use that emitted URL consistent
 
 1. Install the required tools from the development setup guide:
    - .NET SDK 8.x.
-   - Node.js 20.0.0+.
+   - Node.js 20.19.0+.
    - npm.
    - SQL Server access through Docker, a local SQL Server install, a named instance, or another development SQL Server.
    - Docker Desktop or Docker Engine with Compose only when using the Docker-backed SQL Server path.
