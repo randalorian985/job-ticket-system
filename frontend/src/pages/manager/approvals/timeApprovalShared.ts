@@ -6,6 +6,7 @@ export type TimeApprovalFilter = 'all' | 'pending' | 'approved' | 'rejected'
 export type TimeApprovalFilterState = {
   dateFrom: string
   dateTo: string
+  jobTicketId: string
   employeeId: string
   approvalStatus: TimeApprovalFilter
   search: string
@@ -14,6 +15,7 @@ export type TimeApprovalFilterState = {
 export const defaultTimeApprovalFilters: TimeApprovalFilterState = {
   dateFrom: '',
   dateTo: '',
+  jobTicketId: '',
   employeeId: '',
   approvalStatus: 'pending',
   search: ''
@@ -27,6 +29,7 @@ const approvalStatusValue = (status: TimeApprovalFilter) => {
 }
 
 export const toReviewFilters = (filters: TimeApprovalFilterState): TimeEntryReviewFilters => ({
+  jobTicketId: filters.jobTicketId || undefined,
   employeeId: filters.employeeId || undefined,
   approvalStatus: approvalStatusValue(filters.approvalStatus),
   dateFromUtc: filters.dateFrom ? `${filters.dateFrom}T00:00:00.000Z` : undefined,

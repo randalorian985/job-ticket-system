@@ -102,6 +102,11 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
             requests = requests.Where(x => x.Status == query.Status.Value);
         }
 
+        if (query?.JobTicketId is not null)
+        {
+            requests = requests.Where(x => x.JobTicketId == query.JobTicketId.Value);
+        }
+
         var search = Normalize(query?.Search);
         if (search is not null)
         {
@@ -339,7 +344,8 @@ public sealed record CreatePartRequestDto(
 
 public sealed record PartRequestQueueQuery(
     JobPartApprovalStatus? Status = null,
-    string? Search = null);
+    string? Search = null,
+    Guid? JobTicketId = null);
 
 public sealed record UpdatePartRequestDto(
     string PartDescription,

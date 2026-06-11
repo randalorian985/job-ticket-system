@@ -5,8 +5,9 @@ import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { timeEntriesApi } from '../../../api/timeEntriesApi'
 import { usersApi } from '../../../api/usersApi'
 import { TimeApprovalPage } from './TimeApprovalPage'
+import { PartsApprovalPage } from './ApprovalPages'
 
-vi.mock('../../../api/jobTicketsApi', () => ({ jobTicketsApi: { listParts: vi.fn(), approvePart: vi.fn(), rejectPart: vi.fn() } }))
+vi.mock('../../../api/jobTicketsApi', () => ({ jobTicketsApi: { listAll: vi.fn(), listParts: vi.fn(), approvePart: vi.fn(), rejectPart: vi.fn() } }))
 vi.mock('../../../api/timeEntriesApi', () => ({
   timeEntriesApi: {
     listByJob: vi.fn(), listForReview: vi.fn(), approve: vi.fn(), bulkApprove: vi.fn(), editAndApprove: vi.fn(),
@@ -31,6 +32,12 @@ beforeEach(() => {
   vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([
     { id: 'emp-a', firstName: 'Alex', lastName: 'Rivera' }, { id: 'emp-b', firstName: 'Morgan', lastName: 'Lee' }
   ])
+  vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+    {
+      id: 'job-1', ticketNumber: 'JT-1042', title: 'Hydraulic repair', status: 2, priority: 2,
+      customerId: 'customer-1', serviceLocationId: 'location-1'
+    }
+  ])
   vi.mocked(timeEntriesApi.listForReview).mockResolvedValue([pendingEntry])
 })
 
@@ -45,6 +52,7 @@ describe('TimeApprovalPage', () => {
     expect(screen.getByLabelText('Employee filter')).toHaveAttribute('placeholder', 'All employees')
     expect(screen.queryByLabelText(/employee id/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/job ticket id/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Job ticket filter')).toHaveAttribute('placeholder', 'All job tickets')
     expect(screen.getByLabelText('Approval status filter')).toHaveValue('pending')
     expect(screen.getByRole('button', { name: 'Approve Selected (0)' })).toBeDisabled()
     const summary = screen.getByLabelText('Time review summary')
@@ -53,10 +61,14 @@ describe('TimeApprovalPage', () => {
     expect(jobTicketsApi.listParts).not.toHaveBeenCalled()
   })
 
-  it('uses employee IDs internally and applies search, status, and date filters', async () => {
+  it('uses selected job and employee IDs internally and applies search, status, and date filters', async () => {
     vi.mocked(timeEntriesApi.listForReview).mockResolvedValue([])
     renderWithRouter(<TimeApprovalPage />)
     await waitFor(() => expect(usersApi.listAssignableEmployees).toHaveBeenCalled())
+    fireEvent.focus(screen.getByLabelText('Job ticket filter'))
+    fireEvent.change(screen.getByLabelText('Job ticket filter'), { target: { value: 'Hydraulic' } })
+    fireEvent.click(screen.getByRole('option', { name: 'JT-1042 - Hydraulic repair' }))
+    expect(screen.getByLabelText('Job ticket filter')).toHaveValue('JT-1042 - Hydraulic repair')
     fireEvent.focus(screen.getByLabelText('Employee filter'))
     fireEvent.change(screen.getByLabelText('Employee filter'), { target: { value: 'Alex' } })
     fireEvent.click(screen.getByRole('option', { name: 'Alex Rivera' }))
@@ -67,7 +79,7 @@ describe('TimeApprovalPage', () => {
     fireEvent.change(screen.getByLabelText('Date to'), { target: { value: '2026-06-10' } })
     fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }))
     await waitFor(() => expect(timeEntriesApi.listForReview).toHaveBeenLastCalledWith({
-      employeeId: 'emp-a', approvalStatus: undefined, dateFromUtc: '2026-06-01T00:00:00.000Z',
+      jobTicketId: 'job-1', employeeId: 'emp-a', approvalStatus: undefined, dateFromUtc: '2026-06-01T00:00:00.000Z',
       dateToUtc: '2026-06-10T23:59:59.999Z', search: 'Acme North Plant'
     }))
   })
@@ -118,5 +130,21 @@ describe('TimeApprovalPage', () => {
     expect(within(summary).getByText('3.00')).toBeInTheDocument()
     expect(within(summary).getByText('2.50')).toBeInTheDocument()
     expect(within(summary).getAllByText('1')).toHaveLength(2)
+  })
+})
+
+describe('PartsApprovalPage', () => {
+  it('loads parts from a searchable job ticket choice without exposing a raw id field', async () => {
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    renderWithRouter(<PartsApprovalPage />)
+
+    await waitFor(() => expect(jobTicketsApi.listAll).toHaveBeenCalled())
+    fireEvent.focus(screen.getByLabelText('Parts approval job ticket'))
+    fireEvent.change(screen.getByLabelText('Parts approval job ticket'), { target: { value: 'Hydraulic' } })
+    fireEvent.click(screen.getByRole('option', { name: 'JT-1042 - Hydraulic repair' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Load Job Parts' }))
+
+    await waitFor(() => expect(jobTicketsApi.listParts).toHaveBeenCalledWith('job-1'))
+    expect(screen.queryByPlaceholderText(/job ticket id/i)).not.toBeInTheDocument()
   })
 })

@@ -1,9 +1,11 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../api/httpClient'
 import { masterDataApi } from '../../api/masterDataApi'
+import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { partRequestsApi, type PartRequestDto } from '../../api/partRequestsApi'
-import type { PartDto } from '../../types'
+import type { JobTicketListItemDto, PartDto } from '../../types'
 import { formatDate, getApprovalLabel, JOB_PART_APPROVAL_STATUS } from './managerDisplay'
+import { JobTicketCombobox } from './common/JobTicketCombobox'
 
 const statusOptions = [
   { value: JOB_PART_APPROVAL_STATUS.Pending, label: 'Pending' },
@@ -16,6 +18,8 @@ const moneyValue = (value?: number | null) => (Number.isFinite(value) ? String(v
 export function PartRequestsPage() {
   const [requests, setRequests] = useState<PartRequestDto[]>([])
   const [parts, setParts] = useState<PartDto[]>([])
+  const [jobTickets, setJobTickets] = useState<JobTicketListItemDto[]>([])
+  const [jobTicketId, setJobTicketId] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<number | ''>('')
   const [search, setSearch] = useState('')
@@ -42,12 +46,14 @@ export function PartRequestsPage() {
 
   const load = async () => {
     setIsLoading(true)
-    const [requestResponse, partResponse] = await Promise.all([
-      partRequestsApi.listQueue({ status: statusFilter, search }),
-      masterDataApi.listParts()
+    const [requestResponse, partResponse, jobTicketResponse] = await Promise.all([
+      partRequestsApi.listQueue({ status: statusFilter, search, jobTicketId }),
+      masterDataApi.listParts(),
+      jobTicketsApi.listAll()
     ])
     setRequests(requestResponse)
     setParts(partResponse)
+    setJobTickets(jobTicketResponse)
     setSelectedId((current) => requestResponse.some((request) => request.id === current) ? current : requestResponse[0]?.id ?? null)
     setError(null)
     setIsLoading(false)
@@ -153,6 +159,16 @@ export function PartRequestsPage() {
           </div>
         </div>
         <form onSubmit={onFilterSubmit} className="review-grid" aria-label="parts request queue filters">
+          <label>
+            Job ticket
+            <JobTicketCombobox
+              tickets={jobTickets}
+              selectedJobTicketId={jobTicketId}
+              inputId="parts-request-job-ticket"
+              label="Parts request job ticket filter"
+              onSelect={(ticket) => setJobTicketId(ticket?.id ?? '')}
+            />
+          </label>
           <label>
             Search requests
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ticket, job, part number, or part name" />

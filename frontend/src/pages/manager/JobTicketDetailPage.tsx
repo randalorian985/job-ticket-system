@@ -1025,15 +1025,15 @@ export function JobTicketDetailPage() {
               </div>
               <div>
                 <span>Customer</span>
-                <strong>{selectedCustomer?.name ?? job.customerId}</strong>
+                <strong>{selectedCustomer?.name ?? "Customer unavailable"}</strong>
               </div>
               <div>
                 <span>Service location</span>
-                <strong>{selectedLocation?.locationName ?? job.serviceLocationId}</strong>
+                <strong>{selectedLocation?.locationName ?? "Location unavailable"}</strong>
               </div>
               <div>
                 <span>Equipment</span>
-                <strong>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentId) : emptyDisplay}</strong>
+                <strong>{job.equipmentId ? (selectedEquipment?.name ?? "Equipment unavailable") : emptyDisplay}</strong>
               </div>
               <div>
                 <span>Due</span>
@@ -1325,20 +1325,20 @@ export function JobTicketDetailPage() {
                 <div className="context-grid">
                   <section className="context-block" aria-label="customer">
                     <span>Customer</span>
-                    <h4>{selectedCustomer?.name ?? job.customerId}</h4>
+                    <h4>{selectedCustomer?.name ?? "Customer unavailable"}</h4>
                     <p>{displayValue(selectedCustomer?.contactName)}</p>
                     <p className="muted">{displayValue(selectedCustomer?.phone)} | {displayValue(selectedCustomer?.email)}</p>
                     <p className="muted">Account {displayValue(selectedCustomer?.accountNumber)}</p>
                   </section>
                   <section className="context-block" aria-label="service location">
                     <span>Service Location</span>
-                    <h4>{selectedLocation?.locationName ?? job.serviceLocationId}</h4>
+                    <h4>{selectedLocation?.locationName ?? "Location unavailable"}</h4>
                     <p>{getAddressLine(selectedLocation)}</p>
                     <p className="muted">{selectedLocation?.isActive === false ? "Inactive location" : "Active location"}</p>
                   </section>
                   <section className="context-block" aria-label="equipment">
                     <span>Equipment</span>
-                    <h4>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentId) : "No equipment attached"}</h4>
+                    <h4>{job.equipmentId ? (selectedEquipment?.name ?? "Equipment unavailable") : "No equipment attached"}</h4>
                     <p>{displayValue(selectedEquipment?.equipmentType)} {displayValue(selectedEquipment?.manufacturer)} {displayValue(selectedEquipment?.modelNumber)}</p>
                     <p className="muted">Unit {displayValue(selectedEquipment?.unitNumber)} | Serial {displayValue(selectedEquipment?.serialNumber)}</p>
                   </section>
@@ -1386,7 +1386,7 @@ export function JobTicketDetailPage() {
                   </section>
                   <section>
                     <h4>Billing Contact</h4>
-                    <p>{billingParty?.name ?? job.billingPartyCustomerId}</p>
+                    <p>{billingParty?.name ?? "Billing party unavailable"}</p>
                     <p className="muted">{displayValue(job.billingContactName)} | {displayValue(job.billingContactPhone)} | {displayValue(job.billingContactEmail)}</p>
                   </section>
                 </div>
@@ -1445,18 +1445,7 @@ export function JobTicketDetailPage() {
                           ))}
                       </select>
                     </label>
-                  ) : (
-                    <label>
-                      Employee
-                      <input
-                        value={assignmentEmployeeId}
-                        onChange={(e) => setAssignmentEmployeeId(e.target.value)}
-                        placeholder="Employee id"
-                        aria-label="assignment employee"
-                        disabled={assignmentLoadFailed}
-                      />
-                    </label>
-                  )}
+                  ) : <p className="muted">No active technicians are available to assign.</p>}
                   <label className="inline-check">
                     <input
                       type="checkbox"

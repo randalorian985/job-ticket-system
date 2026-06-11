@@ -200,7 +200,7 @@ describe('ReportsPage', () => {
 
     resolveReport([])
 
-    expect(await screen.findByText('No rows match the current report and filters. Adjust the filters or source ID, then run the report again.')).toBeInTheDocument()
+    expect(await screen.findByText('No rows match the current report and filters. Adjust the filters or selected record, then run the report again.')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
   })
 

@@ -31,11 +31,12 @@ public sealed class PartRequestsController(IPartRequestsService service) : Contr
     public async Task<ActionResult<IReadOnlyList<PartRequestDto>>> ListQueueAsync(
         [FromQuery] JobPartApprovalStatus? status,
         [FromQuery] string? search,
+        [FromQuery] Guid? jobTicketId,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            return Ok(await service.ListQueueAsync(new PartRequestQueueQuery(status, search), cancellationToken));
+            return Ok(await service.ListQueueAsync(new PartRequestQueueQuery(status, search, jobTicketId), cancellationToken));
         }
         catch (Exception exception)
         {

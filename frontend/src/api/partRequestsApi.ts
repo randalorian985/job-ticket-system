@@ -49,6 +49,7 @@ export type PartRequestDto = {
 export type PartRequestQueueFilters = {
   status?: number | ''
   search?: string
+  jobTicketId?: string
 }
 
 const buildQueueUrl = (filters?: PartRequestQueueFilters) => {
@@ -58,6 +59,9 @@ const buildQueueUrl = (filters?: PartRequestQueueFilters) => {
   }
   if (filters?.search?.trim()) {
     params.set('search', filters.search.trim())
+  }
+  if (filters?.jobTicketId) {
+    params.set('jobTicketId', filters.jobTicketId)
   }
 
   const query = params.toString()

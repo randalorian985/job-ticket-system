@@ -1,16 +1,18 @@
-import type { AssignableEmployeeDto } from '../../../types'
+import type { AssignableEmployeeDto, JobTicketListItemDto } from '../../../types'
+import { JobTicketCombobox } from '../common/JobTicketCombobox'
 import { EmployeeCombobox } from './EmployeeCombobox'
 import type { TimeApprovalFilter, TimeApprovalFilterState } from './timeApprovalShared'
 
 type Props = {
   employees: AssignableEmployeeDto[]
+  jobTickets: JobTicketListItemDto[]
   filters: TimeApprovalFilterState
   loading: boolean
   onChange: (filters: TimeApprovalFilterState) => void
   onApply: () => void
 }
 
-export function TimeApprovalFilters({ employees, filters, loading, onChange, onApply }: Props) {
+export function TimeApprovalFilters({ employees, jobTickets, filters, loading, onChange, onApply }: Props) {
   const update = <K extends keyof TimeApprovalFilterState>(key: K, value: TimeApprovalFilterState[K]) =>
     onChange({ ...filters, [key]: value })
 
@@ -30,6 +32,19 @@ export function TimeApprovalFilters({ employees, filters, loading, onChange, onA
         <label>
           Date to
           <input aria-label="Date to" type="date" value={filters.dateTo} onChange={(event) => update('dateTo', event.target.value)} />
+        </label>
+        <label>
+          Job ticket
+          <JobTicketCombobox
+            tickets={jobTickets}
+            selectedJobTicketId={filters.jobTicketId}
+            inputId="time-approval-job-ticket"
+            label="Job ticket filter"
+            onSelect={(ticket) => onChange({
+              ...filters,
+              jobTicketId: ticket?.id ?? ''
+            })}
+          />
         </label>
         <label>
           Employee

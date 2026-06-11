@@ -795,7 +795,7 @@ export function ReportsPage() {
         ) : null}
         {loadingMode ? <p className="muted" role="status">Loading {reportTitleMap[loadingMode]}...</p> : null}
         {mode && !loadingMode && !hasRows && !error ? (
-          <p className="muted">No rows match the current report and filters. Adjust the filters or source ID, then run the report again.</p>
+          <p className="muted">No rows match the current report and filters. Adjust the filters or selected record, then run the report again.</p>
         ) : null}
         {hasRows ? (
           <div className="table-scroll">

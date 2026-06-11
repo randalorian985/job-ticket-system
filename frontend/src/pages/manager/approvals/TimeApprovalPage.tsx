@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../../api/httpClient'
 import { timeEntriesApi } from '../../../api/timeEntriesApi'
 import { usersApi } from '../../../api/usersApi'
-import type { AdjustTimeEntryRequestDto, AssignableEmployeeDto, TimeApprovalQueueItemDto } from '../../../types'
+import { jobTicketsApi } from '../../../api/jobTicketsApi'
+import type { AdjustTimeEntryRequestDto, AssignableEmployeeDto, JobTicketListItemDto, TimeApprovalQueueItemDto } from '../../../types'
 import { csvDataUri, toCsv, type CsvColumn } from '../../../utils/csv'
 import { Errorable } from '../common/Errorable'
 import { getApprovalLabel } from '../managerDisplay'
@@ -37,6 +38,7 @@ const exportColumns: CsvColumn<TimeApprovalQueueItemDto>[] = [
 export function TimeApprovalPage() {
   const [entries, setEntries] = useState<TimeApprovalQueueItemDto[]>([])
   const [employees, setEmployees] = useState<AssignableEmployeeDto[]>([])
+  const [jobTickets, setJobTickets] = useState<JobTicketListItemDto[]>([])
   const [filters, setFilters] = useState<TimeApprovalFilterState>(defaultTimeApprovalFilters)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [reviewEntry, setReviewEntry] = useState<TimeApprovalQueueItemDto | null>(null)
@@ -64,7 +66,8 @@ export function TimeApprovalPage() {
   useEffect(() => {
     void Promise.all([
       load(defaultTimeApprovalFilters),
-      usersApi.listAssignableEmployees().then(setEmployees)
+      usersApi.listAssignableEmployees().then(setEmployees),
+      jobTicketsApi.listAll().then(setJobTickets)
     ]).catch((requestError) => setError(managerTimeError(requestError, 'Unable to load time approval filters.')))
     // Initial pending queue and employee choices load once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,7 +111,7 @@ export function TimeApprovalPage() {
         <p className="muted">Pending work loads automatically so managers can understand, review, and approve the queue without knowing internal IDs.</p>
         {entries.length ? <a className="button-link" href={exportHref} download="time-approval-review.csv">Export visible rows as CSV</a> : null}
       </div>
-      <TimeApprovalFilters employees={employees} filters={filters} loading={loading} onChange={setFilters} onApply={() => void load()} />
+      <TimeApprovalFilters employees={employees} jobTickets={jobTickets} filters={filters} loading={loading} onChange={setFilters} onApply={() => void load()} />
       <Errorable error={error} />
       {message ? <p className="muted">{message}</p> : null}
       <div className="report-grid" aria-label="Time review summary">

@@ -154,6 +154,45 @@ public sealed class PartRequestsServiceTests
     }
 
     [Fact]
+    public async Task Queue_filters_by_selected_job_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var otherTicket = new JobTicket
+        {
+            TicketNumber = "JT-OTHER",
+            Title = "Other job",
+            CustomerId = refs.JobTicket.CustomerId,
+            ServiceLocationId = refs.JobTicket.ServiceLocationId,
+            BillingPartyCustomerId = refs.JobTicket.BillingPartyCustomerId
+        };
+        context.JobTickets.Add(otherTicket);
+        context.JobTicketEmployees.Add(new JobTicketEmployee
+        {
+            JobTicket = otherTicket,
+            EmployeeId = refs.Employee.Id
+        });
+        context.TimeEntries.Add(new TimeEntry
+        {
+            JobTicket = otherTicket,
+            EmployeeId = refs.Employee.Id,
+            StartedAtUtc = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var employeeService = new PartRequestsService(context, new TestUserContext(refs.Employee.Id, SystemRoles.Employee));
+        await employeeService.CreateForJobTicketAsync(refs.JobTicket.Id, new CreatePartRequestDto("First job part", 1m, null));
+        await employeeService.CreateForJobTicketAsync(otherTicket.Id, new CreatePartRequestDto("Other job part", 1m, null));
+
+        var managerService = new PartRequestsService(context, new TestUserContext(refs.Manager.Id, SystemRoles.Manager));
+        var queue = await managerService.ListQueueAsync(new PartRequestQueueQuery(JobTicketId: otherTicket.Id));
+
+        var result = Assert.Single(queue);
+        Assert.Equal(otherTicket.Id, result.JobTicketId);
+        Assert.Equal("Other job part", result.PartName);
+    }
+
+    [Fact]
     public async Task Queue_orders_requests_by_most_recent_request_first()
     {
         await using var context = CreateContext();

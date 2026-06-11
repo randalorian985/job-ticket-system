@@ -208,8 +208,8 @@ export function JobTicketListPage() {
     const normalizedSearch = searchText.trim().toLocaleLowerCase()
 
     return jobs.filter((job) => {
-      const customerName = customers[job.customerId]?.name ?? job.customerId
-      const locationName = locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId
+      const customerName = customers[job.customerId]?.name ?? 'Customer unavailable'
+      const locationName = locations[job.serviceLocationId]?.locationName ?? 'Location unavailable'
       const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
       const assignmentNames = assignments?.map((item) => getAssignmentDisplayName(item)) ?? []
       const readiness = getDispatchReadiness(job, assignments)
@@ -366,8 +366,8 @@ export function JobTicketListPage() {
                     <span className={`status-pill readiness-pill ${readinessClass}`}>{readiness.label}</span>
                   </div>
                   <div className="ticket-meta-grid">
-                    <div><strong>Customer</strong><span>{customers[job.customerId]?.name ?? job.customerId}</span></div>
-                    <div><strong>Location</strong><span>{locations[job.serviceLocationId]?.locationName ?? job.serviceLocationId}</span></div>
+                    <div><strong>Customer</strong><span>{customers[job.customerId]?.name ?? 'Customer unavailable'}</span></div>
+                    <div><strong>Location</strong><span>{locations[job.serviceLocationId]?.locationName ?? 'Location unavailable'}</span></div>
                     <div><strong>Assigned</strong><span>{assignmentSummary}</span></div>
                     <div><strong>Lead</strong><span>{leadSummary}</span></div>
                   </div>

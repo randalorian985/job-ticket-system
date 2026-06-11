@@ -392,7 +392,7 @@ describe('ReportsPage', () => {
     expect(await screen.findByText('Loading Labor by Employee...')).toBeInTheDocument()
 
     resolveReport([])
-    expect(await screen.findByText('No rows match the current report and filters. Adjust the filters or source ID, then run the report again.')).toBeInTheDocument()
+    expect(await screen.findByText('No rows match the current report and filters. Adjust the filters or selected record, then run the report again.')).toBeInTheDocument()
   })
 
   it('renders labor by employee success data with snapshot labeling', async () => {

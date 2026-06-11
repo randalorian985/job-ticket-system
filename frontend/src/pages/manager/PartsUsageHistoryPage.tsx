@@ -95,7 +95,7 @@ export function PartsUsageHistoryPage() {
                 <div>
                   <strong>{item.partNumber} · {item.partName}</strong>
                   <p className="muted">{item.ticketNumber} · Qty {item.quantity} · {getApprovalLabel(item.approvalStatus)} · {formatDate(item.installedAtUtc ?? item.addedAtUtc)}</p>
-                  <p className="muted">Equipment: {item.equipmentName ?? item.equipmentId ?? '—'}{item.modelNumber ? ` · Model ${item.modelNumber}` : ''}</p>
+                  <p className="muted">Equipment: {item.equipmentName ?? (item.equipmentId ? 'Equipment unavailable' : '—')}{item.modelNumber ? ` · Model ${item.modelNumber}` : ''}</p>
                 </div>
                 <div className="inline-links" aria-label={`evidence for ${item.partNumber}`}>
                   {item.evidenceTags.map((tag) => <span className="badge" key={tag}>{tag}</span>)}

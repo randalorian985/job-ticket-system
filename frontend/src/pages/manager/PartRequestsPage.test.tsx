@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../api/masterDataApi'
+import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { partRequestsApi } from '../../api/partRequestsApi'
 import { PartRequestsPage } from './PartRequestsPage'
 
@@ -18,10 +19,27 @@ vi.mock('../../api/masterDataApi', () => ({
   }
 }))
 
+vi.mock('../../api/jobTicketsApi', () => ({
+  jobTicketsApi: {
+    listAll: vi.fn()
+  }
+}))
+
 describe('PartRequestsPage', () => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      {
+        id: 'job-1',
+        ticketNumber: 'JT-2026-000101',
+        title: 'Hydraulic Repair',
+        status: 2,
+        priority: 2,
+        customerId: 'customer-1',
+        serviceLocationId: 'location-1'
+      }
+    ])
   })
 
   it('loads the filtered queue and lets back office update status, notes, price, and catalog match', async () => {
@@ -84,15 +102,18 @@ describe('PartRequestsPage', () => {
     expect(screen.getAllByText(/JT-2026-000101/)).toHaveLength(2)
     expect(screen.getByText('Urgency: Urgent')).toBeInTheDocument()
     expect(screen.getByText(/Qty 2 · Needs ordered/)).toBeInTheDocument()
-    expect(partRequestsApi.listQueue).toHaveBeenCalledWith({ status: '', search: '' })
+    expect(partRequestsApi.listQueue).toHaveBeenCalledWith({ status: '', search: '', jobTicketId: '' })
 
     const user = userEvent.setup()
+    await user.click(screen.getByLabelText('Parts request job ticket filter'))
+    await user.type(screen.getByLabelText('Parts request job ticket filter'), 'Hydraulic')
+    await user.click(screen.getByRole('option', { name: 'JT-2026-000101 - Hydraulic Repair' }))
     await user.type(screen.getByLabelText('Search requests'), 'hose')
     await user.selectOptions(screen.getByLabelText('Status filter'), '1')
     await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
 
     await waitFor(() => {
-      expect(partRequestsApi.listQueue).toHaveBeenLastCalledWith({ status: 1, search: 'hose' })
+      expect(partRequestsApi.listQueue).toHaveBeenLastCalledWith({ status: 1, search: 'hose', jobTicketId: 'job-1' })
     })
 
     await user.selectOptions(screen.getByLabelText('Catalog part match'), 'part-1')

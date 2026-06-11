@@ -152,12 +152,13 @@ The parts request API is a job-ticket-first workflow for technician-added ticket
   - no inventory adjustment is performed by this path.
 
 ### Back-office queue
-- `GET /api/part-requests?status={status}&search={text}`
+- `GET /api/part-requests?status={status}&search={text}&jobTicketId={jobTicketId}`
 - Authorization: `ManagerOrAdmin`
 - Returns only job-ticket parts marked `Needs ordered`, newest first.
 - Optional filters:
   - `status` uses existing job-part approval status values;
-  - `search` matches ticket number, job title, part number, or part name.
+  - `search` matches ticket number, job title, part number, or part name;
+  - `jobTicketId` narrows the queue to a job selected from the authorized job-ticket lookup.
 
 ### Back-office detail
 - `GET /api/part-requests/{id}`
