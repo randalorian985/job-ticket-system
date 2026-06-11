@@ -168,6 +168,11 @@ button,
   transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
 }
 
+.button-link {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 button:hover:not(:disabled),
 .button-link:hover {
   background: var(--brand-strong);
