@@ -154,6 +154,31 @@ public sealed class PartRequestsServiceTests
     }
 
     [Fact]
+    public async Task Queue_orders_requests_by_most_recent_request_first()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var employeeService = new PartRequestsService(context, new TestUserContext(refs.Employee.Id, SystemRoles.Employee));
+        var older = await employeeService.CreateForJobTicketAsync(
+            refs.JobTicket.Id,
+            new CreatePartRequestDto("Older request", 1m, null));
+        var newer = await employeeService.CreateForJobTicketAsync(
+            refs.JobTicket.Id,
+            new CreatePartRequestDto("Newer request", 1m, null));
+
+        var olderEntity = await context.JobTicketParts.SingleAsync(x => x.Id == older.Id);
+        var newerEntity = await context.JobTicketParts.SingleAsync(x => x.Id == newer.Id);
+        olderEntity.AddedAtUtc = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+        newerEntity.AddedAtUtc = new DateTime(2026, 1, 2, 12, 0, 0, DateTimeKind.Utc);
+        await context.SaveChangesAsync();
+
+        var managerService = new PartRequestsService(context, new TestUserContext(refs.Manager.Id, SystemRoles.Manager));
+        var queue = await managerService.ListQueueAsync();
+
+        Assert.Equal([newer.Id, older.Id], queue.Select(x => x.Id));
+    }
+
+    [Fact]
     public async Task Unassigned_employee_cannot_create_part_request_for_ticket()
     {
         await using var context = CreateContext();

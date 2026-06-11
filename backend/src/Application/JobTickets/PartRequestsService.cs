@@ -113,7 +113,6 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
         }
 
         return await requests
-            .OrderByDescending(x => x.RequestedAtUtc)
             .ToListAsync(cancellationToken);
     }
 
@@ -217,7 +216,9 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
             parts = parts.Where(x => x.OfficeOrderRequested);
         }
 
-        return parts.Select(x => new PartRequestDto(
+        return parts
+            .OrderByDescending(x => x.AddedAtUtc)
+            .Select(x => new PartRequestDto(
             x.Id,
             x.JobTicketId,
             x.JobTicket.TicketNumber,

@@ -40,5 +40,10 @@ export const isEligibleForApproval = (entry: TimeApprovalQueueItemDto) =>
 export const managerLocationText = (entry: TimeApprovalQueueItemDto) =>
   [...new Set([entry.customerName, entry.siteName, entry.locationName, entry.locationAddress].filter(Boolean))].join(' · ') || '—'
 
-export const toLocalDateTimeInput = (value?: string | null) =>
-  value ? new Date(value).toISOString().slice(0, 16) : ''
+export const toLocalDateTimeInput = (value?: string | null) => {
+  if (!value) return ''
+
+  const date = new Date(value)
+  const localOffsetMilliseconds = date.getTimezoneOffset() * 60_000
+  return new Date(date.getTime() - localOffsetMilliseconds).toISOString().slice(0, 16)
+}
