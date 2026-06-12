@@ -98,6 +98,8 @@ Next feature work should remain a bounded Manager/Admin workflow PR. The recomme
 
 This lane is a Manager/Admin operational workflow improvement. It must not become purchasing expansion, receiving, vendor invoice tracking, landed-cost tracking, warehouse/truck inventory expansion, replenishment, recommendation/scoring/AI, automatic compatibility, or automatic approval work.
 
+Initial Phase 3B implementation now expands the existing Manager/Admin master-data create/edit forms to expose current DTO fields for customer contact/account details, equipment ownership/billing/model/serial/type details, vendor contact/account details, part descriptions, stock/reorder values, and part category descriptions. It keeps the existing master-data APIs, archive/unarchive behavior, route boundaries, schema, migrations, auth, and enum values unchanged.
+
 Acceptable alternatives, if deliberately selected before the next PR starts:
 - Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
 - Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;
