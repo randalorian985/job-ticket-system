@@ -22,6 +22,11 @@
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory foundation (`/api/inventory/*`)
 
+## Manager/Admin Master Data
+Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the already-documented DTO fields for customer contact/account details, service-location status/address/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.
+
+This UI polish does not add endpoints, change DTO shapes, change authorization, add schema or migrations, alter enum values, or expand purchasing, receiving, landed-cost, inventory, recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
+
 ## Manager/Admin Time Approval Review
 - `GET /api/time-entries/review`
 - Authorization: `ManagerOrAdmin`
