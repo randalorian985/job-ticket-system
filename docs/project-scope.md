@@ -40,6 +40,8 @@ The next feature work should remain a bounded Manager/Admin workflow slice, sele
 Recommended next lane:
 - Manager/Admin Phase 3B master-data management polish for customers, service locations, equipment, vendors, part categories, and parts, including create/edit/archive forms, validation and error UX, tests, and docs.
 
+Initial Phase 3B polish expands the existing Manager/Admin master-data forms to reach current customer, service-location, equipment, vendor, part-category, and part DTO fields from the UI. This is existing-field workflow polish only; it does not add APIs, schema, migrations, roles, purchase orders, receiving, vendor invoice expansion, landed-cost expansion, inventory expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval.
+
 Acceptable alternate lanes if deliberately selected:
 - Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
 - Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;
