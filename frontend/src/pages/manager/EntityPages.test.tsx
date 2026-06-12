@@ -130,6 +130,17 @@ describe('CustomersPage', () => {
     }))
   })
 
+  it('validates whitespace-only customer names before create', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
+
+    render(<CustomersPage />)
+    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Customer' }))
+
+    expect(await screen.findByText('Customer name is required.')).toBeInTheDocument()
+    expect(masterDataApi.createCustomer).not.toHaveBeenCalled()
+  })
+
   it('filters customers by search/status, resets filters, and shows no-match state', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
       { id: 'c1', name: 'Acme', contactName: 'Alex', email: 'alex@example.com', isArchived: false },
@@ -352,6 +363,21 @@ describe('EquipmentPage', () => {
       year: 2024
     })))
   })
+
+  it('validates whitespace-only equipment names before create', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', locationName: 'HQ' }] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
+
+    render(<EquipmentPage />)
+    fireEvent.change(await screen.findByLabelText('Primary customer'), { target: { value: 'c1' } })
+    fireEvent.change(screen.getByLabelText('Service location'), { target: { value: 'l1' } })
+    fireEvent.change(screen.getByLabelText('Equipment name'), { target: { value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Equipment' }))
+
+    expect(await screen.findByText('Customer, location, and equipment name are required.')).toBeInTheDocument()
+    expect(masterDataApi.createEquipment).not.toHaveBeenCalled()
+  })
 })
 
 describe('PartsPage', () => {
@@ -420,6 +446,28 @@ describe('PartsPage', () => {
 
     expect(await screen.findByText('Category, part number, and name are required.')).toBeInTheDocument()
     expect(masterDataApi.createPart).not.toHaveBeenCalled()
+  })
+
+  it('validates whitespace-only vendor and category names before create', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([] as any)
+
+    render(<PartsPage />)
+
+    const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
+    fireEvent.change(await within(vendorsCard).findByLabelText('Vendor name'), { target: { value: '   ' } })
+    fireEvent.click(within(vendorsCard).getByRole('button', { name: 'Create Vendor' }))
+
+    expect(await screen.findByText('Vendor name is required.')).toBeInTheDocument()
+    expect(masterDataApi.createVendor).not.toHaveBeenCalled()
+
+    const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
+    fireEvent.change(within(categoriesCard).getByLabelText('Category name'), { target: { value: '   ' } })
+    fireEvent.click(within(categoriesCard).getByRole('button', { name: 'Create Category' }))
+
+    expect(await screen.findByText('Part category name is required.')).toBeInTheDocument()
+    expect(masterDataApi.createPartCategory).not.toHaveBeenCalled()
   })
 
   it('saves expanded part, vendor, and category form fields', async () => {
