@@ -218,6 +218,36 @@ describe('ServiceLocationsPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Archive' }))
     expect(await screen.findByText('Unable to update service location archive state.')).toBeInTheDocument()
   })
+
+  it('creates service locations with customer, address, and active status fields', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.createServiceLocation).mockResolvedValue({ id: 'l-new', locationName: 'HQ' } as any)
+
+    const { container } = render(<ServiceLocationsPage />)
+    fireEvent.change(await screen.findByPlaceholderText('Company'), { target: { value: 'Acme Crane' } })
+    fireEvent.change(screen.getByPlaceholderText('Location Name'), { target: { value: 'North Yard' } })
+    fireEvent.change(screen.getByPlaceholderText('Address'), { target: { value: '100 Main St' } })
+    fireEvent.change(screen.getByPlaceholderText('City'), { target: { value: 'Tulsa' } })
+    fireEvent.change(screen.getByPlaceholderText('State'), { target: { value: 'OK' } })
+    fireEvent.change(screen.getByPlaceholderText('Postal'), { target: { value: '74101' } })
+    fireEvent.change(screen.getByPlaceholderText('Country'), { target: { value: 'USA' } })
+    fireEvent.change(container.querySelector('form select')!, { target: { value: 'c1' } })
+    fireEvent.click(screen.getByLabelText('Active'))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Location' }))
+
+    await waitFor(() => expect(masterDataApi.createServiceLocation).toHaveBeenCalledWith({
+      companyName: 'Acme Crane',
+      locationName: 'North Yard',
+      addressLine1: '100 Main St',
+      city: 'Tulsa',
+      state: 'OK',
+      postalCode: '74101',
+      country: 'USA',
+      customerId: 'c1',
+      isActive: false
+    }))
+  })
 })
 
 it('validates required service-location fields before create', async () => {
