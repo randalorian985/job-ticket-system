@@ -31,6 +31,21 @@ Core scope:
 - Shared Employee and Manager/Admin UI polish is implemented as a presentation-only stabilization layer across existing screens. It standardizes typography, compact actions, form density, tables, cards, navigation, responsive layout, and loading/empty/error presentation without changing workflow authorization or API behavior.
 - Manager/Admin Service Ticket Workspace Redesign is implemented for the ticket detail/workspace flow without expanding into deferred purchasing, inventory, payment, client portal, notification, approval automation, recommendation, or scoring domains.
 - Manager/Admin task navigation now uses URL-backed job-ticket queue filters, dashboard links into exact queues, queue-aware return links, and workflow tabs on ticket detail; these are frontend navigation contracts only and do not change backend APIs or business rules.
+- Manager/Admin Time Approval is now a queue-first workflow with default pending-entry loading, employee-name filtering, broad job/customer/site/location search, contextual review details, bulk approve, reject, and edit-and-approve with audit-safe adjustment records.
+- The latest post-Time Approval regression audit is recorded in the historical audit log and keeps the project in a clean planning state for the next selected Manager/Admin workflow lane.
+
+## Current Planning Direction
+The next feature work should remain a bounded Manager/Admin workflow slice, selected only after any active audit or stabilization PR is closed and GitHub checks are clean.
+
+Recommended next lane:
+- Manager/Admin Phase 3B master-data management polish for customers, service locations, equipment, vendors, part categories, and parts, including create/edit/archive forms, validation and error UX, tests, and docs.
+
+Acceptable alternate lanes if deliberately selected:
+- Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
+- Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;
+- a narrow stabilization or validation PR if checks, review feedback, or audit findings identify a concrete risk.
+
+This planning direction does not approve purchasing expansion, receiving, vendor invoice tracking, landed cost, advanced inventory, recommendations, AI/scoring, automatic compatibility decisions, automatic approval, auth weakening, enum renumbering, hard deletes, or historical migration edits.
 
 ## Service Ticket Workspace Direction
 The Manager/Admin service-ticket side should move toward a field-service operations workbench rather than a collection of disconnected forms.
@@ -127,7 +142,7 @@ The following must remain stable:
 - README, API contract, project scope, and roadmap alignment.
 
 ## Not Approved Right Now
-The following are not approved as part of Parts Request Workflow Phase 2, UI polish stabilization, or Manager/Admin Service Ticket Workspace Redesign:
+The following are not approved as part of Parts Request Workflow Phase 2, UI polish stabilization, Manager/Admin Service Ticket Workspace Redesign, Time Approval workflow polish, or the current planning direction:
 - external customer portal or Client Hub workflow;
 - online payments or payment collection;
 - quote approval automation;
