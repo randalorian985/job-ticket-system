@@ -193,7 +193,7 @@ function quickAddErrorMessage(error: unknown, fallback: string) {
 }
 
 export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditCheck[] {
-  const hasEquipmentContext = Boolean(form.equipmentId)
+  const hasEquipmentAssignment = Boolean(form.equipmentId)
   const isActiveDispatchStatus = activeDispatchStatuses.has(form.status)
 
   return [
@@ -215,9 +215,9 @@ export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditC
       detail: form.serviceLocationId ? 'Service location is selected.' : 'Select the service location before dispatch review.'
     },
     {
-      label: 'Equipment context',
+      label: 'Equipment decision',
       isReady: true,
-      detail: hasEquipmentContext ? 'Equipment context is selected.' : 'No equipment context is selected for this ticket.'
+      detail: hasEquipmentAssignment ? 'Equipment is selected.' : 'This ticket can be dispatched without equipment.'
     },
     {
       label: 'Scheduled start',
@@ -234,7 +234,7 @@ export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditC
       isReady: Boolean(form.description?.trim() || form.internalNotes?.trim() || form.customerFacingNotes?.trim()),
       detail: form.description?.trim() || form.internalNotes?.trim() || form.customerFacingNotes?.trim()
         ? 'Job instructions or notes are present.'
-        : 'Add job instructions or notes for field context.'
+        : 'Add job instructions or notes for the technician.'
     }
   ]
 }
@@ -351,7 +351,7 @@ export function JobTicketEditorForm({
   const dispatchEditChecks = useMemo(() => buildDispatchEditChecks(form), [form])
   const dispatchReadyCount = dispatchEditChecks.filter((check) => check.isReady).length
   const dispatchOpenItems = dispatchEditChecks.filter((check) => !check.isReady)
-  const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'No edit-side dispatch blockers are visible from the current ticket fields.'
+  const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'All dispatch requirements are complete.'
   const equipmentQuickAddDuplicateWarnings = useMemo(() => {
     if (!form.customerId || !form.serviceLocationId) {
       return []
@@ -600,31 +600,31 @@ export function JobTicketEditorForm({
   return (
     <form onSubmit={submit} className="stack job-editor-form">
       {error ? <p className="error">{error}</p> : null}
-      <section className="stack" aria-label="dispatch edit readiness review">
-        <h3>Dispatch Edit Readiness</h3>
+      <section className="stack" aria-label="dispatch requirements review">
+        <h3>Dispatch Requirements</h3>
         <div className="review-grid">
           <div>
-            <span className="muted">Review Status</span>
-            <strong>{dispatchOpenItems.length ? 'Needs dispatch review' : 'Ready for dispatch review'}</strong>
+            <span className="muted">Dispatch Status</span>
+            <strong>{dispatchOpenItems.length ? 'Needs dispatch updates' : 'Ready to dispatch'}</strong>
           </div>
           <div>
-            <span className="muted">Ready Checks</span>
+            <span className="muted">Requirements Ready</span>
             <strong>{dispatchReadyCount} / {dispatchEditChecks.length}</strong>
           </div>
           <div>
-            <span className="muted">Open Items</span>
+            <span className="muted">Open Requirements</span>
             <strong>{dispatchOpenItems.length}</strong>
           </div>
         </div>
-        <p className="muted">Next dispatch fix: {nextDispatchFix}</p>
+        <p className="muted">Next required update: {nextDispatchFix}</p>
         {dispatchOpenItems.length ? (
-          <ul className="muted" aria-label="dispatch edit readiness warnings">
+          <ul className="muted" aria-label="dispatch requirement warnings">
             {dispatchOpenItems.map((check) => (
               <li key={check.label}>{check.label}: {check.detail}</li>
             ))}
           </ul>
         ) : (
-          <p className="muted">Dispatch status, customer, location, equipment or no-equipment context, schedule, due date, and job instructions are ready for dispatch review.</p>
+          <p className="muted">Dispatch status, customer, service location, equipment decision, schedule, due date, and job instructions are ready.</p>
         )}
       </section>
       <label>Title<input value={form.title} onChange={(e) => update('title', e.target.value)} /></label>
@@ -756,11 +756,11 @@ export function JobTicketEditorForm({
             </button>
             <button type="button" className="secondary-button" onClick={() => setEquipmentQuickAddOpen(false)}>Cancel</button>
           </div>
-          <p className="muted">Context: {selectedCustomer?.name ?? 'No customer'} / {selectedServiceLocation?.locationName ?? 'No service location'}</p>
+          <p className="muted">Customer / service location: {selectedCustomer?.name ?? 'No customer'} / {selectedServiceLocation?.locationName ?? 'No service location'}</p>
         </section>
       ) : null}
-      <section className="quick-add-panel" aria-label="equipment service history context">
-        <h3>Recent Equipment Service Context</h3>
+      <section className="quick-add-panel" aria-label="equipment service history">
+        <h3>Recent Equipment Service History</h3>
         {!form.equipmentId ? (
           <p className="muted">Select equipment to review recent service history before saving this ticket.</p>
         ) : isLoadingEquipmentHistory ? (
@@ -779,7 +779,7 @@ export function JobTicketEditorForm({
         ) : (
           <p className="muted">No recent service history is visible for the selected equipment.</p>
         )}
-        <p className="muted">History is context for Manager/Admin review only; it does not recommend parts or guarantee compatibility.</p>
+        <p className="muted">Use this history for Manager/Admin reference only; it does not recommend parts or guarantee compatibility.</p>
       </section>
       <label>Priority<select value={form.priority} onChange={(e) => update('priority', Number(e.target.value))}>{priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
       <label>Status<select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>{jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>

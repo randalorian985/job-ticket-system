@@ -12,21 +12,21 @@ function formatOptionalDateTime(value?: string | null) {
 
 const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
 
-function getAssignedJobListFieldContext(job: JobTicketListItemDto) {
+function getAssignedJobReadiness(job: JobTicketListItemDto) {
   const isActiveFieldWork = activeFieldWorkStatuses.has(job.status)
   const warnings = [
-    isActiveFieldWork ? null : 'Ticket is outside the active field-work queue.',
-    job.scheduledStartAtUtc ? null : 'No scheduled start is visible from the assigned-jobs list.',
-    job.dueAtUtc ? null : 'No due date is visible from the assigned-jobs list.',
-    job.customerId ? null : 'No customer reference is visible from the assigned-jobs list.',
-    job.serviceLocationId ? null : 'No service-location reference is visible from the assigned-jobs list.'
+    isActiveFieldWork ? null : 'Ticket is no longer available for field work.',
+    job.scheduledStartAtUtc ? null : 'Scheduled start has not been set.',
+    job.dueAtUtc ? null : 'Due date has not been set.',
+    job.customerId ? null : 'Customer has not been assigned.',
+    job.serviceLocationId ? null : 'Service location has not been assigned.'
   ].filter((item): item is string => Boolean(item))
 
   return {
     label: !isActiveFieldWork
       ? 'Not active field work'
-      : warnings.length ? 'Needs field-context review' : 'Ready for field-context review',
-    nextStep: warnings[0] ?? 'No field-context blockers are visible from the assigned-jobs list.',
+      : warnings.length ? 'Needs job review' : 'Ready to start',
+    nextStep: warnings[0] ?? 'This job has the information needed to start work.',
     openItems: warnings.length,
     isActiveFieldWork
   }
@@ -80,13 +80,13 @@ export function MyJobsPage() {
   }, [logout, navigate])
 
   const jobSummaries = useMemo(
-    () => jobs.map((job) => ({ job, fieldContext: getAssignedJobListFieldContext(job) })),
+    () => jobs.map((job) => ({ job, readiness: getAssignedJobReadiness(job) })),
     [jobs]
   )
 
-  const activeCount = jobSummaries.filter((item) => item.fieldContext.isActiveFieldWork).length
+  const activeCount = jobSummaries.filter((item) => item.readiness.isActiveFieldWork).length
   const needsReviewCount = jobSummaries.filter(
-    (item) => item.fieldContext.isActiveFieldWork && item.fieldContext.openItems > 0
+    (item) => item.readiness.isActiveFieldWork && item.readiness.openItems > 0
   ).length
   const nextJob = jobSummaries[0]
 
@@ -110,7 +110,7 @@ export function MyJobsPage() {
         <section className="employee-work-summary" aria-label="assigned jobs summary">
           <div><span>Assigned</span><strong>{jobs.length}</strong></div>
           <div><span>Active field work</span><strong>{activeCount}</strong></div>
-          <div><span>Needs context review</span><strong>{needsReviewCount}</strong></div>
+          <div><span>Needs job review</span><strong>{needsReviewCount}</strong></div>
         </section>
       ) : null}
 
@@ -118,14 +118,14 @@ export function MyJobsPage() {
         <section className="card employee-next-job" aria-label="next assigned job">
           <span className="muted employee-eyebrow">Next up</span>
           <h2>Start with the first assigned job</h2>
-          <p className="muted">{nextJob.fieldContext.label}: {nextJob.fieldContext.nextStep}</p>
+          <p className="muted">{nextJob.readiness.label}: {nextJob.readiness.nextStep}</p>
           <Link className="button-link" to={`/jobs/${nextJob.job.id}`}>Open First Job</Link>
         </section>
       ) : null}
 
       <section className="stack" aria-label="assigned job list">
-        {jobSummaries.map(({ job, fieldContext }) => {
-          const readinessClass = fieldContext.openItems ? 'readiness-review' : 'readiness-ready'
+        {jobSummaries.map(({ job, readiness }) => {
+          const readinessClass = readiness.openItems ? 'readiness-review' : 'readiness-ready'
           const statusLabel = getJobTicketStatusLabel(job.status)
           const priorityLabel = getJobTicketPriorityLabel(job.priority)
           const dueLabel = formatOptionalDateTime(job.dueAtUtc)
@@ -137,11 +137,11 @@ export function MyJobsPage() {
                   <h2>{job.ticketNumber}</h2>
                   <p>{job.title}</p>
                 </div>
-                <span className={`status-pill readiness-pill ${readinessClass}`}>{fieldContext.label}</span>
+                <span className={`status-pill readiness-pill ${readinessClass}`}>{readiness.label}</span>
               </div>
               <p className="muted assigned-job-summary-line">Status: {statusLabel} | Priority: {priorityLabel}</p>
               <p className="muted assigned-job-summary-line">Due: {dueLabel}</p>
-              <p className="muted assigned-job-summary-line">Field context: {fieldContext.label}</p>
+              <p className="muted assigned-job-summary-line">Start readiness: {readiness.label}</p>
               <div className="assigned-job-meta">
                 <div><strong>Status</strong><span>{statusLabel}</span></div>
                 <div><strong>Priority</strong><span>{priorityLabel}</span></div>
@@ -149,11 +149,11 @@ export function MyJobsPage() {
                 <div><strong>Due</strong><span>{dueLabel}</span></div>
               </div>
               <div className="assigned-job-context">
-                <div><strong>Customer ref</strong><span>{job.customerId}</span></div>
-                <div><strong>Location ref</strong><span>{job.serviceLocationId}</span></div>
-                <div><strong>Equipment</strong><span>Summary unavailable from assigned-jobs API</span></div>
+                <div><strong>Customer</strong><span>Reference: {job.customerId}</span></div>
+                <div><strong>Service location</strong><span>Reference: {job.serviceLocationId}</span></div>
+                <div><strong>Equipment</strong><span>Open the job to view equipment details.</span></div>
               </div>
-              <p className="muted">Next field-context fix: {fieldContext.nextStep}</p>
+              <p className="muted">Next required update: {readiness.nextStep}</p>
               <Link className="button-link secondary-link" to={`/jobs/${job.id}`}>Open Job</Link>
             </article>
           )

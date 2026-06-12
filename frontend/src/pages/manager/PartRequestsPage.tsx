@@ -153,7 +153,7 @@ export function PartRequestsPage() {
               <strong>{unlistedRequests.length}</strong>
             </div>
             <div>
-              <span className="muted">Loaded Requests</span>
+              <span className="muted">Visible Requests</span>
               <strong>{requests.length}</strong>
             </div>
           </div>
@@ -191,7 +191,7 @@ export function PartRequestsPage() {
 
       <div className="manager-workspace-grid">
         <article className="card stack">
-          <h3>Queue</h3>
+          <h3>Requests Awaiting Review</h3>
           {requests.length ? (
             <ul>
               {requests.map((request) => (
@@ -213,7 +213,7 @@ export function PartRequestsPage() {
         </article>
 
         <article className="card stack">
-          <h3>Request Details</h3>
+          <h3>Selected Part Request</h3>
           {selectedRequest ? (
             <>
               <div className="review-grid">
@@ -230,7 +230,7 @@ export function PartRequestsPage() {
                   <strong>{getApprovalLabel(selectedRequest.status)}</strong>
                 </div>
                 <div>
-                  <span className="muted">Request Context</span>
+                  <span className="muted">Request Type</span>
                   <strong>{selectedRequest.needsOrdered ? 'Needs ordered' : 'Ticket part only'}</strong>
                 </div>
                 <div>

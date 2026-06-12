@@ -68,8 +68,8 @@ describe('Manager list pages', () => {
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
     expect(screen.getByText('Assigned: Alex Rivera · Lead: Alex Rivera')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing scheduled start, due date.')).toBeInTheDocument()
-    expect(screen.getByText('Next dispatch fix: Set a scheduled start time before dispatch.')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch status: Needs dispatch review · Missing scheduled start, due date.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Set a scheduled start time before dispatch.')).toBeInTheDocument()
     expect(screen.getByText('Due')).toBeInTheDocument()
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
@@ -117,8 +117,8 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch readiness: Ready for dispatch · Assignment, lead tech, schedule, and due date are present.')).toBeInTheDocument()
-    expect(screen.getByText('Next dispatch fix: No dispatch blockers are visible from the loaded list data.')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch status: Ready for dispatch · Assignment, lead tech, schedule, and due date are present.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: All dispatch requirements are complete.')).toBeInTheDocument()
   })
 
   it('shows due-date-missing dispatch review when assignment, lead, and schedule are present', async () => {
@@ -129,8 +129,8 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing due date.')).toBeInTheDocument()
-    expect(screen.getByText('Next dispatch fix: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch status: Needs dispatch review · Missing due date.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
   })
 
   it('shows assignment-first dispatch guidance when no employees are assigned', async () => {
@@ -141,8 +141,8 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-3')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch readiness: Needs dispatch review · Missing assignment, lead tech.')).toBeInTheDocument()
-    expect(screen.getByText('Next dispatch fix: Assign at least one employee before dispatch.')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch status: Needs dispatch review · Missing assignment, lead tech.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Assign at least one employee before dispatch.')).toBeInTheDocument()
   })
 
   it('does not treat assignment load failures as unassigned tickets or ready dispatch data', async () => {
@@ -155,13 +155,13 @@ describe('Manager list pages', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText(/Assignment data could not be loaded for one or more tickets/)).toBeInTheDocument()
-    expect(screen.getByText('Assignments')).toBeInTheDocument()
+    expect(screen.getByText('Technician Assignments')).toBeInTheDocument()
     expect(screen.queryByText('Unassigned')).not.toBeInTheDocument()
     expect(screen.queryByText('Needs lead')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Dispatch readiness')).toBeDisabled()
     expect(screen.getByText('Assigned: Assignment data unavailable · Lead: Assignment data unavailable')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch readiness: Assignment data unavailable · Assignment data could not be loaded for this ticket.')).toBeInTheDocument()
-    expect(screen.getByText('Next dispatch fix: Reload assignments before using dispatch readiness to make assignment decisions.')).toBeInTheDocument()
+    expect(screen.getByText('Dispatch status: Assignment data unavailable · Assignment data could not be loaded for this ticket.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Reload technician assignments before making dispatch decisions.')).toBeInTheDocument()
   })
 
   it('filters by dispatch readiness from the loaded ticket and assignment data', async () => {
@@ -186,7 +186,7 @@ describe('Manager list pages', () => {
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
     expect(screen.getByText('JT-2')).toBeInTheDocument()
     expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
-    expect(screen.getByText('Next dispatch fix: Mark one assigned employee as the lead tech.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Mark one assigned employee as the lead tech.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'not-active' } })
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()

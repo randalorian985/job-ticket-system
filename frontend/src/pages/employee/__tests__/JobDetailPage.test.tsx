@@ -124,7 +124,7 @@ describe('JobDetailPage', () => {
     vi.mocked(partsApi.list).mockResolvedValue([])
   })
 
-  it('renders ticket details, work entries, parts, files, and ready field context', async () => {
+  it('renders ticket details, work entries, parts, files, and ready job requirements', async () => {
     mockEmployeeAuth()
     mockJob()
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([
@@ -182,14 +182,14 @@ describe('JobDetailPage', () => {
     expect(screen.getByText(/Added to ticket - Pending review/)).toBeInTheDocument()
     expect(screen.getByText(/before.jpg/)).toBeInTheDocument()
 
-    const fieldContext = screen.getByLabelText('field context review')
-    expect(within(fieldContext).getByText('Ready for field work review')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('7 / 7')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('Field context is complete for assigned work.')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('No field-context blockers are visible from the assigned ticket.')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('Ticket is in the active field-work queue.')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('Job instructions are available.')).toBeInTheDocument()
-    expect(screen.getByText('Field context is ready for clock-in.')).toBeInTheDocument()
+    const jobReadiness = screen.getByLabelText('job readiness review')
+    expect(within(jobReadiness).getByText('Ready to start work')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('7 / 7')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('The job requirements are complete for assigned work.')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('This ticket has the information needed to start work.')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Ticket is available for field work.')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Job instructions are available.')).toBeInTheDocument()
+    expect(screen.getByText('Job setup is ready for clock-in.')).toBeInTheDocument()
   })
 
   it('keeps field recording disabled until the technician clocks into this ticket', async () => {
@@ -428,7 +428,7 @@ describe('JobDetailPage', () => {
     expect(screen.queryByText(/Hydraulic hose - Hydraulic hose/)).not.toBeInTheDocument()
   })
 
-  it('shows clock-out state, upload UI, and missing field context review', async () => {
+  it('shows clock-out state, upload UI, and missing job requirements', async () => {
     mockEmployeeAuth()
     mockJob({
       ticketNumber: 'JT-2026-000111',
@@ -454,15 +454,15 @@ describe('JobDetailPage', () => {
     expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument()
     expect(screen.queryByLabelText('Invoice attachment')).not.toBeInTheDocument()
 
-    const fieldContext = screen.getByLabelText('field context review')
-    expect(within(fieldContext).getByText('Needs manager review')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('4 / 7')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('Review open field context with a manager before starting field work.')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('Next Field Context Fix')).toBeInTheDocument()
-    expect(within(fieldContext).getAllByText('No scheduled start is set.')).toHaveLength(2)
-    expect(within(fieldContext).getByText('No due date is set.')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('No job instructions are available yet.')).toBeInTheDocument()
-    expect(screen.getByText('Field context needs manager review before starting new work.')).toBeInTheDocument()
+    const jobReadiness = screen.getByLabelText('job readiness review')
+    expect(within(jobReadiness).getByText('Needs manager review')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('4 / 7')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Review the open job requirements with a manager before starting work.')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Next Required Update')).toBeInTheDocument()
+    expect(within(jobReadiness).getAllByText('No scheduled start is set.')).toHaveLength(2)
+    expect(within(jobReadiness).getByText('No due date is set.')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('No job instructions are available yet.')).toBeInTheDocument()
+    expect(screen.getByText('Job setup needs manager review before starting new work.')).toBeInTheDocument()
 
     const user = userEvent.setup()
     const uploadButton = screen.getByRole('button', { name: 'Upload' })
@@ -473,7 +473,7 @@ describe('JobDetailPage', () => {
     })
   })
 
-  it('marks completed assigned tickets as outside active field work even when context is complete', async () => {
+  it('marks completed assigned tickets as outside active field work even when requirements are complete', async () => {
     mockEmployeeAuth()
     mockJob({
       ticketNumber: 'JT-2026-000112',
@@ -491,10 +491,10 @@ describe('JobDetailPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000112' })).toBeInTheDocument()
 
-    const fieldContext = screen.getByLabelText('field context review')
-    expect(within(fieldContext).getByText('Not active field work')).toBeInTheDocument()
-    expect(within(fieldContext).getByText('6 / 7')).toBeInTheDocument()
-    expect(within(fieldContext).getAllByText('Ticket is outside the active field-work queue.')).toHaveLength(2)
-    expect(screen.getByText('Field context needs manager review before starting new work.')).toBeInTheDocument()
+    const jobReadiness = screen.getByLabelText('job readiness review')
+    expect(within(jobReadiness).getByText('Not active field work')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('6 / 7')).toBeInTheDocument()
+    expect(within(jobReadiness).getAllByText('Ticket is no longer available for field work.')).toHaveLength(2)
+    expect(screen.getByText('Job setup needs manager review before starting new work.')).toBeInTheDocument()
   })
 })

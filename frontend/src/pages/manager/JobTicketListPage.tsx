@@ -48,7 +48,7 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
     return {
       label: 'Assignment data unavailable',
       detail: 'Assignment data could not be loaded for this ticket.',
-      nextStep: 'Reload assignments before using dispatch readiness to make assignment decisions.',
+      nextStep: 'Reload technician assignments before making dispatch decisions.',
       openItems: 0,
       isReady: false
     }
@@ -88,7 +88,7 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
     return {
       label: 'Ready for dispatch',
       detail: 'Assignment, lead tech, schedule, and due date are present.',
-      nextStep: 'No dispatch blockers are visible from the loaded list data.',
+      nextStep: 'All dispatch requirements are complete.',
       openItems: 0,
       isReady: true
     }
@@ -349,7 +349,7 @@ export function JobTicketListPage() {
         <section className="queue-shortcuts" aria-label="queue summary">
           <div className="queue-shortcuts-heading">
             <div>
-              <h3>Queue shortcuts</h3>
+              <h3>Ticket Filter Shortcuts</h3>
               <p className="muted">Select a count to filter the ticket list.</p>
             </div>
             {hasActiveFilters ? <span className="status-pill">Filtered view</span> : null}
@@ -361,7 +361,7 @@ export function JobTicketListPage() {
             <button aria-pressed={attentionFilter === 'unscheduled'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'unscheduled' })} title="Show active tickets without a scheduled start" type="button"><span>Unscheduled</span><strong>{triageSummary.unscheduledCount}</strong></button>
             <button aria-pressed={attentionFilter === 'missing-due'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'missing-due' })} title="Show active tickets without a due date" type="button"><span>Missing due</span><strong>{triageSummary.missingDueDateCount}</strong></button>
             {assignmentDataUnavailable ? (
-              <div className="queue-kpi-card queue-kpi-card-review queue-kpi-card-static"><span>Assignments</span><strong>Unavailable</strong></div>
+              <div className="queue-kpi-card queue-kpi-card-review queue-kpi-card-static"><span>Technician Assignments</span><strong>Unavailable</strong></div>
             ) : (
               <>
                 <button aria-pressed={attentionFilter === 'unassigned'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'unassigned' })} title="Show active tickets that need an assigned technician" type="button"><span>Unassigned</span><strong>{triageSummary.unassignedCount}</strong></button>
@@ -416,8 +416,8 @@ export function JobTicketListPage() {
                   </div>
                   <div className="readiness-panel">
                     <div>Assigned: {assignmentSummary} · Lead: {leadSummary}</div>
-                    <div>Dispatch readiness: {readiness.label} · {readiness.detail}</div>
-                    <div>Next dispatch fix: {readiness.nextStep}</div>
+                    <div>Dispatch status: {readiness.label} · {readiness.detail}</div>
+                    <div>Next required update: {readiness.nextStep}</div>
                   </div>
                   <div className="ticket-meta-grid ticket-date-grid">
                     <div><strong>Created</strong><span>{formatDate(job.requestedAtUtc)}</span></div>

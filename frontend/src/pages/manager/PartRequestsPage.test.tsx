@@ -99,6 +99,9 @@ describe('PartRequestsPage', () => {
     render(<PartRequestsPage />)
 
     expect(await screen.findByRole('heading', { name: 'Parts Request Queue' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Requests Awaiting Review' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Selected Part Request' })).toBeInTheDocument()
+    expect(screen.getByText('Request Type')).toBeInTheDocument()
     expect(screen.getAllByText(/JT-2026-000101/)).toHaveLength(2)
     expect(screen.getByText('Urgency: Urgent')).toBeInTheDocument()
     expect(screen.getByText(/Qty 2 · Needs ordered/)).toBeInTheDocument()

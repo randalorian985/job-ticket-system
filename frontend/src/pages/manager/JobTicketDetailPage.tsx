@@ -42,13 +42,13 @@ type WorkbenchDrawer = "ticket" | "status" | "archive" | "part" | null;
 type WorkflowTab = "overview" | "dispatch" | "time" | "parts" | "files" | "closeout" | "activity";
 
 const workflowTabs: Array<{ value: WorkflowTab; label: string }> = [
-  { value: "overview", label: "Overview" },
+  { value: "overview", label: "Service Details" },
   { value: "dispatch", label: "Dispatch" },
-  { value: "time", label: "Time" },
+  { value: "time", label: "Labor" },
   { value: "parts", label: "Parts" },
   { value: "files", label: "Files" },
-  { value: "closeout", label: "Closeout" },
-  { value: "activity", label: "Activity" },
+  { value: "closeout", label: "Invoice Review" },
+  { value: "activity", label: "History" },
 ];
 
 const isWorkflowTab = (value: string | null): value is WorkflowTab =>
@@ -369,11 +369,11 @@ export function JobTicketDetailPage() {
           : "Service location is not selected.",
       },
       {
-        label: "Equipment or no-equipment context",
+        label: "Equipment decision",
         isReady: Boolean(job),
         detail: job?.equipmentId
-          ? "Equipment context is selected."
-          : "No equipment is attached; no-equipment context is allowed for this ticket.",
+          ? "Equipment is selected."
+          : "No equipment is attached; this ticket can be dispatched without equipment.",
       },
     ];
     const warnings = checks
@@ -395,7 +395,7 @@ export function JobTicketDetailPage() {
   }, [assignmentLoadFailed, assignments, employeesById, job, leadAssignment]);
 
   const dispatchWarnings = dispatchReadiness.warnings;
-  const nextDispatchFix = dispatchWarnings[0] ?? "No dispatch blockers found.";
+  const nextDispatchFix = dispatchWarnings[0] ?? "All dispatch requirements are complete.";
 
   const closeoutReview = useMemo(() => {
     const warnings: string[] = [];
@@ -414,14 +414,14 @@ export function JobTicketDetailPage() {
           : "Customer or service location is missing.",
       },
       {
-        label: "Equipment context",
+        label: "Equipment verification",
         isReady: Boolean(job?.equipmentId),
         detail: job?.equipmentId
           ? "Equipment is attached for review."
-          : "No equipment is attached; confirm that this ticket does not require equipment context.",
+          : "Confirm whether this ticket should remain without equipment before invoice review.",
       },
       {
-        label: "Billing handoff context",
+        label: "Billing information",
         isReady: Boolean(
           job?.billingPartyCustomerId ||
           job?.purchaseOrderNumber?.trim() ||
@@ -430,8 +430,8 @@ export function JobTicketDetailPage() {
           job?.billingContactPhone?.trim(),
         ),
         detail: job?.billingPartyCustomerId || job?.purchaseOrderNumber?.trim() || job?.billingContactName?.trim()
-          ? "Billing party, purchase order, or billing contact context is present."
-          : "Add purchase-order, billing-party, or billing-contact context before invoice handoff.",
+          ? "Billing party, purchase order, or billing contact is present."
+          : "Add a purchase order, billing party, or billing contact before invoice handoff.",
       },
       {
         label: "Labor and work notes",
@@ -965,7 +965,7 @@ export function JobTicketDetailPage() {
     ? dispatchWarnings[0]
     : partsReview.blockerCount
       ? partsReview.nextAction
-      : closeoutReview.warnings[0] ?? "Review the ticket overview and continue the current workflow.";
+      : closeoutReview.warnings[0] ?? "Review the service details and continue the current workflow.";
 
   if (!canShow) return <section className="card">Missing job id.</section>;
 
@@ -1014,7 +1014,7 @@ export function JobTicketDetailPage() {
                 {activeDrawer === "archive" ? "Close Archive Panel" : "Archive Review"}
               </button>
             </div>
-            <div className="ticket-workbench-hero-meta" aria-label="ticket overview">
+            <div className="ticket-workbench-hero-meta" aria-label="ticket key details">
               <div>
                 <span>Status</span>
                 <strong>{getJobTicketStatusLabel(job.status)}</strong>
@@ -1098,16 +1098,16 @@ export function JobTicketDetailPage() {
               <small>{files.filter((file) => file.isInvoiceAttachment).length} invoice attachments</small>
             </div>
             <div className="metric-tile metric-tile-money">
-              <span>Invoice-ready</span>
+              <span>Invoice Review</span>
               <strong>{invoiceSummary ? formatCurrency(invoiceSummary.grandTotal) : "Not ready"}</strong>
-              <small>{invoiceSummary ? "Report summary loaded" : "Use closeout checks"}</small>
+              <small>{invoiceSummary ? "Invoice report loaded" : "Complete invoice checks"}</small>
             </div>
           </section>
 
           <section className="ticket-workbench-layout">
-            <aside className="ticket-workbench-rail no-print" aria-label="ticket actions and readiness">
+            <aside className="ticket-workbench-rail no-print" aria-label="ticket actions and dispatch requirements">
               <section className="workbench-panel workbench-panel-compact">
-                <h3>Workbench Actions</h3>
+                <h3>Ticket Actions</h3>
                 <button type="button" onClick={() => toggleDrawer("ticket")}>Edit Ticket</button>
                 <button type="button" onClick={() => toggleDrawer("status")}>Change Status</button>
                 <button type="button" onClick={() => openWorkflowDrawer("parts", "part")}>Open Add / Request Part Panel</button>
@@ -1115,7 +1115,7 @@ export function JobTicketDetailPage() {
               </section>
 
               <section className="workbench-panel workbench-panel-compact">
-                <h3>Ownership</h3>
+                <h3>Assigned Technicians</h3>
                 <div className="rail-facts">
                   <div>
                     <span>Lead tech</span>
@@ -1137,7 +1137,7 @@ export function JobTicketDetailPage() {
               </section>
 
               <section className="workbench-panel workbench-panel-compact">
-                <h3>Readiness</h3>
+                <h3>Dispatch Requirements</h3>
                 <ul className="check-list" aria-label="dispatch readiness checks">
                   {dispatchReadiness.checks.map((check) => (
                     <li className={check.isReady ? "check-item-ready" : "check-item-open"} key={check.label}>
@@ -1155,7 +1155,7 @@ export function JobTicketDetailPage() {
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Edit Ticket</h3>
-                      <p className="muted">Customer, service location, equipment, scope, billing handoff, dates, status, and priority.</p>
+                      <p className="muted">Customer, service location, equipment, scope, billing information, dates, status, and priority.</p>
                     </div>
                     <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
                   </div>
@@ -1209,7 +1209,7 @@ export function JobTicketDetailPage() {
                       <strong>{statusReview.nextLabel}</strong>
                     </div>
                     <div>
-                      <span>Dispatch Readiness</span>
+                      <span>Dispatch Status</span>
                       <strong>{dispatchReadiness.statusLabel}</strong>
                     </div>
                   </div>
@@ -1314,11 +1314,11 @@ export function JobTicketDetailPage() {
                 </section>
               ) : null}
 
-              <article {...getWorkflowPanelProps("overview", "ticket-overview")} aria-label="ticket overview, customer, location, and equipment">
+              <article {...getWorkflowPanelProps("overview", "ticket-overview")} aria-label="service details, customer, location, and equipment">
                 <div className="workbench-panel-heading">
                   <div>
-                    <h3>Ticket Overview</h3>
-                    <p className="muted">Customer, service location, equipment, service scope, and billing handoff.</p>
+                    <h3>Service Details</h3>
+                    <p className="muted">Customer, service location, equipment, service scope, and billing information.</p>
                   </div>
                   <button type="button" className="secondary-button no-print" onClick={() => toggleDrawer("ticket")}>Edit Ticket</button>
                 </div>
@@ -1392,10 +1392,10 @@ export function JobTicketDetailPage() {
                 </div>
               </article>
 
-              <article {...getWorkflowPanelProps("dispatch", "assignments")} aria-label="assignments panel">
+              <article {...getWorkflowPanelProps("dispatch", "assignments")} aria-label="technician assignments panel">
                 <div className="workbench-panel-heading">
                   <div>
-                    <h3>Assignments</h3>
+                    <h3>Technician Assignments</h3>
                     <p className="muted">Current lead: {leadAssignment ? getEmployeeDisplayName(leadAssignment) : "Needs assignment"}</p>
                   </div>
                   <span className={assignmentLoadFailed ? "status-chip status-chip-alert" : "status-chip"}>{assignments.length} assigned</span>
@@ -1459,10 +1459,10 @@ export function JobTicketDetailPage() {
                 </form>
               </article>
 
-              <article {...getWorkflowPanelProps("overview", "status-priority")} aria-label="status and priority panel">
+              <article {...getWorkflowPanelProps("overview", "status-priority")} aria-label="ticket status and priority panel">
                 <div className="workbench-panel-heading">
                   <div>
-                    <h3>Status / Priority</h3>
+                    <h3>Ticket Status &amp; Priority</h3>
                     <p className="muted">{statusReview.summary}</p>
                   </div>
                   <button type="button" className="secondary-button no-print" onClick={() => toggleDrawer("status")}>Open Status Review</button>
@@ -1477,11 +1477,11 @@ export function JobTicketDetailPage() {
                     <strong>{getJobTicketPriorityLabel(job.priority)}</strong>
                   </div>
                   <div>
-                    <span>Dispatch Readiness</span>
+                    <span>Dispatch Status</span>
                     <strong>{dispatchReadiness.statusLabel}</strong>
                   </div>
                   <div>
-                    <span>Next Dispatch Fix</span>
+                    <span>Next Required Update</span>
                     <strong>{nextDispatchFix}</strong>
                   </div>
                 </div>
@@ -1492,14 +1492,14 @@ export function JobTicketDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="muted">Assignment, lead tech, schedule, due date, customer, service location, and equipment or no-equipment signals are all present.</p>
+                  <p className="muted">Assignment, lead tech, schedule, due date, customer, service location, and equipment decision are all present.</p>
                 )}
               </article>
 
-              <article {...getWorkflowPanelProps("time", "time-labor")} aria-label="time and labor panel">
+              <article {...getWorkflowPanelProps("time", "time-labor")} aria-label="labor and time entries panel">
                 <div className="workbench-panel-heading">
                   <div>
-                    <h3>Time / Labor</h3>
+                    <h3>Labor &amp; Time Entries</h3>
                     <p className="muted">Labor totals, time approvals, and work notes.</p>
                   </div>
                   <span className="status-chip">{timeEntries.length} time entries</span>
@@ -1571,10 +1571,10 @@ export function JobTicketDetailPage() {
                 </div>
               </article>
 
-              <article {...getWorkflowPanelProps("parts", "parts")} aria-label="ticket parts panel">
+              <article {...getWorkflowPanelProps("parts", "parts")} aria-label="parts used and requested panel">
                 <div className="workbench-panel-heading">
                   <div>
-                    <h3>Parts</h3>
+                    <h3>Parts Used &amp; Requested</h3>
                     <p className="muted">Ticket parts and back-office request status.</p>
                   </div>
                   <button type="button" className="secondary-button no-print" onClick={() => toggleDrawer("part")}>Open Add / Request Part Panel</button>
@@ -1704,10 +1704,10 @@ export function JobTicketDetailPage() {
                 )}
               </article>
 
-              <article {...getWorkflowPanelProps("files", "files")} aria-label="files and photos panel">
+              <article {...getWorkflowPanelProps("files", "files")} aria-label="job files and photos panel">
                 <div className="workbench-panel-heading">
                   <div>
-                    <h3>Files / Photos</h3>
+                    <h3>Job Files &amp; Photos</h3>
                     <p className="muted">{files.length} attached files, {files.filter((file) => file.isInvoiceAttachment).length} marked for invoice review.</p>
                   </div>
                 </div>
@@ -1731,10 +1731,10 @@ export function JobTicketDetailPage() {
                 )}
               </article>
 
-              <article {...getWorkflowPanelProps("activity", "activity")} aria-label="activity panel">
+              <article {...getWorkflowPanelProps("activity", "activity")} aria-label="ticket history panel">
                 <div className="workbench-panel-heading">
                   <div>
-                    <h3>Activity</h3>
+                    <h3>Ticket History</h3>
                     <p className="muted">Recent work notes, time entries, parts, and file/photo activity.</p>
                   </div>
                 </div>
@@ -1754,11 +1754,11 @@ export function JobTicketDetailPage() {
                 )}
               </article>
 
-              <article {...getWorkflowPanelProps("closeout", "closeout")} aria-label="closeout invoice readiness review">
+              <article {...getWorkflowPanelProps("closeout", "closeout")} aria-label="invoice review">
                 <div className="workbench-panel-heading">
                   <div>
-                    <h3>Invoice-ready Summary</h3>
-                    <p className="muted">Closeout readiness and existing invoice-ready report totals.</p>
+                    <h3>Invoice Review</h3>
+                    <p className="muted">Invoice requirements and the existing invoice-ready report totals.</p>
                   </div>
                   <span className={closeoutReview.warnings.length ? "status-chip status-chip-review" : "status-chip status-chip-ready"}>
                     {closeoutReview.warnings.length ? "Needs closeout review" : "Ready for invoice handoff"}
@@ -1766,11 +1766,11 @@ export function JobTicketDetailPage() {
                 </div>
                 <div className="fact-grid">
                   <div>
-                    <span>Readiness Checks</span>
+                    <span>Invoice Checks</span>
                     <strong>{closeoutReview.readyCount} / {closeoutReview.checks.length}</strong>
                   </div>
                   <div>
-                    <span>Open Items</span>
+                    <span>Open Requirements</span>
                     <strong>{closeoutReview.warnings.length}</strong>
                   </div>
                   <div>
@@ -1846,7 +1846,7 @@ export function JobTicketDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="muted">Labor, time approval, parts, files/photos, notes, and billing handoff context are ready for invoice review.</p>
+                  <p className="muted">Labor, time approval, parts, files/photos, notes, and billing information are ready for invoice review.</p>
                 )}
               </article>
             </div>

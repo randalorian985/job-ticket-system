@@ -85,12 +85,13 @@ beforeEach(() => {
 })
 
 describe('PurchasingWorkbenchPage', () => {
-  it('renders purchase order workflow and reorder context without inventory automation language', async () => {
+  it('renders purchase order workflow and reorder reference without inventory automation language', async () => {
     renderWithRouter(<PurchasingWorkbenchPage />)
 
     expect(await screen.findByText('Purchasing Workbench')).toBeInTheDocument()
     expect(screen.getByText(/purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording/i)).toBeInTheDocument()
     expect(screen.getByText('PO-1001')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Parts Below Reorder Point' })).toBeInTheDocument()
     expect(screen.getByText(/replenishment automation or recommendation scoring/i)).toBeInTheDocument()
     expect(screen.getByText(/SEAL-1 · Seal Kit: Out of stock, manual reorder quantity 4/i)).toBeInTheDocument()
     expect(screen.queryByText(/suggested manual order quantity/i)).not.toBeInTheDocument()

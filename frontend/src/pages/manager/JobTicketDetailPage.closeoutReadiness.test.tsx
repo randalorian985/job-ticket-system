@@ -71,7 +71,7 @@ describe('JobTicketDetailPage closeout readiness semantics', () => {
 
     expect(await screen.findByText('Ready for invoice handoff')).toBeInTheDocument()
     expect(screen.getByText('9 / 9')).toBeInTheDocument()
-    expect(screen.getByText('Labor, time approval, parts, files/photos, notes, and billing handoff context are ready for invoice review.')).toBeInTheDocument()
+    expect(screen.getByText('Labor, time approval, parts, files/photos, notes, and billing information are ready for invoice review.')).toBeInTheDocument()
   })
 
   it('does not count pending time as invoice ready', async () => {

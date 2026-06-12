@@ -344,8 +344,8 @@ export function PurchasingWorkbenchPage() {
       ) : null}
 
       <article className="card">
-        <h3>Reorder candidates from parts master data</h3>
-        <p className="muted">Used only as purchasing context; no replenishment automation or recommendation scoring is performed.</p>
+        <h3>Parts Below Reorder Point</h3>
+        <p className="muted">Reference list only; no replenishment automation or recommendation scoring is performed.</p>
         <ul>
           {reorderCandidates.map((part) => <li key={part.id}>{part.partNumber} · {part.name}: {part.statusLabel}, manual reorder quantity {quantityFormatter.format(part.manualReorderQuantity)}</li>)}
         </ul>

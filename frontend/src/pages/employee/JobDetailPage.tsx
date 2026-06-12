@@ -105,16 +105,16 @@ export function JobDetailPage() {
     }
   }
 
-  const employeeFieldContext = useMemo(() => {
+  const employeeJobReadiness = useMemo(() => {
     const hasJobInstructions = Boolean(job?.description?.trim() || job?.customerFacingNotes?.trim())
     const isActiveFieldWork = Boolean(job && activeFieldWorkStatuses.has(job.status))
     const checks = [
       {
-        label: 'Field-work status',
+        label: 'Ticket availability',
         isReady: isActiveFieldWork,
         detail: isActiveFieldWork
-          ? 'Ticket is in the active field-work queue.'
-          : 'Ticket is outside the active field-work queue.'
+          ? 'Ticket is available for field work.'
+          : 'Ticket is no longer available for field work.'
       },
       {
         label: 'Scheduled start',
@@ -139,7 +139,7 @@ export function JobDetailPage() {
         detail: job?.serviceLocationId ? `Service Location ID: ${job.serviceLocationId}` : 'Service location is not selected.'
       },
       {
-        label: 'Equipment context',
+        label: 'Equipment assignment',
         isReady: Boolean(job),
         detail: job?.equipmentId ? `Equipment ID: ${job.equipmentId}` : 'No equipment is attached for this ticket.'
       },
@@ -157,11 +157,11 @@ export function JobDetailPage() {
       warnings,
       statusLabel: !isActiveFieldWork
         ? 'Not active field work'
-        : warnings.length ? 'Needs manager review' : 'Ready for field work review',
-      nextFieldContextFix: warnings[0] ?? 'No field-context blockers are visible from the assigned ticket.',
+        : warnings.length ? 'Needs manager review' : 'Ready to start work',
+      nextRequiredUpdate: warnings[0] ?? 'This ticket has the information needed to start work.',
       guidance: warnings.length
-        ? 'Review open field context with a manager before starting field work.'
-        : 'Field context is complete for assigned work.'
+        ? 'Review the open job requirements with a manager before starting work.'
+        : 'The job requirements are complete for assigned work.'
     }
   }, [job])
   const isClockedIntoThisJob = Boolean(openEntry && openEntry.jobTicketId === jobTicketId)
@@ -469,29 +469,29 @@ export function JobDetailPage() {
         <p>{job.description ?? 'No description provided.'}</p>
       </section>
 
-      <section className="card stack" aria-label="field context review">
-        <h2>Field Context</h2>
+      <section className="card stack" aria-label="job readiness review">
+        <h2>Before You Start</h2>
         <div className="review-grid">
           <div>
-            <span className="muted">Context Status</span>
-            <strong>{employeeFieldContext.statusLabel}</strong>
+            <span className="muted">Work Status</span>
+            <strong>{employeeJobReadiness.statusLabel}</strong>
           </div>
           <div>
-            <span className="muted">Context Checks</span>
-            <strong>{employeeFieldContext.readyCount} / {employeeFieldContext.checks.length}</strong>
+            <span className="muted">Requirements Ready</span>
+            <strong>{employeeJobReadiness.readyCount} / {employeeJobReadiness.checks.length}</strong>
           </div>
           <div>
-            <span className="muted">Open Items</span>
-            <strong>{employeeFieldContext.warnings.length}</strong>
+            <span className="muted">Open Requirements</span>
+            <strong>{employeeJobReadiness.warnings.length}</strong>
           </div>
           <div>
-            <span className="muted">Next Field Context Fix</span>
-            <strong>{employeeFieldContext.nextFieldContextFix}</strong>
+            <span className="muted">Next Required Update</span>
+            <strong>{employeeJobReadiness.nextRequiredUpdate}</strong>
           </div>
         </div>
-        <p className="muted">{employeeFieldContext.guidance}</p>
-        <ul className="muted" aria-label="field context checks">
-          {employeeFieldContext.checks.map((check) => (
+        <p className="muted">{employeeJobReadiness.guidance}</p>
+        <ul className="muted" aria-label="job readiness checks">
+          {employeeJobReadiness.checks.map((check) => (
             <li key={check.label}>
               <strong>{check.label}:</strong> {check.detail}
             </li>
@@ -509,9 +509,9 @@ export function JobDetailPage() {
             : 'No open entry'}
         </p>
         <p className="muted">
-          {employeeFieldContext.warnings.length
-            ? 'Field context needs manager review before starting new work.'
-            : 'Field context is ready for clock-in.'}
+          {employeeJobReadiness.warnings.length
+            ? 'Job setup needs manager review before starting new work.'
+            : 'Job setup is ready for clock-in.'}
         </p>
         {isClockedIntoAnotherJob ? (
           <p className="warning">
