@@ -42,7 +42,7 @@ Recommended next lane:
 
 Initial Phase 3B polish expands the existing Manager/Admin master-data forms to reach current customer, service-location, equipment, vendor, part-category, and part DTO fields from the UI. This is existing-field workflow polish only; it does not add APIs, schema, migrations, roles, purchase orders, receiving, vendor invoice expansion, landed-cost expansion, inventory expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
-Phase 3B validation hardening keeps whitespace-only required service-location and part values from being submitted from the Manager/Admin forms. This remains frontend validation and test coverage within the existing master-data workflow; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, inventory, recommendations, AI/scoring, automatic compatibility, or automatic approval.
+Phase 3B validation hardening keeps whitespace-only required customer, service-location, equipment, vendor, part-category, and part values from being submitted from the Manager/Admin forms. This remains frontend validation and test coverage within the existing master-data workflow; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, inventory, recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
 Acceptable alternate lanes if deliberately selected:
 - Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;

@@ -100,7 +100,7 @@ This lane is a Manager/Admin operational workflow improvement. It must not becom
 
 Initial Phase 3B implementation now expands the existing Manager/Admin master-data create/edit forms to expose current DTO fields for customer contact/account details, equipment ownership/billing/model/serial/type details, vendor contact/account details, part descriptions, stock/reorder values, and part category descriptions. It keeps the existing master-data APIs, archive/unarchive behavior, route boundaries, schema, migrations, auth, and enum values unchanged.
 
-Phase 3B validation hardening also keeps required service-location and part text fields from submitting whitespace-only values from the Manager/Admin forms. This is frontend validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, or deferred purchasing/inventory/recommendation domains.
+Phase 3B validation hardening also keeps required customer, service-location, equipment, vendor, part-category, and part text fields from submitting whitespace-only values from the Manager/Admin forms. This is frontend validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, or deferred purchasing/inventory/recommendation domains.
 
 Acceptable alternatives, if deliberately selected before the next PR starts:
 - Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
