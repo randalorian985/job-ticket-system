@@ -261,6 +261,24 @@ it('validates required service-location fields before create', async () => {
   expect(masterDataApi.createServiceLocation).not.toHaveBeenCalled()
 })
 
+it('validates whitespace-only service-location fields before create', async () => {
+  vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
+  vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
+
+  render(<ServiceLocationsPage />)
+  fireEvent.change(await screen.findByPlaceholderText('Company'), { target: { value: '   ' } })
+  fireEvent.change(screen.getByPlaceholderText('Location Name'), { target: { value: 'North Yard' } })
+  fireEvent.change(screen.getByPlaceholderText('Address'), { target: { value: '100 Main St' } })
+  fireEvent.change(screen.getByPlaceholderText('City'), { target: { value: 'Tulsa' } })
+  fireEvent.change(screen.getByPlaceholderText('State'), { target: { value: 'OK' } })
+  fireEvent.change(screen.getByPlaceholderText('Postal'), { target: { value: '74101' } })
+  fireEvent.change(screen.getByPlaceholderText('Country'), { target: { value: 'US' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Create Location' }))
+
+  expect(await screen.findByText('All address fields are required.')).toBeInTheDocument()
+  expect(masterDataApi.createServiceLocation).not.toHaveBeenCalled()
+})
+
 describe('EquipmentPage', () => {
   it('filters equipment by customer and archived status', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
@@ -386,6 +404,22 @@ describe('PartsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Part' }))
 
     expect(await screen.findByText('Part number must be unique.')).toBeInTheDocument()
+  })
+
+  it('validates whitespace-only part required fields before create', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([{ id: 'pc1', name: 'Category A', isArchived: false }] as any)
+
+    render(<PartsPage />)
+    const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
+    fireEvent.change(await within(partsCard).findByLabelText('Part category'), { target: { value: 'pc1' } })
+    fireEvent.change(within(partsCard).getByLabelText('Part number'), { target: { value: '   ' } })
+    fireEvent.change(within(partsCard).getByLabelText('Name'), { target: { value: 'Filter' } })
+    fireEvent.click(within(partsCard).getByRole('button', { name: 'Create Part' }))
+
+    expect(await screen.findByText('Category, part number, and name are required.')).toBeInTheDocument()
+    expect(masterDataApi.createPart).not.toHaveBeenCalled()
   })
 
   it('saves expanded part, vendor, and category form fields', async () => {

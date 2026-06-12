@@ -31,6 +31,9 @@ import {
   type ArchiveFilter
 } from './masterDataShared'
 
+const hasRequiredText = (value?: string | null) => Boolean(value?.trim())
+const hasRequiredTexts = (...values: Array<string | null | undefined>) => values.every(hasRequiredText)
+
 export function CustomersPage() {
   const [items, setItems] = useState<CustomerDto[]>([])
   const [draft, setDraft] = useState<CreateCustomerDto>({ name: '' })
@@ -85,7 +88,7 @@ export function ServiceLocationsPage() {
   const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [x.locationName, x.companyName, customerNameById(customers, x.customerId), x.addressLine1, x.city, x.state, x.postalCode, x.country])), [items, customers, search, archiveFilter, customerFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
-    if (!draft.companyName || !draft.locationName || !draft.addressLine1 || !draft.city || !draft.state || !draft.postalCode || !draft.country) return setError('All address fields are required.')
+    if (!hasRequiredTexts(draft.companyName, draft.locationName, draft.addressLine1, draft.city, draft.state, draft.postalCode, draft.country)) return setError('All address fields are required.')
     try {
       setError(null)
       if (editId) await masterDataApi.updateServiceLocation(editId, draft)
@@ -166,7 +169,7 @@ export function PartsPage() {
   const filteredCategories = useMemo(() => categories.filter((x) => matchesArchiveFilter(categoryArchiveFilter, x.isArchived) && matchesTextSearch(categorySearch, [x.name, x.description])), [categories, categorySearch, categoryArchiveFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
-    if (!draft.partCategoryId || !draft.partNumber || !draft.name) return setError('Category, part number, and name are required.')
+    if (!draft.partCategoryId || !hasRequiredText(draft.partNumber) || !hasRequiredText(draft.name)) return setError('Category, part number, and name are required.')
     try {
       setError(null)
       if (editId) await masterDataApi.updatePart(editId, draft)
