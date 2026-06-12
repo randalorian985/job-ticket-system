@@ -109,6 +109,27 @@ describe('CustomersPage', () => {
     expect(await screen.findByText('Name is required.')).toBeInTheDocument()
   })
 
+  it('saves customer contact and account details from the expanded form', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.createCustomer).mockResolvedValue({ id: 'c-new', name: 'Acme' } as any)
+
+    render(<CustomersPage />)
+    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'Acme' } })
+    fireEvent.change(screen.getByLabelText('Account number'), { target: { value: 'AC-100' } })
+    fireEvent.change(screen.getByLabelText('Contact name'), { target: { value: 'Alex Manager' } })
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'alex@example.com' } })
+    fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '555-0100' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Customer' }))
+
+    await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({
+      name: 'Acme',
+      accountNumber: 'AC-100',
+      contactName: 'Alex Manager',
+      email: 'alex@example.com',
+      phone: '555-0100'
+    }))
+  })
+
   it('filters customers by search/status, resets filters, and shows no-match state', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
       { id: 'c1', name: 'Acme', contactName: 'Alex', email: 'alex@example.com', isArchived: false },
@@ -246,6 +267,43 @@ describe('EquipmentPage', () => {
     await waitFor(() => expect(masterDataApi.unarchiveEquipment).toHaveBeenCalledWith('e1'))
     expect(await screen.findByText('Unable to update equipment archive state.')).toBeInTheDocument()
   })
+
+  it('creates equipment with ownership, billing, model, serial, type, and year details', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Billing Co' }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', locationName: 'HQ' }] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.createEquipment).mockResolvedValue({ id: 'e-new', name: 'Pump' } as any)
+
+    render(<EquipmentPage />)
+    fireEvent.change(await screen.findByLabelText('Primary customer'), { target: { value: 'c1' } })
+    fireEvent.change(screen.getByLabelText('Service location'), { target: { value: 'l1' } })
+    fireEvent.change(screen.getByLabelText('Owner customer'), { target: { value: 'c1' } })
+    fireEvent.change(screen.getByLabelText('Billing customer'), { target: { value: 'c2' } })
+    fireEvent.change(screen.getByLabelText('Equipment name'), { target: { value: 'Pump' } })
+    fireEvent.change(screen.getByLabelText('Equipment number'), { target: { value: 'EQ-9' } })
+    fireEvent.change(screen.getByLabelText('Unit number'), { target: { value: 'Unit 4' } })
+    fireEvent.change(screen.getByLabelText('Manufacturer'), { target: { value: 'CraneCo' } })
+    fireEvent.change(screen.getByLabelText('Model number'), { target: { value: 'M-200' } })
+    fireEvent.change(screen.getByLabelText('Serial number'), { target: { value: 'SN-200' } })
+    fireEvent.change(screen.getByLabelText('Equipment type'), { target: { value: 'Hydraulic' } })
+    fireEvent.change(screen.getByLabelText('Year'), { target: { value: '2024' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Equipment' }))
+
+    await waitFor(() => expect(masterDataApi.createEquipment).toHaveBeenCalledWith(expect.objectContaining({
+      customerId: 'c1',
+      serviceLocationId: 'l1',
+      ownerCustomerId: 'c1',
+      responsibleBillingCustomerId: 'c2',
+      name: 'Pump',
+      equipmentNumber: 'EQ-9',
+      unitNumber: 'Unit 4',
+      manufacturer: 'CraneCo',
+      modelNumber: 'M-200',
+      serialNumber: 'SN-200',
+      equipmentType: 'Hydraulic',
+      year: 2024
+    })))
+  })
 })
 
 describe('PartsPage', () => {
@@ -298,6 +356,67 @@ describe('PartsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Part' }))
 
     expect(await screen.findByText('Part number must be unique.')).toBeInTheDocument()
+  })
+
+  it('saves expanded part, vendor, and category form fields', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([{ id: 'v1', name: 'Vendor A', isArchived: false }] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([{ id: 'pc1', name: 'Category A', isArchived: false }] as any)
+    vi.mocked(masterDataApi.createPart).mockResolvedValue({ id: 'p-new', partNumber: 'PN-9', name: 'Filter' } as any)
+    vi.mocked(masterDataApi.createVendor).mockResolvedValue({ id: 'v-new', name: 'Vendor B' } as any)
+    vi.mocked(masterDataApi.createPartCategory).mockResolvedValue({ id: 'pc-new', name: 'Hydraulics' } as any)
+
+    render(<PartsPage />)
+
+    const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
+    fireEvent.change(await within(partsCard).findByLabelText('Part number'), { target: { value: 'PN-9' } })
+    fireEvent.change(within(partsCard).getByLabelText('Name'), { target: { value: 'Filter' } })
+    fireEvent.change(within(partsCard).getByLabelText('Description'), { target: { value: 'Hydraulic filter' } })
+    fireEvent.change(within(partsCard).getByLabelText('Part category'), { target: { value: 'pc1' } })
+    fireEvent.change(within(partsCard).getByLabelText('Preferred vendor'), { target: { value: 'v1' } })
+    fireEvent.change(within(partsCard).getByLabelText('Unit cost'), { target: { value: '12.5' } })
+    fireEvent.change(within(partsCard).getByLabelText('Billable price'), { target: { value: '25' } })
+    fireEvent.change(within(partsCard).getByLabelText('Quantity on hand'), { target: { value: '7' } })
+    fireEvent.change(within(partsCard).getByLabelText('Reorder threshold'), { target: { value: '2' } })
+    fireEvent.click(within(partsCard).getByRole('button', { name: 'Create Part' }))
+
+    await waitFor(() => expect(masterDataApi.createPart).toHaveBeenCalledWith({
+      partCategoryId: 'pc1',
+      vendorId: 'v1',
+      partNumber: 'PN-9',
+      name: 'Filter',
+      description: 'Hydraulic filter',
+      unitCost: 12.5,
+      unitPrice: 25,
+      quantityOnHand: 7,
+      reorderThreshold: 2
+    }))
+
+    const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
+    fireEvent.change(within(vendorsCard).getByLabelText('Vendor name'), { target: { value: 'Vendor B' } })
+    fireEvent.change(within(vendorsCard).getByLabelText('Account number'), { target: { value: 'VB-1' } })
+    fireEvent.change(within(vendorsCard).getByLabelText('Contact name'), { target: { value: 'Vera Vendor' } })
+    fireEvent.change(within(vendorsCard).getByLabelText('Email'), { target: { value: 'vera@example.com' } })
+    fireEvent.change(within(vendorsCard).getByLabelText('Phone'), { target: { value: '555-0200' } })
+    fireEvent.click(within(vendorsCard).getByRole('button', { name: 'Create Vendor' }))
+
+    await waitFor(() => expect(masterDataApi.createVendor).toHaveBeenCalledWith({
+      name: 'Vendor B',
+      accountNumber: 'VB-1',
+      contactName: 'Vera Vendor',
+      email: 'vera@example.com',
+      phone: '555-0200'
+    }))
+
+    const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
+    fireEvent.change(within(categoriesCard).getByLabelText('Category name'), { target: { value: 'Hydraulics' } })
+    fireEvent.change(within(categoriesCard).getByLabelText('Description'), { target: { value: 'Hydraulic service parts' } })
+    fireEvent.click(within(categoriesCard).getByRole('button', { name: 'Create Category' }))
+
+    await waitFor(() => expect(masterDataApi.createPartCategory).toHaveBeenCalledWith({
+      name: 'Hydraulics',
+      description: 'Hydraulic service parts'
+    }))
   })
 
   it('archives and unarchives part/vendor/category and surfaces API errors', async () => {
