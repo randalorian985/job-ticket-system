@@ -75,7 +75,35 @@ Manager/Admin Phase 3C reporting polish and export workflow is merged and protec
 - README, project scope, and API contract docs describe the completed reporting behavior;
 - no backend controller, service, DTO, schema, migration, authorization, enum, purchasing expansion, inventory expansion, recommendation, AI/scoring, confidence-score, invoice-generation, payment, client-portal, hard-delete, or historical-migration behavior was added.
 
-There is no active feature PR at this checkpoint. Before selecting another feature lane, run the daily audit guardrails below and confirm the source-of-truth docs still align with `main`. Any next feature task must be explicitly approved by the current roadmap/scope documents and must not pull deferred purchasing expansion, inventory expansion, client portal, payment, notification automation, recommendation, AI/scoring, automatic compatibility, or automatic approval scope forward.
+Manager/Admin Time Approval workflow polish is merged and protected on `main`:
+- the Time Approval screen is a queue-first Manager/Admin workflow and pending entries load by default;
+- optional filters include date range, employee name, approval status, and broad job/customer/site/location search;
+- managers can review contextual employee/job/customer/location details, approve clean completed entries in bulk, reject entries with reasons, or edit and approve with an audit reason;
+- manager edits reuse existing time-entry adjustment audit behavior and do not add unsupported payroll, break-duration, or labor-type schema concepts;
+- helper refactors preserved explicit enum-aligned labels, filter behavior, return context safety, routes, APIs, authorization, database behavior, and UI workflows.
+
+The post-Time Approval historical regression audit checkpoint is merged and recorded in `docs/historical-bug-regression-audit.md`. This roadmap update names the next planning lane only; it does not start or implement a new feature workflow.
+
+## Next Selected Planning Lane
+Next feature work should remain a bounded Manager/Admin workflow PR. The recommended lane is Manager/Admin Phase 3B master-data management polish:
+- customers;
+- service locations;
+- equipment;
+- vendors;
+- part categories;
+- parts;
+- create/edit/archive forms;
+- validation and error UX;
+- focused tests and docs.
+
+This lane is a Manager/Admin operational workflow improvement. It must not become purchasing expansion, receiving, vendor invoice tracking, landed-cost tracking, warehouse/truck inventory expansion, replenishment, recommendation/scoring/AI, automatic compatibility, or automatic approval work.
+
+Acceptable alternatives, if deliberately selected before the next PR starts:
+- Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
+- Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;
+- a narrow stabilization, validation, security, or audit PR if checks, review feedback, or daily audit findings identify a concrete risk.
+
+Before selecting another feature lane, run the daily audit guardrails below and confirm the source-of-truth docs still align with `main`. Any next feature task must be explicitly approved by the current roadmap/scope documents and must not pull deferred purchasing expansion, inventory expansion, client portal, payment, notification automation, recommendation, AI/scoring, automatic compatibility, or automatic approval scope forward.
 
 ## Implemented Feature Direction: Manager/Admin Service Ticket Workspace
 This implemented UI workflow phase used field-service lifecycle inspiration and dense repair-ticket detail views to make service tickets feel like one coherent workbench instead of scattered forms.
