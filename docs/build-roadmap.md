@@ -102,6 +102,8 @@ Initial Phase 3B implementation now expands the existing Manager/Admin master-da
 
 Phase 3B validation hardening also keeps required customer, service-location, equipment, vendor, part-category, and part text fields from submitting whitespace-only values from the Manager/Admin forms. This is frontend validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, or deferred purchasing/inventory/recommendation domains.
 
+Phase 3B archive workflow hardening now requires Manager/Admin confirmation before customer, service-location, equipment, part, vendor, or part-category archive/unarchive actions are sent to the existing APIs. This is frontend confirmation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, soft-delete/archive semantics, or deferred purchasing/inventory/recommendation domains.
+
 Acceptable alternatives, if deliberately selected before the next PR starts:
 - Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
 - Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;

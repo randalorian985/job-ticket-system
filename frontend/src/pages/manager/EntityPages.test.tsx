@@ -68,9 +68,12 @@ vi.mock('../../api/usersApi', () => ({
   }
 }))
 
+const confirmSpy = vi.spyOn(window, 'confirm')
+
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
+  confirmSpy.mockReturnValue(true)
   vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
     { id: 'j2', ticketNumber: 'JT-200', title: 'Gamma invoice summary', status: 7, priority: 2, customerId: 'c1', serviceLocationId: 'loc-1' }
   ] as any)
