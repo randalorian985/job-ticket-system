@@ -350,7 +350,7 @@ describe('EquipmentPage', () => {
 
   it('creates equipment with ownership, billing, model, serial, type, and year details', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Billing Co' }] as any)
-    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', locationName: 'HQ' }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', customerId: 'c1', locationName: 'HQ' }] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.createEquipment).mockResolvedValue({ id: 'e-new', name: 'Pump' } as any)
 
@@ -387,7 +387,7 @@ describe('EquipmentPage', () => {
 
   it('validates whitespace-only equipment names before create', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
-    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', locationName: 'HQ' }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', customerId: 'c1', locationName: 'HQ' }] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
 
     render(<EquipmentPage />)
