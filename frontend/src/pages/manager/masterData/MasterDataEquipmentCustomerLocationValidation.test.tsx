@@ -54,8 +54,10 @@ describe('MasterData equipment customer/location validation', () => {
     render(<EquipmentPage />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
-    const equipmentForm = screen.getByRole('form', { name: 'equipment form' })
-    fireEvent.submit(equipmentForm)
+    const saveButton = await screen.findByRole('button', { name: 'Save Equipment' })
+    const equipmentForm = saveButton.closest('form')
+    expect(equipmentForm).not.toBeNull()
+    fireEvent.submit(equipmentForm as HTMLFormElement)
 
     expect(await screen.findByText('Equipment service location must belong to the selected customer.')).toBeInTheDocument()
     expect(masterDataApi.updateEquipment).not.toHaveBeenCalled()
