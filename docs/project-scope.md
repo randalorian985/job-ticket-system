@@ -48,6 +48,8 @@ Phase 3B archive workflow hardening requires Manager/Admin confirmation before c
 
 Phase 3B edit-mode UX hardening gives Manager/Admin master-data forms clear edit-mode context and cancel-edit controls for customer, service-location, equipment, part, vendor, and part-category forms. This remains frontend create/edit workflow polish within the existing master-data workflow; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, inventory, recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
+Phase 3B part numeric validation hardening keeps Manager/Admin part create/edit forms from submitting negative cost, billable price, quantity-on-hand, or reorder-threshold values. This remains frontend validation within the existing master-data workflow; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval.
+
 Acceptable alternate lanes if deliberately selected:
 - Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
 - Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;
