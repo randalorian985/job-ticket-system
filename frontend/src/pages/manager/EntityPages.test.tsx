@@ -726,4 +726,4 @@ describe('ReportsPage', () => {
 
     expect(await screen.findByText('You do not have permission to run manager reports.')).toBeInTheDocument()
   })
-}
+})
