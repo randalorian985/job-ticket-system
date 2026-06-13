@@ -133,6 +133,24 @@ describe('CustomersPage', () => {
     }))
   })
 
+  it('lets managers cancel customer edits and return to create mode', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme', accountNumber: 'AC-1', isArchived: false }] as any)
+
+    render(<CustomersPage />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+
+    expect(screen.getByText('Editing customer. Save changes or cancel to create a new customer.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save Customer' })).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Changed' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel customer edit' }))
+
+    expect(screen.getByRole('button', { name: 'Create Customer' })).toBeInTheDocument()
+    expect(screen.queryByText('Editing customer. Save changes or cancel to create a new customer.')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Name')).toHaveValue('')
+    expect(masterDataApi.updateCustomer).not.toHaveBeenCalled()
+  })
+
   it('validates whitespace-only customer names before create', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
 
@@ -532,6 +550,40 @@ describe('PartsPage', () => {
       name: 'Hydraulics',
       description: 'Hydraulic service parts'
     }))
+  })
+
+  it('lets managers cancel part, vendor, and category edits independently', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partCategoryId: 'pc1', vendorId: 'v1', partNumber: 'PN-1', name: 'Filter', unitCost: 1, unitPrice: 2, quantityOnHand: 3, reorderThreshold: 1, isArchived: false }] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([{ id: 'v1', name: 'Vendor A', accountNumber: 'VA-1', isArchived: false }] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([{ id: 'pc1', name: 'Filters', description: 'Filter parts', isArchived: false }] as any)
+
+    render(<PartsPage />)
+
+    const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
+    const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
+    const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
+
+    fireEvent.click(await within(partsCard).findByRole('button', { name: 'Edit' }))
+    expect(within(partsCard).getByText('Editing part. Save changes or cancel to create a new part.')).toBeInTheDocument()
+    fireEvent.click(within(partsCard).getByRole('button', { name: 'Cancel part edit' }))
+    expect(within(partsCard).getByRole('button', { name: 'Create Part' })).toBeInTheDocument()
+    expect(within(partsCard).queryByText('Editing part. Save changes or cancel to create a new part.')).not.toBeInTheDocument()
+
+    fireEvent.click(within(vendorsCard).getByRole('button', { name: 'Edit' }))
+    expect(within(vendorsCard).getByText('Editing vendor. Save changes or cancel to create a new vendor.')).toBeInTheDocument()
+    fireEvent.click(within(vendorsCard).getByRole('button', { name: 'Cancel vendor edit' }))
+    expect(within(vendorsCard).getByRole('button', { name: 'Create Vendor' })).toBeInTheDocument()
+    expect(within(vendorsCard).queryByText('Editing vendor. Save changes or cancel to create a new vendor.')).not.toBeInTheDocument()
+
+    fireEvent.click(within(categoriesCard).getByRole('button', { name: 'Edit' }))
+    expect(within(categoriesCard).getByText('Editing part category. Save changes or cancel to create a new part category.')).toBeInTheDocument()
+    fireEvent.click(within(categoriesCard).getByRole('button', { name: 'Cancel category edit' }))
+    expect(within(categoriesCard).getByRole('button', { name: 'Create Category' })).toBeInTheDocument()
+    expect(within(categoriesCard).queryByText('Editing part category. Save changes or cancel to create a new part category.')).not.toBeInTheDocument()
+
+    expect(masterDataApi.updatePart).not.toHaveBeenCalled()
+    expect(masterDataApi.updateVendor).not.toHaveBeenCalled()
+    expect(masterDataApi.updatePartCategory).not.toHaveBeenCalled()
   })
 
   it('archives and unarchives part/vendor/category and surfaces API errors', async () => {

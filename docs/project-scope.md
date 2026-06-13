@@ -46,6 +46,8 @@ Phase 3B validation hardening keeps whitespace-only required customer, service-l
 
 Phase 3B archive workflow hardening requires Manager/Admin confirmation before customer, service-location, equipment, part, vendor, or part-category archive/unarchive actions are sent to the existing APIs. This remains frontend confirmation and test coverage within the existing soft-delete/archive workflow; it does not change API contracts, DTO shapes, schema, migrations, authorization, purchasing, inventory, recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
+Phase 3B edit-mode UX hardening gives Manager/Admin master-data forms clear edit-mode context and cancel-edit controls for customer, service-location, equipment, part, vendor, and part-category forms. This remains frontend create/edit workflow polish within the existing master-data workflow; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, inventory, recommendations, AI/scoring, automatic compatibility, or automatic approval.
+
 Acceptable alternate lanes if deliberately selected:
 - Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
 - Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;
