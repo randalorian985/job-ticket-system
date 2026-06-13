@@ -24,18 +24,19 @@ describe('MasterData part numeric validation', () => {
     render(<PartsPage />)
 
     const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
+    const partForm = within(partsCard).getByRole('form', { name: 'part form' })
     fireEvent.change(await within(partsCard).findByLabelText('Part category'), { target: { value: 'pc1' } })
     fireEvent.change(within(partsCard).getByLabelText('Part number'), { target: { value: 'PN-1' } })
     fireEvent.change(within(partsCard).getByLabelText('Name'), { target: { value: 'Filter' } })
     fireEvent.change(within(partsCard).getByLabelText('Unit cost'), { target: { value: '-1' } })
-    fireEvent.click(within(partsCard).getByRole('button', { name: 'Create Part' }))
+    fireEvent.submit(partForm)
 
     expect(await screen.findByText('Part cost, price, quantity on hand, and reorder threshold must be zero or greater.')).toBeInTheDocument()
     expect(masterDataApi.createPart).not.toHaveBeenCalled()
 
     fireEvent.change(within(partsCard).getByLabelText('Unit cost'), { target: { value: '0' } })
     fireEvent.change(within(partsCard).getByLabelText('Reorder threshold'), { target: { value: '-2' } })
-    fireEvent.click(within(partsCard).getByRole('button', { name: 'Create Part' }))
+    fireEvent.submit(partForm)
 
     expect(await screen.findByText('Part cost, price, quantity on hand, and reorder threshold must be zero or greater.')).toBeInTheDocument()
     expect(masterDataApi.createPart).not.toHaveBeenCalled()
