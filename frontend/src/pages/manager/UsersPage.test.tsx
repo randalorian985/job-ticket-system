@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { ApiError } from '../../api/httpClient'
 import { usersApi } from '../../api/usersApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
@@ -38,10 +38,15 @@ const inactiveUser = {
 }
 
 const renderUsers = () => renderWithRouter(<UsersPage />)
+const scrollIntoViewMock = vi.fn()
 
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
+  Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: scrollIntoViewMock
+  })
   vi.mocked(usersApi.list).mockResolvedValue([activeUser, inactiveUser] as any)
   vi.mocked(usersApi.create).mockResolvedValue(activeUser as any)
   vi.mocked(usersApi.update).mockResolvedValue(activeUser as any)
@@ -117,6 +122,8 @@ describe('UsersPage', () => {
       password: 'Temp123!'
     }))
     expect(await screen.findByText('New Tech was created.')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('user account results')).getByText('New Tech was created.')).toBeInTheDocument()
+    expect(scrollIntoViewMock).toHaveBeenCalled()
 
     vi.mocked(usersApi.create).mockRejectedValueOnce(new ApiError('UserName is already in use.', 400))
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'casey' } })
@@ -167,6 +174,8 @@ describe('UsersPage', () => {
     await waitFor(() => expect(window.confirm).toHaveBeenCalledWith('Deactivate Casey Tech? They will lose active access after this change.'))
     await waitFor(() => expect(usersApi.archive).toHaveBeenCalledWith('user-1'))
     expect(await screen.findByText('Casey Tech was deactivated.')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('user account results')).getByText('Casey Tech was deactivated.')).toBeInTheDocument()
+    expect(scrollIntoViewMock).toHaveBeenCalled()
   })
 
   it('confirms reset password, validates password input, and calls API without logging the password', async () => {
@@ -182,5 +191,7 @@ describe('UsersPage', () => {
     await waitFor(() => expect(window.confirm).toHaveBeenCalledWith('Reset password for Casey Tech? Share the new temporary password only through an approved secure channel.'))
     await waitFor(() => expect(usersApi.resetPassword).toHaveBeenCalledWith('user-1', { newPassword: 'NewTemp123!' }))
     expect(await screen.findByText('Password was reset for Casey Tech.')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('user account results')).getByText('Password was reset for Casey Tech.')).toBeInTheDocument()
+    expect(scrollIntoViewMock).toHaveBeenCalled()
   })
 })

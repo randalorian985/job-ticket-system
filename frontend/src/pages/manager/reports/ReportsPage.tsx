@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../../api/httpClient'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
@@ -312,6 +312,7 @@ const csvFileName = (title: string) =>
   `report-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loaded-rows'}.csv`
 
 export function ReportsPage() {
+  const previewRef = useRef<HTMLElement | null>(null)
   const [filters, setFilters] = useState<ReportQueryFilters>(defaultFilters)
   const [sourceCustomerId, setSourceCustomerId] = useState('')
   const [sourceEquipmentId, setSourceEquipmentId] = useState('')
@@ -327,6 +328,7 @@ export function ReportsPage() {
   const [mode, setMode] = useState<ReportMode | null>(null)
   const [loadingMode, setLoadingMode] = useState<ReportMode | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [reportMessage, setReportMessage] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -389,12 +391,19 @@ export function ReportsPage() {
     setRows([])
     setMode(null)
     setError(null)
+    setReportMessage(null)
+  }
+
+  const showReportPreview = () => {
+    previewRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
   }
 
   const requireSourceId = (message: string) => {
     setRows([])
     setMode(null)
     setError(message)
+    setReportMessage(null)
+    showReportPreview()
   }
 
   const apply = async (nextMode: ReportMode) => {
@@ -415,9 +424,11 @@ export function ReportsPage() {
 
     try {
       setError(null)
+      setReportMessage(null)
       setLoadingMode(nextMode)
       setRows([])
       setMode(nextMode)
+      showReportPreview()
 
       const scopedFilters = filtersForMode(nextMode, filters)
       const data =
@@ -438,9 +449,11 @@ export function ReportsPage() {
                       : await reportsApi.getEquipmentHistory(sourceEquipmentId.trim(), scopedFilters)
 
       setRows(data as ReportRow[])
+      setReportMessage(`${reportTitleMap[nextMode]} loaded with ${data.length} visible row${data.length === 1 ? '' : 's'}.`)
     } catch (requestError) {
       setRows([])
       setError(userMessageForReportError(requestError))
+      setReportMessage(null)
     } finally {
       setLoadingMode(null)
     }
@@ -747,38 +760,15 @@ export function ReportsPage() {
         {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
       <Errorable error={referenceError} />
-      <Errorable error={error} />
 
-      {reportSections.map((section) => (
-        <section className="report-section stack" key={section.title} aria-label={section.title}>
-          <div className="report-section-heading">
-            <h3>{section.title}</h3>
-            <p className="muted">{section.description}</p>
-          </div>
-          <div className="report-action-grid">
-            {section.modes.map((reportMode) => (
-              <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
-                <h4>{reportTitleMap[reportMode]}</h4>
-                <p className="muted">{reportDescriptions[reportMode]}</p>
-                {renderSourceControl(reportMode)}
-                {renderFilterControls(reportMode)}
-                <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
-                  {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
-                </button>
-              </article>
-            ))}
-          </div>
-        </section>
-      ))}
-
-      <section className="card stack" aria-live="polite" aria-busy={loadingMode !== null}>
+      <section className="card stack report-preview-panel" aria-label="report preview" aria-live="polite" aria-busy={loadingMode !== null} ref={previewRef} tabIndex={-1}>
         <div className="report-results-heading">
           <div>
-            <h3>{title || 'Select a report'}</h3>
+            <h3>{title || 'Report Preview'}</h3>
             <p className="muted">
               {mode
                 ? `${rows.length} visible row${rows.length === 1 ? '' : 's'} loaded for review.`
-                : 'Run a report from the hub to load export-friendly rows.'}
+                : 'Run a report from the hub to load export-friendly rows here.'}
             </p>
           </div>
           {hasRows ? (
@@ -787,6 +777,8 @@ export function ReportsPage() {
             </a>
           ) : null}
         </div>
+        {reportMessage ? <p className="success action-feedback-panel">{reportMessage}</p> : null}
+        <Errorable error={error} />
         {mode ? (
           <div className="report-state-panel">
             <strong>Loaded report review</strong>
@@ -824,6 +816,28 @@ export function ReportsPage() {
           </div>
         ) : null}
       </section>
+
+      {reportSections.map((section) => (
+        <section className="report-section stack" key={section.title} aria-label={section.title}>
+          <div className="report-section-heading">
+            <h3>{section.title}</h3>
+            <p className="muted">{section.description}</p>
+          </div>
+          <div className="report-action-grid">
+            {section.modes.map((reportMode) => (
+              <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
+                <h4>{reportTitleMap[reportMode]}</h4>
+                <p className="muted">{reportDescriptions[reportMode]}</p>
+                {renderSourceControl(reportMode)}
+                {renderFilterControls(reportMode)}
+                <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
+                  {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
     </section>
   )
 }

@@ -396,6 +396,18 @@ td button {
   padding: 0 0 0.7rem;
 }
 
+.report-preview-panel,
+.action-feedback-panel {
+  scroll-margin-top: 1rem;
+}
+
+.action-feedback-panel {
+  border: 1px solid #b7ebd0;
+  border-radius: 7px;
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+}
+
 .filter-panel,
 .report-filters,
 .master-data-filters,
@@ -421,6 +433,21 @@ td button {
 .report-filters > button,
 .filter-panel > button {
   justify-self: start;
+}
+
+.queue-filter-result {
+  align-self: stretch;
+  background: #ffffff;
+  border: 1px solid #dbe3ee;
+  border-radius: 7px;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.58rem 0.7rem;
+}
+
+.queue-filter-result span {
+  color: var(--text-muted);
+  font-size: 0.84rem;
 }
 
 .form-grid,

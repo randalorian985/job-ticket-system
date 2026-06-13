@@ -292,6 +292,16 @@ export function JobTicketListPage() {
     attentionFilter !== allFilterValue ||
     Boolean(searchText.trim())
 
+  const filterResultSummary = isLoading
+    ? 'Loading ticket results...'
+    : error
+      ? 'Ticket results could not be loaded.'
+      : jobs.length === 0
+        ? 'No tickets are loaded yet.'
+        : hasActiveFilters
+          ? `Filtered view showing ${filteredJobs.length} of ${jobs.length} tickets.`
+          : `Showing all ${jobs.length} loaded tickets.`
+
   const resetFilters = () => setSearchParams({}, { replace: true })
 
   const queuePath = `${location.pathname}${normalizedSearch ? `?${normalizedSearch}` : ''}`
@@ -342,6 +352,10 @@ export function JobTicketListPage() {
             {dispatchReadinessFilterOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
+        <div className="queue-filter-result" role="status" aria-live="polite">
+          <strong>Results</strong>
+          <span>{filterResultSummary}</span>
+        </div>
         <button type="button" className="secondary-button" onClick={resetFilters} disabled={!hasActiveFilters}>Reset Filters</button>
       </section>
 
