@@ -72,13 +72,11 @@ describe('Manager/Admin master-data filter defaults', () => {
     ] as any)
 
     const { container } = render(<ServiceLocationsPage />)
-    let customerSelect: HTMLSelectElement | null = null
-    await waitFor(() => {
-      customerSelect = container.querySelector('form select')
-      expect(customerSelect).not.toBeNull()
+    const serviceLocationCustomerSelect = await waitFor(() => {
+      const select = container.querySelector('form select')
+      expect(select).not.toBeNull()
+      return select as HTMLSelectElement
     })
-    expect(customerSelect).not.toBeNull()
-    const serviceLocationCustomerSelect = customerSelect as HTMLSelectElement
     expect(within(serviceLocationCustomerSelect).queryByRole('option', { name: 'Archived Customer' })).not.toBeInTheDocument()
 
     fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
