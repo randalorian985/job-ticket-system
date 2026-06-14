@@ -53,7 +53,10 @@ describe('MasterData equipment customer/location validation', () => {
 
     render(<EquipmentPage />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+    const pumpItem = await screen.findByText('Pump')
+    const equipmentItem = pumpItem.closest('li')
+    expect(equipmentItem).not.toBeNull()
+    fireEvent.click(within(equipmentItem as HTMLElement).getByRole('button', { name: 'Edit' }))
     const saveButton = await screen.findByRole('button', { name: 'Save Equipment' })
     const equipmentForm = saveButton.closest('form')
     expect(equipmentForm).not.toBeNull()
@@ -63,4 +66,32 @@ describe('MasterData equipment customer/location validation', () => {
     expect(masterDataApi.updateEquipment).not.toHaveBeenCalled()
     await waitFor(() => expect(masterDataApi.listEquipment).toHaveBeenCalled())
   })
-})
+
+  it('allows existing equipment edits when the current service location is not loaded', async () => {
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+      { id: 'loc1', customerId: 'c1', locationName: 'Acme shop', isArchived: false }
+    ] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([
+      { id: 'eq1', customerId: 'c1', serviceLocationId: 'loc-missing', name: 'Pump', equipmentNumber: 'EQ-1', isArchived: false }
+    ] as any)
+    vi.mocked(masterDataApi.updateEquipment).mockResolvedValue({ id: 'eq1' } as any)
+
+    render(<EquipmentPage />)
+
+    const pumpItem = await screen.findByText('Pump')
+    const equipmentItem = pumpItem.closest('li')
+    expect(equipmentItem).not.toBeNull()
+    fireEvent.click(within(equipmentItem as HTMLElement).getByRole('button', { name: 'Edit' }))
+    const saveButton = await screen.findByRole('button', { name: 'Save Equipment' })
+    const equipmentForm = saveButton.closest('form')
+    expect(equipmentForm).not.toBeNull()
+    fireEvent.submit(equipmentForm as HTMLFormElement)
+
+    await waitFor(() => expect(masterDataApi.updateEquipment).toHaveBeenCalledWith('eq1', expect.objectContaining({
+      customerId: 'c1',
+      serviceLocationId: 'loc-missing',
+      name: 'Pump'
+    })))
+    expect(screen.queryByText('Equipment service location must belong to the selected customer.')).not.toBeInTheDocument()
+  })
+}
