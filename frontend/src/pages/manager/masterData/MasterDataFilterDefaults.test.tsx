@@ -62,6 +62,31 @@ describe('Manager/Admin master-data filter defaults', () => {
     expect(screen.getByPlaceholderText('Location Name')).toHaveValue('HQ')
   })
 
+  it('keeps archived customers out of blank service-location create forms but preserves them while editing', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+      { id: 'c1', name: 'Acme', isArchived: false },
+      { id: 'c-archived', name: 'Archived Customer', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+      { id: 'l1', customerId: 'c-archived', companyName: 'Archived Customer', locationName: 'Old Yard', addressLine1: '100 Main', city: 'Tulsa', state: 'OK', postalCode: '74101', country: 'USA', isActive: true, isArchived: false }
+    ] as any)
+
+    const { container } = render(<ServiceLocationsPage />)
+    let customerSelect: HTMLSelectElement | null = null
+    await waitFor(() => {
+      customerSelect = container.querySelector('form select')
+      expect(customerSelect).not.toBeNull()
+    })
+    expect(customerSelect).not.toBeNull()
+    const serviceLocationCustomerSelect = customerSelect as HTMLSelectElement
+    expect(within(serviceLocationCustomerSelect).queryByRole('option', { name: 'Archived Customer' })).not.toBeInTheDocument()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+
+    expect(serviceLocationCustomerSelect).toHaveValue('c-archived')
+    expect(within(serviceLocationCustomerSelect).getByRole('option', { name: 'Archived Customer' })).toBeInTheDocument()
+  })
+
   it('prefills blank equipment create forms from the active customer filter', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l2', customerId: 'c2', locationName: 'Depot' }] as any)
@@ -97,6 +122,36 @@ describe('Manager/Admin master-data filter defaults', () => {
     expect(screen.getByLabelText('Primary customer')).toHaveValue('c1')
     expect(screen.getByLabelText('Service location')).toHaveValue('l1')
     expect(screen.getByLabelText('Equipment name')).toHaveValue('Pump')
+  })
+
+  it('uses active equipment relationship options for creates and keeps archived selected relationships in edit mode', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+      { id: 'c1', name: 'Acme', isArchived: false },
+      { id: 'c-archived', name: 'Archived Customer', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+      { id: 'l1', customerId: 'c1', locationName: 'Acme shop', isArchived: false },
+      { id: 'l-archived', customerId: 'c-archived', locationName: 'Old yard', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([
+      { id: 'e1', name: 'Pump', customerId: 'c-archived', serviceLocationId: 'l-archived', isArchived: false }
+    ] as any)
+
+    render(<EquipmentPage />)
+    const equipmentForm = screen.getByRole('form', { name: 'equipment form' })
+    const customerSelect = await within(equipmentForm).findByLabelText('Primary customer')
+    const locationSelect = within(equipmentForm).getByLabelText('Service location')
+
+    expect(within(customerSelect).queryByRole('option', { name: 'Archived Customer' })).not.toBeInTheDocument()
+    fireEvent.change(customerSelect, { target: { value: 'c1' } })
+    expect(within(locationSelect).queryByRole('option', { name: 'Old yard' })).not.toBeInTheDocument()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+
+    expect(customerSelect).toHaveValue('c-archived')
+    expect(locationSelect).toHaveValue('l-archived')
+    expect(within(customerSelect).getByRole('option', { name: 'Archived Customer' })).toBeInTheDocument()
+    expect(within(locationSelect).getByRole('option', { name: 'Old yard' })).toBeInTheDocument()
   })
 
   it('prefills blank part create forms from active category and vendor filters', async () => {
@@ -142,4 +197,33 @@ describe('Manager/Admin master-data filter defaults', () => {
     expect(within(partsCard).getByLabelText('Preferred vendor')).toHaveValue('v1')
     expect(within(partsCard).getByLabelText('Part number')).toHaveValue('FLT-1')
   })
-})
+
+  it('uses active part category and vendor options for creates and keeps archived selections in edit mode', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([
+      { id: 'p1', partCategoryId: 'pc-archived', vendorId: 'v-archived', partNumber: 'OLD-1', name: 'Old Part', unitCost: 1, unitPrice: 2, quantityOnHand: 3, reorderThreshold: 1, isArchived: false }
+    ] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([
+      { id: 'v1', name: 'Vendor A', isArchived: false },
+      { id: 'v-archived', name: 'Archived Vendor', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([
+      { id: 'pc1', name: 'Filters', isArchived: false },
+      { id: 'pc-archived', name: 'Archived Category', isArchived: true }
+    ] as any)
+
+    render(<PartsPage />)
+    const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
+    const categorySelect = await within(partsCard).findByLabelText('Part category')
+    const vendorSelect = within(partsCard).getByLabelText('Preferred vendor')
+
+    expect(within(categorySelect).queryByRole('option', { name: 'Archived Category' })).not.toBeInTheDocument()
+    expect(within(vendorSelect).queryByRole('option', { name: 'Archived Vendor' })).not.toBeInTheDocument()
+
+    fireEvent.click(await within(partsCard).findByRole('button', { name: 'Edit' }))
+
+    expect(categorySelect).toHaveValue('pc-archived')
+    expect(vendorSelect).toHaveValue('v-archived')
+    expect(within(categorySelect).getByRole('option', { name: 'Archived Category' })).toBeInTheDocument()
+    expect(within(vendorSelect).getByRole('option', { name: 'Archived Vendor' })).toBeInTheDocument()
+  })
+}
