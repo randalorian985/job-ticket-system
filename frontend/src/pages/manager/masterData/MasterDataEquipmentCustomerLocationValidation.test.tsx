@@ -94,4 +94,4 @@ describe('MasterData equipment customer/location validation', () => {
     })))
     expect(screen.queryByText('Equipment service location must belong to the selected customer.')).not.toBeInTheDocument()
   })
-}
+})
