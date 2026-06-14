@@ -112,6 +112,8 @@ Phase 3B equipment year validation hardening keeps Manager/Admin equipment creat
 
 Phase 3B equipment customer/location alignment hardening keeps Manager/Admin equipment create/edit forms aligned to the selected primary customer by showing only that customer's service locations and blocking mismatched equipment customer/service-location submissions. This is frontend relationship validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
 
+Phase 3B filter-driven form defaults now let active Manager/Admin master-data list filters prefill blank create forms for service-location customer, equipment primary customer, part category, and preferred vendor while preserving the selected record during edit mode. This is frontend form-flow polish and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
+
 Acceptable alternatives, if deliberately selected before the next PR starts:
 - Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
 - Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;
