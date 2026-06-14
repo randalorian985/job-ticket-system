@@ -226,4 +226,4 @@ describe('Manager/Admin master-data filter defaults', () => {
     expect(within(categorySelect).getByRole('option', { name: 'Archived Category' })).toBeInTheDocument()
     expect(within(vendorSelect).getByRole('option', { name: 'Archived Vendor' })).toBeInTheDocument()
   })
-}
+})
