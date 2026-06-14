@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../../api/masterDataApi'
 import { EquipmentPage } from './MasterDataPages'
@@ -15,6 +15,7 @@ vi.mock('../../../api/masterDataApi', () => ({
 
 describe('MasterData equipment customer/location validation', () => {
   beforeEach(() => {
+    cleanup()
     vi.clearAllMocks()
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
       { id: 'c1', name: 'Acme', isArchived: false },
