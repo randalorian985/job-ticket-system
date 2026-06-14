@@ -37,7 +37,7 @@ const hasNonNegativeNumbers = (...values: number[]) => values.every((value) => N
 const hasValidEquipmentYear = (value?: number | null) => value === null || value === undefined || (Number.isInteger(value) && value >= 1900 && value <= 2100)
 const hasMatchingEquipmentServiceLocation = (customerId: string, serviceLocationId: string, locations: ServiceLocationDto[]) => {
   const selectedLocation = locations.find((location) => location.id === serviceLocationId)
-  return selectedLocation?.customerId === customerId
+  return !selectedLocation || selectedLocation.customerId === customerId
 }
 const confirmArchiveAction = (entityLabel: string, entityName: string, isArchived?: boolean) => {
   const action = isArchived ? 'unarchive' : 'archive'
