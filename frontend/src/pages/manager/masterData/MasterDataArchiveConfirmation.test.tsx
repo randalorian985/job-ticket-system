@@ -40,5 +40,21 @@ describe('MasterData archive confirmations', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Archive' }))
 
     await waitFor(() => expect(masterDataApi.archiveCustomer).toHaveBeenCalledWith('c1'))
+    expect(await screen.findByText('Customer "Acme" was archived.')).toBeInTheDocument()
+  })
+
+  it('shows customer create feedback while keeping the list context visible', async () => {
+    vi.mocked(masterDataApi.listCustomers)
+      .mockResolvedValueOnce([] as any)
+      .mockResolvedValueOnce([{ id: 'c2', name: 'Bravo', isArchived: false }] as any)
+    vi.mocked(masterDataApi.createCustomer).mockResolvedValue({ id: 'c2', name: 'Bravo', isArchived: false } as any)
+
+    render(<CustomersPage />)
+    fireEvent.change(screen.getByPlaceholderText('Name'), { target: { value: 'Bravo' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Customer' }))
+
+    await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith(expect.objectContaining({ name: 'Bravo' })))
+    expect(await screen.findByText('Customer "Bravo" was created.')).toBeInTheDocument()
+    expect(screen.getByText('Showing 1 of 1 loaded customers.')).toBeInTheDocument()
   })
 })

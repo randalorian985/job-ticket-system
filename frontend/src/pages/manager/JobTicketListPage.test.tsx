@@ -62,7 +62,7 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(screen.getByLabelText('manager job ticket queue')).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Loading manager job tickets')
+    expect(screen.getByText(/Loading manager job tickets/)).toBeInTheDocument()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Queue' })).toBeInTheDocument()
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
@@ -206,11 +206,13 @@ describe('Manager list pages', () => {
     const filters = screen.getByLabelText('job ticket filters')
     const shortcuts = screen.getByLabelText('queue summary')
     expect(filters.compareDocumentPosition(shortcuts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText('Showing all 2 loaded tickets.')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Urgent active/ }))
 
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.getByText('Filtered view showing 1 of 2 tickets.')).toBeInTheDocument()
     expect(screen.getByLabelText('Status')).toHaveValue('active')
     expect(screen.getByLabelText('Priority')).toHaveValue('4')
     expect(screen.getByRole('button', { name: /Urgent active/ })).toHaveAttribute('aria-pressed', 'true')
@@ -239,6 +241,7 @@ describe('Manager list pages', () => {
     fireEvent.change(screen.getByLabelText(/Search tickets/i), { target: { value: 'compressor' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.getByText('Filtered view showing 1 of 2 tickets.')).toBeInTheDocument()
     expect(resetFiltersButton).toBeEnabled()
 
     fireEvent.change(screen.getByLabelText(/Search tickets/i), { target: { value: 'Jamie' } })

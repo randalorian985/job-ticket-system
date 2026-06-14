@@ -46,9 +46,15 @@ const readCsvFromExportLink = () => {
   return decodeURIComponent(href.replace('data:text/csv;charset=utf-8,', ''))
 }
 
+const scrollIntoViewMock = vi.fn()
+
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
+  Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: scrollIntoViewMock
+  })
   vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
     {
       id: 'job-invoice-1',
@@ -124,6 +130,8 @@ describe('ReportsPage', () => {
     renderWithRouter(<ReportsPage />)
 
     expect(screen.getByRole('heading', { name: 'Reports' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'report preview' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Report Preview' })).toBeInTheDocument()
     expect(screen.getByText(/Labor totals are labeled as time-entry labor-rate snapshot values/i)).toBeInTheDocument()
 
     const invoiceSection = screen.getByLabelText('Invoice and Closeout')
@@ -168,6 +176,8 @@ describe('ReportsPage', () => {
     fireEvent.click(within(laborByJobCard).getByRole('button', { name: 'Run Labor by Job' }))
 
     expect(await screen.findByRole('link', { name: 'JT-2026-000123' })).toHaveAttribute('href', '/manage/job-tickets/job-1')
+    expect(scrollIntoViewMock).toHaveBeenCalled()
+    expect(screen.getByText('Labor by Job loaded with 1 visible row.')).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Labor Billable (time-entry labor-rate snapshot)' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '$300.00' })).toBeInTheDocument()
     expect(screen.getByText('Loaded report review')).toBeInTheDocument()
@@ -186,7 +196,7 @@ describe('ReportsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
     expect(within(laborByJobCard).getByLabelText('Labor by Job employee filter')).toHaveValue('')
     expect(within(laborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(50)
-    expect(screen.getByText('Select a report')).toBeInTheDocument()
+    expect(screen.getByText('Report Preview')).toBeInTheDocument()
   })
 
   it('shows loading and empty states without offering CSV export for empty loaded data', async () => {
@@ -221,6 +231,7 @@ describe('ReportsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Run Invoice-ready Summary' }))
 
     expect(screen.getByText('Select a job ticket before running Invoice-ready Summary.')).toBeInTheDocument()
+    expect(scrollIntoViewMock).toHaveBeenCalled()
     expect(reportsApi.getInvoiceReadySummary).not.toHaveBeenCalled()
     expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
   })
