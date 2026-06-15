@@ -86,6 +86,9 @@ describe('MasterData equipment customer/location validation', () => {
     const saveButton = await screen.findByRole('button', { name: 'Save Equipment' })
     const equipmentForm = saveButton.closest('form')
     expect(equipmentForm).not.toBeNull()
+    const locationSelect = within(equipmentForm as HTMLFormElement).getByLabelText('Service location')
+    expect(locationSelect).toHaveValue('loc-missing')
+    expect(within(locationSelect).getByRole('option', { name: 'Current service location (unavailable)' })).toHaveValue('loc-missing')
     fireEvent.submit(equipmentForm as HTMLFormElement)
 
     await waitFor(() => expect(masterDataApi.updateEquipment).toHaveBeenCalledWith('eq1', expect.objectContaining({
@@ -94,5 +97,29 @@ describe('MasterData equipment customer/location validation', () => {
       name: 'Pump'
     })))
     expect(screen.queryByText('Equipment service location must belong to the selected customer.')).not.toBeInTheDocument()
+  })
+
+  it('does not allow an unloaded service-location fallback to move to another customer', async () => {
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([
+      { id: 'eq1', customerId: 'c1', serviceLocationId: 'loc-missing', name: 'Pump', isArchived: false }
+    ] as any)
+
+    render(<EquipmentPage />)
+
+    const pumpItem = await screen.findByText('Pump')
+    const equipmentItem = pumpItem.closest('li')
+    expect(equipmentItem).not.toBeNull()
+    fireEvent.click(within(equipmentItem as HTMLElement).getByRole('button', { name: 'Edit' }))
+
+    const equipmentForm = screen.getByRole('form', { name: 'equipment form' })
+    fireEvent.change(within(equipmentForm).getByLabelText('Primary customer'), { target: { value: 'c2' } })
+    const locationSelect = within(equipmentForm).getByLabelText('Service location')
+
+    expect(locationSelect).toHaveValue('')
+    expect(within(locationSelect).queryByRole('option', { name: 'Current service location (unavailable)' })).not.toBeInTheDocument()
+    fireEvent.submit(equipmentForm)
+
+    expect(await screen.findByText('Customer, location, and equipment name are required.')).toBeInTheDocument()
+    expect(masterDataApi.updateEquipment).not.toHaveBeenCalled()
   })
 })
