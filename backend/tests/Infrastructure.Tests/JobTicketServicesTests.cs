@@ -211,6 +211,23 @@ public sealed class JobTicketServicesTests
     }
 
     [Fact]
+    public async Task Employee_list_only_returns_assigned_job_tickets()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedCoreReferencesAsync(context);
+        var managerService = CreateService(context);
+        var assignedTicket = await managerService.CreateAsync(BuildCreateRequest(refs) with { Title = "Assigned ticket" });
+        await managerService.CreateAsync(BuildCreateRequest(refs) with { Title = "Unassigned ticket" });
+        await managerService.AddAssignmentAsync(assignedTicket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
+        var employeeService = CreateService(context, refs.Employee.Id, SystemRoles.Employee);
+
+        var listed = await employeeService.ListAsync(new JobTicketListQuery(null, null, null, null, null));
+
+        var item = Assert.Single(listed);
+        Assert.Equal(assignedTicket.Id, item.Id);
+    }
+
+    [Fact]
     public async Task Add_work_entry_to_job_ticket_succeeds()
     {
         await using var context = CreateContext();
@@ -271,8 +288,8 @@ public sealed class JobTicketServicesTests
         Assert.Empty(await context.JobWorkEntries.Where(x => x.JobTicketId == ticket.Id).ToListAsync());
     }
 
-    private static IJobTicketsService CreateService(ApplicationDbContext context)
-        => new JobTicketAssignmentValidatingService(context, new TestCurrentUserContext(Guid.NewGuid(), SystemRoles.Manager));
+    private static IJobTicketsService CreateService(ApplicationDbContext context, Guid? employeeId = null, string role = SystemRoles.Manager)
+        => new JobTicketAssignmentValidatingService(context, new TestCurrentUserContext(employeeId ?? Guid.NewGuid(), role));
 
     private static CreateJobTicketDto BuildCreateRequest(SeedRefs refs)
         => new(
