@@ -39,6 +39,7 @@ const activeOrSelected = <T extends { id: string, isArchived?: boolean }>(items:
   const selected = new Set(selectedIds.filter(Boolean))
   return items.filter((item) => !item.isArchived || selected.has(item.id))
 }
+const activeFilterId = <T extends { id: string, isArchived?: boolean }>(items: T[], id: string) => items.find((item) => item.id === id && !item.isArchived)?.id ?? ''
 const hasMatchingEquipmentServiceLocation = (
   customerId: string,
   serviceLocationId: string,
@@ -120,7 +121,7 @@ export function ServiceLocationsPage() {
   }
   useEffect(() => { load() }, [])
   useEffect(() => {
-    if (!editId) setDraft((current) => ({ ...current, customerId: customerFilter || null }))
+    if (!editId) setDraft((current) => ({ ...current, customerId: activeFilterId(customers, customerFilter) || null }))
   }, [customerFilter, editId])
   const customerOptions = useMemo(() => activeOrSelected(customers, [draft.customerId]), [customers, draft.customerId])
   const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [x.locationName, x.companyName, customerNameById(customers, x.customerId), x.addressLine1, x.city, x.state, x.postalCode, x.country])), [items, customers, search, archiveFilter, customerFilter])
@@ -134,7 +135,7 @@ export function ServiceLocationsPage() {
       setSuccess(null)
       if (editId) await masterDataApi.updateServiceLocation(editId, draft)
       else await masterDataApi.createServiceLocation(draft)
-      setDraft({ ...emptyServiceLocationDraft, customerId: customerFilter || null }); setEditId(null); await load()
+      setDraft({ ...emptyServiceLocationDraft, customerId: activeFilterId(customers, customerFilter) || null }); setEditId(null); await load()
       setSuccess(`Service location "${locationName}" was ${action}.`)
     } catch (requestError) {
       setSuccess(null)
@@ -166,7 +167,7 @@ export function EquipmentPage() {
   }
   useEffect(() => { load() }, [])
   useEffect(() => {
-    if (!editId) setDraft((current) => ({ ...current, customerId: customerFilter, serviceLocationId: '' }))
+    if (!editId) setDraft((current) => ({ ...current, customerId: activeFilterId(customers, customerFilter), serviceLocationId: '' }))
   }, [customerFilter, editId])
   const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter || x.ownerCustomerId === customerFilter || x.responsibleBillingCustomerId === customerFilter) && matchesTextSearch(search, [x.name, x.equipmentNumber, x.unitNumber, x.serialNumber, x.modelNumber, x.manufacturer, x.equipmentType, customerNameById(customers, x.customerId), customerNameById(customers, x.ownerCustomerId), customerNameById(customers, x.responsibleBillingCustomerId), locationNameById(locations, x.serviceLocationId)])), [items, customers, locations, search, archiveFilter, customerFilter])
   const customerOptions = useMemo(() => activeOrSelected(customers, [draft.customerId, draft.ownerCustomerId, draft.responsibleBillingCustomerId]), [customers, draft.customerId, draft.ownerCustomerId, draft.responsibleBillingCustomerId])
@@ -190,7 +191,7 @@ export function EquipmentPage() {
       setSuccess(null)
       if (editId) await masterDataApi.updateEquipment(editId, draft)
       else await masterDataApi.createEquipment(draft)
-      setDraft({ ...emptyEquipmentDraft, customerId: customerFilter, serviceLocationId: '' })
+      setDraft({ ...emptyEquipmentDraft, customerId: activeFilterId(customers, customerFilter), serviceLocationId: '' })
       setEditId(null)
       await load()
       setSuccess(`Equipment "${equipmentName}" was ${action}.`)
@@ -234,7 +235,11 @@ export function PartsPage() {
   const partCategoryOptions = useMemo(() => activeOrSelected(categories, [draft.partCategoryId]), [categories, draft.partCategoryId])
   const partVendorOptions = useMemo(() => activeOrSelected(vendors, [draft.vendorId]), [vendors, draft.vendorId])
   useEffect(() => {
-    if (!editId) setDraft((current) => ({ ...current, partCategoryId: partCategoryFilter, vendorId: partVendorFilter || null }))
+    if (!editId) setDraft((current) => ({
+      ...current,
+      partCategoryId: activeFilterId(categories, partCategoryFilter),
+      vendorId: activeFilterId(vendors, partVendorFilter) || null
+    }))
   }, [partCategoryFilter, partVendorFilter, editId])
   const save = async (event: FormEvent) => {
     event.preventDefault()
@@ -247,7 +252,7 @@ export function PartsPage() {
       setSuccess(null)
       if (editId) await masterDataApi.updatePart(editId, draft)
       else await masterDataApi.createPart(draft)
-      setDraft({ ...emptyPartDraft, partCategoryId: partCategoryFilter, vendorId: partVendorFilter || null }); setEditId(null); await load()
+      setDraft({ ...emptyPartDraft, partCategoryId: activeFilterId(categories, partCategoryFilter), vendorId: activeFilterId(vendors, partVendorFilter) || null }); setEditId(null); await load()
       setSuccess(`Part "${partName}" was ${action}.`)
     } catch (requestError) {
       setSuccess(null)

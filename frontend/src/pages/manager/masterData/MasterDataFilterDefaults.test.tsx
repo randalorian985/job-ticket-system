@@ -85,6 +85,19 @@ describe('Manager/Admin master-data filter defaults', () => {
     expect(within(serviceLocationCustomerSelect).getByRole('option', { name: 'Archived Customer' })).toBeInTheDocument()
   })
 
+  it('does not prefill blank service-location create forms from archived customer filters', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+      { id: 'c1', name: 'Acme', isArchived: false },
+      { id: 'c-archived', name: 'Archived Customer', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
+
+    const { container } = render(<ServiceLocationsPage />)
+    fireEvent.change(await screen.findByLabelText('Customer'), { target: { value: 'c-archived' } })
+
+    await waitFor(() => expect(container.querySelector('form select')).toHaveValue(''))
+  })
+
   it('prefills blank equipment create forms from the active customer filter', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l2', customerId: 'c2', locationName: 'Depot' }] as any)
@@ -150,6 +163,23 @@ describe('Manager/Admin master-data filter defaults', () => {
     expect(locationSelect).toHaveValue('l-archived')
     expect(within(customerSelect).getByRole('option', { name: 'Archived Customer' })).toBeInTheDocument()
     expect(within(locationSelect).getByRole('option', { name: 'Old yard' })).toBeInTheDocument()
+  })
+
+  it('does not prefill blank equipment create forms from archived customer filters', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+      { id: 'c1', name: 'Acme', isArchived: false },
+      { id: 'c-archived', name: 'Archived Customer', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+      { id: 'l-archived', customerId: 'c-archived', locationName: 'Old yard', isArchived: false }
+    ] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
+
+    render(<EquipmentPage />)
+    fireEvent.change(await screen.findByLabelText('Customer'), { target: { value: 'c-archived' } })
+
+    await waitFor(() => expect(screen.getByLabelText('Primary customer')).toHaveValue(''))
+    expect(screen.getByLabelText('Service location')).toHaveValue('')
   })
 
   it('prefills blank part create forms from active category and vendor filters', async () => {
@@ -223,5 +253,25 @@ describe('Manager/Admin master-data filter defaults', () => {
     expect(vendorSelect).toHaveValue('v-archived')
     expect(within(categorySelect).getByRole('option', { name: 'Archived Category' })).toBeInTheDocument()
     expect(within(vendorSelect).getByRole('option', { name: 'Archived Vendor' })).toBeInTheDocument()
+  })
+
+  it('does not prefill blank part create forms from archived category or vendor filters', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([
+      { id: 'v1', name: 'Vendor A', isArchived: false },
+      { id: 'v-archived', name: 'Archived Vendor', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([
+      { id: 'pc1', name: 'Filters', isArchived: false },
+      { id: 'pc-archived', name: 'Archived Category', isArchived: true }
+    ] as any)
+
+    render(<PartsPage />)
+    const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
+    fireEvent.change(await within(partsCard).findByLabelText('Category'), { target: { value: 'pc-archived' } })
+    fireEvent.change(within(partsCard).getByLabelText('Vendor'), { target: { value: 'v-archived' } })
+
+    await waitFor(() => expect(within(partsCard).getByLabelText('Part category')).toHaveValue(''))
+    expect(within(partsCard).getByLabelText('Preferred vendor')).toHaveValue('')
   })
 })
