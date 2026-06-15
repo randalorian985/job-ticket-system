@@ -148,6 +148,7 @@ export function JobTicketDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const activeTab: WorkflowTab = isWorkflowTab(requestedTab) ? requestedTab : "overview";
+  const workflowFocusMode = searchParams.get("view") === "workflow";
   const { returnTo, returnLabel } = getSafeManagerReturnContext(searchParams);
   const { user } = useAuth();
   const [job, setJob] = useState<JobTicketDto | null>(null);
@@ -924,6 +925,24 @@ export function JobTicketDetailPage() {
     }, { replace: true });
   };
 
+  const openRecommendedWorkflow = (tab: WorkflowTab) => {
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      if (tab === "overview") nextParams.delete("tab");
+      else nextParams.set("tab", tab);
+      nextParams.set("view", "workflow");
+      return nextParams;
+    });
+  };
+
+  const closeWorkflowFocus = () => {
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.delete("view");
+      return nextParams;
+    });
+  };
+
   const openWorkflowDrawer = (tab: WorkflowTab, drawer: Exclude<WorkbenchDrawer, null>) => {
     selectWorkflowTab(tab);
     toggleDrawer(drawer);
@@ -950,6 +969,7 @@ export function JobTicketDetailPage() {
     role: primaryWorkflowPanelNames[tab] === panelName ? "tabpanel" : "region",
     "aria-labelledby": `ticket-workflow-tab-${tab}`,
     hidden: activeTab !== tab,
+    tabIndex: -1,
     className: "workbench-panel workflow-tab-panel",
   });
 
@@ -966,6 +986,13 @@ export function JobTicketDetailPage() {
     : partsReview.blockerCount
       ? partsReview.nextAction
       : closeoutReview.warnings[0] ?? "Review the service details and continue the current workflow.";
+  const recommendedWorkflowLabel = workflowTabs.find((tab) => tab.value === recommendedWorkflow)?.label ?? "Overview";
+  const activeWorkflowLabel = workflowTabs.find((tab) => tab.value === activeTab)?.label ?? "Overview";
+
+  useEffect(() => {
+    if (!workflowFocusMode) return;
+    document.getElementById(`ticket-workflow-panel-${primaryWorkflowPanelNames[activeTab]}`)?.focus({ preventScroll: true });
+  }, [activeTab, workflowFocusMode]);
 
   if (!canShow) return <section className="card">Missing job id.</section>;
 
@@ -986,7 +1013,7 @@ export function JobTicketDetailPage() {
       {message ? <p className="success" role="status">{message}</p> : null}
       {job ? (
         <>
-          <header className="ticket-workbench-hero print-review">
+          <header className="ticket-workbench-hero print-review" hidden={workflowFocusMode}>
             <div className="ticket-workbench-title">
               <span className="muted">Service ticket</span>
               <h2>{job.ticketNumber}</h2>
@@ -1042,13 +1069,36 @@ export function JobTicketDetailPage() {
             </div>
           </header>
 
-          <section className="ticket-recommended-action no-print" aria-label="recommended action">
+          <section className="ticket-recommended-action no-print" aria-label="recommended action" hidden={workflowFocusMode}>
             <div>
               <span>Recommended next action</span>
               <strong>{recommendedAction}</strong>
             </div>
-            <button type="button" onClick={() => selectWorkflowTab(recommendedWorkflow)}>Open workflow</button>
+            <span className="tooltip-anchor">
+              <button
+                type="button"
+                aria-describedby="open-workflow-tooltip"
+                title={`Open the ${recommendedWorkflowLabel} workflow screen`}
+                onClick={() => openRecommendedWorkflow(recommendedWorkflow)}
+              >
+                Open workflow
+              </button>
+              <span id="open-workflow-tooltip" className="control-tooltip" role="tooltip">
+                Open the recommended {recommendedWorkflowLabel} screen for this ticket.
+              </span>
+            </span>
           </section>
+
+          {workflowFocusMode ? (
+            <header className="workflow-focus-heading no-print">
+              <div>
+                <span className="muted">Focused ticket workflow</span>
+                <h2>{activeWorkflowLabel}</h2>
+                <p className="muted">{job.ticketNumber} - {job.title}</p>
+              </div>
+              <button type="button" className="secondary-button" onClick={closeWorkflowFocus}>Back to ticket overview</button>
+            </header>
+          ) : null}
 
           <nav className="ticket-workflow-tabs no-print" aria-label="ticket workflow sections">
             <div role="tablist" aria-label="ticket workflow tabs">
@@ -1071,7 +1121,7 @@ export function JobTicketDetailPage() {
             </div>
           </nav>
 
-          <section className="ticket-workbench-kpis" aria-label="ticket workspace summary">
+          <section className="ticket-workbench-kpis" aria-label="ticket workspace summary" hidden={workflowFocusMode}>
             <div className={dispatchWarnings.length ? "metric-tile metric-tile-review" : "metric-tile metric-tile-ready"}>
               <span>Dispatch</span>
               <strong>{dispatchReadiness.statusLabel}</strong>
@@ -1104,8 +1154,8 @@ export function JobTicketDetailPage() {
             </div>
           </section>
 
-          <section className="ticket-workbench-layout">
-            <aside className="ticket-workbench-rail no-print" aria-label="ticket actions and dispatch requirements">
+          <section className={workflowFocusMode ? "ticket-workbench-layout ticket-workbench-layout-focused" : "ticket-workbench-layout"}>
+            <aside className="ticket-workbench-rail no-print" aria-label="ticket actions and dispatch requirements" hidden={workflowFocusMode}>
               <section className="workbench-panel workbench-panel-compact">
                 <h3>Ticket Actions</h3>
                 <button type="button" onClick={() => toggleDrawer("ticket")}>Edit Ticket</button>

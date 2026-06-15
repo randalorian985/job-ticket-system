@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../../api/httpClient'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
@@ -312,7 +312,7 @@ const csvFileName = (title: string) =>
   `report-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loaded-rows'}.csv`
 
 export function ReportsPage() {
-  const previewRef = useRef<HTMLElement | null>(null)
+  const [activeScreen, setActiveScreen] = useState<'catalog' | 'results'>('catalog')
   const [filters, setFilters] = useState<ReportQueryFilters>(defaultFilters)
   const [sourceCustomerId, setSourceCustomerId] = useState('')
   const [sourceEquipmentId, setSourceEquipmentId] = useState('')
@@ -392,10 +392,7 @@ export function ReportsPage() {
     setMode(null)
     setError(null)
     setReportMessage(null)
-  }
-
-  const showReportPreview = () => {
-    previewRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    setActiveScreen('catalog')
   }
 
   const requireSourceId = (message: string) => {
@@ -403,7 +400,6 @@ export function ReportsPage() {
     setMode(null)
     setError(message)
     setReportMessage(null)
-    showReportPreview()
   }
 
   const apply = async (nextMode: ReportMode) => {
@@ -428,7 +424,7 @@ export function ReportsPage() {
       setLoadingMode(nextMode)
       setRows([])
       setMode(nextMode)
-      showReportPreview()
+      setActiveScreen('results')
 
       const scopedFilters = filtersForMode(nextMode, filters)
       const data =
@@ -760,8 +756,9 @@ export function ReportsPage() {
         {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
       <Errorable error={referenceError} />
+      {activeScreen === 'catalog' ? <Errorable error={error} /> : null}
 
-      <section className="card stack report-preview-panel" aria-label="report preview" aria-live="polite" aria-busy={loadingMode !== null} ref={previewRef} tabIndex={-1}>
+      <section className="card stack report-preview-panel" aria-label="report preview" aria-live="polite" aria-busy={loadingMode !== null} hidden={activeScreen !== 'results'}>
         <div className="report-results-heading">
           <div>
             <h3>{title || 'Report Preview'}</h3>
@@ -771,14 +768,19 @@ export function ReportsPage() {
                 : 'Run a report from the hub to load export-friendly rows here.'}
             </p>
           </div>
-          {hasRows ? (
-            <a className="button-link" href={csvHref} download={csvFileName(title)}>
-              Export loaded rows as CSV
-            </a>
-          ) : null}
+          <div className="row">
+            <button type="button" className="secondary-button" onClick={() => setActiveScreen('catalog')}>
+              Back to report catalog
+            </button>
+            {hasRows ? (
+              <a className="button-link" href={csvHref} download={csvFileName(title)}>
+                Export loaded rows as CSV
+              </a>
+            ) : null}
+          </div>
         </div>
         {reportMessage ? <p className="success action-feedback-panel">{reportMessage}</p> : null}
-        <Errorable error={error} />
+        {activeScreen === 'results' ? <Errorable error={error} /> : null}
         {mode ? (
           <div className="report-state-panel">
             <strong>Loaded report review</strong>
@@ -817,27 +819,29 @@ export function ReportsPage() {
         ) : null}
       </section>
 
-      {reportSections.map((section) => (
-        <section className="report-section stack" key={section.title} aria-label={section.title}>
-          <div className="report-section-heading">
-            <h3>{section.title}</h3>
-            <p className="muted">{section.description}</p>
-          </div>
-          <div className="report-action-grid">
-            {section.modes.map((reportMode) => (
-              <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
-                <h4>{reportTitleMap[reportMode]}</h4>
-                <p className="muted">{reportDescriptions[reportMode]}</p>
-                {renderSourceControl(reportMode)}
-                {renderFilterControls(reportMode)}
-                <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
-                  {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
-                </button>
-              </article>
-            ))}
-          </div>
-        </section>
-      ))}
+      <div className="stack" hidden={activeScreen !== 'catalog'}>
+        {reportSections.map((section) => (
+          <section className="report-section stack" key={section.title} aria-label={section.title}>
+            <div className="report-section-heading">
+              <h3>{section.title}</h3>
+              <p className="muted">{section.description}</p>
+            </div>
+            <div className="report-action-grid">
+              {section.modes.map((reportMode) => (
+                <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
+                  <h4>{reportTitleMap[reportMode]}</h4>
+                  <p className="muted">{reportDescriptions[reportMode]}</p>
+                  {renderSourceControl(reportMode)}
+                  {renderFilterControls(reportMode)}
+                  <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
+                    {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </section>
   )
 }

@@ -72,7 +72,7 @@ const confirmSpy = vi.spyOn(window, 'confirm')
 
 beforeEach(() => {
   cleanup()
-  vi.clearAllMocks()
+  vi.resetAllMocks()
   confirmSpy.mockReturnValue(true)
   vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
     { id: 'j2', ticketNumber: 'JT-200', title: 'Gamma invoice summary', status: 7, priority: 2, customerId: 'c1', serviceLocationId: 'loc-1' }
@@ -97,7 +97,7 @@ describe('CustomersPage', () => {
     render(<CustomersPage />)
     expect(await screen.findByText(/Acme/)).toBeInTheDocument()
     expect(screen.getByText(/No account/)).toBeInTheDocument()
-    expect(screen.getByText('Create Customer')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create Customer' })).toBeInTheDocument()
   })
 
   it('surfaces API validation errors when customer save fails', async () => {
@@ -139,14 +139,14 @@ describe('CustomersPage', () => {
     render(<CustomersPage />)
     fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
 
-    expect(screen.getByText('Editing customer. Save changes or cancel to create a new customer.')).toBeInTheDocument()
+    expect(screen.getByText('Editing customer. Save changes or return to the customer list.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save Customer' })).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Changed' } })
     fireEvent.click(screen.getByRole('button', { name: 'Cancel customer edit' }))
 
     expect(screen.getByRole('button', { name: 'Create Customer' })).toBeInTheDocument()
-    expect(screen.queryByText('Editing customer. Save changes or cancel to create a new customer.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Editing customer. Save changes or return to the customer list.')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Name')).toHaveValue('')
     expect(masterDataApi.updateCustomer).not.toHaveBeenCalled()
   })
@@ -413,9 +413,6 @@ describe('PartsPage', () => {
     render(<PartsPage />)
     expect(await screen.findByText(/FLT-1/)).toBeInTheDocument()
     expect(screen.getByText('Showing 2 of 2 loaded parts.')).toBeInTheDocument()
-    expect(screen.getByText('Showing 2 of 2 loaded vendors.')).toBeInTheDocument()
-    expect(screen.getByText('Showing 2 of 2 loaded part categories.')).toBeInTheDocument()
-    expect(screen.getAllByText('1 active / 1 archived visible.').length).toBeGreaterThanOrEqual(3)
     const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
     fireEvent.change(within(partsCard).getByLabelText('Category'), { target: { value: 'pc2' } })
     expect(screen.queryByText(/FLT-1/)).not.toBeInTheDocument()
@@ -427,12 +424,18 @@ describe('PartsPage', () => {
     expect(screen.getByText('Showing 2 of 2 loaded parts.')).toBeInTheDocument()
     expect(screen.getByText(/FLT-1/)).toBeInTheDocument()
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Vendors' }))
     const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
+    expect(within(vendorsCard).getByText('Showing 2 of 2 loaded vendors.')).toBeInTheDocument()
+    expect(within(vendorsCard).getByText('1 active / 1 archived visible.')).toBeInTheDocument()
     fireEvent.change(within(vendorsCard).getByLabelText('Search vendors'), { target: { value: 'Vendor B' } })
     expect(within(vendorsCard).queryByText(/Vendor A/)).not.toBeInTheDocument()
     expect(within(vendorsCard).getByText(/Vendor B/)).toBeInTheDocument()
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Part Categories' }))
     const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
+    expect(within(categoriesCard).getByText('Showing 2 of 2 loaded part categories.')).toBeInTheDocument()
+    expect(within(categoriesCard).getByText('1 active / 1 archived visible.')).toBeInTheDocument()
     fireEvent.change(within(categoriesCard).getByLabelText('Search part categories'), { target: { value: 'Drive' } })
     expect(within(categoriesCard).queryByText(/Filters/)).not.toBeInTheDocument()
     expect(within(categoriesCard).getByText(/Belts/)).toBeInTheDocument()
@@ -476,6 +479,8 @@ describe('PartsPage', () => {
 
     render(<PartsPage />)
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Vendors' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Vendor' }))
     const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
     fireEvent.change(await within(vendorsCard).findByLabelText('Vendor name'), { target: { value: '   ' } })
     fireEvent.click(within(vendorsCard).getByRole('button', { name: 'Create Vendor' }))
@@ -483,6 +488,8 @@ describe('PartsPage', () => {
     expect(await screen.findByText('Vendor name is required.')).toBeInTheDocument()
     expect(masterDataApi.createVendor).not.toHaveBeenCalled()
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Part Categories' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Category' }))
     const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
     fireEvent.change(within(categoriesCard).getByLabelText('Category name'), { target: { value: '   ' } })
     fireEvent.click(within(categoriesCard).getByRole('button', { name: 'Create Category' }))
@@ -525,6 +532,8 @@ describe('PartsPage', () => {
       reorderThreshold: 2
     }))
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Vendors' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Vendor' }))
     const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
     fireEvent.change(within(vendorsCard).getByLabelText('Vendor name'), { target: { value: 'Vendor B' } })
     fireEvent.change(within(vendorsCard).getByLabelText('Account number'), { target: { value: 'VB-1' } })
@@ -541,6 +550,8 @@ describe('PartsPage', () => {
       phone: '555-0200'
     }))
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Part Categories' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Category' }))
     const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
     fireEvent.change(within(categoriesCard).getByLabelText('Category name'), { target: { value: 'Hydraulics' } })
     fireEvent.change(within(categoriesCard).getByLabelText('Description'), { target: { value: 'Hydraulic service parts' } })
@@ -560,26 +571,28 @@ describe('PartsPage', () => {
     render(<PartsPage />)
 
     const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
-    const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
-    const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
 
     fireEvent.click(await within(partsCard).findByRole('button', { name: 'Edit' }))
-    expect(within(partsCard).getByText('Editing part. Save changes or cancel to create a new part.')).toBeInTheDocument()
+    expect(within(partsCard).getByText('Editing part. Save changes or return to the parts list.')).toBeInTheDocument()
     fireEvent.click(within(partsCard).getByRole('button', { name: 'Cancel part edit' }))
     expect(within(partsCard).getByRole('button', { name: 'Create Part' })).toBeInTheDocument()
-    expect(within(partsCard).queryByText('Editing part. Save changes or cancel to create a new part.')).not.toBeInTheDocument()
+    expect(within(partsCard).queryByText('Editing part. Save changes or return to the parts list.')).not.toBeInTheDocument()
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Vendors' }))
+    const vendorsCard = screen.getByRole('heading', { name: 'Vendors' }).closest('article')!
     fireEvent.click(within(vendorsCard).getByRole('button', { name: 'Edit' }))
-    expect(within(vendorsCard).getByText('Editing vendor. Save changes or cancel to create a new vendor.')).toBeInTheDocument()
+    expect(within(vendorsCard).getByText('Editing vendor. Save changes or return to the vendor list.')).toBeInTheDocument()
     fireEvent.click(within(vendorsCard).getByRole('button', { name: 'Cancel vendor edit' }))
     expect(within(vendorsCard).getByRole('button', { name: 'Create Vendor' })).toBeInTheDocument()
-    expect(within(vendorsCard).queryByText('Editing vendor. Save changes or cancel to create a new vendor.')).not.toBeInTheDocument()
+    expect(within(vendorsCard).queryByText('Editing vendor. Save changes or return to the vendor list.')).not.toBeInTheDocument()
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Part Categories' }))
+    const categoriesCard = screen.getByRole('heading', { name: 'Part Categories' }).closest('article')!
     fireEvent.click(within(categoriesCard).getByRole('button', { name: 'Edit' }))
-    expect(within(categoriesCard).getByText('Editing part category. Save changes or cancel to create a new part category.')).toBeInTheDocument()
+    expect(within(categoriesCard).getByText('Editing part category. Save changes or return to the category list.')).toBeInTheDocument()
     fireEvent.click(within(categoriesCard).getByRole('button', { name: 'Cancel category edit' }))
     expect(within(categoriesCard).getByRole('button', { name: 'Create Category' })).toBeInTheDocument()
-    expect(within(categoriesCard).queryByText('Editing part category. Save changes or cancel to create a new part category.')).not.toBeInTheDocument()
+    expect(within(categoriesCard).queryByText('Editing part category. Save changes or return to the category list.')).not.toBeInTheDocument()
 
     expect(masterDataApi.updatePart).not.toHaveBeenCalled()
     expect(masterDataApi.updateVendor).not.toHaveBeenCalled()
@@ -595,12 +608,13 @@ describe('PartsPage', () => {
     vi.mocked(masterDataApi.archivePartCategory).mockResolvedValue(undefined as any)
 
     const view = render(<PartsPage />)
-    const archiveButtons = await screen.findAllByRole('button', { name: 'Archive' })
-    fireEvent.click(archiveButtons[0])
-    fireEvent.click(archiveButtons[1])
-    fireEvent.click(archiveButtons[2])
+    fireEvent.click(await screen.findByRole('button', { name: 'Archive' }))
     await waitFor(() => expect(masterDataApi.archivePart).toHaveBeenCalledWith('p1'))
+    fireEvent.click(screen.getByRole('tab', { name: 'Vendors' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Archive' }))
     await waitFor(() => expect(masterDataApi.archiveVendor).toHaveBeenCalledWith('v1'))
+    fireEvent.click(screen.getByRole('tab', { name: 'Part Categories' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Archive' }))
     await waitFor(() => expect(masterDataApi.archivePartCategory).toHaveBeenCalledWith('pc1'))
 
     vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'PN-1', name: 'Filter', unitCost: 1, unitPrice: 2, isArchived: true }] as any)
@@ -612,12 +626,13 @@ describe('PartsPage', () => {
 
     view.unmount()
     render(<PartsPage />)
-    const unarchiveButtons = await screen.findAllByRole('button', { name: 'Unarchive' })
-    fireEvent.click(unarchiveButtons[0])
-    fireEvent.click(unarchiveButtons[1])
-    fireEvent.click(unarchiveButtons[2])
+    fireEvent.click(await screen.findByRole('button', { name: 'Unarchive' }))
     await waitFor(() => expect(masterDataApi.unarchivePart).toHaveBeenCalledWith('p1'))
+    fireEvent.click(screen.getByRole('tab', { name: 'Vendors' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Unarchive' }))
     await waitFor(() => expect(masterDataApi.unarchiveVendor).toHaveBeenCalled())
+    fireEvent.click(screen.getByRole('tab', { name: 'Part Categories' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Unarchive' }))
     expect(await screen.findByText('Unable to update archive state.')).toBeInTheDocument()
   })
 })

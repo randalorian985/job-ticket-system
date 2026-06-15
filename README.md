@@ -8,7 +8,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Manager/Admin job-ticket, assignment, reporting, master-data, purchasing-support, and inventory-foundation workflows remain implemented on `main`.
 - Manager/Admin Phase 3B master-data polish has started with expanded existing-field create/edit forms for customers, service locations, equipment, vendors, part categories, and parts, while preserving existing archive/unarchive workflows and APIs.
 - Manager/Admin reports are organized into invoice/closeout, labor/parts, and service-history sections with shared filters, source-ID validation, loading/empty/error states, export-friendly tables, and client-side CSV export from the currently loaded rows.
-- Manager/Admin result-view polish keeps generated reports, filtered job-ticket results, master-data action outcomes, and Admin user-management action outcomes visible in dedicated preview, summary, or result panels without changing backend APIs.
+- Manager/Admin screen cleanup separates report catalog/results, master-data list/editor, and Admin user list/editor states into focused screens without changing backend APIs.
 - Labor report totals are labeled as time-entry labor-rate snapshot values and preserve the existing API fallback behavior for legacy entries without captured snapshots.
 - Parts Request Workflow Phase 2 adds in-ticket Add / Request Part flows without adding purchasing, receiving, inventory expansion, recommendations, or automatic compatibility decisions.
 - Technicians can search/select existing parts through a technician-safe lookup or type a new/unlisted part from inside an assigned service ticket.
@@ -17,7 +17,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Technicians must be clocked into the selected job ticket before recording field work through work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
 - Manager/Admin service-ticket detail now presents a cohesive field-service workbench with ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket actions use focused panels for ticket editing, status review, archive review, and Add / Request Part while staying on existing ticket, part-request, assignment, file, time, and reporting APIs.
-- Manager/Admin task navigation uses URL-backed queue filters, dashboard links into filtered queues, queue-aware return links, workflow tabs, and a visible recommended next action on ticket detail.
+- Manager/Admin task navigation uses URL-backed queue filters, dashboard links into filtered queues, queue-aware return links, workflow tabs, and a recommended next action that opens the selected ticket workflow in a focused view.
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
 - Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
