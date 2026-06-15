@@ -14,6 +14,8 @@ const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/
 const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
 
 const formatOptionalDateTime = (value?: string | null) => (value ? new Date(value).toLocaleString() : 'Not set')
+const displayRelatedName = (value: string | null | undefined, unavailableLabel: string) =>
+  value?.trim() || unavailableLabel
 const getPartUsedDisplay = (part: JobTicketPartDto) => {
   if (part.isUnlistedPart) {
     return part.partName?.trim() || part.notes?.trim() || 'Part request'
@@ -23,7 +25,7 @@ const getPartUsedDisplay = (part: JobTicketPartDto) => {
     return `${part.partNumber} - ${part.partName}`
   }
 
-  return part.partName || `Part ${part.partId ?? 'unlisted'}`
+  return part.partName || part.partNumber || 'Unnamed part'
 }
 
 const getPartApprovalLabel = (status: number) => {
@@ -131,17 +133,23 @@ export function JobDetailPage() {
       {
         label: 'Customer',
         isReady: Boolean(job?.customerId),
-        detail: job?.customerId ? `Customer ID: ${job.customerId}` : 'Customer is not selected.'
+        detail: job?.customerId
+          ? `Customer: ${displayRelatedName(job.customerName, 'Customer details unavailable')}`
+          : 'Customer is not selected.'
       },
       {
         label: 'Service location',
         isReady: Boolean(job?.serviceLocationId),
-        detail: job?.serviceLocationId ? `Service Location ID: ${job.serviceLocationId}` : 'Service location is not selected.'
+        detail: job?.serviceLocationId
+          ? `Service location: ${displayRelatedName(job.serviceLocationName, 'Location details unavailable')}`
+          : 'Service location is not selected.'
       },
       {
         label: 'Equipment assignment',
         isReady: Boolean(job),
-        detail: job?.equipmentId ? `Equipment ID: ${job.equipmentId}` : 'No equipment is attached for this ticket.'
+        detail: job?.equipmentId
+          ? `Equipment: ${displayRelatedName(job.equipmentName, 'Equipment details unavailable')}`
+          : 'No equipment is attached for this ticket.'
       },
       {
         label: 'Job instructions',
@@ -459,14 +467,20 @@ export function JobDetailPage() {
       {error ? <p className="error">{error}</p> : null}
 
       <section className="card">
-        <h1>{job.ticketNumber}</h1>
-        <p>{job.title}</p>
-        <p className="muted">Status: {getJobTicketStatusLabel(job.status)}</p>
-        <p className="muted">Priority: {getJobTicketPriorityLabel(job.priority)}</p>
-        <p className="muted">Customer ID: {job.customerId}</p>
-        <p className="muted">Service Location ID: {job.serviceLocationId}</p>
-        <p className="muted">Equipment ID: {job.equipmentId ?? 'None'}</p>
-        <p>{job.description ?? 'No description provided.'}</p>
+        <div className="employee-job-heading">
+          <div>
+            <h1>{job.ticketNumber}</h1>
+            <p className="employee-job-title">{job.title}</p>
+          </div>
+          <span className="status-pill">{getJobTicketStatusLabel(job.status)}</span>
+        </div>
+        <div className="employee-job-context">
+          <div><span>Customer</span><strong>{displayRelatedName(job.customerName, 'Customer unavailable')}</strong></div>
+          <div><span>Service location</span><strong>{displayRelatedName(job.serviceLocationName, 'Service location unavailable')}</strong></div>
+          <div><span>Equipment</span><strong>{job.equipmentId ? displayRelatedName(job.equipmentName, 'Equipment unavailable') : 'No equipment attached'}</strong></div>
+          <div><span>Priority</span><strong>{getJobTicketPriorityLabel(job.priority)}</strong></div>
+        </div>
+        <p className="employee-job-description">{job.description ?? 'No description provided.'}</p>
       </section>
 
       <section className="card stack" aria-label="job readiness review">

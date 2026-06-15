@@ -149,6 +149,59 @@
   color: var(--ink);
 }
 
+.employee-job-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.employee-job-heading h1,
+.employee-job-title,
+.employee-job-description {
+  margin: 0;
+}
+
+.employee-job-title {
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.employee-job-context {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.9rem;
+}
+
+.employee-job-context > div {
+  background: var(--surface-panel);
+  border: 1px solid #e5ebf3;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.65rem;
+}
+
+.employee-job-context span {
+  color: #505766;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.employee-job-context strong {
+  overflow-wrap: anywhere;
+}
+
+.employee-job-description {
+  border-top: 1px solid #e5ebf3;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+}
+
 @media (max-width: 720px) {
   .manager-header .manager-nav-groups {
     padding: 0 0.75rem 0.75rem;
@@ -164,7 +217,8 @@
   }
 
   .employee-work-header,
-  .assigned-job-heading {
+  .assigned-job-heading,
+  .employee-job-heading {
     align-items: stretch;
     flex-direction: column;
   }
@@ -179,7 +233,8 @@
   }
 
   .assigned-job-meta,
-  .assigned-job-context {
+  .assigned-job-context,
+  .employee-job-context {
     grid-template-columns: 1fr;
   }
 }

@@ -164,6 +164,8 @@ describe('ReportsPage', () => {
     const laborByJobCard = screen.getByLabelText('Labor by Job report')
     expect(await within(laborByJobCard).findByRole('option', { name: 'Taylor Technician' })).toBeInTheDocument()
     fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job customer filter'), { target: { value: 'customer-1' } })
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job service location filter'), { target: { value: 'location-1' } })
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job employee filter'), { target: { value: 'emp-7' } })
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job limit filter'), { target: { value: '75' } })
     fireEvent.click(within(laborByJobCard).getByRole('button', { name: 'Run Labor by Job' }))
@@ -174,7 +176,10 @@ describe('ReportsPage', () => {
     expect(screen.getByRole('columnheader', { name: 'Labor Billable (time-entry labor-rate snapshot)' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '$300.00' })).toBeInTheDocument()
     expect(screen.getByText('Loaded report review')).toBeInTheDocument()
-    expect(screen.getAllByText(/Employee: emp-7/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Customer: Acme Service \(ACME\)/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Service location: Acme Service - Plant 4/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Employee: Taylor Technician/).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/Employee: emp-7/)).not.toBeInTheDocument()
     expect(screen.getAllByText(/Limit: 75/).length).toBeGreaterThan(0)
 
     const exportLink = screen.getByRole('link', { name: 'Export loaded rows as CSV' })
@@ -184,7 +189,13 @@ describe('ReportsPage', () => {
     expect(csv).toContain('Labor Billable (time-entry labor-rate snapshot)')
     expect(csv).toContain('JT-2026-000123,Acme Service,2.5,125,300,2026-05-01,2026-05-02')
     expect(csv).not.toContain('$300.00')
-    await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledWith({ offset: 0, limit: 75, employeeId: 'emp-7' }))
+    await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledWith({
+      offset: 0,
+      limit: 75,
+      customerId: 'customer-1',
+      serviceLocationId: 'location-1',
+      employeeId: 'emp-7'
+    }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
     expect(within(laborByJobCard).getByLabelText('Labor by Job employee filter')).toHaveValue('')

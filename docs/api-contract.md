@@ -22,6 +22,14 @@
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory foundation (`/api/inventory/*`)
 
+## Job Ticket Display Fields
+Job-ticket list and detail responses keep relationship IDs for API operations and also include human-readable fields for UI display.
+
+- `JobTicketListItemDto` includes `customerName`, `serviceLocationName`, and optional `equipmentName`.
+- `JobTicketDto` includes `customerName`, `serviceLocationName`, `billingPartyCustomerName`, optional `equipmentName`, optional `equipmentNumber`, and optional `assignedManagerEmployeeName`.
+- Employee and Manager/Admin screens display these labels instead of exposing customer, service-location, equipment, or employee GUIDs.
+- Authorization, schema, migrations, enum values, and write request DTOs are unchanged.
+
 ## Manager/Admin Master Data
 Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the already-documented DTO fields for customer contact/account details, service-location status/address/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.
 

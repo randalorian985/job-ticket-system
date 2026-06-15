@@ -85,7 +85,7 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Assigned: e-1 · Lead: e-1')).toBeInTheDocument()
+    expect(screen.getByText('Assigned: Employee unavailable · Lead: Employee unavailable')).toBeInTheDocument()
   })
 
   it('shows queue summary counts for active, urgent, waiting, unscheduled, missing due date, unassigned, needs-lead, and dispatch readiness work', async () => {

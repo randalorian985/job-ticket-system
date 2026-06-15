@@ -95,7 +95,7 @@ const reportSections: Array<{ title: string, description: string, modes: ReportM
   },
   {
     title: 'Service History',
-    description: 'Review customer and equipment service history by source record ID.',
+    description: 'Review service history for a selected customer or piece of equipment.',
     modes: ['customerHistory', 'equipmentHistory']
   }
 ]
@@ -285,17 +285,28 @@ const filtersForMode = (mode: ReportMode, filters: ReportQueryFilters): ReportQu
   return scoped
 }
 
-const buildFilterSummary = (mode: ReportMode, filters: ReportQueryFilters, sourceLabel?: string) => {
+type ReportFilterLabels = {
+  customers: Map<string, string>
+  serviceLocations: Map<string, string>
+  employees: Map<string, string>
+}
+
+const buildFilterSummary = (
+  mode: ReportMode,
+  filters: ReportQueryFilters,
+  labels: ReportFilterLabels,
+  sourceLabel?: string
+) => {
   const summary: string[] = []
 
   if (sourceLabel) summary.push(`Source: ${sourceLabel}`)
   if (filters.dateFromUtc || filters.dateToUtc) {
     summary.push(`Dates: ${dateUtc(filters.dateFromUtc)} to ${dateUtc(filters.dateToUtc)}`)
   }
-  if (filters.customerId) summary.push(`Customer: ${filters.customerId}`)
-  if (filters.billingPartyCustomerId) summary.push(`Billing party: ${filters.billingPartyCustomerId}`)
-  if (filters.serviceLocationId) summary.push(`Service location: ${filters.serviceLocationId}`)
-  if (filters.employeeId) summary.push(`Employee: ${filters.employeeId}`)
+  if (filters.customerId) summary.push(`Customer: ${labels.customers.get(filters.customerId) ?? 'Customer unavailable'}`)
+  if (filters.billingPartyCustomerId) summary.push(`Billing party: ${labels.customers.get(filters.billingPartyCustomerId) ?? 'Billing party unavailable'}`)
+  if (filters.serviceLocationId) summary.push(`Service location: ${labels.serviceLocations.get(filters.serviceLocationId) ?? 'Location unavailable'}`)
+  if (filters.employeeId) summary.push(`Employee: ${labels.employees.get(filters.employeeId) ?? 'Employee unavailable'}`)
   if (typeof filters.jobStatus === 'number') summary.push(`Job status: ${getJobStatusLabel(filters.jobStatus)}`)
   if (typeof filters.invoiceStatus === 'number') summary.push(`Invoice status: ${getInvoiceStatusLabel(filters.invoiceStatus)}`)
   if (filters.offset) summary.push(`Offset: ${filters.offset}`)
@@ -381,6 +392,20 @@ export function ReportsPage() {
   const equipmentLabelById = useMemo(
     () => new Map(equipment.map((item) => [item.id, item.equipmentNumber ? `${item.name} (${item.equipmentNumber})` : item.name])),
     [equipment]
+  )
+  const serviceLocationLabelById = useMemo(
+    () => new Map(serviceLocations.map((location) => [
+      location.id,
+      [location.companyName, location.locationName].filter(Boolean).join(' - ')
+    ])),
+    [serviceLocations]
+  )
+  const employeeLabelById = useMemo(
+    () => new Map(employees.map((employee) => [
+      employee.id,
+      `${employee.firstName} ${employee.lastName}`.trim()
+    ])),
+    [employees]
   )
 
   const clearFilters = () => {
@@ -468,8 +493,14 @@ export function ReportsPage() {
         ? equipmentLabelById.get(sourceEquipmentId)
         : undefined
   const filterSummary = useMemo(
-    () => (mode ? buildFilterSummary(mode, filtersForMode(mode, filters), sourceLabel) : ''),
-    [filters, mode, sourceLabel]
+    () => (mode
+      ? buildFilterSummary(mode, filtersForMode(mode, filters), {
+        customers: customerLabelById,
+        serviceLocations: serviceLocationLabelById,
+        employees: employeeLabelById
+      }, sourceLabel)
+      : ''),
+    [customerLabelById, employeeLabelById, filters, mode, serviceLocationLabelById, sourceLabel]
   )
 
   const updateFilters = (nextFilters: Partial<ReportQueryFilters>) => {

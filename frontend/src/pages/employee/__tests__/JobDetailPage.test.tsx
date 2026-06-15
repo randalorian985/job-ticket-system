@@ -82,6 +82,11 @@ const mockJob = (overrides = {}) => {
     serviceLocationId: 'location-1',
     billingPartyCustomerId: 'customer-1',
     equipmentId: 'equipment-1',
+    customerName: 'Acme Manufacturing',
+    serviceLocationName: 'North Plant',
+    billingPartyCustomerName: 'Acme Billing',
+    equipmentName: 'Hydraulic Lift 7',
+    equipmentNumber: 'EQ-007',
     scheduledStartAtUtc: '2026-06-01T15:00:00Z',
     dueAtUtc: '2026-06-02T20:00:00Z',
     ...overrides
@@ -174,9 +179,13 @@ describe('JobDetailPage', () => {
     renderJobDetail()
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
-    expect(screen.getByText('Status: In Progress')).toBeInTheDocument()
-    expect(screen.getByText('Priority: High')).toBeInTheDocument()
+    expect(screen.getByText('In Progress')).toBeInTheDocument()
+    expect(screen.getByText('High')).toBeInTheDocument()
     expect(screen.queryByText(/Billing Party ID/)).not.toBeInTheDocument()
+    expect(screen.getAllByText('Acme Manufacturing').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('North Plant').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Hydraulic Lift 7').length).toBeGreaterThan(0)
+    expect(screen.queryByText(/customer-1|location-1|equipment-1/)).not.toBeInTheDocument()
     expect(screen.getByText(/Inspected hydraulic lines/)).toBeInTheDocument()
     expect(screen.getByText(/P-1 - Valve kit/)).toBeInTheDocument()
     expect(screen.getByText(/Added to ticket - Pending review/)).toBeInTheDocument()
@@ -188,6 +197,9 @@ describe('JobDetailPage', () => {
     expect(within(jobReadiness).getByText('The job requirements are complete for assigned work.')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('This ticket has the information needed to start work.')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('Ticket is available for field work.')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Customer: Acme Manufacturing')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Service location: North Plant')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Equipment: Hydraulic Lift 7')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('Job instructions are available.')).toBeInTheDocument()
     expect(screen.getByText('Job setup is ready for clock-in.')).toBeInTheDocument()
   })

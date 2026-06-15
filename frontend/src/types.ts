@@ -43,6 +43,9 @@ export type JobTicketListItemDto = {
   scheduledStartAtUtc?: string | null
   dueAtUtc?: string | null
   completedAtUtc?: string | null
+  customerName?: string | null
+  serviceLocationName?: string | null
+  equipmentName?: string | null
 }
 
 export type JobTicketDto = {
@@ -69,6 +72,12 @@ export type JobTicketDto = {
   internalNotes?: string | null
   customerFacingNotes?: string | null
   archiveReason?: string | null
+  customerName?: string | null
+  serviceLocationName?: string | null
+  billingPartyCustomerName?: string | null
+  equipmentName?: string | null
+  equipmentNumber?: string | null
+  assignedManagerEmployeeName?: string | null
 }
 
 
