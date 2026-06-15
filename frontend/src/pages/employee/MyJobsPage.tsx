@@ -10,6 +10,9 @@ function formatOptionalDateTime(value?: string | null) {
   return value ? new Date(value).toLocaleString() : 'Not set'
 }
 
+const displayRelatedName = (value: string | null | undefined, unavailableLabel: string) =>
+  value?.trim() || unavailableLabel
+
 const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
 
 function getAssignedJobReadiness(job: JobTicketListItemDto) {
@@ -149,9 +152,9 @@ export function MyJobsPage() {
                 <div><strong>Due</strong><span>{dueLabel}</span></div>
               </div>
               <div className="assigned-job-context">
-                <div><strong>Customer</strong><span>Reference: {job.customerId}</span></div>
-                <div><strong>Service location</strong><span>Reference: {job.serviceLocationId}</span></div>
-                <div><strong>Equipment</strong><span>Open the job to view equipment details.</span></div>
+                <div><strong>Customer</strong><span>{displayRelatedName(job.customerName, 'Customer unavailable')}</span></div>
+                <div><strong>Service location</strong><span>{displayRelatedName(job.serviceLocationName, 'Service location unavailable')}</span></div>
+                <div><strong>Equipment</strong><span>{displayRelatedName(job.equipmentName, 'No equipment attached')}</span></div>
               </div>
               <p className="muted">Next required update: {readiness.nextStep}</p>
               <Link className="button-link secondary-link" to={`/jobs/${job.id}`}>Open Job</Link>

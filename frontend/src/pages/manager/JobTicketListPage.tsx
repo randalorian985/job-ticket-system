@@ -103,7 +103,8 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
   }
 }
 
-const getAssignmentDisplayName = (assignment: JobTicketAssignmentDto) => assignment.employeeName?.trim() || assignment.employeeId
+const getAssignmentDisplayName = (assignment: JobTicketAssignmentDto) =>
+  assignment.employeeName?.trim() || 'Employee unavailable'
 
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
@@ -423,8 +424,8 @@ export function JobTicketListPage() {
                     <span className={`status-pill readiness-pill ${readinessClass}`}>{readiness.label}</span>
                   </div>
                   <div className="ticket-meta-grid">
-                    <div><strong>Customer</strong><span>{customers[job.customerId]?.name ?? 'Customer unavailable'}</span></div>
-                    <div><strong>Location</strong><span>{locations[job.serviceLocationId]?.locationName ?? 'Location unavailable'}</span></div>
+                    <div><strong>Customer</strong><span>{customers[job.customerId]?.name ?? job.customerName ?? 'Customer unavailable'}</span></div>
+                    <div><strong>Location</strong><span>{locations[job.serviceLocationId]?.locationName ?? job.serviceLocationName ?? 'Location unavailable'}</span></div>
                     <div><strong>Assigned</strong><span>{assignmentSummary}</span></div>
                     <div><strong>Lead</strong><span>{leadSummary}</span></div>
                   </div>

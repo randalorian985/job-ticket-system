@@ -466,9 +466,9 @@ export function EquipmentPage() {
               title={equipment.name}
               statusArchived={equipment.isArchived}
               meta={[
-                `Owner: ${customerNameById(customers, equipment.ownerCustomerId ?? equipment.customerId) || equipment.ownerCustomerId || equipment.customerId}`,
-                `Billing: ${customerNameById(customers, equipment.responsibleBillingCustomerId) || equipment.responsibleBillingCustomerId || 'n/a'}`,
-                `Location: ${locationNameById(locations, equipment.serviceLocationId) || equipment.serviceLocationId}`,
+                `Owner: ${customerNameById(customers, equipment.ownerCustomerId ?? equipment.customerId) || 'Customer unavailable'}`,
+                `Billing: ${equipment.responsibleBillingCustomerId ? customerNameById(customers, equipment.responsibleBillingCustomerId) || 'Customer unavailable' : 'No separate billing customer'}`,
+                `Location: ${locationNameById(locations, equipment.serviceLocationId) || 'Service location unavailable'}`,
                 equipment.equipmentNumber ? `Equipment #: ${equipment.equipmentNumber}` : null,
                 equipment.unitNumber ? `Unit: ${equipment.unitNumber}` : null,
                 equipment.manufacturer || equipment.modelNumber ? `Model: ${[equipment.manufacturer, equipment.modelNumber].filter(Boolean).join(' ')}` : null,

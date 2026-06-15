@@ -104,7 +104,7 @@ const getPartDisplayName = (part: JobTicketPartDto) => {
     return `${part.partNumber} - ${part.partName}`;
   }
 
-  return part.partName || part.partNumber || `Part ${part.partId ?? "unlisted"}`;
+  return part.partName || part.partNumber || "Unnamed part";
 };
 
 const getPartReviewLabel = (status: number) => {
@@ -231,7 +231,7 @@ export function JobTicketDetailPage() {
       ? `${employee.firstName} ${employee.lastName}`.trim()
       : "";
 
-    return assignment.employeeName?.trim() || name || assignment.employeeId;
+    return assignment.employeeName?.trim() || name || "Employee unavailable";
   };
 
   const getEmployeeNameById = (employeeId?: string | null) => {
@@ -240,7 +240,11 @@ export function JobTicketDetailPage() {
     }
 
     const employee = employeesById[employeeId];
-    return employee ? `${employee.firstName} ${employee.lastName}`.trim() : employeeId;
+    return employee
+      ? `${employee.firstName} ${employee.lastName}`.trim()
+      : job?.assignedManagerEmployeeId === employeeId
+        ? job.assignedManagerEmployeeName?.trim() || "Manager unavailable"
+        : "Employee unavailable";
   };
 
   const partsReview = useMemo(() => {
@@ -1064,15 +1068,15 @@ export function JobTicketDetailPage() {
               </div>
               <div>
                 <span>Customer</span>
-                <strong>{selectedCustomer?.name ?? "Customer unavailable"}</strong>
+                <strong>{selectedCustomer?.name ?? job.customerName ?? "Customer unavailable"}</strong>
               </div>
               <div>
                 <span>Service location</span>
-                <strong>{selectedLocation?.locationName ?? "Location unavailable"}</strong>
+                <strong>{selectedLocation?.locationName ?? job.serviceLocationName ?? "Location unavailable"}</strong>
               </div>
               <div>
                 <span>Equipment</span>
-                <strong>{job.equipmentId ? (selectedEquipment?.name ?? "Equipment unavailable") : emptyDisplay}</strong>
+                <strong>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentName ?? "Equipment unavailable") : emptyDisplay}</strong>
               </div>
               <div>
                 <span>Due</span>
@@ -1452,21 +1456,26 @@ export function JobTicketDetailPage() {
                 <div className="context-grid">
                   <section className="context-block" aria-label="customer">
                     <span>Customer</span>
-                    <h4>{selectedCustomer?.name ?? "Customer unavailable"}</h4>
+                    <h4>{selectedCustomer?.name ?? job.customerName ?? "Customer unavailable"}</h4>
                     <p>{displayValue(selectedCustomer?.contactName)}</p>
                     <p className="muted">{displayValue(selectedCustomer?.phone)} | {displayValue(selectedCustomer?.email)}</p>
                     <p className="muted">Account {displayValue(selectedCustomer?.accountNumber)}</p>
                   </section>
                   <section className="context-block" aria-label="service location">
                     <span>Service Location</span>
-                    <h4>{selectedLocation?.locationName ?? "Location unavailable"}</h4>
+                    <h4>{selectedLocation?.locationName ?? job.serviceLocationName ?? "Location unavailable"}</h4>
                     <p>{getAddressLine(selectedLocation)}</p>
-                    <p className="muted">{selectedLocation?.isActive === false ? "Inactive location" : "Active location"}</p>
+                    <p className="muted">
+                      {selectedLocation
+                        ? selectedLocation.isActive === false ? "Inactive location" : "Active location"
+                        : "Location status unavailable"}
+                    </p>
                   </section>
                   <section className="context-block" aria-label="equipment">
                     <span>Equipment</span>
-                    <h4>{job.equipmentId ? (selectedEquipment?.name ?? "Equipment unavailable") : "No equipment attached"}</h4>
+                    <h4>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentName ?? "Equipment unavailable") : "No equipment attached"}</h4>
                     <p>{displayValue(selectedEquipment?.equipmentType)} {displayValue(selectedEquipment?.manufacturer)} {displayValue(selectedEquipment?.modelNumber)}</p>
+                    {!selectedEquipment && job.equipmentNumber ? <p className="muted">Equipment {job.equipmentNumber}</p> : null}
                     <p className="muted">Unit {displayValue(selectedEquipment?.unitNumber)} | Serial {displayValue(selectedEquipment?.serialNumber)}</p>
                   </section>
                 </div>
@@ -1513,7 +1522,7 @@ export function JobTicketDetailPage() {
                   </section>
                   <section>
                     <h4>Billing Contact</h4>
-                    <p>{billingParty?.name ?? "Billing party unavailable"}</p>
+                    <p>{billingParty?.name ?? job.billingPartyCustomerName ?? "Billing party unavailable"}</p>
                     <p className="muted">{displayValue(job.billingContactName)} | {displayValue(job.billingContactPhone)} | {displayValue(job.billingContactEmail)}</p>
                   </section>
                 </div>

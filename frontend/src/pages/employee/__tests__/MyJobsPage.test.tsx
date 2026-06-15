@@ -41,6 +41,9 @@ describe('MyJobsPage', () => {
         priority: 3,
         customerId: 'customer-1',
         serviceLocationId: 'location-1',
+        customerName: 'Acme Manufacturing',
+        serviceLocationName: 'North Plant',
+        equipmentName: 'Press 12',
         scheduledStartAtUtc: '2026-06-01T15:00:00Z',
         dueAtUtc: '2026-06-02T20:00:00Z'
       },
@@ -52,6 +55,9 @@ describe('MyJobsPage', () => {
         priority: 77,
         customerId: 'customer-2',
         serviceLocationId: 'location-2',
+        customerName: 'Beta Logistics',
+        serviceLocationName: 'Main Warehouse',
+        equipmentName: null,
         scheduledStartAtUtc: '2026-06-03T15:00:00Z',
         dueAtUtc: '2026-06-04T20:00:00Z'
       },
@@ -63,6 +69,9 @@ describe('MyJobsPage', () => {
         priority: 2,
         customerId: 'customer-3',
         serviceLocationId: 'location-3',
+        customerName: 'Central Utilities',
+        serviceLocationName: 'Pump Station 4',
+        equipmentName: 'Transfer Pump',
         scheduledStartAtUtc: null,
         dueAtUtc: null
       },
@@ -74,6 +83,9 @@ describe('MyJobsPage', () => {
         priority: 2,
         customerId: 'customer-4',
         serviceLocationId: 'location-4',
+        customerName: 'Delta Services',
+        serviceLocationName: 'South Yard',
+        equipmentName: 'Service Crane',
         scheduledStartAtUtc: '2026-06-03T15:00:00Z',
         dueAtUtc: '2026-06-04T20:00:00Z'
       }
@@ -96,6 +108,11 @@ describe('MyJobsPage', () => {
     expect(screen.getByText('Next required update: Scheduled start has not been set.')).toBeInTheDocument()
     expect(screen.getAllByText('Start readiness: Not active field work')).toHaveLength(2)
     expect(screen.getAllByText('Next required update: Ticket is no longer available for field work.')).toHaveLength(2)
+    expect(screen.getByText('Acme Manufacturing')).toBeInTheDocument()
+    expect(screen.getByText('North Plant')).toBeInTheDocument()
+    expect(screen.getByText('Press 12')).toBeInTheDocument()
+    expect(screen.getByText('No equipment attached')).toBeInTheDocument()
+    expect(screen.queryByText(/customer-1|location-1/)).not.toBeInTheDocument()
 
     await waitFor(() => {
       expect(jobTicketsApi.listMine).toHaveBeenCalledTimes(1)

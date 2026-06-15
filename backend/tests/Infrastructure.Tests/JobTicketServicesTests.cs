@@ -23,6 +23,11 @@ public sealed class JobTicketServicesTests
         Assert.Equal(refs.Customer.Id, created.CustomerId);
         Assert.Equal(refs.ServiceLocation.Id, created.ServiceLocationId);
         Assert.Equal(refs.BillingCustomer.Id, created.BillingPartyCustomerId);
+        Assert.Equal("Customer A", created.CustomerName);
+        Assert.Equal("Main Site", created.ServiceLocationName);
+        Assert.Equal("Billing Customer", created.BillingPartyCustomerName);
+        Assert.Equal("Compressor", created.EquipmentName);
+        Assert.Equal("Manager One", created.AssignedManagerEmployeeName);
     }
 
     [Fact]
@@ -225,6 +230,9 @@ public sealed class JobTicketServicesTests
 
         var item = Assert.Single(listed);
         Assert.Equal(assignedTicket.Id, item.Id);
+        Assert.Equal("Customer A", item.CustomerName);
+        Assert.Equal("Main Site", item.ServiceLocationName);
+        Assert.Equal("Compressor", item.EquipmentName);
     }
 
     [Fact]

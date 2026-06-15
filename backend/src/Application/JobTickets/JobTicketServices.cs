@@ -74,7 +74,21 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             .OrderByDescending(x => x.CreatedAtUtc)
             .Skip(query.PagedQuery.NormalizedOffset)
             .Take(query.PagedQuery.NormalizedLimit)
-            .Select(x => new JobTicketListItemDto(x.Id, x.TicketNumber, x.Title, x.Status, x.Priority, x.CustomerId, x.ServiceLocationId, x.RequestedAtUtc, x.ScheduledStartAtUtc, x.DueAtUtc, x.CompletedAtUtc))
+            .Select(x => new JobTicketListItemDto(
+                x.Id,
+                x.TicketNumber,
+                x.Title,
+                x.Status,
+                x.Priority,
+                x.CustomerId,
+                x.ServiceLocationId,
+                x.RequestedAtUtc,
+                x.ScheduledStartAtUtc,
+                x.DueAtUtc,
+                x.CompletedAtUtc,
+                x.Customer.Name,
+                x.ServiceLocation.LocationName,
+                x.Equipment != null ? x.Equipment.Name : null))
             .ToListAsync(cancellationToken);
     }
 
@@ -89,7 +103,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             }
         }
 
-        return await dbContext.JobTickets.Where(x => x.Id == id).Select(MapJobTicket).SingleOrDefaultAsync(cancellationToken);
+        return await LoadJobTicketAsync(id, cancellationToken);
     }
 
     public async Task<JobTicketDto> CreateAsync(CreateJobTicketDto request, CancellationToken cancellationToken = default)
@@ -130,12 +144,15 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             try
             {
                 await dbContext.SaveChangesAsync(cancellationToken);
-                return MapJobTicket.Compile().Invoke(entity);
             }
             catch (DbUpdateException) when (attempt < 2)
             {
                 dbContext.Entry(entity).State = EntityState.Detached;
+                continue;
             }
+
+            return await LoadJobTicketAsync(entity.Id, cancellationToken)
+                ?? throw new InvalidOperationException("Created job ticket could not be reloaded.");
         }
 
         throw new ValidationException("Unable to generate a unique job ticket number. Please retry.");
@@ -181,7 +198,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
         AddAudit(entity.Id, nameof(JobTicket), AuditActionType.Update, null, AuditJson(("Status", entity.Status.ToString())));
         await dbContext.SaveChangesAsync(cancellationToken);
-        return MapJobTicket.Compile().Invoke(entity);
+        return await LoadJobTicketAsync(entity.Id, cancellationToken);
     }
 
     public async Task<JobTicketDto?> ChangeStatusAsync(Guid id, ChangeJobTicketStatusDto request, CancellationToken cancellationToken = default)
@@ -204,7 +221,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         AddAudit(entity.Id, nameof(JobTicket), AuditActionType.StatusChange, AuditJson(("Status", oldStatus.ToString())), AuditJson(("Status", entity.Status.ToString())));
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapJobTicket.Compile().Invoke(entity);
+        return await LoadJobTicketAsync(entity.Id, cancellationToken);
     }
 
     public async Task<JobTicketDto?> ArchiveAsync(Guid id, ArchiveJobTicketDto request, CancellationToken cancellationToken = default)
@@ -226,7 +243,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
         AddAudit(entity.Id, nameof(JobTicket), AuditActionType.Delete, null, AuditJson(("ArchiveReason", archiveReason)));
         await dbContext.SaveChangesAsync(cancellationToken);
-        return MapJobTicket.Compile().Invoke(entity);
+        return await LoadJobTicketAsync(entity.Id, cancellationToken, includeArchived: true);
     }
 
     public async Task<IReadOnlyList<JobTicketAssignmentDto>> ListAssignmentsAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
@@ -909,6 +926,21 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         });
     }
 
+    private async Task<JobTicketDto?> LoadJobTicketAsync(
+        Guid id,
+        CancellationToken cancellationToken,
+        bool includeArchived = false)
+    {
+        var query = includeArchived
+            ? dbContext.JobTickets.IgnoreQueryFilters()
+            : dbContext.JobTickets.AsQueryable();
+
+        return await query
+            .Where(x => x.Id == id)
+            .Select(MapJobTicket)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
     private static readonly System.Linq.Expressions.Expression<Func<JobTicket, JobTicketDto>> MapJobTicket = x => new JobTicketDto(
         x.Id,
         x.TicketNumber,
@@ -932,7 +964,15 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         x.BillingContactEmail,
         x.InternalNotes,
         x.CustomerFacingNotes,
-        x.ArchiveReason);
+        x.ArchiveReason,
+        x.Customer.Name,
+        x.ServiceLocation.LocationName,
+        x.BillingPartyCustomer.Name,
+        x.Equipment != null ? x.Equipment.Name : null,
+        x.Equipment != null ? x.Equipment.EquipmentNumber : null,
+        x.AssignedManagerEmployee != null
+            ? x.AssignedManagerEmployee.FirstName + " " + x.AssignedManagerEmployee.LastName
+            : null);
 
     private static System.Linq.Expressions.Expression<Func<JobTicketPart, JobTicketPartDto>> MapJobTicketPart(bool includePricing) => x => new JobTicketPartDto(
         x.Id,
@@ -992,7 +1032,10 @@ public sealed record JobTicketListItemDto(
     DateTime? RequestedAtUtc,
     DateTime? ScheduledStartAtUtc,
     DateTime? DueAtUtc,
-    DateTime? CompletedAtUtc);
+    DateTime? CompletedAtUtc,
+    string CustomerName,
+    string ServiceLocationName,
+    string? EquipmentName);
 
 public sealed record JobTicketDto(
     Guid Id,
@@ -1017,7 +1060,13 @@ public sealed record JobTicketDto(
     string? BillingContactEmail,
     string? InternalNotes,
     string? CustomerFacingNotes,
-    string? ArchiveReason);
+    string? ArchiveReason,
+    string CustomerName,
+    string ServiceLocationName,
+    string BillingPartyCustomerName,
+    string? EquipmentName,
+    string? EquipmentNumber,
+    string? AssignedManagerEmployeeName);
 
 public sealed record CreateJobTicketDto(
     Guid CustomerId,
