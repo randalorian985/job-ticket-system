@@ -41,14 +41,14 @@ import { activeDispatchStatusValues, getSafeManagerReturnContext } from "./manag
 type WorkbenchDrawer = "ticket" | "status" | "archive" | "part" | null;
 type WorkflowTab = "overview" | "dispatch" | "time" | "parts" | "files" | "closeout" | "activity";
 
-const workflowTabs: Array<{ value: WorkflowTab; label: string }> = [
-  { value: "overview", label: "Service Details" },
-  { value: "dispatch", label: "Dispatch" },
-  { value: "time", label: "Labor" },
-  { value: "parts", label: "Parts" },
-  { value: "files", label: "Files" },
-  { value: "closeout", label: "Invoice Review" },
-  { value: "activity", label: "History" },
+const workflowTabs: Array<{ value: WorkflowTab; label: string; description: string }> = [
+  { value: "overview", label: "Service Details", description: "Review the customer, location, equipment, scope, and billing details." },
+  { value: "dispatch", label: "Dispatch", description: "Manage technician assignments and dispatch readiness." },
+  { value: "time", label: "Labor", description: "Review work entries, time entries, and approval status." },
+  { value: "parts", label: "Parts", description: "Review parts used, requested, ordered, and awaiting approval." },
+  { value: "files", label: "Files", description: "Review job files, photos, and invoice attachments." },
+  { value: "closeout", label: "Invoice Review", description: "Review closeout requirements and invoice-ready totals." },
+  { value: "activity", label: "History", description: "Review ticket activity in chronological order." },
 ];
 
 const isWorkflowTab = (value: string | null): value is WorkflowTab =>
@@ -396,6 +396,8 @@ export function JobTicketDetailPage() {
   }, [assignmentLoadFailed, assignments, employeesById, job, leadAssignment]);
 
   const dispatchWarnings = dispatchReadiness.warnings;
+  const openDispatchChecks = dispatchReadiness.checks.filter((check) => !check.isReady);
+  const completedDispatchChecks = dispatchReadiness.checks.filter((check) => check.isReady);
   const nextDispatchFix = dispatchWarnings[0] ?? "All dispatch requirements are complete.";
 
   const closeoutReview = useMemo(() => {
@@ -1023,19 +1025,29 @@ export function JobTicketDetailPage() {
               <button
                 type="button"
                 className="secondary-button"
+                title="Open the browser print dialog for this job review."
                 onClick={() => window.print()}
               >
                 Print Job Review
               </button>
-              <button type="button" onClick={() => toggleDrawer("ticket")}>
+              <button
+                type="button"
+                title="Edit ticket details without leaving this workspace."
+                onClick={() => toggleDrawer("ticket")}
+              >
                 {activeDrawer === "ticket" ? "Close Ticket Editor" : "Edit Ticket"}
               </button>
-              <button type="button" onClick={() => toggleDrawer("status")}>
+              <button
+                type="button"
+                title="Review readiness warnings before changing ticket status."
+                onClick={() => toggleDrawer("status")}
+              >
                 {activeDrawer === "status" ? "Close Status Panel" : "Change Status"}
               </button>
               <button
                 type="button"
                 className="secondary-button"
+                title="Review archive impact and enter a reason before confirmation."
                 onClick={() => toggleDrawer("archive")}
               >
                 {activeDrawer === "archive" ? "Close Archive Panel" : "Archive Review"}
@@ -1110,6 +1122,7 @@ export function JobTicketDetailPage() {
                   aria-controls={`ticket-workflow-panel-${primaryWorkflowPanelNames[tab.value]}`}
                   aria-selected={activeTab === tab.value}
                   tabIndex={activeTab === tab.value ? 0 : -1}
+                  title={tab.description}
                   className={activeTab === tab.value ? "ticket-workflow-tab-active" : ""}
                   key={tab.value}
                   onClick={() => selectWorkflowTab(tab.value)}
@@ -1158,10 +1171,38 @@ export function JobTicketDetailPage() {
             <aside className="ticket-workbench-rail no-print" aria-label="ticket actions and dispatch requirements" hidden={workflowFocusMode}>
               <section className="workbench-panel workbench-panel-compact">
                 <h3>Ticket Actions</h3>
-                <button type="button" onClick={() => toggleDrawer("ticket")}>Edit Ticket</button>
-                <button type="button" onClick={() => toggleDrawer("status")}>Change Status</button>
-                <button type="button" onClick={() => openWorkflowDrawer("parts", "part")}>Open Add / Request Part Panel</button>
-                <button type="button" className="secondary-button" onClick={() => toggleDrawer("archive")}>Archive Review</button>
+                <div className="ticket-action-grid">
+                  <button
+                    type="button"
+                    title="Edit customer, scheduling, service, and billing details."
+                    onClick={() => toggleDrawer("ticket")}
+                  >
+                    Edit Ticket
+                  </button>
+                  <button
+                    type="button"
+                    title="Review warnings and choose the ticket's next status."
+                    onClick={() => toggleDrawer("status")}
+                  >
+                    Change Status
+                  </button>
+                  <button
+                    type="button"
+                    className="action-wide"
+                    title="Record a used part or create a request for office ordering."
+                    onClick={() => openWorkflowDrawer("parts", "part")}
+                  >
+                    Open Add / Request Part Panel
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button action-wide"
+                    title="Review archive impact and enter a reason before confirmation."
+                    onClick={() => toggleDrawer("archive")}
+                  >
+                    Archive Review
+                  </button>
+                </div>
               </section>
 
               <section className="workbench-panel workbench-panel-compact">
@@ -1186,16 +1227,52 @@ export function JobTicketDetailPage() {
                 </div>
               </section>
 
-              <section className="workbench-panel workbench-panel-compact">
-                <h3>Dispatch Requirements</h3>
-                <ul className="check-list" aria-label="dispatch readiness checks">
-                  {dispatchReadiness.checks.map((check) => (
-                    <li className={check.isReady ? "check-item-ready" : "check-item-open"} key={check.label}>
-                      <strong>{check.label}</strong>
-                      <span>{check.detail}</span>
-                    </li>
-                  ))}
-                </ul>
+              <section className="workbench-panel workbench-panel-compact dispatch-requirements-panel">
+                <div className="dispatch-requirements-heading">
+                  <h3>Dispatch Requirements</h3>
+                  <span className="tooltip-anchor">
+                    <button
+                      type="button"
+                      className="help-tooltip-trigger"
+                      aria-label="About dispatch requirements"
+                      aria-describedby="dispatch-requirements-tooltip"
+                    >
+                      i
+                    </button>
+                    <span id="dispatch-requirements-tooltip" className="control-tooltip" role="tooltip">
+                      These checks identify missing information before dispatch review. Completed checks stay available below.
+                    </span>
+                  </span>
+                </div>
+                <div className={openDispatchChecks.length ? "dispatch-readiness-summary dispatch-readiness-summary-open" : "dispatch-readiness-summary dispatch-readiness-summary-ready"}>
+                  <strong>{openDispatchChecks.length ? `${openDispatchChecks.length} open` : "Ready"}</strong>
+                  <span>{dispatchReadiness.readyCount} of {dispatchReadiness.checks.length} complete</span>
+                </div>
+                {openDispatchChecks.length ? (
+                  <ul className="check-list dispatch-open-checks" aria-label="open dispatch readiness checks">
+                    {openDispatchChecks.map((check) => (
+                      <li className="check-item-open" key={check.label}>
+                        <strong>{check.label}</strong>
+                        <span>{check.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="dispatch-ready-message">No dispatch blockers are currently visible.</p>
+                )}
+                <details className="dispatch-completed-details">
+                  <summary>
+                    Review {completedDispatchChecks.length} completed requirement{completedDispatchChecks.length === 1 ? "" : "s"}
+                  </summary>
+                  <ul className="check-list" aria-label="completed dispatch readiness checks">
+                    {completedDispatchChecks.map((check) => (
+                      <li className="check-item-ready" key={check.label}>
+                        <strong>{check.label}</strong>
+                        <span>{check.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               </section>
             </aside>
 

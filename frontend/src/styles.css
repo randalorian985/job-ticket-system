@@ -1544,7 +1544,7 @@ td {
   align-items: start;
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(270px, 320px) minmax(0, 1fr);
 }
 
 .ticket-workbench-rail,
@@ -1568,6 +1568,21 @@ td {
 
 .workbench-panel-compact {
   gap: 0.7rem;
+}
+
+.ticket-action-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ticket-action-grid button {
+  min-width: 0;
+  width: 100%;
+}
+
+.ticket-action-grid .action-wide {
+  grid-column: 1 / -1;
 }
 
 .workbench-panel-compact h3,
@@ -1613,6 +1628,11 @@ td {
 .rail-facts {
   display: grid;
   gap: 0.55rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rail-facts > div {
+  padding: 0.6rem;
 }
 
 .check-list li {
@@ -1858,9 +1878,11 @@ td {
 
 .ticket-recommended-action {
   align-items: center;
-  background: #eff6ff;
-  border: 1px solid #93c5fd;
+  background: #f8fbff;
+  border: 1px solid #9ec5ee;
+  border-left: 4px solid #3157c8;
   border-radius: 8px;
+  box-shadow: 0 5px 16px rgba(49, 87, 200, 0.08);
   display: flex;
   gap: 1rem;
   justify-content: space-between;
@@ -1892,29 +1914,147 @@ td {
   position: relative;
 }
 
-.control-tooltip {
-  background: #172033;
+.tooltip-anchor .control-tooltip {
+  background: #fff7d6;
+  border: 1px solid #c88a00;
   border-radius: 5px;
-  bottom: calc(100% + 0.45rem);
-  color: #fff;
+  box-shadow: 0 10px 24px rgba(36, 38, 43, 0.2);
+  box-sizing: border-box;
+  color: #352300;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 750;
+  line-height: 1.35;
   opacity: 0;
   padding: 0.45rem 0.6rem;
   pointer-events: none;
   position: absolute;
   right: 0;
   text-align: center;
-  transition: opacity 120ms ease;
+  text-transform: none;
+  top: calc(100% + 0.45rem);
   visibility: hidden;
   width: min(17rem, calc(100vw - 2rem));
   z-index: 20;
+}
+
+.tooltip-anchor .control-tooltip::after {
+  border-bottom: 0.4rem solid #c88a00;
+  border-left: 0.4rem solid transparent;
+  border-right: 0.4rem solid transparent;
+  content: "";
+  bottom: 100%;
+  position: absolute;
+  right: 1.1rem;
 }
 
 .tooltip-anchor:hover .control-tooltip,
 .tooltip-anchor:focus-within .control-tooltip {
   opacity: 1;
   visibility: visible;
+}
+
+.dispatch-requirements-heading {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.help-tooltip-trigger {
+  background: #ffffff;
+  border: 1px solid #6684ad;
+  border-radius: 999px;
+  color: #194f86;
+  font-size: 0.78rem;
+  font-weight: 900;
+  height: 1.65rem;
+  min-height: 1.65rem;
+  padding: 0;
+  width: 1.65rem !important;
+}
+
+.help-tooltip-trigger:hover:not(:disabled),
+.help-tooltip-trigger:focus-visible {
+  background: #e9f3ff;
+  border-color: #194f86;
+  color: #123c67;
+}
+
+.dispatch-readiness-summary {
+  align-items: center;
+  border: 1px solid;
+  border-radius: 7px;
+  display: flex;
+  gap: 0.55rem;
+  justify-content: space-between;
+  padding: 0.55rem 0.65rem;
+}
+
+.dispatch-readiness-summary strong {
+  font-size: 0.9rem;
+}
+
+.dispatch-readiness-summary span {
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.dispatch-readiness-summary-open {
+  background: #fff8e7;
+  border-color: #dfb95c;
+  color: #6d4700;
+}
+
+.dispatch-readiness-summary-ready {
+  background: #edf9f3;
+  border-color: #86c9a8;
+  color: #075d3c;
+}
+
+.dispatch-open-checks .check-item-open {
+  background: #fff8e7;
+  border: 1px solid #edd08a;
+  color: #6d4700;
+}
+
+.dispatch-requirements-panel .check-item-ready {
+  background: #edf9f3;
+  border: 1px solid #b9dfcc;
+  color: #075d3c;
+}
+
+.dispatch-ready-message {
+  color: #075d3c;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.dispatch-completed-details {
+  border-top: 1px solid #e1e7ef;
+  padding-top: 0.6rem;
+}
+
+.dispatch-completed-details summary {
+  color: #315779;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.dispatch-completed-details[open] summary {
+  margin-bottom: 0.55rem;
+}
+
+.dispatch-completed-details .check-list {
+  gap: 0.4rem;
+}
+
+.dispatch-completed-details .check-list li {
+  padding: 0.45rem 0.55rem;
+}
+
+.dispatch-completed-details .check-list li span {
+  font-size: 0.82rem;
 }
 
 .workflow-focus-heading {
