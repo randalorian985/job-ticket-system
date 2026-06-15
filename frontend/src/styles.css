@@ -1887,6 +1887,73 @@ td {
   width: auto;
 }
 
+.tooltip-anchor {
+  display: inline-flex;
+  position: relative;
+}
+
+.control-tooltip {
+  background: #172033;
+  border-radius: 5px;
+  bottom: calc(100% + 0.45rem);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0;
+  padding: 0.45rem 0.6rem;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  transition: opacity 120ms ease;
+  visibility: hidden;
+  width: min(17rem, calc(100vw - 2rem));
+  z-index: 20;
+}
+
+.tooltip-anchor:hover .control-tooltip,
+.tooltip-anchor:focus-within .control-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.workflow-focus-heading {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #d7dee8;
+  border-radius: 7px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.workflow-focus-heading h2,
+.workflow-focus-heading p {
+  margin: 0;
+}
+
+.ticket-workbench-layout-focused {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.master-data-screen-tabs {
+  border-bottom: 1px solid #d7dee8;
+}
+
+.master-data-screen-tabs [role="tablist"] {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.55rem;
+}
+
+.master-data-screen-tabs button {
+  flex: 0 0 auto;
+  min-height: 2.25rem;
+  width: auto;
+}
+
 .ticket-workflow-tabs {
   background: #ffffff;
   border: 1px solid #d6dde8;
@@ -2178,4 +2245,8 @@ td {
   .action-group button {
     flex: 1 1 8rem;
   }
+}
+/* Native hidden must win over component display rules. */
+[hidden] {
+  display: none !important;
 }

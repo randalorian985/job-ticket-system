@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../../api/httpClient'
 import { usersApi } from '../../../api/usersApi'
@@ -34,7 +34,7 @@ const userRequestErrorMessage = (requestError: unknown, fallback: string) => {
 }
 
 export function UsersPage() {
-  const usersListRef = useRef<HTMLElement | null>(null)
+  const [activeScreen, setActiveScreen] = useState<'list' | 'editor'>('list')
   const [items, setItems] = useState<UserDto[]>([])
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -58,10 +58,6 @@ export function UsersPage() {
   }
 
   useEffect(() => { load() }, [])
-
-  const showUsersList = () => {
-    usersListRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
-  }
 
   const validateDraft = () => {
     if (!draft.userName.trim()) return 'Username is required.'
@@ -110,7 +106,7 @@ export function UsersPage() {
       setEditing(null)
       setDraft(emptyUserDraft())
       await load()
-      showUsersList()
+      setActiveScreen('list')
     } catch (requestError) {
       setError(userRequestErrorMessage(requestError, editing ? 'Unable to update user.' : 'Unable to create user.'))
     } finally {
@@ -130,12 +126,22 @@ export function UsersPage() {
       role: user.role,
       password: ''
     })
+    setActiveScreen('editor')
+  }
+
+  const startCreate = () => {
+    setEditing(null)
+    setDraft(emptyUserDraft())
+    setError(null)
+    setSuccess(null)
+    setActiveScreen('editor')
   }
 
   const cancelEdit = () => {
     setEditing(null)
     setDraft(emptyUserDraft())
     setError(null)
+    setActiveScreen('list')
   }
 
   const archiveUser = async (user: UserDto) => {
@@ -149,7 +155,6 @@ export function UsersPage() {
       await usersApi.archive(user.id)
       setSuccess(`${userDisplayName(user)} was deactivated.`)
       await load()
-      showUsersList()
     } catch (requestError) {
       setError(userRequestErrorMessage(requestError, 'Unable to deactivate user.'))
     } finally {
@@ -175,7 +180,6 @@ export function UsersPage() {
       await usersApi.resetPassword(user.id, { newPassword })
       setPasswordByUserId((prev) => ({ ...prev, [user.id]: '' }))
       setSuccess(`Password was reset for ${userDisplayName(user)}.`)
-      showUsersList()
     } catch (requestError) {
       setError(userRequestErrorMessage(requestError, 'Unable to reset password.'))
     } finally {
@@ -185,13 +189,23 @@ export function UsersPage() {
 
   return (
     <section className="stack">
-      <article className="card stack">
-        <div>
-          <p className="muted"><Link to="/manage">Service Operations</Link> / User Management</p>
-          <h2>User Management</h2>
-          <p className="muted">Admin-only controls for account access, roles, deactivation, and password reset.</p>
+      <header className="card stack">
+        <div className="report-results-heading">
+          <div>
+            <p className="muted"><Link to="/manage">Service Operations</Link> / User Management</p>
+            <h2>User Management</h2>
+            <p className="muted">Admin-only controls for account access, roles, deactivation, and password reset.</p>
+          </div>
+          {activeScreen === 'list' ? <button type="button" onClick={startCreate}>Create user</button> : null}
         </div>
-        <Errorable error={error} />
+      </header>
+      <Errorable error={error} />
+
+      <article className="card stack" hidden={activeScreen !== 'editor'}>
+        <div>
+          <h3>{editing ? `Edit ${userDisplayName(editing)}` : 'Create user account'}</h3>
+          <p className="muted">Complete this focused account form, then return to the user list.</p>
+        </div>
         <form onSubmit={save} className="stack" aria-label={editing ? 'Edit user' : 'Create user'}>
           <div className="form-grid">
             <label>Username<input aria-label="Username" value={draft.userName} onChange={(e) => setDraft({ ...draft, userName: e.target.value })} /></label>
@@ -203,12 +217,12 @@ export function UsersPage() {
           </div>
           <div className="row form-actions">
             <button type="submit" disabled={isSaving}>{isSaving ? 'Saving user…' : editing ? 'Save user changes' : 'Create user'}</button>
-            {editing ? <button type="button" className="secondary-button" onClick={cancelEdit} disabled={isSaving}>Cancel edit</button> : null}
+            <button type="button" className="secondary-button" onClick={cancelEdit} disabled={isSaving}>Back to users</button>
           </div>
         </form>
       </article>
 
-      <article className="card stack" aria-label="user account results" aria-live="polite" ref={usersListRef} tabIndex={-1}>
+      <article className="card stack" aria-label="user account results" aria-live="polite" hidden={activeScreen !== 'list'}>
         <div className="report-results-heading">
           <div>
             <h3>Users</h3>
@@ -217,7 +231,7 @@ export function UsersPage() {
         </div>
         {isLoading ? <p className="muted">Loading user accounts…</p> : null}
         {success ? <p className="success action-feedback-panel">{success}</p> : null}
-        {!isLoading && items.length === 0 && !error ? <p className="muted">No users have been created yet. Create the first user above.</p> : null}
+        {!isLoading && items.length === 0 && !error ? <p className="muted">No users have been created yet. Create the first user to begin account setup.</p> : null}
         {items.length > 0 ? (
           <div className="table-scroll">
             <table>

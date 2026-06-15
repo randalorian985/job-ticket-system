@@ -38,15 +38,11 @@ const inactiveUser = {
 }
 
 const renderUsers = () => renderWithRouter(<UsersPage />)
-const scrollIntoViewMock = vi.fn()
+const openCreateScreen = () => fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
 
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
-  Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
-    configurable: true,
-    value: scrollIntoViewMock
-  })
   vi.mocked(usersApi.list).mockResolvedValue([activeUser, inactiveUser] as any)
   vi.mocked(usersApi.create).mockResolvedValue(activeUser as any)
   vi.mocked(usersApi.update).mockResolvedValue(activeUser as any)
@@ -73,7 +69,7 @@ describe('UsersPage', () => {
     vi.mocked(usersApi.list).mockResolvedValueOnce([] as any)
     const view = renderUsers()
 
-    expect(await screen.findByText('No users have been created yet. Create the first user above.')).toBeInTheDocument()
+    expect(await screen.findByText('No users have been created yet. Create the first user to begin account setup.')).toBeInTheDocument()
 
     vi.mocked(usersApi.list).mockRejectedValueOnce(new ApiError('Forbidden', 403))
     view.unmount()
@@ -85,6 +81,7 @@ describe('UsersPage', () => {
   it('validates create user payloads before calling the API', async () => {
     renderUsers()
 
+    openCreateScreen()
     fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
     expect(await screen.findByText('Username is required.')).toBeInTheDocument()
     expect(usersApi.create).not.toHaveBeenCalled()
@@ -105,6 +102,7 @@ describe('UsersPage', () => {
       .mockResolvedValueOnce([{ ...activeUser }, { ...activeUser, id: 'user-3', userName: 'newtech', firstName: 'New', lastName: 'Tech' }] as any)
     renderUsers()
 
+    openCreateScreen()
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'newtech' } })
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'newtech@example.com' } })
     fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'New' } })
@@ -123,9 +121,9 @@ describe('UsersPage', () => {
     }))
     expect(await screen.findByText('New Tech was created.')).toBeInTheDocument()
     expect(within(screen.getByLabelText('user account results')).getByText('New Tech was created.')).toBeInTheDocument()
-    expect(scrollIntoViewMock).toHaveBeenCalled()
 
     vi.mocked(usersApi.create).mockRejectedValueOnce(new ApiError('UserName is already in use.', 400))
+    openCreateScreen()
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'casey' } })
     fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Duplicate' } })
     fireEvent.change(screen.getByLabelText('Last name'), { target: { value: 'User' } })
@@ -175,7 +173,6 @@ describe('UsersPage', () => {
     await waitFor(() => expect(usersApi.archive).toHaveBeenCalledWith('user-1'))
     expect(await screen.findByText('Casey Tech was deactivated.')).toBeInTheDocument()
     expect(within(screen.getByLabelText('user account results')).getByText('Casey Tech was deactivated.')).toBeInTheDocument()
-    expect(scrollIntoViewMock).toHaveBeenCalled()
   })
 
   it('confirms reset password, validates password input, and calls API without logging the password', async () => {
@@ -192,6 +189,5 @@ describe('UsersPage', () => {
     await waitFor(() => expect(usersApi.resetPassword).toHaveBeenCalledWith('user-1', { newPassword: 'NewTemp123!' }))
     expect(await screen.findByText('Password was reset for Casey Tech.')).toBeInTheDocument()
     expect(within(screen.getByLabelText('user account results')).getByText('Password was reset for Casey Tech.')).toBeInTheDocument()
-    expect(scrollIntoViewMock).toHaveBeenCalled()
   })
 })

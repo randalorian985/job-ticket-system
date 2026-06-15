@@ -14,6 +14,6 @@ Manager job queues use URL query parameters so operational views are shareable a
 
 Unsupported filter values and unrelated query parameters are removed when the queue loads, keeping the URL and controlled filter inputs in sync.
 
-Ticket-detail links may include `returnTo` so breadcrumbs return the user to the exact queue; the visible label is derived from the validated internal path rather than URL-provided display text. Detail workflow tabs use `tab` with one of `overview`, `dispatch`, `time`, `parts`, `files`, `closeout`, or `activity`.
+Ticket-detail links may include `returnTo` so breadcrumbs return the user to the exact queue; the visible label is derived from the validated internal path rather than URL-provided display text. Detail workflow tabs use `tab` with one of `overview`, `dispatch`, `time`, `parts`, `files`, `closeout`, or `activity`. The recommended action also sets `view=workflow` to open the selected tab as a focused workflow screen.
 
 All return paths must remain internal to `/manage`; invalid or missing return paths fall back to `/manage/job-tickets`.

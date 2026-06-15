@@ -662,8 +662,13 @@ describe('JobTicketDetailPage', () => {
     expect(recommendation).toHaveTextContent('Some loaded time entries still need approval review.')
     expect(recommendation).not.toHaveTextContent('Ticket is outside the active dispatch queue.')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open workflow' }))
+    const openWorkflowButton = screen.getByRole('button', { name: 'Open workflow' })
+    expect(openWorkflowButton).toHaveAttribute('title', 'Open the Invoice Review workflow screen')
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Open the recommended Invoice Review screen for this ticket.')
+    fireEvent.click(openWorkflowButton)
     expect(screen.getByRole('tab', { name: 'Invoice Review' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('button', { name: 'Back to ticket overview' })).toBeInTheDocument()
+    expect(screen.getByLabelText('invoice review')).toHaveFocus()
   })
 
 })
