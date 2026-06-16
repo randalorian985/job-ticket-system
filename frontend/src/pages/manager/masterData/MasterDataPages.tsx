@@ -61,6 +61,25 @@ const emptyEquipmentDraft: CreateEquipmentDto = { customerId: '', serviceLocatio
 const emptyPartDraft: CreatePartDto = { partCategoryId: '', partNumber: '', name: '', unitCost: 0, unitPrice: 0, quantityOnHand: 0, reorderThreshold: 0 }
 const emptyVendorDraft: CreateVendorDto = { name: '' }
 const emptyPartCategoryDraft: CreatePartCategoryDto = { name: '', description: '' }
+const serviceLocationDraftFromFilter = (customers: CustomerDto[], customerFilter: string): CreateServiceLocationDto => ({
+  ...emptyServiceLocationDraft,
+  customerId: activeFilterId(customers, customerFilter) || null
+})
+const equipmentDraftFromFilter = (customers: CustomerDto[], customerFilter: string): CreateEquipmentDto => ({
+  ...emptyEquipmentDraft,
+  customerId: activeFilterId(customers, customerFilter),
+  serviceLocationId: ''
+})
+const partDraftFromFilters = (
+  categories: PartCategoryDto[],
+  partCategoryFilter: string,
+  vendors: VendorDto[],
+  partVendorFilter: string
+): CreatePartDto => ({
+  ...emptyPartDraft,
+  partCategoryId: activeFilterId(categories, partCategoryFilter),
+  vendorId: activeFilterId(vendors, partVendorFilter) || null
+})
 
 export function CustomersPage() {
   const [editorOpen, setEditorOpen] = useState(true)
@@ -234,7 +253,7 @@ export function ServiceLocationsPage() {
       setSuccess(null)
       if (editId) await masterDataApi.updateServiceLocation(editId, draft)
       else await masterDataApi.createServiceLocation(draft)
-      setDraft({ ...emptyServiceLocationDraft, customerId: activeFilterId(customers, customerFilter) || null }); setEditId(null); await load()
+      setDraft(serviceLocationDraftFromFilter(customers, customerFilter)); setEditId(null); await load()
       setEditorOpen(false)
       setSuccess(`Service location "${locationName}" was ${action}.`)
     } catch (requestError) {
@@ -243,7 +262,7 @@ export function ServiceLocationsPage() {
     }
   }
   const closeEditor = () => {
-    setDraft({ ...emptyServiceLocationDraft, customerId: customerFilter || null })
+    setDraft(serviceLocationDraftFromFilter(customers, customerFilter))
     setEditId(null)
     setError(null)
     setSuccess(null)
@@ -264,7 +283,7 @@ export function ServiceLocationsPage() {
           <h2>Service Locations</h2>
           <p className="muted">{editorOpen ? (editId ? 'Edit service-location details.' : 'Create a service location.') : 'Search and manage service locations.'}</p>
         </div>
-        {!editorOpen ? <button type="button" onClick={() => { setDraft({ ...emptyServiceLocationDraft, customerId: customerFilter || null }); setEditId(null); setError(null); setSuccess(null); setEditorOpen(true) }}>Create Location</button> : null}
+        {!editorOpen ? <button type="button" onClick={() => { setDraft(serviceLocationDraftFromFilter(customers, customerFilter)); setEditId(null); setError(null); setSuccess(null); setEditorOpen(true) }}>Create Location</button> : null}
       </div>
       <Errorable error={error} />
       {success ? <p className="success action-feedback-panel">{success}</p> : null}
@@ -386,7 +405,7 @@ export function EquipmentPage() {
       setSuccess(null)
       if (editId) await masterDataApi.updateEquipment(editId, draft)
       else await masterDataApi.createEquipment(draft)
-      setDraft({ ...emptyEquipmentDraft, customerId: activeFilterId(customers, customerFilter), serviceLocationId: '' })
+      setDraft(equipmentDraftFromFilter(customers, customerFilter))
       setEditId(null)
       await load()
       setEditorOpen(false)
@@ -397,7 +416,7 @@ export function EquipmentPage() {
     }
   }
   const closeEditor = () => {
-    setDraft({ ...emptyEquipmentDraft, customerId: customerFilter, serviceLocationId: '' })
+    setDraft(equipmentDraftFromFilter(customers, customerFilter))
     setEditId(null)
     setError(null)
     setSuccess(null)
@@ -418,7 +437,7 @@ export function EquipmentPage() {
           <h2>Equipment</h2>
           <p className="muted">{editorOpen ? (editId ? 'Edit equipment details.' : 'Create an equipment record.') : 'Search and manage equipment records.'}</p>
         </div>
-        {!editorOpen ? <button type="button" onClick={() => { setDraft({ ...emptyEquipmentDraft, customerId: customerFilter, serviceLocationId: '' }); setEditId(null); setError(null); setSuccess(null); setEditorOpen(true) }}>Create Equipment</button> : null}
+        {!editorOpen ? <button type="button" onClick={() => { setDraft(equipmentDraftFromFilter(customers, customerFilter)); setEditId(null); setError(null); setSuccess(null); setEditorOpen(true) }}>Create Equipment</button> : null}
       </div>
       <Errorable error={error} />
       {success ? <p className="success action-feedback-panel">{success}</p> : null}
@@ -595,7 +614,7 @@ export function PartsPage() {
   }
 
   const closeEditor = () => {
-    setDraft({ ...emptyPartDraft, partCategoryId: partCategoryFilter, vendorId: partVendorFilter || null })
+    setDraft(partDraftFromFilters(categories, partCategoryFilter, vendors, partVendorFilter))
     setVendorDraft(emptyVendorDraft)
     setCategoryDraft(emptyPartCategoryDraft)
     setEditId(null)
@@ -624,7 +643,7 @@ export function PartsPage() {
       setSuccess(null)
       if (editId) await masterDataApi.updatePart(editId, draft)
       else await masterDataApi.createPart(draft)
-      setDraft({ ...emptyPartDraft, partCategoryId: activeFilterId(categories, partCategoryFilter), vendorId: activeFilterId(vendors, partVendorFilter) || null })
+      setDraft(partDraftFromFilters(categories, partCategoryFilter, vendors, partVendorFilter))
       setEditId(null)
       await load()
       setEditorOpen(false)
@@ -721,7 +740,7 @@ export function PartsPage() {
               setError(null)
               setSuccess(null)
               if (activeScreen === 'parts') {
-                setDraft({ ...emptyPartDraft, partCategoryId: partCategoryFilter, vendorId: partVendorFilter || null })
+                setDraft(partDraftFromFilters(categories, partCategoryFilter, vendors, partVendorFilter))
                 setEditId(null)
               } else if (activeScreen === 'vendors') {
                 setVendorDraft(emptyVendorDraft)
