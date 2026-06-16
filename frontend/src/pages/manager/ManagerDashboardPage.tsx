@@ -43,6 +43,7 @@ export function ManagerDashboardPage() {
     { to: '/manage/service-locations', label: 'Service Locations' },
     { to: '/manage/equipment', label: 'Equipment' },
     { to: '/manage/parts', label: 'Parts' },
+    { to: '/manage/part-requests', label: 'Part Requests' },
     { to: '/manage/time-approval', label: 'Time Approval' },
     { to: '/manage/parts-approval', label: 'Parts Approval' },
     { to: '/manage/reports', label: 'Reports' }
@@ -153,6 +154,20 @@ export function ManagerDashboardPage() {
         </div>
       </header>
 
+      <section className="operations-panel operations-shortcut-panel" aria-label="manager workspace shortcuts">
+        <div className="operations-shortcut-heading">
+          <h3>Workspace Shortcuts</h3>
+          <span>Jump to common Manager/Admin work without scrolling the dashboard.</span>
+        </div>
+        <div className="dashboard-grid operations-link-grid">
+          {links.map((item) => (
+            <Link key={item.to} className="nav-card operations-link" to={item.to}>
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <section className="operations-kpi-grid" aria-label="operations summary">
         {isLoadingSummary ? <p className="muted" role="status">Loading operations summary...</p> : null}
         {summaryError ? <p className="error">{summaryError}</p> : null}
@@ -217,16 +232,6 @@ export function ManagerDashboardPage() {
         </section>
       ) : null}
 
-      <section className="operations-panel operations-nav-panel" aria-label="manager workspace links">
-        <h3>Manager Workspace</h3>
-        <div className="dashboard-grid operations-link-grid">
-          {links.map((item) => (
-            <Link key={item.to} className="nav-card operations-link" to={item.to}>
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </section>
     </section>
   )
 }
