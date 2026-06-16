@@ -98,6 +98,24 @@ describe('Manager/Admin master-data filter defaults', () => {
     await waitFor(() => expect(container.querySelector('form select')).toHaveValue(''))
   })
 
+  it('does not seed service-location create buttons from archived customer filters', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+      { id: 'c1', name: 'Acme', isArchived: false },
+      { id: 'c-archived', name: 'Archived Customer', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+      { id: 'l1', customerId: 'c1', companyName: 'Acme', locationName: 'HQ', addressLine1: '100 Main', city: 'Tulsa', state: 'OK', postalCode: '74101', country: 'USA', isActive: true, isArchived: false }
+    ] as any)
+
+    render(<ServiceLocationsPage />)
+    fireEvent.change(await screen.findByLabelText('Customer'), { target: { value: 'c-archived' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Location' }))
+
+    const serviceLocationCustomerSelect = screen.getByLabelText('Related customer')
+    expect(serviceLocationCustomerSelect).toHaveValue('')
+    expect(within(serviceLocationCustomerSelect).queryByRole('option', { name: 'Archived Customer' })).not.toBeInTheDocument()
+  })
+
   it('prefills blank equipment create forms from the active customer filter', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l2', customerId: 'c2', locationName: 'Depot' }] as any)
@@ -179,6 +197,29 @@ describe('Manager/Admin master-data filter defaults', () => {
     fireEvent.change(await screen.findByLabelText('Customer'), { target: { value: 'c-archived' } })
 
     await waitFor(() => expect(screen.getByLabelText('Primary customer')).toHaveValue(''))
+    expect(screen.getByLabelText('Service location')).toHaveValue('')
+  })
+
+  it('does not seed equipment create buttons from archived customer filters', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+      { id: 'c1', name: 'Acme', isArchived: false },
+      { id: 'c-archived', name: 'Archived Customer', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+      { id: 'l1', customerId: 'c1', locationName: 'Acme shop', isArchived: false },
+      { id: 'l-archived', customerId: 'c-archived', locationName: 'Old yard', isArchived: false }
+    ] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([
+      { id: 'e1', name: 'Pump', customerId: 'c1', serviceLocationId: 'l1', isArchived: false }
+    ] as any)
+
+    render(<EquipmentPage />)
+    fireEvent.change(await screen.findByLabelText('Customer'), { target: { value: 'c-archived' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Equipment' }))
+
+    const customerSelect = screen.getByLabelText('Primary customer')
+    expect(customerSelect).toHaveValue('')
+    expect(within(customerSelect).queryByRole('option', { name: 'Archived Customer' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('Service location')).toHaveValue('')
   })
 
@@ -273,5 +314,32 @@ describe('Manager/Admin master-data filter defaults', () => {
 
     await waitFor(() => expect(within(partsCard).getByLabelText('Part category')).toHaveValue(''))
     expect(within(partsCard).getByLabelText('Preferred vendor')).toHaveValue('')
+  })
+
+  it('does not seed part create buttons from archived category or vendor filters', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([
+      { id: 'p1', partCategoryId: 'pc1', vendorId: 'v1', partNumber: 'FLT-1', name: 'Filter', unitCost: 1, unitPrice: 2, quantityOnHand: 3, reorderThreshold: 1, isArchived: false }
+    ] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([
+      { id: 'v1', name: 'Vendor A', isArchived: false },
+      { id: 'v-archived', name: 'Archived Vendor', isArchived: true }
+    ] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([
+      { id: 'pc1', name: 'Filters', isArchived: false },
+      { id: 'pc-archived', name: 'Archived Category', isArchived: true }
+    ] as any)
+
+    render(<PartsPage />)
+    const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
+    fireEvent.change(await within(partsCard).findByLabelText('Category'), { target: { value: 'pc-archived' } })
+    fireEvent.change(within(partsCard).getByLabelText('Vendor'), { target: { value: 'v-archived' } })
+    fireEvent.click(within(partsCard).getByRole('button', { name: 'Create Part' }))
+
+    const categorySelect = within(partsCard).getByLabelText('Part category')
+    const vendorSelect = within(partsCard).getByLabelText('Preferred vendor')
+    expect(categorySelect).toHaveValue('')
+    expect(vendorSelect).toHaveValue('')
+    expect(within(categorySelect).queryByRole('option', { name: 'Archived Category' })).not.toBeInTheDocument()
+    expect(within(vendorSelect).queryByRole('option', { name: 'Archived Vendor' })).not.toBeInTheDocument()
   })
 })
