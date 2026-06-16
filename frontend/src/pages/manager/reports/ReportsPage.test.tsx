@@ -239,6 +239,20 @@ describe('ReportsPage', () => {
     expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
   })
 
+  it('validates report date ranges before calling report APIs', async () => {
+    renderWithRouter(<ReportsPage />)
+
+    const laborByJobCard = screen.getByLabelText('Labor by Job report')
+    fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job from date filter'), { target: { value: '2026-05-10' } })
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job to date filter'), { target: { value: '2026-05-01' } })
+    fireEvent.click(within(laborByJobCard).getByRole('button', { name: 'Run Labor by Job' }))
+
+    expect(await screen.findByText('From date must be on or before the to date.')).toBeInTheDocument()
+    expect(reportsApi.getLaborByJob).not.toHaveBeenCalled()
+    expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
+  })
+
   it('keeps invoice-ready reporting aligned with the implemented API response and export columns', async () => {
     vi.mocked(reportsApi.getInvoiceReadySummary).mockResolvedValue({
       jobTicketId: 'job-invoice-1',

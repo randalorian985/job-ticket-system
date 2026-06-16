@@ -68,12 +68,19 @@ Manager/Admin assignment stabilization is merged and protected on `main`:
 
 Manager/Admin Phase 3C reporting polish and export workflow is merged and protected on `main`:
 - reports are organized into invoice/closeout, labor/parts, and service-history sections;
-- shared filters, source-ID validation, loading, empty, and error states are implemented on the existing Manager/Admin reports hub;
+- shared filters, source-ID validation, date/paging validation, loading, empty, and error states are implemented on the existing Manager/Admin reports hub;
 - report tables remain export-friendly and use client-side CSV export from the currently loaded browser rows only;
 - labor totals are labeled around time-entry labor-rate snapshot semantics while preserving the existing API fallback behavior for legacy entries without captured snapshots;
 - focused report tests and broader manager-page expectations were updated;
 - README, project scope, and API contract docs describe the completed reporting behavior;
 - no backend controller, service, DTO, schema, migration, authorization, enum, purchasing expansion, inventory expansion, recommendation, AI/scoring, confidence-score, invoice-generation, payment, client-portal, hard-delete, or historical-migration behavior was added.
+
+Manager/Admin Phase 3D Admin user-management closeout is merged and protected on `main`:
+- Admin-only user management keeps focused list/editor screens for create, edit, deactivate, and password reset workflows;
+- the user list adds client-side account search plus role and active/inactive filters so Admins can find accounts without changing `/api/users`;
+- inactive Admin user screens are not kept mounted behind hidden panels, avoiding duplicate inactive controls in the DOM;
+- focused Admin user-management regression tests cover filtering and existing account actions;
+- no auth weakening, role expansion, backend API, schema, migration, enum, hard-delete, or deferred-domain behavior was added.
 
 Manager/Admin Time Approval workflow polish is merged and protected on `main`:
 - the Time Approval screen is a queue-first Manager/Admin workflow and pending entries load by default;

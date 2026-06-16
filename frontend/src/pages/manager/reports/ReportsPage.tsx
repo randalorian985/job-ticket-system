@@ -427,6 +427,24 @@ export function ReportsPage() {
     setReportMessage(null)
   }
 
+  const validateScopedFilters = (nextMode: ReportMode) => {
+    const scopedFilters = filtersForMode(nextMode, filters)
+
+    if (scopedFilters.dateFromUtc && scopedFilters.dateToUtc && scopedFilters.dateFromUtc > scopedFilters.dateToUtc) {
+      return 'From date must be on or before the to date.'
+    }
+
+    if (typeof scopedFilters.offset === 'number' && scopedFilters.offset < 0) {
+      return 'Offset must be zero or greater.'
+    }
+
+    if (typeof scopedFilters.limit === 'number' && scopedFilters.limit < 1) {
+      return 'Limit must be at least 1.'
+    }
+
+    return null
+  }
+
   const apply = async (nextMode: ReportMode) => {
     if ((nextMode === 'invoiceReady' || nextMode === 'jobCost') && !sourceJobTicketId.trim()) {
       requireSourceId(`Select a job ticket before running ${reportTitleMap[nextMode]}.`)
@@ -440,6 +458,16 @@ export function ReportsPage() {
 
     if (nextMode === 'equipmentHistory' && !sourceEquipmentId.trim()) {
       requireSourceId('Select equipment before running Equipment Service History.')
+      return
+    }
+
+    const filterValidationError = validateScopedFilters(nextMode)
+    if (filterValidationError) {
+      setRows([])
+      setMode(null)
+      setError(filterValidationError)
+      setReportMessage(null)
+      setActiveScreen('catalog')
       return
     }
 
