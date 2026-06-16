@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import './ManagerShell.css'
@@ -64,6 +65,7 @@ export function ManagerShell() {
   const isAdmin = user?.role === 'Admin'
   const location = useLocation()
   const navigate = useNavigate()
+  const [openMenuLabel, setOpenMenuLabel] = useState<string | null>(null)
   const visibleNavGroups = navGroups
     .map((group) => ({
       ...group,
@@ -75,6 +77,10 @@ export function ManagerShell() {
     .sort((left, right) => right.to.length - left.to.length)
     .find((item) => isRouteActive(location.pathname, item))
   const selectedNavValue = activeNavItem?.to ?? '/manage'
+
+  useEffect(() => {
+    setOpenMenuLabel(null)
+  }, [location.pathname])
 
   return (
     <main className="desktop-shell manager-shell">
@@ -104,10 +110,16 @@ export function ManagerShell() {
             ))}
           </select>
         </div>
-        <nav className="manager-desktop-nav" aria-label="manager navigation">
+        <nav
+          className="manager-desktop-nav"
+          aria-label="manager navigation"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setOpenMenuLabel(null)
+          }}
+        >
           <div className="manager-primary-links">
             {visibleNavGroups[0]?.items.map((item) => (
-              <NavLink className={navLinkClassName} end={item.end} key={item.to} to={item.to}>
+              <NavLink className={navLinkClassName} end={item.end} key={item.to} onClick={() => setOpenMenuLabel(null)} to={item.to}>
                 {item.label}
               </NavLink>
             ))}
@@ -115,13 +127,25 @@ export function ManagerShell() {
           <div className="manager-nav-menus">
             {visibleNavGroups.slice(1).map((group) => {
               const groupIsActive = group.items.some((item) => isRouteActive(location.pathname, item))
+              const isOpen = openMenuLabel === group.label
 
               return (
-                <details className={`manager-nav-menu${groupIsActive ? ' manager-nav-menu-active' : ''}`} key={group.label}>
+                <details
+                  className={`manager-nav-menu${groupIsActive ? ' manager-nav-menu-active' : ''}`}
+                  key={group.label}
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) {
+                      setOpenMenuLabel(group.label)
+                    } else if (openMenuLabel === group.label) {
+                      setOpenMenuLabel(null)
+                    }
+                  }}
+                  open={isOpen}
+                >
                   <summary>{group.label}</summary>
                   <div className="manager-nav-menu-panel">
                     {group.items.map((item) => (
-                      <NavLink className={navLinkClassName} end={item.end} key={item.to} to={item.to}>
+                      <NavLink className={navLinkClassName} end={item.end} key={item.to} onClick={() => setOpenMenuLabel(null)} to={item.to}>
                         {item.label}
                       </NavLink>
                     ))}

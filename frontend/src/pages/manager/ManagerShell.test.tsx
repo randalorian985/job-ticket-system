@@ -79,4 +79,21 @@ describe('ManagerShell', () => {
     expect(screen.getByText('Customers & Equipment')).toBeInTheDocument()
     expect(screen.getByText('Parts & Supply')).toBeInTheDocument()
   })
+
+  it('closes the previously opened desktop menu when another menu opens', async () => {
+    const user = userEvent.setup()
+    renderShell('/manage/reports')
+
+    const customersMenu = screen.getByText('Customers & Equipment').closest('details')
+    const partsMenu = screen.getByText('Parts & Supply').closest('details')
+    expect(customersMenu).not.toBeNull()
+    expect(partsMenu).not.toBeNull()
+
+    await user.click(screen.getByText('Customers & Equipment'))
+    expect(customersMenu).toHaveAttribute('open')
+
+    await user.click(screen.getByText('Parts & Supply'))
+    expect(partsMenu).toHaveAttribute('open')
+    expect(customersMenu).not.toHaveAttribute('open')
+  })
 })

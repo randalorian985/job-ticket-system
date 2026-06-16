@@ -49,6 +49,10 @@ describe('ManagerDashboardPage', () => {
     expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
     expect(screen.getByLabelText('manager operations dashboard')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Create Job Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
+    const shortcuts = screen.getByLabelText('manager workspace shortcuts')
+    expect(within(shortcuts).getByRole('heading', { name: 'Workspace Shortcuts' })).toBeInTheDocument()
+    expect(within(shortcuts).getByRole('link', { name: 'Customers' })).toHaveAttribute('href', '/manage/customers')
+    expect(within(shortcuts).getByRole('link', { name: 'Part Requests' })).toHaveAttribute('href', '/manage/part-requests')
 
     const kpis = screen.getByLabelText('operations summary')
     expect(within(kpis).getByText('Open Jobs')).toBeInTheDocument()
