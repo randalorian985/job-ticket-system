@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import './ManagerShell.css'
@@ -66,6 +66,7 @@ export function ManagerShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const [openMenuLabel, setOpenMenuLabel] = useState<string | null>(null)
+  const desktopNavRef = useRef<HTMLElement | null>(null)
   const visibleNavGroups = navGroups
     .map((group) => ({
       ...group,
@@ -82,6 +83,18 @@ export function ManagerShell() {
     setOpenMenuLabel(null)
   }, [location.pathname])
 
+  useEffect(() => {
+    if (!openMenuLabel) return
+
+    const closeMenuOnOutsidePointer = (event: PointerEvent) => {
+      if (desktopNavRef.current?.contains(event.target as Node)) return
+      setOpenMenuLabel(null)
+    }
+
+    document.addEventListener('pointerdown', closeMenuOnOutsidePointer)
+    return () => document.removeEventListener('pointerdown', closeMenuOnOutsidePointer)
+  }, [openMenuLabel])
+
   return (
     <main className="desktop-shell manager-shell">
       <header className="manager-header">
@@ -94,7 +107,7 @@ export function ManagerShell() {
           <button className="secondary-button logout-button" onClick={logout}>Logout</button>
         </div>
         <div className="manager-mobile-nav">
-          <label htmlFor="manager-mobile-section">Current section</label>
+          <label htmlFor="manager-mobile-section">Jump to screen</label>
           <select
             aria-label="Manager section navigation"
             id="manager-mobile-section"
@@ -109,10 +122,12 @@ export function ManagerShell() {
               </optgroup>
             ))}
           </select>
+          <span className="manager-mobile-nav-hint">Use this screen picker when the full Manager/Admin menu is collapsed.</span>
         </div>
         <nav
           className="manager-desktop-nav"
           aria-label="manager navigation"
+          ref={desktopNavRef}
           onKeyDown={(event) => {
             if (event.key === 'Escape') setOpenMenuLabel(null)
           }}
@@ -140,6 +155,7 @@ export function ManagerShell() {
                       setOpenMenuLabel(null)
                     }
                   }}
+                  aria-expanded={isOpen}
                   open={isOpen}
                 >
                   <summary>{group.label}</summary>
