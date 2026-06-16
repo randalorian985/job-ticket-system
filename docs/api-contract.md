@@ -139,6 +139,7 @@ Client CSV export behavior:
 - CSV is produced in the Manager/Admin frontend from the rows currently loaded in the browser.
 - CSV values use raw DTO values and report labels, not localized display formatting.
 - Empty reports do not expose an export action.
+- The frontend validates required source IDs, date ranges, and paging values before calling these existing report endpoints. This does not add a server-side export, reporting job, or new reporting API.
 
 ## Parts Request Workflow Phase 2
 The parts request API is a job-ticket-first workflow for technician-added ticket parts and back-office review. It uses DTOs and application services. No schema migration is required for Phase 2 because the existing job-ticket part model already stores catalog matches, unlisted parts, approval status, and office-order request flags.
@@ -292,6 +293,7 @@ This section documents the existing inventory foundation only. It does not appro
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
 - User-management endpoints under `/api/users` remain Admin-only except for the narrow Manager/Admin `GET /api/users/assignable-employees` lookup documented above.
+- Admin user-management list search and role/status filters are frontend-only over the loaded `/api/users` results; they do not add query parameters or new user-management endpoints.
 - No backend enum numeric values are changed.
 - No hard deletes are introduced.
 - Deferred domains remain deferred unless explicitly selected: purchasing expansion, receiving expansion, vendor invoice expansion, landed cost expansion, warehouse/truck inventory, replenishment, recommendation engine, AI/scoring, automatic compatibility decisions, and automatic approval.

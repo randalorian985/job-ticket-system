@@ -61,8 +61,8 @@ describe('UsersPage', () => {
     expect(screen.getByText('Casey Tech')).toBeInTheDocument()
     expect(screen.getByText('casey')).toBeInTheDocument()
     expect(screen.getAllByText('Employee').length).toBeGreaterThan(0)
-    expect(screen.getByText('Active')).toBeInTheDocument()
-    expect(screen.getByText('Inactive')).toBeInTheDocument()
+    expect(screen.getAllByText('Active').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Inactive').length).toBeGreaterThan(0)
   })
 
   it('renders empty and load error states clearly', async () => {
@@ -76,6 +76,30 @@ describe('UsersPage', () => {
     renderUsers()
 
     expect(await screen.findByText('Only Admin users can manage user accounts.')).toBeInTheDocument()
+  })
+
+  it('filters user accounts by search, role, and status', async () => {
+    renderUsers()
+
+    expect(await screen.findByText('Casey Tech')).toBeInTheDocument()
+    expect(screen.getByText('Lee Lead')).toBeInTheDocument()
+    expect(screen.getByText('2 of 2 accounts visible')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('User role filter'), { target: { value: 'Manager' } })
+    expect(screen.queryByText('Casey Tech')).not.toBeInTheDocument()
+    expect(screen.getByText('Lee Lead')).toBeInTheDocument()
+    expect(screen.getByText('1 of 2 accounts visible')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('User status filter'), { target: { value: 'active' } })
+    expect(screen.getByText('No user accounts match the current filters.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }))
+    expect(screen.getByText('Casey Tech')).toBeInTheDocument()
+    expect(screen.getByText('Lee Lead')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('User account search'), { target: { value: 'casey@example.com' } })
+    expect(screen.getByText('Casey Tech')).toBeInTheDocument()
+    expect(screen.queryByText('Lee Lead')).not.toBeInTheDocument()
   })
 
   it('validates create user payloads before calling the API', async () => {

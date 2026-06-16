@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../../api/httpClient'
 import { usersApi } from '../../../api/usersApi'
@@ -6,6 +6,7 @@ import type { CreateUserDto, UpdateUserDto, UserDto } from '../../../types'
 import { Errorable } from '../common/Errorable'
 
 type UserRole = 'Employee' | 'Manager' | 'Admin'
+type UserStatusFilter = 'all' | 'active' | 'inactive'
 
 const userRoles: UserRole[] = ['Employee', 'Manager', 'Admin']
 
@@ -44,6 +45,37 @@ export function UsersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [busyUserId, setBusyUserId] = useState<string | null>(null)
+  const [searchText, setSearchText] = useState('')
+  const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<UserStatusFilter>('all')
+
+  const filteredItems = useMemo(() => {
+    const normalizedSearch = searchText.trim().toLowerCase()
+
+    return items.filter((user) => {
+      const inactive = statusLabel(user) === 'Inactive'
+      const searchableText = [
+        userDisplayName(user),
+        user.userName,
+        user.email,
+        user.role,
+        statusLabel(user)
+      ].filter(Boolean).join(' ').toLowerCase()
+
+      if (normalizedSearch && !searchableText.includes(normalizedSearch)) return false
+      if (roleFilter !== 'all' && user.role !== roleFilter) return false
+      if (statusFilter === 'active' && inactive) return false
+      if (statusFilter === 'inactive' && !inactive) return false
+
+      return true
+    })
+  }, [items, roleFilter, searchText, statusFilter])
+
+  const resetFilters = () => {
+    setSearchText('')
+    setRoleFilter('all')
+    setStatusFilter('all')
+  }
 
   const load = async () => {
     try {
@@ -201,7 +233,7 @@ export function UsersPage() {
       </header>
       <Errorable error={error} />
 
-      <article className="card stack" hidden={activeScreen !== 'editor'}>
+      {activeScreen === 'editor' ? <article className="card stack">
         <div>
           <h3>{editing ? `Edit ${userDisplayName(editing)}` : 'Create user account'}</h3>
           <p className="muted">Complete this focused account form, then return to the user list.</p>
@@ -220,19 +252,47 @@ export function UsersPage() {
             <button type="button" className="secondary-button" onClick={cancelEdit} disabled={isSaving}>Back to users</button>
           </div>
         </form>
-      </article>
+      </article> : null}
 
-      <article className="card stack" aria-label="user account results" aria-live="polite" hidden={activeScreen !== 'list'}>
+      {activeScreen === 'list' ? <article className="card stack" aria-label="user account results" aria-live="polite">
         <div className="report-results-heading">
           <div>
             <h3>Users</h3>
-            <p className="muted">{isLoading ? 'Loading user accounts…' : `${items.length} account${items.length === 1 ? '' : 's'} visible`}</p>
+            <p className="muted">{isLoading ? 'Loading user accounts…' : `${filteredItems.length} of ${items.length} account${items.length === 1 ? '' : 's'} visible`}</p>
           </div>
+        </div>
+        <div className="master-data-filters" aria-label="user account filters">
+          <label>
+            Search users
+            <input
+              aria-label="User account search"
+              placeholder="Name, username, email, role, or status"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+            />
+          </label>
+          <label>
+            Role
+            <select aria-label="User role filter" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as UserRole | 'all')}>
+              <option value="all">All roles</option>
+              {userRoles.map((role) => <option key={role} value={role}>{role}</option>)}
+            </select>
+          </label>
+          <label>
+            Status
+            <select aria-label="User status filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as UserStatusFilter)}>
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+          <button type="button" className="secondary-button" onClick={resetFilters}>Reset filters</button>
         </div>
         {isLoading ? <p className="muted">Loading user accounts…</p> : null}
         {success ? <p className="success action-feedback-panel">{success}</p> : null}
         {!isLoading && items.length === 0 && !error ? <p className="muted">No users have been created yet. Create the first user to begin account setup.</p> : null}
-        {items.length > 0 ? (
+        {!isLoading && items.length > 0 && filteredItems.length === 0 && !error ? <p className="muted empty-state">No user accounts match the current filters.</p> : null}
+        {filteredItems.length > 0 ? (
           <div className="table-scroll">
             <table>
               <thead>
@@ -246,7 +306,7 @@ export function UsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((user) => {
+                {filteredItems.map((user) => {
                   const busy = busyUserId === user.id
                   const inactive = statusLabel(user) === 'Inactive'
                   const displayName = userDisplayName(user)
@@ -292,7 +352,7 @@ export function UsersPage() {
             </table>
           </div>
         ) : null}
-      </article>
+      </article> : null}
     </section>
   )
 }
