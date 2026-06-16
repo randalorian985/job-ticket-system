@@ -41,6 +41,8 @@ describe('ManagerShell', () => {
     renderShell()
 
     const sectionPicker = screen.getByLabelText('Manager section navigation')
+    expect(screen.getByLabelText('Jump to screen')).toBeInTheDocument()
+    expect(screen.getByText('Use this screen picker when the full Manager/Admin menu is collapsed.')).toBeInTheDocument()
     expect(sectionPicker).toHaveValue('/manage/job-tickets')
     expect(screen.getByText('Ticket detail page')).toBeInTheDocument()
 
@@ -91,9 +93,28 @@ describe('ManagerShell', () => {
 
     await user.click(screen.getByText('Customers & Equipment'))
     expect(customersMenu).toHaveAttribute('open')
+    expect(customersMenu).toHaveAttribute('aria-expanded', 'true')
 
     await user.click(screen.getByText('Parts & Supply'))
     expect(partsMenu).toHaveAttribute('open')
+    expect(partsMenu).toHaveAttribute('aria-expanded', 'true')
     expect(customersMenu).not.toHaveAttribute('open')
+    expect(customersMenu).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('closes an open desktop menu when the manager clicks outside navigation', async () => {
+    const user = userEvent.setup()
+    renderShell('/manage/reports')
+
+    const partsMenu = screen.getByText('Parts & Supply').closest('details')
+    expect(partsMenu).not.toBeNull()
+
+    await user.click(screen.getByText('Parts & Supply'))
+    expect(partsMenu).toHaveAttribute('open')
+
+    await user.click(screen.getByText('Reports page'))
+
+    expect(partsMenu).not.toHaveAttribute('open')
+    expect(partsMenu).toHaveAttribute('aria-expanded', 'false')
   })
 })
