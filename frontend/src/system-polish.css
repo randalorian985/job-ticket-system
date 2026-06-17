@@ -590,10 +590,11 @@ td button {
 
 .report-run-card > button {
   align-self: end;
-  justify-self: stretch;
+  justify-self: end;
   min-height: 2.25rem;
-  min-width: 0;
+  min-width: 9.5rem;
   padding: 0.5rem 0.7rem;
+  width: auto;
 }
 
 .report-run-card .report-card-controls,
