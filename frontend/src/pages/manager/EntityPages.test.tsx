@@ -690,7 +690,8 @@ describe('ReportsPage', () => {
     renderReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Employee' }))
-    expect(await screen.findByText('Loading Labor by Employee...')).toBeInTheDocument()
+    expect(await screen.findByText('Loading Labor by Employee')).toBeInTheDocument()
+    expect(screen.getByText('Preparing rows for review and export.')).toBeInTheDocument()
 
     resolveReport([])
     expect(await screen.findByText('No rows match the current report and filters. Adjust the filters or selected record, then run the report again.')).toBeInTheDocument()

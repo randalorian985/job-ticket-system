@@ -871,28 +871,52 @@ export function ReportsPage() {
           </div>
         </div>
         {mode ? (
+          <div className="report-result-meta" aria-label="generated report metadata">
+            <div>
+              <span>Rows</span>
+              <strong>{rows.length}</strong>
+            </div>
+            <div>
+              <span>Columns</span>
+              <strong>{columns.length}</strong>
+            </div>
+            <div>
+              <span>Generated</span>
+              <strong>{generatedAt ?? 'Pending'}</strong>
+            </div>
+          </div>
+        ) : null}
+        {mode ? (
           <div className="report-print-heading">
             <p className="eyebrow">Manager/Admin Report</p>
             <h2>{title}</h2>
             <p>{generatedAt ? `Generated ${generatedAt}` : 'Generated report preview'}</p>
           </div>
         ) : null}
-        {reportMessage ? <p className="success action-feedback-panel">{reportMessage}</p> : null}
+        {reportMessage ? <p className="success action-feedback-panel report-result-feedback">{reportMessage}</p> : null}
         {activeScreen === 'results' ? <Errorable error={error} /> : null}
         {mode ? (
           <div className="report-state-panel report-result-summary">
-            <strong>Loaded report review</strong>
-            <span>{filterSummary}</span>
-            {generatedAt ? <span>Generated {generatedAt}</span> : null}
+            <span>Applied scope</span>
+            <strong>{filterSummary}</strong>
           </div>
         ) : null}
-        {loadingMode ? <p className="muted" role="status">Loading {reportTitleMap[loadingMode]}...</p> : null}
+        {loadingMode ? (
+          <div className="report-result-state" role="status">
+            <strong>Loading {reportTitleMap[loadingMode]}</strong>
+            <span>Preparing rows for review and export.</span>
+          </div>
+        ) : null}
         {mode && !loadingMode && !hasRows && !error ? (
-          <p className="muted">No rows match the current report and filters. Adjust the filters or selected record, then run the report again.</p>
+          <div className="report-result-state">
+            <strong>No rows found</strong>
+            <span>No rows match the current report and filters. Adjust the filters or selected record, then run the report again.</span>
+          </div>
         ) : null}
         {hasRows ? (
           <div className="table-scroll report-results-table">
             <table aria-label={`${title} results`}>
+              <caption>{title} results table with {rows.length} visible row{rows.length === 1 ? '' : 's'}.</caption>
               <thead>
                 <tr>
                   {columns.map((column) => (

@@ -174,9 +174,11 @@ describe('ReportsPage', () => {
     expect(await screen.findByRole('link', { name: 'JT-2026-000123' })).toHaveAttribute('href', '/manage/job-tickets/job-1')
     expect(screen.getByRole('button', { name: 'Back to report catalog' })).toBeInTheDocument()
     expect(screen.getByText('Labor by Job loaded with 1 visible row.')).toBeInTheDocument()
+    expect(screen.getByLabelText('generated report metadata')).toHaveTextContent(/Rows\s*1\s*Columns\s*7\s*Generated/)
+    expect(screen.getByText('Labor by Job results table with 1 visible row.')).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Labor Billable (time-entry labor-rate snapshot)' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '$300.00' })).toBeInTheDocument()
-    expect(screen.getByText('Loaded report review')).toBeInTheDocument()
+    expect(screen.getByText('Applied scope')).toBeInTheDocument()
     expect(screen.getAllByText(/Customer: Acme Service \(ACME\)/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Service location: Acme Service - Plant 4/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Employee: Taylor Technician/).length).toBeGreaterThan(0)
@@ -213,7 +215,8 @@ describe('ReportsPage', () => {
     renderWithRouter(<ReportsPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Employee' }))
-    expect(await screen.findByText('Loading Labor by Employee...')).toBeInTheDocument()
+    expect(await screen.findByText('Loading Labor by Employee')).toBeInTheDocument()
+    expect(screen.getByText('Preparing rows for review and export.')).toBeInTheDocument()
 
     resolveReport([])
 
