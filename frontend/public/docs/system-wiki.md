@@ -37,6 +37,7 @@ The screenshots below appear again in the workflow sections where they are most 
 | Manager/Admin dashboard | [manager-dashboard.png](assets/system-wiki/manager-dashboard.png) |
 | Job-ticket queue | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
 | Job-ticket workspace | [job-ticket-workspace.png](assets/system-wiki/job-ticket-workspace.png) |
+| Section-based ticket editor | [ticket-section-editor.png](assets/system-wiki/ticket-section-editor.png) |
 | Time approval | [time-approval.png](assets/system-wiki/time-approval.png) |
 | Parts requests | [part-requests.png](assets/system-wiki/part-requests.png) |
 | Master data customers | [master-data-customers.png](assets/system-wiki/master-data-customers.png) |
@@ -396,6 +397,48 @@ The ticket view is organized around review first and editing second:
 
 This view is intended to answer "what needs attention?" before asking the user to edit anything.
 
+### Dispatch Flow
+Dispatch flow is the Manager/Admin path for moving a ticket from intake into field-ready work. It starts in the job-ticket queue or dashboard, continues through the ticket workspace, and uses dispatch readiness checks to show what is missing before field work should proceed.
+
+The dispatch flow is:
+- open the dashboard or job-ticket queue;
+- filter to active, dispatch-ready, needs dispatch review, unassigned, missing lead, unscheduled, or missing due-date tickets;
+- open the ticket detail page;
+- review the Dispatch KPI and Dispatch Requirements panel;
+- resolve open requirements such as status, assignment, lead tech, scheduled start, due date, customer, service location, or job instructions;
+- use the Dispatch tab for technician assignments;
+- use Edit Ticket when customer/location/equipment, schedule, or job instructions need correction;
+- use Change Status when the ticket is ready to move into the next operational state.
+
+Dispatch requirements are guidance, not a new approval engine. They help Managers/Admins see whether the ticket has enough operational information to dispatch. The checks do not create automatic approvals, automatic compatibility decisions, AI recommendations, or backend workflow jobs.
+
+Common dispatch checks include:
+- ticket is in an active dispatch status;
+- customer is selected;
+- service location is selected;
+- equipment decision is clear;
+- at least one employee is assigned;
+- one assigned employee is marked as lead where required by the workflow;
+- scheduled start is set;
+- due date is set;
+- job instructions or notes are present.
+
+When dispatch requirements are incomplete, the ticket workspace shows the open items and the next required update. Completed requirements remain reviewable so managers can see why the ticket is considered ready.
+
+```mermaid
+flowchart TD
+  A["Dashboard or Job Ticket Queue"] --> B["Open ticket detail"]
+  B --> C["Review Dispatch KPI and requirements"]
+  C --> D{"Open dispatch items?"}
+  D -->|Assignment issue| E["Open Dispatch tab and update technicians or lead"]
+  D -->|Schedule or service details| F["Open Edit Ticket and update the right section"]
+  D -->|Status issue| G["Open Change Status review"]
+  D -->|No open items| H["Ticket is dispatch-ready"]
+  E --> C
+  F --> C
+  G --> C
+```
+
 ### Ticket Editing
 Managers/Admins edit ticket information through a focused in-page panel. The previous workflow opened one large edit form containing customer, service location, equipment, scope, billing, dates, status, and priority fields at the same time. That worked functionally, but it forced users to scan a long form and created extra mobile scrolling.
 
@@ -407,6 +450,8 @@ The new workflow keeps editing in the ticket workspace but splits the edit panel
 - **Schedule**: requested, scheduled start, and due dates.
 
 The same dispatch-readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
+
+![Section-based ticket editor with dispatch readiness](assets/system-wiki/ticket-section-editor.png)
 
 The edit workflow should preserve:
 - customer/service-location relationships;
