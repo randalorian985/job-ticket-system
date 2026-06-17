@@ -264,6 +264,31 @@ describe('Manager list pages', () => {
     expect(screen.getByText('JT-2')).toBeInTheDocument()
   })
 
+  it('exports the currently visible ticket queue rows as CSV', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    const exportLink = screen.getByRole('link', { name: 'Export visible queue as CSV' })
+    expect(exportLink).toHaveAttribute('download', 'job-ticket-queue.csv')
+    const csv = decodeURIComponent(exportLink.getAttribute('href')!.replace('data:text/csv;charset=utf-8,', ''))
+    expect(csv).toContain('Ticket Number,Title,Status,Priority,Customer,Service Location,Assigned Employees,Lead Employees,Dispatch Readiness')
+    expect(csv).toContain('JT-1,Fix compressor,In Progress,High,Acme,HQ,Alex Rivera,Alex Rivera,Ready for dispatch')
+    expect(csv).toContain('JT-2,Inspect pump,Waiting on Parts,Normal,Bravo,Field Shop,Jamie Chen,Needs lead,Needs dispatch review')
+
+    fireEvent.change(screen.getByLabelText(/Search tickets/i), { target: { value: 'compressor' } })
+
+    const filteredExportLink = screen.getByRole('link', { name: 'Export visible queue as CSV' })
+    expect(filteredExportLink).toHaveAttribute('download', 'job-ticket-queue-filtered.csv')
+    const filteredCsv = decodeURIComponent(filteredExportLink.getAttribute('href')!.replace('data:text/csv;charset=utf-8,', ''))
+    expect(filteredCsv).toContain('JT-1,Fix compressor')
+    expect(filteredCsv).not.toContain('JT-2,Inspect pump')
+  })
+
   it('shows empty and error states', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
     const view = render(

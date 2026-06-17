@@ -4,6 +4,7 @@ import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { ApiError } from '../../api/httpClient'
 import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto } from '../../types'
+import { csvDataUri, toCsv, type CsvColumn } from '../../utils/csv'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from '../employee/jobDisplay'
 import { formatDate, jobStatusOptions, priorityOptions } from './managerDisplay'
 import { activeDispatchStatusValues, buildJobTicketDetailPath, normalizeJobTicketQueueSearchParams, readJobTicketQueueFilters } from './managerTaskNavigation'
@@ -32,6 +33,44 @@ type QueuePreset = {
   readiness?: string
   attention?: string
 }
+
+type QueueExportRow = {
+  ticketNumber: string
+  title: string
+  status: string
+  priority: string
+  customer: string
+  serviceLocation: string
+  assignedEmployees: string
+  leadEmployees: string
+  dispatchReadiness: string
+  dispatchDetail: string
+  nextRequiredUpdate: string
+  requestedAtUtc: string
+  scheduledStartAtUtc: string
+  dueAtUtc: string
+  completedAtUtc: string
+}
+
+const queueExportColumns: CsvColumn<QueueExportRow>[] = [
+  { header: 'Ticket Number', value: (row) => row.ticketNumber },
+  { header: 'Title', value: (row) => row.title },
+  { header: 'Status', value: (row) => row.status },
+  { header: 'Priority', value: (row) => row.priority },
+  { header: 'Customer', value: (row) => row.customer },
+  { header: 'Service Location', value: (row) => row.serviceLocation },
+  { header: 'Assigned Employees', value: (row) => row.assignedEmployees },
+  { header: 'Lead Employees', value: (row) => row.leadEmployees },
+  { header: 'Dispatch Readiness', value: (row) => row.dispatchReadiness },
+  { header: 'Dispatch Detail', value: (row) => row.dispatchDetail },
+  { header: 'Next Required Update', value: (row) => row.nextRequiredUpdate },
+  { header: 'Requested Date (UTC)', value: (row) => row.requestedAtUtc },
+  { header: 'Scheduled Start (UTC)', value: (row) => row.scheduledStartAtUtc },
+  { header: 'Due Date (UTC)', value: (row) => row.dueAtUtc },
+  { header: 'Completed Date (UTC)', value: (row) => row.completedAtUtc }
+]
+
+const dateForExport = (value?: string | null) => value ? value.slice(0, 10) : ''
 
 const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[] | null): DispatchReadiness => {
   if (!activeStatusValues.has(job.status)) {
@@ -293,6 +332,38 @@ export function JobTicketListPage() {
     attentionFilter !== allFilterValue ||
     Boolean(searchText.trim())
 
+  const queueExportRows = useMemo<QueueExportRow[]>(() => filteredJobs.map((job) => {
+    const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
+    const leadAssignments = assignments?.filter((item) => item.isLead) ?? []
+    const readiness = getDispatchReadiness(job, assignments)
+
+    return {
+      ticketNumber: job.ticketNumber,
+      title: job.title,
+      status: getJobTicketStatusLabel(job.status),
+      priority: getJobTicketPriorityLabel(job.priority),
+      customer: customers[job.customerId]?.name ?? job.customerName ?? 'Customer unavailable',
+      serviceLocation: locations[job.serviceLocationId]?.locationName ?? job.serviceLocationName ?? 'Location unavailable',
+      assignedEmployees: assignmentDataUnavailable
+        ? 'Assignment data unavailable'
+        : assignments?.length ? assignments.map(getAssignmentDisplayName).join('; ') : 'Unassigned',
+      leadEmployees: assignmentDataUnavailable
+        ? 'Assignment data unavailable'
+        : leadAssignments.length ? leadAssignments.map(getAssignmentDisplayName).join('; ') : 'Needs lead',
+      dispatchReadiness: readiness.label,
+      dispatchDetail: readiness.detail,
+      nextRequiredUpdate: readiness.nextStep,
+      requestedAtUtc: dateForExport(job.requestedAtUtc),
+      scheduledStartAtUtc: dateForExport(job.scheduledStartAtUtc),
+      dueAtUtc: dateForExport(job.dueAtUtc),
+      completedAtUtc: dateForExport(job.completedAtUtc)
+    }
+  }), [assignmentDataUnavailable, assignmentMap, customers, filteredJobs, locations])
+
+  const queueCsv = useMemo(() => toCsv(queueExportRows, queueExportColumns), [queueExportRows])
+  const queueCsvHref = useMemo(() => csvDataUri(queueCsv), [queueCsv])
+  const queueCsvFileName = hasActiveFilters ? 'job-ticket-queue-filtered.csv' : 'job-ticket-queue.csv'
+
   const filterResultSummary = isLoading
     ? 'Loading ticket results...'
     : error
@@ -401,8 +472,13 @@ export function JobTicketListPage() {
       {!isLoading && !error && filteredJobs.length ? (
         <section className="queue-results-panel" aria-label="job ticket results">
           <div className="queue-results-heading">
-            <h3>Ticket Queue</h3>
-            <span className="muted">Showing {filteredJobs.length} of {jobs.length} tickets.</span>
+            <div>
+              <h3>Ticket Queue</h3>
+              <span className="muted">Showing {filteredJobs.length} of {jobs.length} tickets.</span>
+            </div>
+            <a className="button-link secondary-link" href={queueCsvHref} download={queueCsvFileName}>
+              Export visible queue as CSV
+            </a>
           </div>
           <ul className="review-list ticket-queue-list">
             {filteredJobs.map((job) => {
