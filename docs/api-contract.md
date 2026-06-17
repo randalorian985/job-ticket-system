@@ -93,7 +93,7 @@ Behavior:
 - this guard does not change DTO shapes, role policies, backend enum values, schema, migrations, purchasing behavior, inventory behavior, recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
 ## Reporting
-Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports UI groups the existing endpoints into invoice/closeout, labor/parts, and service-history sections, then performs client-side CSV export from the currently loaded table rows. There is no server-side export job, invoice generation, payment workflow, customer portal workflow, recommendation engine, AI/scoring, automatic compatibility decision, or automatic approval behavior in this reporting slice.
+Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports UI groups the existing endpoints into invoice/closeout, labor/parts, and service-history sections, then performs browser print/save-PDF output and client-side CSV export from the currently loaded table rows. There is no server-side PDF renderer, server-side export job, invoice generation, payment workflow, customer portal workflow, recommendation engine, AI/scoring, automatic compatibility decision, or automatic approval behavior in this reporting slice.
 
 Authorization: `ManagerOrAdmin`.
 
@@ -135,10 +135,11 @@ Endpoints:
 - `GET /api/reports/equipment/{equipmentId}/service-history`
   - Returns `ServiceHistoryItemDto[]` for the selected equipment record.
 
-Client CSV export behavior:
+Client export behavior:
+- Print/save-PDF uses the browser print dialog from the generated report results screen.
 - CSV is produced in the Manager/Admin frontend from the rows currently loaded in the browser.
 - CSV values use raw DTO values and report labels, not localized display formatting.
-- Empty reports do not expose an export action.
+- Empty reports do not expose CSV or print/save-PDF export actions.
 - The frontend validates required source IDs, date ranges, and paging values before calling these existing report endpoints. This does not add a server-side export, reporting job, or new reporting API.
 
 ## Parts Request Workflow Phase 2

@@ -368,6 +368,24 @@ pre {
   scroll-margin-top: 1rem;
 }
 
+.report-result-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.report-result-actions button,
+.report-result-actions .button-link {
+  min-height: 2.45rem;
+}
+
+.report-print-heading {
+  display: none;
+}
+
+.report-result-summary span {
+  overflow-wrap: anywhere;
+}
+
 .action-feedback-panel {
   border: 1px solid #b7ebd0;
   border-radius: 8px;
@@ -2386,6 +2404,98 @@ td {
     flex: 1 1 8rem;
   }
 }
+
+@media print {
+  @page {
+    margin: 0.45in;
+  }
+
+  body {
+    background: #ffffff;
+    color: #111827;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-report-surface,
+  .print-report-surface * {
+    visibility: visible;
+  }
+
+  .print-report-surface {
+    border: 0;
+    box-shadow: none;
+    left: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+
+  .no-print,
+  .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .print-report-surface > .report-results-heading {
+    display: none;
+  }
+
+  .report-print-heading {
+    border-bottom: 2px solid #111827;
+    display: block;
+    margin-bottom: 0.25in;
+    padding-bottom: 0.15in;
+  }
+
+  .report-print-heading h2 {
+    color: #111827;
+    font-size: 18pt;
+    margin: 0.05in 0;
+  }
+
+  .report-print-heading p {
+    margin: 0.02in 0;
+  }
+
+  .report-state-panel {
+    background: #ffffff;
+    border: 1px solid #9ca3af;
+    break-inside: avoid;
+    color: #111827;
+    margin-bottom: 0.2in;
+  }
+
+  .action-feedback-panel {
+    display: none;
+  }
+
+  .table-scroll {
+    overflow: visible;
+  }
+
+  .print-report-surface table {
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    width: 100%;
+  }
+
+  .print-report-surface th,
+  .print-report-surface td {
+    border: 1px solid #d1d5db;
+    color: #111827;
+    padding: 0.08in;
+  }
+
+  .print-report-surface th {
+    background: #f3f4f6;
+    font-weight: 800;
+  }
+}
+
 /* Native hidden must win over component display rules. */
 [hidden] {
   display: none !important;

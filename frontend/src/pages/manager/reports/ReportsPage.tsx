@@ -321,6 +321,7 @@ const buildFilterSummary = (
 
 const csvFileName = (title: string) =>
   `report-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loaded-rows'}.csv`
+const generatedAtLabel = () => new Date().toLocaleString()
 
 export function ReportsPage() {
   const [activeScreen, setActiveScreen] = useState<'catalog' | 'results'>('catalog')
@@ -340,6 +341,7 @@ export function ReportsPage() {
   const [loadingMode, setLoadingMode] = useState<ReportMode | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reportMessage, setReportMessage] = useState<string | null>(null)
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -417,6 +419,7 @@ export function ReportsPage() {
     setMode(null)
     setError(null)
     setReportMessage(null)
+    setGeneratedAt(null)
     setActiveScreen('catalog')
   }
 
@@ -425,6 +428,7 @@ export function ReportsPage() {
     setMode(null)
     setError(message)
     setReportMessage(null)
+    setGeneratedAt(null)
   }
 
   const validateScopedFilters = (nextMode: ReportMode) => {
@@ -467,6 +471,7 @@ export function ReportsPage() {
       setMode(null)
       setError(filterValidationError)
       setReportMessage(null)
+      setGeneratedAt(null)
       setActiveScreen('catalog')
       return
     }
@@ -478,6 +483,7 @@ export function ReportsPage() {
       setRows([])
       setMode(nextMode)
       setActiveScreen('results')
+      setGeneratedAt(null)
 
       const scopedFilters = filtersForMode(nextMode, filters)
       const data =
@@ -499,10 +505,12 @@ export function ReportsPage() {
 
       setRows(data as ReportRow[])
       setReportMessage(`${reportTitleMap[nextMode]} loaded with ${data.length} visible row${data.length === 1 ? '' : 's'}.`)
+      setGeneratedAt(generatedAtLabel())
     } catch (requestError) {
       setRows([])
       setError(userMessageForReportError(requestError))
       setReportMessage(null)
+      setGeneratedAt(null)
     } finally {
       setLoadingMode(null)
     }
@@ -807,7 +815,7 @@ export function ReportsPage() {
               Pick the report you need, set its source or optional filters in the same panel, then run it.
             </p>
           </div>
-          <button type="button" onClick={clearFilters}>Reset report inputs</button>
+          <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
         </div>
         <p className="muted">
           Labor totals are labeled as time-entry labor-rate snapshot values. The implemented API uses captured time-entry cost and bill rates first, then falls back only for legacy entries without snapshots.
@@ -817,7 +825,7 @@ export function ReportsPage() {
       <Errorable error={referenceError} />
       {activeScreen === 'catalog' ? <Errorable error={error} /> : null}
 
-      <section className="card stack report-preview-panel" aria-label="report preview" aria-live="polite" aria-busy={loadingMode !== null} hidden={activeScreen !== 'results'}>
+      <section className="card stack report-preview-panel print-report-surface" aria-label="report preview" aria-live="polite" aria-busy={loadingMode !== null} hidden={activeScreen !== 'results'}>
         <div className="report-results-heading">
           <div>
             <h3>{title || 'Report Preview'}</h3>
@@ -827,10 +835,15 @@ export function ReportsPage() {
                 : 'Run a report from the hub to load export-friendly rows here.'}
             </p>
           </div>
-          <div className="row">
+          <div className="row report-result-actions no-print">
             <button type="button" className="secondary-button" onClick={() => setActiveScreen('catalog')}>
               Back to report catalog
             </button>
+            {hasRows ? (
+              <button type="button" className="secondary-button" onClick={() => window.print()}>
+                Print / Save PDF
+              </button>
+            ) : null}
             {hasRows ? (
               <a className="button-link" href={csvHref} download={csvFileName(title)}>
                 Export loaded rows as CSV
@@ -838,12 +851,20 @@ export function ReportsPage() {
             ) : null}
           </div>
         </div>
+        {mode ? (
+          <div className="report-print-heading">
+            <p className="eyebrow">Manager/Admin Report</p>
+            <h2>{title}</h2>
+            <p>{generatedAt ? `Generated ${generatedAt}` : 'Generated report preview'}</p>
+          </div>
+        ) : null}
         {reportMessage ? <p className="success action-feedback-panel">{reportMessage}</p> : null}
         {activeScreen === 'results' ? <Errorable error={error} /> : null}
         {mode ? (
-          <div className="report-state-panel">
+          <div className="report-state-panel report-result-summary">
             <strong>Loaded report review</strong>
             <span>{filterSummary}</span>
+            {generatedAt ? <span>Generated {generatedAt}</span> : null}
           </div>
         ) : null}
         {loadingMode ? <p className="muted" role="status">Loading {reportTitleMap[loadingMode]}...</p> : null}
