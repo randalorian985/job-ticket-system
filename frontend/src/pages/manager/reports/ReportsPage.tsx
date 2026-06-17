@@ -113,6 +113,51 @@ const reportFilterFields: Record<ReportMode, FilterField[]> = {
 
 type ReportSourceSelections = Partial<Record<ReportMode, string>>
 type ReportFiltersByMode = Partial<Record<ReportMode, ReportQueryFilters>>
+type ReportSavedDefaults = {
+  filtersByMode?: ReportFiltersByMode
+  sourceSelections?: ReportSourceSelections
+}
+
+const reportDefaultsStorageKey = 'job-ticket-system:manager-reports:defaults:v1'
+
+const isReportMode = (value: string): value is ReportMode => Object.prototype.hasOwnProperty.call(reportTitleMap, value)
+const hasSavedDefaults = (defaults: ReportSavedDefaults) =>
+  Object.keys(defaults.filtersByMode ?? {}).length > 0 || Object.keys(defaults.sourceSelections ?? {}).length > 0
+
+const readSavedReportDefaults = (): ReportSavedDefaults => {
+  if (typeof localStorage === 'undefined') return {}
+
+  try {
+    const saved = localStorage.getItem(reportDefaultsStorageKey)
+    if (!saved) return {}
+    const parsed = JSON.parse(saved) as ReportSavedDefaults
+    const filtersByMode = Object.fromEntries(
+      Object.entries(parsed.filtersByMode ?? {}).filter(([mode]) => isReportMode(mode))
+    ) as ReportFiltersByMode
+    const sourceSelections = Object.fromEntries(
+      Object.entries(parsed.sourceSelections ?? {}).filter(([mode, value]) => isReportMode(mode) && typeof value === 'string')
+    ) as ReportSourceSelections
+
+    return { filtersByMode, sourceSelections }
+  } catch {
+    return {}
+  }
+}
+
+const writeSavedReportDefaults = (defaults: ReportSavedDefaults) => {
+  if (typeof localStorage === 'undefined') return
+
+  if (!hasSavedDefaults(defaults)) {
+    localStorage.removeItem(reportDefaultsStorageKey)
+    return
+  }
+
+  localStorage.setItem(reportDefaultsStorageKey, JSON.stringify(defaults))
+}
+
+const clearSavedReportDefaults = () => {
+  if (typeof localStorage !== 'undefined') localStorage.removeItem(reportDefaultsStorageKey)
+}
 
 const money = (value?: number | null) =>
   typeof value === 'number' ? value.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : '-'
@@ -327,9 +372,10 @@ const csvFileName = (title: string) =>
 const generatedAtLabel = () => new Date().toLocaleString()
 
 export function ReportsPage() {
+  const savedDefaults = useMemo(readSavedReportDefaults, [])
   const [activeScreen, setActiveScreen] = useState<'catalog' | 'results'>('catalog')
-  const [filtersByMode, setFiltersByMode] = useState<ReportFiltersByMode>({})
-  const [sourceSelections, setSourceSelections] = useState<ReportSourceSelections>({})
+  const [filtersByMode, setFiltersByMode] = useState<ReportFiltersByMode>(savedDefaults.filtersByMode ?? {})
+  const [sourceSelections, setSourceSelections] = useState<ReportSourceSelections>(savedDefaults.sourceSelections ?? {})
   const [jobTickets, setJobTickets] = useState<JobTicketListItemDto[]>([])
   const [customers, setCustomers] = useState<CustomerDto[]>([])
   const [serviceLocations, setServiceLocations] = useState<ServiceLocationDto[]>([])
@@ -380,6 +426,10 @@ export function ReportsPage() {
     }
   }, [])
 
+  useEffect(() => {
+    writeSavedReportDefaults({ filtersByMode, sourceSelections })
+  }, [filtersByMode, sourceSelections])
+
   const activeCustomers = useMemo(() => customers.filter((customer) => !customer.isArchived), [customers])
   const activeServiceLocations = useMemo(() => serviceLocations.filter((location) => !location.isArchived && location.isActive), [serviceLocations])
   const activeEquipment = useMemo(() => equipment.filter((item) => !item.isArchived), [equipment])
@@ -412,6 +462,7 @@ export function ReportsPage() {
   )
 
   const clearFilters = () => {
+    clearSavedReportDefaults()
     setFiltersByMode({})
     setSourceSelections({})
     setRows([])
