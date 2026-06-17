@@ -2490,9 +2490,160 @@ td {
     padding: 0.08in;
   }
 
-  .print-report-surface th {
+.print-report-surface th {
     background: #f3f4f6;
     font-weight: 800;
+  }
+}
+
+.system-wiki-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.system-wiki-hero,
+.system-wiki-layout {
+  width: 100%;
+}
+
+.system-wiki-hero {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.system-wiki-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.system-wiki-layout {
+  align-items: start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+}
+
+.system-wiki-toc {
+  position: sticky;
+  top: 1rem;
+}
+
+.system-wiki-toc h3 {
+  margin-top: 0;
+}
+
+.system-wiki-toc a {
+  border-radius: 6px;
+  color: #1d4ed8;
+  display: block;
+  font-weight: 700;
+  padding: 0.35rem 0.45rem;
+  text-decoration: none;
+}
+
+.system-wiki-toc a:hover,
+.system-wiki-toc a:focus-visible {
+  background: #eff6ff;
+  text-decoration: underline;
+}
+
+.system-wiki-document {
+  line-height: 1.65;
+  max-width: 74rem;
+}
+
+.system-wiki-document h1,
+.system-wiki-document h2,
+.system-wiki-document h3 {
+  scroll-margin-top: 1rem;
+}
+
+.system-wiki-document h1 {
+  font-size: 1.75rem;
+  margin-top: 0;
+}
+
+.system-wiki-document h2 {
+  border-top: 1px solid #dbe4f0;
+  font-size: 1.35rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+}
+
+.system-wiki-document h3 {
+  font-size: 1.05rem;
+  margin-top: 1.35rem;
+}
+
+.system-wiki-document p,
+.system-wiki-document li {
+  color: #334155;
+}
+
+.system-wiki-document code {
+  background: #f1f5f9;
+  border-radius: 4px;
+  color: #0f172a;
+  padding: 0.1rem 0.25rem;
+}
+
+.system-wiki-document table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.system-wiki-document th,
+.system-wiki-document td {
+  border: 1px solid #dbe4f0;
+  padding: 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.system-wiki-document th {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.system-wiki-image {
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  display: block;
+  height: auto;
+  margin: 1rem 0;
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .system-wiki-hero {
+    display: grid;
+  }
+
+  .system-wiki-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .system-wiki-toc {
+    position: static;
+  }
+}
+
+@media print {
+  .system-wiki-toc,
+  .system-wiki-actions {
+    display: none;
+  }
+
+  .system-wiki-layout {
+    display: block;
+  }
+
+  .system-wiki-document {
+    border: 0;
+    box-shadow: none;
+    max-width: none;
   }
 }
 

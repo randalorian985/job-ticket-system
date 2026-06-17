@@ -4,6 +4,7 @@ export { TimeApprovalPage } from './approvals/TimeApprovalPage'
 export { ReportsPage } from './reports/ReportsPage'
 export { UnauthorizedPage } from './users/UnauthorizedPage'
 export { UsersPage } from './users/UsersPage'
+export { SystemWikiPage } from './wiki/SystemWikiPage'
 
 export { InventoryPage } from './InventoryPage'
 export { PartRequestsPage } from './PartRequestsPage'

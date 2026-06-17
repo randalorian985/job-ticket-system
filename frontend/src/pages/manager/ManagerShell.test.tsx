@@ -29,6 +29,7 @@ describe('ManagerShell', () => {
             <Route index element={<p>Dashboard page</p>} />
             <Route path="job-tickets/:jobTicketId" element={<p>Ticket detail page</p>} />
             <Route path="reports" element={<p>Reports page</p>} />
+            <Route path="wiki" element={<p>Wiki page</p>} />
             <Route path="users" element={<p>Users page</p>} />
           </Route>
         </Routes>
@@ -50,6 +51,11 @@ describe('ManagerShell', () => {
 
     expect(screen.getByText('Reports page')).toBeInTheDocument()
     expect(sectionPicker).toHaveValue('/manage/reports')
+
+    await user.selectOptions(sectionPicker, '/manage/wiki')
+
+    expect(screen.getByText('Wiki page')).toBeInTheDocument()
+    expect(sectionPicker).toHaveValue('/manage/wiki')
   })
 
   it('keeps admin-only navigation out of the manager section picker', () => {
@@ -78,6 +84,7 @@ describe('ManagerShell', () => {
 
     expect(screen.getByRole('navigation', { name: 'manager navigation' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Job Tickets' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Wiki' })).toBeInTheDocument()
     expect(screen.getByText('Customers & Equipment')).toBeInTheDocument()
     expect(screen.getByText('Parts & Supply')).toBeInTheDocument()
   })

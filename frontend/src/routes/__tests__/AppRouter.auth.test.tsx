@@ -60,6 +60,10 @@ describe('AppRouter authentication rendering', () => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve('# Job Ticket System Wiki\n\n## Reports\n\nReports support CSV export and print/save-PDF output.')
+    }))
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
     vi.mocked(usersApi.list).mockResolvedValue([])
     vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([])
@@ -172,6 +176,14 @@ describe('AppRouter authentication rendering', () => {
 
     view.rerender(
       <MemoryRouter future={routerFuture} initialEntries={['/manage/reports']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Access Denied' })).toBeInTheDocument()
+
+    view.rerender(
+      <MemoryRouter future={routerFuture} initialEntries={['/manage/wiki']}>
         <AppRouter />
       </MemoryRouter>
     )
@@ -339,5 +351,24 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'User Management' })).toBeInTheDocument()
+  })
+
+  it('manager users can open the in-app system wiki', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: managerUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    render(
+      <MemoryRouter future={routerFuture} initialEntries={['/manage/wiki#reports']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'System Wiki' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Reports' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open markdown' })).toHaveAttribute('href', '/docs/system-wiki.md')
   })
 })

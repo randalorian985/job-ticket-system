@@ -15,6 +15,7 @@ import {
   PurchasingWorkbenchPage,
   ReportsPage,
   ServiceLocationsPage,
+  SystemWikiPage,
   TimeApprovalPage,
   UnauthorizedPage,
   UsersPage
@@ -68,6 +69,7 @@ export function AppRouter() {
           <Route path="time-approval" element={<TimeApprovalPage />} />
           <Route path="parts-approval" element={<PartsApprovalPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="wiki" element={<SystemWikiPage />} />
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
             <Route path="users" element={<UsersPage />} />
           </Route>

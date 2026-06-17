@@ -919,7 +919,10 @@ export function ReportsPage() {
               Pick the report you need, set its source or optional filters in the same panel, then run it.
             </p>
           </div>
-          <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
+          <div className="row">
+            <Link className="secondary-button" to="/manage/wiki#reports">Wiki</Link>
+            <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
+          </div>
         </div>
         <div className="report-hero-metrics" aria-label="report hub summary">
           <div><span>Report types</span><strong>{Object.keys(reportTitleMap).length}</strong></div>
