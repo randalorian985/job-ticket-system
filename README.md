@@ -44,6 +44,7 @@ Parts Request Workflow Phase 2 is not a purchasing, receiving, vendor invoice, l
 - Project control center: [docs/build-roadmap.md](docs/build-roadmap.md)
 - Scope contract: [docs/project-scope.md](docs/project-scope.md)
 - API contract: [docs/api-contract.md](docs/api-contract.md)
+- Client-facing system wiki: [docs/system-wiki.md](docs/system-wiki.md)
 - Development setup and validation: [docs/development-setup.md](docs/development-setup.md)
 - Test environment setup and workarounds: [docs/test-environment-setup.md](docs/test-environment-setup.md)
 - Historical audit log: [docs/historical-bug-regression-audit.md](docs/historical-bug-regression-audit.md)
