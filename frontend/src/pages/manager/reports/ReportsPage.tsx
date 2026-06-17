@@ -806,10 +806,11 @@ export function ReportsPage() {
   }
 
   return (
-    <section className="stack">
-      <header className="card stack">
-        <div className="report-results-heading">
+    <section className="report-hub stack">
+      <header className="card stack report-hub-hero">
+        <div className="report-hero-layout">
           <div>
+            <p className="eyebrow">Manager/Admin reporting</p>
             <h2>Reports</h2>
             <p className="muted">
               Pick the report you need, set its source or optional filters in the same panel, then run it.
@@ -817,17 +818,24 @@ export function ReportsPage() {
           </div>
           <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
         </div>
-        <p className="muted">
-          Labor totals are labeled as time-entry labor-rate snapshot values. The implemented API uses captured time-entry cost and bill rates first, then falls back only for legacy entries without snapshots.
-        </p>
+        <div className="report-hero-metrics" aria-label="report hub summary">
+          <div><span>Report types</span><strong>{Object.keys(reportTitleMap).length}</strong></div>
+          <div><span>Groups</span><strong>{reportSections.length}</strong></div>
+          <div><span>Output</span><strong>CSV / PDF</strong></div>
+        </div>
+        <div className="report-note-panel">
+          <strong>Labor totals</strong>
+          <span>Labor totals are labeled as time-entry labor-rate snapshot values. The implemented API uses captured time-entry cost and bill rates first, then falls back only for legacy entries without snapshots.</span>
+        </div>
         {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
       <Errorable error={referenceError} />
       {activeScreen === 'catalog' ? <Errorable error={error} /> : null}
 
       <section className="card stack report-preview-panel print-report-surface" aria-label="report preview" aria-live="polite" aria-busy={loadingMode !== null} hidden={activeScreen !== 'results'}>
-        <div className="report-results-heading">
+        <div className="report-results-heading report-results-toolbar">
           <div>
+            <p className="eyebrow">Generated report</p>
             <h3>{title || 'Report Preview'}</h3>
             <p className="muted">
               {mode
@@ -901,15 +909,22 @@ export function ReportsPage() {
 
       <div className="stack" hidden={activeScreen !== 'catalog'}>
         {reportSections.map((section) => (
-          <section className="report-section stack" key={section.title} aria-label={section.title}>
+          <section className="report-section report-section-panel stack" key={section.title} aria-label={section.title}>
             <div className="report-section-heading">
-              <h3>{section.title}</h3>
-              <p className="muted">{section.description}</p>
+              <div>
+                <p className="eyebrow">Report group</p>
+                <h3>{section.title}</h3>
+                <p className="muted">{section.description}</p>
+              </div>
+              <span className="report-section-count">{section.modes.length} reports</span>
             </div>
             <div className="report-action-grid">
               {section.modes.map((reportMode) => (
                 <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
-                  <h4>{reportTitleMap[reportMode]}</h4>
+                  <div className="report-card-top">
+                    <h4>{reportTitleMap[reportMode]}</h4>
+                    <span>{reportFilterFields[reportMode].length ? 'Filterable' : 'Source required'}</span>
+                  </div>
                   <p className="muted">{reportDescriptions[reportMode]}</p>
                   {renderSourceControl(reportMode)}
                   {renderFilterControls(reportMode)}
