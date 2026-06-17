@@ -48,6 +48,7 @@ Manager/Admin Service Ticket Workspace Redesign is merged and protected on `main
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
 - Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;
+- Manager/Admin job-ticket queue can export the currently visible filtered ticket rows as client-side CSV for dispatch handoff;
 - ticket detail links preserve safe queue-aware return context;
 - ticket detail exposes workflow tabs for overview, dispatch, time, parts, files, closeout, and activity, with a visible recommended next action;
 - developer setup validation checks Docker Compose configuration even when `.env` is absent by using `.env.example` safely;

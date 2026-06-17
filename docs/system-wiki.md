@@ -319,6 +319,8 @@ Managers/Admins can filter by:
 - attention condition;
 - search text.
 
+Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and dispatch readiness. It does not create a server-side export job.
+
 Queue URLs are shareable. If a Manager/Admin opens a ticket from a filtered queue, the ticket detail can preserve a safe return link back to that queue.
 
 Important queue concepts:
