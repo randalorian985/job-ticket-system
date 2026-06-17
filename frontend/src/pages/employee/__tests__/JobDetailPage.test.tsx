@@ -179,6 +179,7 @@ describe('JobDetailPage', () => {
     renderJobDetail()
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to My Jobs' })).toHaveAttribute('href', '/jobs')
     expect(screen.getByText('In Progress')).toBeInTheDocument()
     expect(screen.getByText('High')).toBeInTheDocument()
     expect(screen.queryByText(/Billing Party ID/)).not.toBeInTheDocument()
@@ -216,6 +217,9 @@ describe('JobDetailPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeEnabled()
+    expect(screen.getByLabelText('Clock note (optional)')).toBeEnabled()
+    expect(screen.getByLabelText('Work note')).toBeDisabled()
+    expect(screen.getByLabelText('Photo or file')).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Save Work Note' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Add / Request Part' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled()
@@ -465,6 +469,11 @@ describe('JobDetailPage', () => {
     expect(screen.getByRole('heading', { name: 'Upload Photo / File' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument()
     expect(screen.queryByLabelText('Invoice attachment')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Work summary (required)')).toHaveAccessibleDescription('Summarize the work completed before clocking out.')
+    expect(screen.getByLabelText('Work note')).toHaveAccessibleDescription('Use this for progress notes, site conditions, or details the office should review.')
+    expect(screen.getByLabelText('Find existing part or enter new part')).toHaveAccessibleDescription('Select a matching stocked part when available, or submit the typed value as an unlisted part.')
+    expect(screen.getByLabelText('Existing parts match')).toHaveAccessibleDescription('Changing the typed search clears the selected match so the submitted part stays intentional.')
+    expect(screen.getByLabelText('Photo or file')).toHaveAccessibleDescription('Allowed file types: JPG, PNG, WebP, or PDF.')
 
     const jobReadiness = screen.getByLabelText('job readiness review')
     expect(within(jobReadiness).getByText('Needs manager review')).toBeInTheDocument()
