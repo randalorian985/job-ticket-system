@@ -49,6 +49,7 @@ const readCsvFromExportLink = () => {
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
+  vi.spyOn(window, 'print').mockImplementation(() => undefined)
   vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
     {
       id: 'job-invoice-1',
@@ -184,6 +185,8 @@ describe('ReportsPage', () => {
 
     const exportLink = screen.getByRole('link', { name: 'Export loaded rows as CSV' })
     expect(exportLink).toHaveAttribute('download', 'report-labor-by-job.csv')
+    fireEvent.click(screen.getByRole('button', { name: 'Print / Save PDF' }))
+    expect(window.print).toHaveBeenCalled()
 
     const csv = readCsvFromExportLink()
     expect(csv).toContain('Labor Billable (time-entry labor-rate snapshot)')
@@ -216,6 +219,7 @@ describe('ReportsPage', () => {
 
     expect(await screen.findByText('No rows match the current report and filters. Adjust the filters or selected record, then run the report again.')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Print / Save PDF' })).not.toBeInTheDocument()
   })
 
   it('surfaces user-friendly report failures without rendering stale empty-state copy', async () => {

@@ -69,7 +69,7 @@ Manager/Admin assignment stabilization is merged and protected on `main`:
 Manager/Admin Phase 3C reporting polish and export workflow is merged and protected on `main`:
 - reports are organized into invoice/closeout, labor/parts, and service-history sections;
 - shared filters, source-ID validation, date/paging validation, loading, empty, and error states are implemented on the existing Manager/Admin reports hub;
-- report tables remain export-friendly and use client-side CSV export from the currently loaded browser rows only;
+- report tables remain export-friendly and use browser print/save-PDF output plus client-side CSV export from the currently loaded browser rows only;
 - labor totals are labeled around time-entry labor-rate snapshot semantics while preserving the existing API fallback behavior for legacy entries without captured snapshots;
 - focused report tests and broader manager-page expectations were updated;
 - README, project scope, and API contract docs describe the completed reporting behavior;
