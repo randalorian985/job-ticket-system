@@ -187,11 +187,18 @@ describe('ReportsPage', () => {
     expect(screen.getAllByText(/Limit: 75/).length).toBeGreaterThan(0)
 
     const exportLink = screen.getByRole('link', { name: 'Export loaded rows as CSV' })
-    expect(exportLink).toHaveAttribute('download', 'report-labor-by-job.csv')
+    expect(exportLink.getAttribute('download')).toMatch(/^report-labor-by-job-\d{4}-\d{2}-\d{2}\.csv$/)
+    document.title = 'Job Ticket Management System'
+    vi.mocked(window.print).mockImplementation(() => {
+      expect(document.title).toMatch(/^report-labor-by-job-\d{4}-\d{2}-\d{2}$/)
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Print / Save PDF' }))
     expect(window.print).toHaveBeenCalled()
 
     const csv = readCsvFromExportLink()
+    expect(csv).toContain('Report,Labor by Job')
+    expect(csv).toContain('Applied scope,Customer: Acme Service (ACME) | Service location: Acme Service - Plant 4 | Employee: Taylor Technician | Limit: 75')
+    expect(csv).toContain('Visible rows,1')
     expect(csv).toContain('Labor Billable (time-entry labor-rate snapshot)')
     expect(csv).toContain('JT-2026-000123,Acme Service,2.5,125,300,2026-05-01,2026-05-02')
     expect(csv).not.toContain('$300.00')

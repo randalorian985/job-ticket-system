@@ -5,7 +5,7 @@ import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { masterDataApi } from '../../../api/masterDataApi'
 import { reportsApi } from '../../../api/reportsApi'
 import { usersApi } from '../../../api/usersApi'
-import { csvDataUri, toCsv, type CsvColumn } from '../../../utils/csv'
+import { csvDataUri, escapeCsvValue, toCsv, type CsvColumn } from '../../../utils/csv'
 import type {
   AssignableEmployeeDto,
   CustomerDto,
@@ -367,9 +367,31 @@ const buildFilterSummary = (
       : 'This report is scoped to the selected source record.'
 }
 
-const csvFileName = (title: string) =>
-  `report-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loaded-rows'}.csv`
+const reportSlug = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loaded-rows'
+const csvFileName = (title: string, dateStamp?: string | null) =>
+  `report-${reportSlug(title)}${dateStamp ? `-${dateStamp}` : ''}.csv`
 const generatedAtLabel = () => new Date().toLocaleString()
+const generatedDateStamp = () => new Date().toISOString().slice(0, 10)
+
+const reportCsvWithMetadata = (
+  title: string,
+  generatedAt: string | null,
+  filterSummary: string,
+  rows: ReportRow[],
+  columns: Array<ReportColumn<ReportRow>>
+) => {
+  if (!rows.length || !columns.length) return ''
+
+  const metadataRows = [
+    ['Report', title],
+    ['Generated', generatedAt ?? ''],
+    ['Applied scope', filterSummary],
+    ['Visible rows', rows.length],
+    ['Columns', columns.length]
+  ].map((row) => row.map((value) => escapeCsvValue(value)).join(','))
+
+  return [...metadataRows, '', toCsv(rows, columns)].join('\n')
+}
 
 export function ReportsPage() {
   const savedDefaults = useMemo(readSavedReportDefaults, [])
@@ -389,6 +411,7 @@ export function ReportsPage() {
   const [error, setError] = useState<string | null>(null)
   const [reportMessage, setReportMessage] = useState<string | null>(null)
   const [generatedAt, setGeneratedAt] = useState<string | null>(null)
+  const [generatedFileDate, setGeneratedFileDate] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -470,6 +493,7 @@ export function ReportsPage() {
     setError(null)
     setReportMessage(null)
     setGeneratedAt(null)
+    setGeneratedFileDate(null)
     setActiveScreen('catalog')
   }
 
@@ -479,6 +503,7 @@ export function ReportsPage() {
     setError(message)
     setReportMessage(null)
     setGeneratedAt(null)
+    setGeneratedFileDate(null)
   }
 
   const validateScopedFilters = (nextMode: ReportMode) => {
@@ -524,6 +549,7 @@ export function ReportsPage() {
       setError(filterValidationError)
       setReportMessage(null)
       setGeneratedAt(null)
+      setGeneratedFileDate(null)
       setActiveScreen('catalog')
       return
     }
@@ -536,6 +562,7 @@ export function ReportsPage() {
       setMode(nextMode)
       setActiveScreen('results')
       setGeneratedAt(null)
+      setGeneratedFileDate(null)
 
       const scopedFilters = filtersForMode(nextMode, filtersByMode[nextMode] ?? defaultFilters)
       const data =
@@ -558,11 +585,13 @@ export function ReportsPage() {
       setRows(data as ReportRow[])
       setReportMessage(`${reportTitleMap[nextMode]} loaded with ${data.length} visible row${data.length === 1 ? '' : 's'}.`)
       setGeneratedAt(generatedAtLabel())
+      setGeneratedFileDate(generatedDateStamp())
     } catch (requestError) {
       setRows([])
       setError(userMessageForReportError(requestError))
       setReportMessage(null)
       setGeneratedAt(null)
+      setGeneratedFileDate(null)
     } finally {
       setLoadingMode(null)
     }
@@ -570,8 +599,6 @@ export function ReportsPage() {
 
   const columns = mode ? columnsByMode[mode] : []
   const title = mode ? reportTitleMap[mode] : ''
-  const csv = useMemo(() => toCsv(rows, columns), [rows, columns])
-  const csvHref = useMemo(() => csvDataUri(csv), [csv])
   const hasRows = rows.length > 0
   const activeSourceId = mode ? sourceSelections[mode] : undefined
   const sourceLabel = mode === 'invoiceReady' || mode === 'jobCost'
@@ -591,6 +618,11 @@ export function ReportsPage() {
       : ''),
     [customerLabelById, employeeLabelById, filtersByMode, mode, serviceLocationLabelById, sourceLabel]
   )
+  const csv = useMemo(
+    () => reportCsvWithMetadata(title, generatedAt, filterSummary, rows, columns as Array<ReportColumn<ReportRow>>),
+    [columns, filterSummary, generatedAt, rows, title]
+  )
+  const csvHref = useMemo(() => csvDataUri(csv), [csv])
 
   const updateFilters = (reportMode: ReportMode, nextFilters: Partial<ReportQueryFilters>) => {
     setFiltersByMode((current) => ({
@@ -601,6 +633,15 @@ export function ReportsPage() {
 
   const updateSourceSelection = (reportMode: ReportMode, value: string) => {
     setSourceSelections((current) => ({ ...current, [reportMode]: value }))
+  }
+
+  const printReport = () => {
+    const originalTitle = document.title
+    document.title = `report-${reportSlug(title)}${generatedFileDate ? `-${generatedFileDate}` : ''}`
+    window.print()
+    window.setTimeout(() => {
+      document.title = originalTitle
+    }, 0)
   }
 
   const renderSourceControl = (reportMode: ReportMode) => {
@@ -910,12 +951,12 @@ export function ReportsPage() {
               Back to report catalog
             </button>
             {hasRows ? (
-              <button type="button" className="secondary-button" onClick={() => window.print()}>
+              <button type="button" className="secondary-button" onClick={printReport}>
                 Print / Save PDF
               </button>
             ) : null}
             {hasRows ? (
-              <a className="button-link" href={csvHref} download={csvFileName(title)}>
+              <a className="button-link" href={csvHref} download={csvFileName(title, generatedFileDate)}>
                 Export loaded rows as CSV
               </a>
             ) : null}

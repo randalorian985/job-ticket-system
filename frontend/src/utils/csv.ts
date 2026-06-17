@@ -3,7 +3,7 @@ export type CsvColumn<T> = {
   value: (row: T) => string | number | boolean | null | undefined
 }
 
-const escapeCsvValue = (value: string | number | boolean | null | undefined) => {
+export const escapeCsvValue = (value: string | number | boolean | null | undefined) => {
   const text = value === null || typeof value === 'undefined' ? '' : String(value)
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
