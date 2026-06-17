@@ -111,6 +111,9 @@ const reportFilterFields: Record<ReportMode, FilterField[]> = {
   equipmentHistory: ['dateRange', 'jobStatus', 'paging']
 }
 
+type ReportSourceSelections = Partial<Record<ReportMode, string>>
+type ReportFiltersByMode = Partial<Record<ReportMode, ReportQueryFilters>>
+
 const money = (value?: number | null) =>
   typeof value === 'number' ? value.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : '-'
 const quantity = (value?: number | null) =>
@@ -325,10 +328,8 @@ const generatedAtLabel = () => new Date().toLocaleString()
 
 export function ReportsPage() {
   const [activeScreen, setActiveScreen] = useState<'catalog' | 'results'>('catalog')
-  const [filters, setFilters] = useState<ReportQueryFilters>(defaultFilters)
-  const [sourceCustomerId, setSourceCustomerId] = useState('')
-  const [sourceEquipmentId, setSourceEquipmentId] = useState('')
-  const [sourceJobTicketId, setSourceJobTicketId] = useState('')
+  const [filtersByMode, setFiltersByMode] = useState<ReportFiltersByMode>({})
+  const [sourceSelections, setSourceSelections] = useState<ReportSourceSelections>({})
   const [jobTickets, setJobTickets] = useState<JobTicketListItemDto[]>([])
   const [customers, setCustomers] = useState<CustomerDto[]>([])
   const [serviceLocations, setServiceLocations] = useState<ServiceLocationDto[]>([])
@@ -411,10 +412,8 @@ export function ReportsPage() {
   )
 
   const clearFilters = () => {
-    setFilters(defaultFilters)
-    setSourceCustomerId('')
-    setSourceEquipmentId('')
-    setSourceJobTicketId('')
+    setFiltersByMode({})
+    setSourceSelections({})
     setRows([])
     setMode(null)
     setError(null)
@@ -432,7 +431,7 @@ export function ReportsPage() {
   }
 
   const validateScopedFilters = (nextMode: ReportMode) => {
-    const scopedFilters = filtersForMode(nextMode, filters)
+    const scopedFilters = filtersForMode(nextMode, filtersByMode[nextMode] ?? defaultFilters)
 
     if (scopedFilters.dateFromUtc && scopedFilters.dateToUtc && scopedFilters.dateFromUtc > scopedFilters.dateToUtc) {
       return 'From date must be on or before the to date.'
@@ -450,17 +449,19 @@ export function ReportsPage() {
   }
 
   const apply = async (nextMode: ReportMode) => {
-    if ((nextMode === 'invoiceReady' || nextMode === 'jobCost') && !sourceJobTicketId.trim()) {
+    const selectedSourceId = sourceSelections[nextMode]?.trim() ?? ''
+
+    if ((nextMode === 'invoiceReady' || nextMode === 'jobCost') && !selectedSourceId) {
       requireSourceId(`Select a job ticket before running ${reportTitleMap[nextMode]}.`)
       return
     }
 
-    if (nextMode === 'customerHistory' && !sourceCustomerId.trim()) {
+    if (nextMode === 'customerHistory' && !selectedSourceId) {
       requireSourceId('Select a customer before running Customer Service History.')
       return
     }
 
-    if (nextMode === 'equipmentHistory' && !sourceEquipmentId.trim()) {
+    if (nextMode === 'equipmentHistory' && !selectedSourceId) {
       requireSourceId('Select equipment before running Equipment Service History.')
       return
     }
@@ -485,10 +486,10 @@ export function ReportsPage() {
       setActiveScreen('results')
       setGeneratedAt(null)
 
-      const scopedFilters = filtersForMode(nextMode, filters)
+      const scopedFilters = filtersForMode(nextMode, filtersByMode[nextMode] ?? defaultFilters)
       const data =
         nextMode === 'invoiceReady'
-          ? [await reportsApi.getInvoiceReadySummary(sourceJobTicketId.trim())]
+          ? [await reportsApi.getInvoiceReadySummary(selectedSourceId)]
           : nextMode === 'jobsReady'
             ? await reportsApi.getJobsReadyToInvoice(scopedFilters)
             : nextMode === 'laborJob'
@@ -498,10 +499,10 @@ export function ReportsPage() {
                 : nextMode === 'partsJob'
                   ? await reportsApi.getPartsByJob(scopedFilters)
                   : nextMode === 'jobCost'
-                    ? [await reportsApi.getCostSummary(sourceJobTicketId.trim())]
+                    ? [await reportsApi.getCostSummary(selectedSourceId)]
                     : nextMode === 'customerHistory'
-                      ? await reportsApi.getCustomerHistory(sourceCustomerId.trim(), scopedFilters)
-                      : await reportsApi.getEquipmentHistory(sourceEquipmentId.trim(), scopedFilters)
+                      ? await reportsApi.getCustomerHistory(selectedSourceId, scopedFilters)
+                      : await reportsApi.getEquipmentHistory(selectedSourceId, scopedFilters)
 
       setRows(data as ReportRow[])
       setReportMessage(`${reportTitleMap[nextMode]} loaded with ${data.length} visible row${data.length === 1 ? '' : 's'}.`)
@@ -521,30 +522,39 @@ export function ReportsPage() {
   const csv = useMemo(() => toCsv(rows, columns), [rows, columns])
   const csvHref = useMemo(() => csvDataUri(csv), [csv])
   const hasRows = rows.length > 0
+  const activeSourceId = mode ? sourceSelections[mode] : undefined
   const sourceLabel = mode === 'invoiceReady' || mode === 'jobCost'
-    ? jobTicketLabelById.get(sourceJobTicketId)
+    ? jobTicketLabelById.get(activeSourceId ?? '')
     : mode === 'customerHistory'
-      ? customerLabelById.get(sourceCustomerId)
+      ? customerLabelById.get(activeSourceId ?? '')
       : mode === 'equipmentHistory'
-        ? equipmentLabelById.get(sourceEquipmentId)
+        ? equipmentLabelById.get(activeSourceId ?? '')
         : undefined
   const filterSummary = useMemo(
     () => (mode
-      ? buildFilterSummary(mode, filtersForMode(mode, filters), {
+      ? buildFilterSummary(mode, filtersForMode(mode, filtersByMode[mode] ?? defaultFilters), {
         customers: customerLabelById,
         serviceLocations: serviceLocationLabelById,
         employees: employeeLabelById
       }, sourceLabel)
       : ''),
-    [customerLabelById, employeeLabelById, filters, mode, serviceLocationLabelById, sourceLabel]
+    [customerLabelById, employeeLabelById, filtersByMode, mode, serviceLocationLabelById, sourceLabel]
   )
 
-  const updateFilters = (nextFilters: Partial<ReportQueryFilters>) => {
-    setFilters((current) => ({ ...current, ...nextFilters }))
+  const updateFilters = (reportMode: ReportMode, nextFilters: Partial<ReportQueryFilters>) => {
+    setFiltersByMode((current) => ({
+      ...current,
+      [reportMode]: { ...(current[reportMode] ?? defaultFilters), ...nextFilters }
+    }))
+  }
+
+  const updateSourceSelection = (reportMode: ReportMode, value: string) => {
+    setSourceSelections((current) => ({ ...current, [reportMode]: value }))
   }
 
   const renderSourceControl = (reportMode: ReportMode) => {
     const titleForMode = reportTitleMap[reportMode]
+    const selectedSourceId = sourceSelections[reportMode] ?? ''
 
     if (reportMode === 'invoiceReady' || reportMode === 'jobCost') {
       return (
@@ -553,8 +563,8 @@ export function ReportsPage() {
             Job ticket
             <select
               aria-label={`${titleForMode} job ticket`}
-              value={sourceJobTicketId}
-              onChange={(event) => setSourceJobTicketId(event.target.value)}
+              value={selectedSourceId}
+              onChange={(event) => updateSourceSelection(reportMode, event.target.value)}
               disabled={referenceLoading}
             >
               <option value="">{referenceLoading ? 'Loading job tickets...' : 'Select job ticket'}</option>
@@ -575,8 +585,8 @@ export function ReportsPage() {
             Customer
             <select
               aria-label="Customer Service History customer"
-              value={sourceCustomerId}
-              onChange={(event) => setSourceCustomerId(event.target.value)}
+              value={selectedSourceId}
+              onChange={(event) => updateSourceSelection(reportMode, event.target.value)}
               disabled={referenceLoading}
             >
               <option value="">{referenceLoading ? 'Loading customers...' : 'Select customer'}</option>
@@ -599,8 +609,8 @@ export function ReportsPage() {
             Equipment
             <select
               aria-label="Equipment Service History equipment"
-              value={sourceEquipmentId}
-              onChange={(event) => setSourceEquipmentId(event.target.value)}
+              value={selectedSourceId}
+              onChange={(event) => updateSourceSelection(reportMode, event.target.value)}
               disabled={referenceLoading}
             >
               <option value="">{referenceLoading ? 'Loading equipment...' : 'Select equipment'}</option>
@@ -624,6 +634,7 @@ export function ReportsPage() {
     if (!fields.length) return null
 
     const titleForMode = reportTitleMap[reportMode]
+    const filters = filtersByMode[reportMode] ?? defaultFilters
     const controls: JSX.Element[] = []
 
     if (fields.includes('dateRange')) {
@@ -634,7 +645,7 @@ export function ReportsPage() {
             aria-label={`${titleForMode} from date filter`}
             type="date"
             value={filters.dateFromUtc?.slice(0, 10) ?? ''}
-            onChange={(event) => updateFilters({ dateFromUtc: event.target.value ? `${event.target.value}T00:00:00Z` : undefined })}
+            onChange={(event) => updateFilters(reportMode, { dateFromUtc: event.target.value ? `${event.target.value}T00:00:00Z` : undefined })}
           />
         </label>,
         <label key="dateTo">
@@ -643,7 +654,7 @@ export function ReportsPage() {
             aria-label={`${titleForMode} to date filter`}
             type="date"
             value={filters.dateToUtc?.slice(0, 10) ?? ''}
-            onChange={(event) => updateFilters({ dateToUtc: event.target.value ? `${event.target.value}T23:59:59Z` : undefined })}
+            onChange={(event) => updateFilters(reportMode, { dateToUtc: event.target.value ? `${event.target.value}T23:59:59Z` : undefined })}
           />
         </label>
       )
@@ -656,7 +667,7 @@ export function ReportsPage() {
           <select
             aria-label={`${titleForMode} customer filter`}
             value={filters.customerId ?? ''}
-            onChange={(event) => updateFilters({ customerId: event.target.value || undefined })}
+            onChange={(event) => updateFilters(reportMode, { customerId: event.target.value || undefined })}
             disabled={referenceLoading}
           >
             <option value="">Any customer</option>
@@ -677,7 +688,7 @@ export function ReportsPage() {
           <select
             aria-label={`${titleForMode} billing party filter`}
             value={filters.billingPartyCustomerId ?? ''}
-            onChange={(event) => updateFilters({ billingPartyCustomerId: event.target.value || undefined })}
+            onChange={(event) => updateFilters(reportMode, { billingPartyCustomerId: event.target.value || undefined })}
             disabled={referenceLoading}
           >
             <option value="">Any billing party</option>
@@ -698,7 +709,7 @@ export function ReportsPage() {
           <select
             aria-label={`${titleForMode} service location filter`}
             value={filters.serviceLocationId ?? ''}
-            onChange={(event) => updateFilters({ serviceLocationId: event.target.value || undefined })}
+            onChange={(event) => updateFilters(reportMode, { serviceLocationId: event.target.value || undefined })}
             disabled={referenceLoading}
           >
             <option value="">Any service location</option>
@@ -719,7 +730,7 @@ export function ReportsPage() {
           <select
             aria-label={`${titleForMode} employee filter`}
             value={filters.employeeId ?? ''}
-            onChange={(event) => updateFilters({ employeeId: event.target.value || undefined })}
+            onChange={(event) => updateFilters(reportMode, { employeeId: event.target.value || undefined })}
             disabled={referenceLoading}
           >
             <option value="">Any technician</option>
@@ -738,7 +749,7 @@ export function ReportsPage() {
           <select
             aria-label={`${titleForMode} job status filter`}
             value={filters.jobStatus ?? ''}
-            onChange={(event) => updateFilters({ jobStatus: event.target.value ? Number(event.target.value) : undefined })}
+            onChange={(event) => updateFilters(reportMode, { jobStatus: event.target.value ? Number(event.target.value) : undefined })}
           >
             <option value="">Any job status</option>
             <option value="7">Completed</option>
@@ -756,7 +767,7 @@ export function ReportsPage() {
           <select
             aria-label={`${titleForMode} invoice status filter`}
             value={filters.invoiceStatus ?? ''}
-            onChange={(event) => updateFilters({ invoiceStatus: event.target.value ? Number(event.target.value) : undefined })}
+            onChange={(event) => updateFilters(reportMode, { invoiceStatus: event.target.value ? Number(event.target.value) : undefined })}
           >
             <option value="">Any invoice status</option>
             <option value="1">Not Ready</option>
@@ -779,7 +790,7 @@ export function ReportsPage() {
             type="number"
             min={0}
             value={filters.offset ?? 0}
-            onChange={(event) => updateFilters({ offset: Number(event.target.value) || 0 })}
+            onChange={(event) => updateFilters(reportMode, { offset: Number(event.target.value) || 0 })}
           />
         </label>,
         <label key="limit">
@@ -789,7 +800,7 @@ export function ReportsPage() {
             type="number"
             min={1}
             value={filters.limit ?? 50}
-            onChange={(event) => updateFilters({ limit: Number(event.target.value) || 50 })}
+            onChange={(event) => updateFilters(reportMode, { limit: Number(event.target.value) || 50 })}
           />
         </label>
       )
