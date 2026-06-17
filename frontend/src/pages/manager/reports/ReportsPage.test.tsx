@@ -48,6 +48,7 @@ const readCsvFromExportLink = () => {
 
 beforeEach(() => {
   cleanup()
+  localStorage.clear()
   vi.clearAllMocks()
   vi.spyOn(window, 'print').mockImplementation(() => undefined)
   vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
@@ -302,6 +303,34 @@ describe('ReportsPage', () => {
     fireEvent.change(jobsReadyCustomer, { target: { value: '' } })
     expect(jobsReadyCustomer).toHaveValue('')
     expect(laborByJobCustomer).toHaveValue('customer-1')
+  })
+
+  it('restores report-specific saved defaults and clears them from reset', async () => {
+    renderWithRouter(<ReportsPage />)
+
+    const costCard = screen.getByLabelText('Job Cost Summary report')
+    const laborByJobCard = screen.getByLabelText('Labor by Job report')
+    expect(await within(costCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
+
+    fireEvent.change(within(costCard).getByLabelText('Job Cost Summary job ticket'), { target: { value: 'job-invoice-1' } })
+    fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job limit filter'), { target: { value: '75' } })
+    await waitFor(() => expect(localStorage.length).toBeGreaterThan(0))
+
+    cleanup()
+    renderWithRouter(<ReportsPage />)
+
+    const restoredCostCard = screen.getByLabelText('Job Cost Summary report')
+    const restoredLaborByJobCard = screen.getByLabelText('Labor by Job report')
+    expect(await within(restoredCostCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
+    expect(within(restoredCostCard).getByLabelText('Job Cost Summary job ticket')).toHaveValue('job-invoice-1')
+    fireEvent.click(within(restoredLaborByJobCard).getByText('Optional filters'))
+    expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(75)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
+    expect(within(restoredCostCard).getByLabelText('Job Cost Summary job ticket')).toHaveValue('')
+    expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(50)
+    expect(localStorage.length).toBe(0)
   })
 
   it('validates report date ranges before calling report APIs', async () => {
