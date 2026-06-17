@@ -243,6 +243,64 @@ describe('ReportsPage', () => {
     expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
   })
 
+  it('keeps every report source dropdown selection independent', async () => {
+    renderWithRouter(<ReportsPage />)
+
+    const invoiceCard = screen.getByLabelText('Invoice-ready Summary report')
+    const costCard = screen.getByLabelText('Job Cost Summary report')
+    const customerHistoryCard = screen.getByLabelText('Customer Service History report')
+    const equipmentHistoryCard = screen.getByLabelText('Equipment Service History report')
+
+    expect(await within(invoiceCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
+
+    const invoiceSelect = within(invoiceCard).getByLabelText('Invoice-ready Summary job ticket')
+    const costSelect = within(costCard).getByLabelText('Job Cost Summary job ticket')
+    const customerSelect = within(customerHistoryCard).getByLabelText('Customer Service History customer')
+    const equipmentSelect = within(equipmentHistoryCard).getByLabelText('Equipment Service History equipment')
+
+    fireEvent.change(invoiceSelect, { target: { value: 'job-invoice-1' } })
+    expect(invoiceSelect).toHaveValue('job-invoice-1')
+    expect(costSelect).toHaveValue('')
+
+    fireEvent.change(costSelect, { target: { value: 'job-1' } })
+    expect(invoiceSelect).toHaveValue('job-invoice-1')
+    expect(costSelect).toHaveValue('job-1')
+
+    fireEvent.change(customerSelect, { target: { value: 'customer-1' } })
+    expect(customerSelect).toHaveValue('customer-1')
+    expect(equipmentSelect).toHaveValue('')
+
+    fireEvent.change(equipmentSelect, { target: { value: 'equipment-1' } })
+    expect(customerSelect).toHaveValue('customer-1')
+    expect(equipmentSelect).toHaveValue('equipment-1')
+  })
+
+  it('keeps optional report filters independent between report cards', async () => {
+    renderWithRouter(<ReportsPage />)
+
+    const jobsReadyCard = screen.getByLabelText('Jobs Ready to Invoice report')
+    const laborByJobCard = screen.getByLabelText('Labor by Job report')
+
+    fireEvent.click(within(jobsReadyCard).getByText('Optional filters'))
+    fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+
+    const jobsReadyCustomer = within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice customer filter')
+    const laborByJobCustomer = within(laborByJobCard).getByLabelText('Labor by Job customer filter')
+    await waitFor(() => expect(jobsReadyCustomer).not.toBeDisabled())
+
+    fireEvent.change(jobsReadyCustomer, { target: { value: 'customer-1' } })
+    expect(jobsReadyCustomer).toHaveValue('customer-1')
+    expect(laborByJobCustomer).toHaveValue('')
+
+    fireEvent.change(laborByJobCustomer, { target: { value: 'customer-1' } })
+    expect(jobsReadyCustomer).toHaveValue('customer-1')
+    expect(laborByJobCustomer).toHaveValue('customer-1')
+
+    fireEvent.change(jobsReadyCustomer, { target: { value: '' } })
+    expect(jobsReadyCustomer).toHaveValue('')
+    expect(laborByJobCustomer).toHaveValue('customer-1')
+  })
+
   it('validates report date ranges before calling report APIs', async () => {
     renderWithRouter(<ReportsPage />)
 
