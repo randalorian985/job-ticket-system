@@ -880,7 +880,7 @@ export function ReportsPage() {
           <p className="muted">No rows match the current report and filters. Adjust the filters or selected record, then run the report again.</p>
         ) : null}
         {hasRows ? (
-          <div className="table-scroll">
+          <div className="table-scroll report-results-table">
             <table aria-label={`${title} results`}>
               <thead>
                 <tr>
@@ -926,8 +926,10 @@ export function ReportsPage() {
                     <span>{reportFilterFields[reportMode].length ? 'Filterable' : 'Source required'}</span>
                   </div>
                   <p className="muted">{reportDescriptions[reportMode]}</p>
-                  {renderSourceControl(reportMode)}
-                  {renderFilterControls(reportMode)}
+                  <div className="report-card-inputs">
+                    {renderSourceControl(reportMode)}
+                    {renderFilterControls(reportMode)}
+                  </div>
                   <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
                     {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
                   </button>
