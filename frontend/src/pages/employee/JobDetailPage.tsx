@@ -462,7 +462,7 @@ export function JobDetailPage() {
   return (
     <main className="mobile-shell">
       <p>
-        <Link to="/jobs">← Back to My Jobs</Link>
+        <Link to="/jobs">Back to My Jobs</Link>
       </p>
       {error ? <p className="error">{error}</p> : null}
 
@@ -535,15 +535,25 @@ export function JobDetailPage() {
 
         <label>
           Clock note (optional)
-          <input value={clockNote} onChange={(event) => setClockNote(event.target.value)} disabled={isClockedIntoAnotherJob} />
+          <input
+            value={clockNote}
+            onChange={(event) => setClockNote(event.target.value)}
+            disabled={isClockedIntoAnotherJob}
+          />
         </label>
 
         {isClockedIntoThisJob ? (
           <>
             <label>
               Work summary (required)
-              <textarea value={clockWorkSummary} onChange={(event) => setClockWorkSummary(event.target.value)} required />
+              <textarea
+                aria-describedby="clock-work-summary-help"
+                value={clockWorkSummary}
+                onChange={(event) => setClockWorkSummary(event.target.value)}
+                required
+              />
             </label>
+            <p id="clock-work-summary-help" className="field-help">Summarize the work completed before clocking out.</p>
             <button onClick={onClockOut} disabled={isClocking}>
               {isClocking ? 'Clocking out...' : 'Clock Out with GPS'}
             </button>
@@ -559,7 +569,18 @@ export function JobDetailPage() {
         <h2>Add Work Note</h2>
         {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
         <form onSubmit={onAddWorkNote} className="stack">
-          <textarea value={workNote} onChange={(event) => setWorkNote(event.target.value)} required placeholder="Describe work performed" disabled={!isClockedIntoThisJob} />
+          <label>
+            Work note
+            <textarea
+              aria-describedby="work-note-help"
+              value={workNote}
+              onChange={(event) => setWorkNote(event.target.value)}
+              required
+              placeholder="Describe work performed"
+              disabled={!isClockedIntoThisJob}
+            />
+          </label>
+          <p id="work-note-help" className="field-help">Use this for progress notes, site conditions, or details the office should review.</p>
           <button type="submit" disabled={isSavingWork || !isClockedIntoThisJob}>
             {isSavingWork ? 'Saving note...' : 'Save Work Note'}
           </button>
@@ -572,11 +593,23 @@ export function JobDetailPage() {
         <form onSubmit={onSubmitPartRequest} className="stack">
           <label>
             Find existing part or enter new part
-            <input value={partRequestDescription} onChange={(event) => onPartRequestDescriptionChange(event.target.value)} placeholder="Search part number, name, or type a new part" disabled={!isClockedIntoThisJob} />
+            <input
+              aria-describedby="part-description-help"
+              value={partRequestDescription}
+              onChange={(event) => onPartRequestDescriptionChange(event.target.value)}
+              placeholder="Search part number, name, or type a new part"
+              disabled={!isClockedIntoThisJob}
+            />
           </label>
+          <p id="part-description-help" className="field-help">Select a matching stocked part when available, or submit the typed value as an unlisted part.</p>
           <label>
             Existing parts match
-            <select value={selectedPartId} onChange={(event) => setSelectedPartId(event.target.value)} disabled={!isClockedIntoThisJob}>
+            <select
+              aria-describedby="part-match-help"
+              value={selectedPartId}
+              onChange={(event) => setSelectedPartId(event.target.value)}
+              disabled={!isClockedIntoThisJob}
+            >
               <option value="">Use typed new/unlisted part</option>
               {partLookupMatches.map((part) => (
                 <option key={part.id} value={part.id}>
@@ -585,6 +618,7 @@ export function JobDetailPage() {
               ))}
             </select>
           </label>
+          <p id="part-match-help" className="field-help">Changing the typed search clears the selected match so the submitted part stays intentional.</p>
           {selectedPart ? (
             <p className="muted">Selected existing part: {selectedPart.partNumber} - {selectedPart.name}</p>
           ) : (
@@ -592,11 +626,23 @@ export function JobDetailPage() {
           )}
           <label>
             Quantity
-            <input type="number" min="0.01" step="0.01" value={partRequestQuantity} onChange={(event) => setPartRequestQuantity(event.target.value)} required disabled={!isClockedIntoThisJob} />
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={partRequestQuantity}
+              onChange={(event) => setPartRequestQuantity(event.target.value)}
+              required
+              disabled={!isClockedIntoThisJob}
+            />
           </label>
           <label>
             Notes
-            <input value={partRequestNotes} onChange={(event) => setPartRequestNotes(event.target.value)} disabled={!isClockedIntoThisJob} />
+            <input
+              value={partRequestNotes}
+              onChange={(event) => setPartRequestNotes(event.target.value)}
+              disabled={!isClockedIntoThisJob}
+            />
           </label>
           <label className="row">
             <input type="checkbox" checked={partNeedsOrdered} onChange={(event) => setPartNeedsOrdered(event.target.checked)} disabled={!isClockedIntoThisJob} />
@@ -606,7 +652,11 @@ export function JobDetailPage() {
             <>
               <label>
                 Urgency
-                <select value={partRequestUrgency} onChange={(event) => setPartRequestUrgency(event.target.value)} disabled={!isClockedIntoThisJob}>
+                <select
+                  value={partRequestUrgency}
+                  onChange={(event) => setPartRequestUrgency(event.target.value)}
+                  disabled={!isClockedIntoThisJob}
+                >
                   <option value="">Routine</option>
                   <option value="Soon">Soon</option>
                   <option value="Urgent">Urgent</option>
@@ -614,7 +664,12 @@ export function JobDetailPage() {
               </label>
               <label>
                 Needed by
-                <input type="date" value={partRequestNeededBy} onChange={(event) => setPartRequestNeededBy(event.target.value)} disabled={!isClockedIntoThisJob} />
+                <input
+                  type="date"
+                  value={partRequestNeededBy}
+                  onChange={(event) => setPartRequestNeededBy(event.target.value)}
+                  disabled={!isClockedIntoThisJob}
+                />
               </label>
             </>
           ) : null}
@@ -628,16 +683,25 @@ export function JobDetailPage() {
         <h2>Upload Photo / File</h2>
         {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
         <form onSubmit={onUpload} className="stack">
-          <input
-            type="file"
-            accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
-            onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
-            required
-            disabled={!isClockedIntoThisJob}
-          />
+          <label>
+            Photo or file
+            <input
+              aria-describedby="upload-file-help"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+              onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
+              required
+              disabled={!isClockedIntoThisJob}
+            />
+          </label>
+          <p id="upload-file-help" className="field-help">Allowed file types: JPG, PNG, WebP, or PDF.</p>
           <label>
             Caption
-            <input value={uploadCaption} onChange={(event) => setUploadCaption(event.target.value)} disabled={!isClockedIntoThisJob} />
+            <input
+              value={uploadCaption}
+              onChange={(event) => setUploadCaption(event.target.value)}
+              disabled={!isClockedIntoThisJob}
+            />
           </label>
           <button type="submit" disabled={isUploading || !isClockedIntoThisJob}>
             {isUploading ? 'Uploading...' : 'Upload'}
