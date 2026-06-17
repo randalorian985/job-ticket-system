@@ -385,8 +385,28 @@ The workspace keeps related work on one screen instead of forcing Managers/Admin
 
 ![Manager/Admin job-ticket workspace](assets/system-wiki/job-ticket-workspace.png)
 
+### Ticket View Workflow
+Managers/Admins open a ticket from the job-ticket queue, dashboard links, reports, or another Manager/Admin workflow. The ticket view preserves safe return context where possible, so a user can go back to the filtered queue they came from.
+
+The ticket view is organized around review first and editing second:
+- the top summary shows ticket number, title, status, priority, customer, location, equipment, and due date;
+- the recommended next action opens the most relevant workflow screen;
+- workflow tabs separate Service Details, Dispatch, Labor, Parts, Files, Invoice Review, and History;
+- the side action rail keeps common Manager/Admin actions visible without taking over the whole screen.
+
+This view is intended to answer "what needs attention?" before asking the user to edit anything.
+
 ### Ticket Editing
-Managers/Admins can edit ticket information through a focused panel.
+Managers/Admins edit ticket information through a focused in-page panel. The previous workflow opened one large edit form containing customer, service location, equipment, scope, billing, dates, status, and priority fields at the same time. That worked functionally, but it forced users to scan a long form and created extra mobile scrolling.
+
+The new workflow keeps editing in the ticket workspace but splits the edit panel into sections:
+- **Basics**: title, job type, priority, and status;
+- **Customer & Equipment**: customer, service location, billing party, equipment, quick-add relationship helpers, and recent equipment service history;
+- **Scope & Notes**: description, internal notes, and customer notes;
+- **Billing**: purchase order and billing contact fields;
+- **Schedule**: requested, scheduled start, and due dates.
+
+The same dispatch-readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
 
 The edit workflow should preserve:
 - customer/service-location relationships;
@@ -394,6 +414,89 @@ The edit workflow should preserve:
 - assigned manager context;
 - status and priority values;
 - notes and schedule fields.
+
+Reason for change:
+- reduce long-form scrolling on desktop and mobile;
+- make each editing decision easier to understand;
+- keep relationship editing separate from notes, billing, and schedule changes;
+- preserve the existing backend update behavior while improving the client workflow.
+
+User experience improvements:
+- fewer fields compete for attention at one time;
+- section buttons make the edit model predictable;
+- mobile users can edit one section at a time instead of working through a long stacked form;
+- dispatch-readiness feedback remains visible while editing;
+- quick actions let users add notes, upload photos/files, review labor, or change status without opening the full editor.
+
+Technical implementation details:
+- `JobTicketEditorForm` owns the section state and still emits the same ticket update payload.
+- The Manager/Admin ticket detail page opens the section editor through the existing `Edit Ticket` action.
+- No new route, backend service, database table, enum, migration, or authorization policy was introduced.
+- Existing APIs remain in use: ticket update, work-entry add, file upload, status change, archive, assignment, part request, time-entry list, and report summary.
+
+Component changes:
+- `frontend/src/pages/manager/JobTicketEditorForm.tsx` now renders section navigation and section panels.
+- `frontend/src/pages/manager/JobTicketDetailPage.tsx` exposes quick-action panels for Add Note and Add Photo/File and routes Add Labor to the Labor workflow tab.
+- `frontend/src/pages/manager/JobTicketEditorForm.test.tsx` and `frontend/src/pages/manager/JobTicketDetailPage.test.tsx` cover the section navigation and quick-action behavior.
+
+Database impacts: none.
+
+API impacts: none. The enhancement reuses existing endpoints and DTOs.
+
+```mermaid
+flowchart TD
+  A["Open ticket view"] --> B["Review summary and recommended action"]
+  B --> C{"Need to edit ticket details?"}
+  C -->|Yes| D["Open Edit Ticket"]
+  D --> E["Choose edit section"]
+  E --> F["Update section fields"]
+  F --> G["Save through existing ticket update API"]
+  C -->|No| H["Use workflow tabs or quick actions"]
+  H --> I["Add Note / Add Photo / Add Labor / Change Status"]
+```
+
+### Mobile User Experience
+On smaller screens, the section-based editor reduces the amount of visible form content. Users choose the section they need, make the change, and save. This avoids the older long-form edit mode where relationship, billing, notes, and schedule controls all appeared in one continuous vertical form.
+
+Mobile users should prefer:
+- quick actions for simple notes and photos/files;
+- the Labor tab for reviewing labor/time entries;
+- the Status Review panel for status changes;
+- section editing only when ticket details need to change.
+
+### Section-Based Editing Architecture
+Section-based editing is a frontend presentation architecture. It does not split the backend ticket update command. The frontend keeps one edit draft and one save action so existing validation, API contracts, and persistence behavior remain stable.
+
+Section responsibilities:
+- Basics handles identity/status fields.
+- Customer & Equipment handles relationship fields and quick-add relationship helpers.
+- Scope & Notes handles narrative fields.
+- Billing handles closeout billing metadata.
+- Schedule handles date/time planning fields.
+
+### User Permissions And Edit Controls
+Manager/Admin users can access the ticket workbench and ticket edit controls. Employee users remain in the mobile employee workflow and do not receive Manager/Admin ticket-edit controls.
+
+Protected controls:
+- Edit Ticket;
+- Add Note;
+- Add Photo;
+- Add Labor;
+- Change Status;
+- Archive Review;
+- Add / Request Part;
+- assignment controls.
+
+The enhancement does not weaken authorization. It only changes the Manager/Admin frontend layout and quick-action access points.
+
+### Quick Actions
+Quick actions are short paths for common ticket updates:
+- **Add Note** opens a focused note panel and saves a Manager/Admin work entry to ticket history.
+- **Add Photo** opens a focused upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
+- **Add Labor** opens the existing Labor workflow tab for time/labor review and follow-up.
+- **Change Status** opens the existing Status Review panel with warnings and status selection.
+
+Quick actions are intended for small updates. Use the section editor when relationship, billing, schedule, or detailed ticket fields need to change.
 
 ### Assignment Management
 Managers/Admins can assign active, non-archived Employee users to tickets.

@@ -45,6 +45,13 @@ Manager/Admin Service Ticket Workspace Redesign is merged and protected on `main
 - `/manage` remains Manager/Admin-only and `/manage/users` remains Admin-only;
 - no backend API behavior, schema, migration, enum, auth, purchasing expansion, inventory expansion, portal, payment, notification, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior was added.
 
+Manager/Admin Section-Based Ticket Editing and Quick Actions was implemented on June 17, 2026:
+- affected modules: `frontend/src/pages/manager/JobTicketDetailPage.tsx`, `frontend/src/pages/manager/JobTicketEditorForm.tsx`, ticket detail/editor tests, shared styles, and client wiki documentation;
+- the old single long Edit Ticket form is replaced by section navigation for Basics, Customer & Equipment, Scope & Notes, Billing, and Schedule;
+- quick actions now expose Add Note, Add Photo, Add Labor, and Change Status from the ticket workbench action rail;
+- Add Note uses the existing job-ticket work-entry API; Add Photo uses the existing job-ticket file upload API; Add Labor opens the existing Labor workflow tab; Change Status keeps the existing guarded status review panel;
+- no database schema, migration, enum, authorization, route, backend API, DTO, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval behavior was added.
+
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
 - Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;

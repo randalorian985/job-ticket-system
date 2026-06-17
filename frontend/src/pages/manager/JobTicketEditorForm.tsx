@@ -72,6 +72,20 @@ export type EquipmentDuplicateWarning = {
   matchedFields: string[]
 }
 
+type TicketEditorSection = 'identity' | 'relationships' | 'scope' | 'billing' | 'schedule'
+
+const ticketEditorSections: Array<{
+  value: TicketEditorSection
+  label: string
+  description: string
+}> = [
+  { value: 'identity', label: 'Basics', description: 'Title, type, priority, and status.' },
+  { value: 'relationships', label: 'Customer & Equipment', description: 'Customer, location, billing party, and equipment.' },
+  { value: 'scope', label: 'Scope & Notes', description: 'Job description, internal notes, and customer notes.' },
+  { value: 'billing', label: 'Billing', description: 'Purchase order and billing contact details.' },
+  { value: 'schedule', label: 'Schedule', description: 'Requested, scheduled, and due dates.' }
+]
+
 const activeDispatchStatuses = new Set([2, 3, 4, 5, 6])
 const defaultJobTypeOptions = ['Repair', 'Inspection', 'Warranty', 'Install', 'Preventive Maintenance']
 const equipmentDuplicateMatchFields: Array<{
@@ -271,6 +285,7 @@ export function JobTicketEditorForm({
   const [serviceLocationQuickAddMessage, setServiceLocationQuickAddMessage] = useState<string | null>(null)
   const [equipmentQuickAddMessage, setEquipmentQuickAddMessage] = useState<string | null>(null)
   const [jobTypeQuickAddMessage, setJobTypeQuickAddMessage] = useState<string | null>(null)
+  const [activeEditorSection, setActiveEditorSection] = useState<TicketEditorSection>('identity')
   const [jobTypeOptions, setJobTypeOptions] = useState(() => uniqueLabels([...defaultJobTypeOptions, initial.jobType]))
   const [isAddingCustomer, setIsAddingCustomer] = useState(false)
   const [isAddingServiceLocation, setIsAddingServiceLocation] = useState(false)
@@ -598,9 +613,9 @@ export function JobTicketEditorForm({
   }
 
   return (
-    <form onSubmit={submit} className="stack job-editor-form">
+    <form onSubmit={submit} className="stack job-editor-form section-ticket-editor">
       {error ? <p className="error">{error}</p> : null}
-      <section className="stack" aria-label="dispatch requirements review">
+      <section className="stack section-edit-readiness" aria-label="dispatch requirements review">
         <h3>Dispatch Requirements</h3>
         <div className="review-grid">
           <div>
@@ -627,173 +642,245 @@ export function JobTicketEditorForm({
           <p className="muted">Dispatch status, customer, service location, equipment decision, schedule, due date, and job instructions are ready.</p>
         )}
       </section>
-      <label>Title<input value={form.title} onChange={(e) => update('title', e.target.value)} /></label>
-      <div className="field-with-action">
-        <label>Job Type
-          <select value={form.jobType ?? ''} onChange={(e) => update('jobType', e.target.value || null)}>
-            <option value="">Select job type</option>
-            {displayedJobTypeOptions.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-        <button type="button" className="secondary-button" onClick={() => setJobTypeQuickAddOpen((prev) => !prev)}>
-          Quick add job type
-        </button>
-      </div>
-      {jobTypeQuickAddMessage ? <p className="success" role="status">{jobTypeQuickAddMessage}</p> : null}
-      {jobTypeQuickAddError ? <p className="error">{jobTypeQuickAddError}</p> : null}
-      {jobTypeQuickAddOpen ? (
-        <section className="quick-add-panel" aria-label="quick add job type">
-          <label>New Job Type<input value={jobTypeDraft} onChange={(e) => setJobTypeDraft(e.target.value)} /></label>
-          <div className="row">
-            <button type="button" onClick={addJobType}>Add Job Type</button>
-            <button type="button" className="secondary-button" onClick={() => setJobTypeQuickAddOpen(false)}>Cancel</button>
+
+      <nav className="section-editor-nav" aria-label="ticket edit sections">
+        {ticketEditorSections.map((section) => (
+          <button
+            type="button"
+            key={section.value}
+            className={activeEditorSection === section.value ? 'section-editor-nav-active' : undefined}
+            aria-pressed={activeEditorSection === section.value}
+            aria-label={section.label}
+            title={section.description}
+            onClick={() => setActiveEditorSection(section.value)}
+          >
+            <span>{section.label}</span>
+            <small>{section.description}</small>
+          </button>
+        ))}
+      </nav>
+
+      {activeEditorSection === 'identity' ? (
+        <section className="section-editor-panel stack" aria-label="Basics edit section">
+          <div className="section-editor-heading">
+            <h3>Basics</h3>
+            <p className="muted">Edit the ticket's title, type, priority, and current status.</p>
           </div>
-        </section>
-      ) : null}
-      <div className="field-with-action">
-        <label>Customer
-          <select value={form.customerId} onChange={(e) => selectCustomer(e.target.value)}>
-            <option value="">Select customer</option>
-            {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
-        <button type="button" className="secondary-button" onClick={() => setCustomerQuickAddOpen((prev) => !prev)}>
-          Quick add customer
-        </button>
-      </div>
-      {customerQuickAddMessage ? <p className="success" role="status">{customerQuickAddMessage}</p> : null}
-      {customerQuickAddError ? <p className="error">{customerQuickAddError}</p> : null}
-      {customerQuickAddOpen ? (
-        <section className="quick-add-panel" aria-label="quick add customer">
-          <div className="quick-add-grid">
-            <label>Customer Name<input value={customerDraft.name} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, name: e.target.value }))} /></label>
-            <label>Account Number<input value={customerDraft.accountNumber} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, accountNumber: e.target.value }))} /></label>
-            <label>Contact Name<input value={customerDraft.contactName} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, contactName: e.target.value }))} /></label>
-            <label>Contact Phone<input value={customerDraft.phone} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, phone: e.target.value }))} /></label>
-            <label>Contact Email<input type="email" value={customerDraft.email} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, email: e.target.value }))} /></label>
-          </div>
-          <div className="row">
-            <button type="button" onClick={addCustomer} disabled={isAddingCustomer}>
-              {isAddingCustomer ? 'Adding Customer...' : 'Add Customer'}
+          <label>Title<input value={form.title} onChange={(e) => update('title', e.target.value)} /></label>
+          <div className="field-with-action">
+            <label>Job Type
+              <select value={form.jobType ?? ''} onChange={(e) => update('jobType', e.target.value || null)}>
+                <option value="">Select job type</option>
+                {displayedJobTypeOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+              </select>
+            </label>
+            <button type="button" className="secondary-button" onClick={() => setJobTypeQuickAddOpen((prev) => !prev)}>
+              Quick add job type
             </button>
-            <button type="button" className="secondary-button" onClick={() => setCustomerQuickAddOpen(false)}>Cancel</button>
           </div>
-          <p className="muted">New customers are selected for the ticket and billing party. Add a service location next before saving.</p>
+          {jobTypeQuickAddMessage ? <p className="success" role="status">{jobTypeQuickAddMessage}</p> : null}
+          {jobTypeQuickAddError ? <p className="error">{jobTypeQuickAddError}</p> : null}
+          {jobTypeQuickAddOpen ? (
+            <section className="quick-add-panel" aria-label="quick add job type">
+              <label>New Job Type<input value={jobTypeDraft} onChange={(e) => setJobTypeDraft(e.target.value)} /></label>
+              <div className="row">
+                <button type="button" onClick={addJobType}>Add Job Type</button>
+                <button type="button" className="secondary-button" onClick={() => setJobTypeQuickAddOpen(false)}>Cancel</button>
+              </div>
+            </section>
+          ) : null}
+          <div className="section-editor-grid">
+            <label>Priority<select value={form.priority} onChange={(e) => update('priority', Number(e.target.value))}>{priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
+            <label>Status<select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>{jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
+          </div>
         </section>
       ) : null}
-      <div className="field-with-action">
-        <label>Service Location
-          <select value={form.serviceLocationId} onChange={(e) => update('serviceLocationId', e.target.value)}>
-            <option value="">Select location</option>
-            {filteredLocations.map((c) => <option key={c.id} value={c.id}>{c.locationName}</option>)}
-          </select>
-        </label>
-        <button type="button" className="secondary-button" onClick={() => setServiceLocationQuickAddOpen((prev) => !prev)}>
-          Quick add location
-        </button>
-      </div>
-      {serviceLocationQuickAddMessage ? <p className="success" role="status">{serviceLocationQuickAddMessage}</p> : null}
-      {serviceLocationQuickAddError ? <p className="error">{serviceLocationQuickAddError}</p> : null}
-      {serviceLocationQuickAddOpen ? (
-        <section className="quick-add-panel" aria-label="quick add service location">
-          <div className="quick-add-grid">
-            <label>Location Name<input value={serviceLocationDraft.locationName} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, locationName: e.target.value }))} /></label>
-            <label>Street Address<input value={serviceLocationDraft.addressLine1} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, addressLine1: e.target.value }))} /></label>
-            <label>City<input value={serviceLocationDraft.city} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, city: e.target.value }))} /></label>
-            <label>State<input value={serviceLocationDraft.state} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, state: e.target.value }))} /></label>
-            <label>Postal Code<input value={serviceLocationDraft.postalCode} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, postalCode: e.target.value }))} /></label>
-            <label>Country<input value={serviceLocationDraft.country} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, country: e.target.value }))} /></label>
+
+      {activeEditorSection === 'relationships' ? (
+        <section className="section-editor-panel stack" aria-label="Customer and equipment edit section">
+          <div className="section-editor-heading">
+            <h3>Customer & Equipment</h3>
+            <p className="muted">Edit the customer, service location, billing party, and equipment relationships.</p>
           </div>
-          <div className="row">
-            <button type="button" onClick={addServiceLocation} disabled={isAddingServiceLocation}>
-              {isAddingServiceLocation ? 'Adding Location...' : 'Add Location'}
+          <div className="field-with-action">
+            <label>Customer
+              <select value={form.customerId} onChange={(e) => selectCustomer(e.target.value)}>
+                <option value="">Select customer</option>
+                {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <button type="button" className="secondary-button" onClick={() => setCustomerQuickAddOpen((prev) => !prev)}>
+              Quick add customer
             </button>
-            <button type="button" className="secondary-button" onClick={() => setServiceLocationQuickAddOpen(false)}>Cancel</button>
           </div>
-        </section>
-      ) : null}
-      <label>Billing Party<select value={form.billingPartyCustomerId} onChange={(e) => update('billingPartyCustomerId', e.target.value)}><option value="">Select billing party</option>{allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-      <div className="field-with-action">
-        <label>Equipment
-          <select value={form.equipmentId ?? ''} onChange={(e) => update('equipmentId', e.target.value || null)}>
-            <option value="">None</option>
-            {filteredEquipment.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
-        <button type="button" className="secondary-button" onClick={() => setEquipmentQuickAddOpen((prev) => !prev)}>
-          Quick add equipment
-        </button>
-      </div>
-      {equipmentQuickAddMessage ? <p className="success" role="status">{equipmentQuickAddMessage}</p> : null}
-      {equipmentQuickAddError ? <p className="error">{equipmentQuickAddError}</p> : null}
-      {equipmentQuickAddOpen ? (
-        <section className="quick-add-panel" aria-label="quick add equipment">
-          <div className="quick-add-grid">
-            <label>Equipment Name<input value={equipmentDraft.name} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, name: e.target.value }))} /></label>
-            <label>Equipment Number<input value={equipmentDraft.equipmentNumber} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, equipmentNumber: e.target.value }))} /></label>
-            <label>Unit Number<input value={equipmentDraft.unitNumber} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, unitNumber: e.target.value }))} /></label>
-            <label>Manufacturer<input value={equipmentDraft.manufacturer} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, manufacturer: e.target.value }))} /></label>
-            <label>Model Number<input value={equipmentDraft.modelNumber} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, modelNumber: e.target.value }))} /></label>
-            <label>Serial Number<input value={equipmentDraft.serialNumber} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, serialNumber: e.target.value }))} /></label>
-            <label>Equipment Type<input value={equipmentDraft.equipmentType} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, equipmentType: e.target.value }))} /></label>
-            <label>Year<input type="number" min="1900" max="2100" value={equipmentDraft.year} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, year: e.target.value }))} /></label>
+          {customerQuickAddMessage ? <p className="success" role="status">{customerQuickAddMessage}</p> : null}
+          {customerQuickAddError ? <p className="error">{customerQuickAddError}</p> : null}
+          {customerQuickAddOpen ? (
+            <section className="quick-add-panel" aria-label="quick add customer">
+              <div className="quick-add-grid">
+                <label>Customer Name<input value={customerDraft.name} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, name: e.target.value }))} /></label>
+                <label>Account Number<input value={customerDraft.accountNumber} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, accountNumber: e.target.value }))} /></label>
+                <label>Contact Name<input value={customerDraft.contactName} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, contactName: e.target.value }))} /></label>
+                <label>Contact Phone<input value={customerDraft.phone} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, phone: e.target.value }))} /></label>
+                <label>Contact Email<input type="email" value={customerDraft.email} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, email: e.target.value }))} /></label>
+              </div>
+              <div className="row">
+                <button type="button" onClick={addCustomer} disabled={isAddingCustomer}>
+                  {isAddingCustomer ? 'Adding Customer...' : 'Add Customer'}
+                </button>
+                <button type="button" className="secondary-button" onClick={() => setCustomerQuickAddOpen(false)}>Cancel</button>
+              </div>
+              <p className="muted">New customers are selected for the ticket and billing party. Add a service location next before saving.</p>
+            </section>
+          ) : null}
+          <div className="field-with-action">
+            <label>Service Location
+              <select value={form.serviceLocationId} onChange={(e) => update('serviceLocationId', e.target.value)}>
+                <option value="">Select location</option>
+                {filteredLocations.map((c) => <option key={c.id} value={c.id}>{c.locationName}</option>)}
+              </select>
+            </label>
+            <button type="button" className="secondary-button" onClick={() => setServiceLocationQuickAddOpen((prev) => !prev)}>
+              Quick add location
+            </button>
           </div>
-          {equipmentQuickAddDuplicateWarnings.length ? (
-            <div className="warning" role="status" aria-label="possible duplicate equipment warning">
-              <strong>Possible duplicate equipment</strong>
-              <ul>
-                {equipmentQuickAddDuplicateWarnings.map((warning) => (
-                  <li key={warning.equipment.id}>
-                    {warning.equipment.name}{warning.equipment.isArchived ? ' (archived)' : ''}: matches {warning.matchedFields.join(', ')}.
+          {serviceLocationQuickAddMessage ? <p className="success" role="status">{serviceLocationQuickAddMessage}</p> : null}
+          {serviceLocationQuickAddError ? <p className="error">{serviceLocationQuickAddError}</p> : null}
+          {serviceLocationQuickAddOpen ? (
+            <section className="quick-add-panel" aria-label="quick add service location">
+              <div className="quick-add-grid">
+                <label>Location Name<input value={serviceLocationDraft.locationName} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, locationName: e.target.value }))} /></label>
+                <label>Street Address<input value={serviceLocationDraft.addressLine1} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, addressLine1: e.target.value }))} /></label>
+                <label>City<input value={serviceLocationDraft.city} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, city: e.target.value }))} /></label>
+                <label>State<input value={serviceLocationDraft.state} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, state: e.target.value }))} /></label>
+                <label>Postal Code<input value={serviceLocationDraft.postalCode} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, postalCode: e.target.value }))} /></label>
+                <label>Country<input value={serviceLocationDraft.country} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, country: e.target.value }))} /></label>
+              </div>
+              <div className="row">
+                <button type="button" onClick={addServiceLocation} disabled={isAddingServiceLocation}>
+                  {isAddingServiceLocation ? 'Adding Location...' : 'Add Location'}
+                </button>
+                <button type="button" className="secondary-button" onClick={() => setServiceLocationQuickAddOpen(false)}>Cancel</button>
+              </div>
+            </section>
+          ) : null}
+          <label>Billing Party<select value={form.billingPartyCustomerId} onChange={(e) => update('billingPartyCustomerId', e.target.value)}><option value="">Select billing party</option>{allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          <div className="field-with-action">
+            <label>Equipment
+              <select value={form.equipmentId ?? ''} onChange={(e) => update('equipmentId', e.target.value || null)}>
+                <option value="">None</option>
+                {filteredEquipment.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <button type="button" className="secondary-button" onClick={() => setEquipmentQuickAddOpen((prev) => !prev)}>
+              Quick add equipment
+            </button>
+          </div>
+          {equipmentQuickAddMessage ? <p className="success" role="status">{equipmentQuickAddMessage}</p> : null}
+          {equipmentQuickAddError ? <p className="error">{equipmentQuickAddError}</p> : null}
+          {equipmentQuickAddOpen ? (
+            <section className="quick-add-panel" aria-label="quick add equipment">
+              <div className="quick-add-grid">
+                <label>Equipment Name<input value={equipmentDraft.name} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, name: e.target.value }))} /></label>
+                <label>Equipment Number<input value={equipmentDraft.equipmentNumber} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, equipmentNumber: e.target.value }))} /></label>
+                <label>Unit Number<input value={equipmentDraft.unitNumber} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, unitNumber: e.target.value }))} /></label>
+                <label>Manufacturer<input value={equipmentDraft.manufacturer} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, manufacturer: e.target.value }))} /></label>
+                <label>Model Number<input value={equipmentDraft.modelNumber} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, modelNumber: e.target.value }))} /></label>
+                <label>Serial Number<input value={equipmentDraft.serialNumber} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, serialNumber: e.target.value }))} /></label>
+                <label>Equipment Type<input value={equipmentDraft.equipmentType} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, equipmentType: e.target.value }))} /></label>
+                <label>Year<input type="number" min="1900" max="2100" value={equipmentDraft.year} onChange={(e) => setEquipmentDraft((prev) => ({ ...prev, year: e.target.value }))} /></label>
+              </div>
+              {equipmentQuickAddDuplicateWarnings.length ? (
+                <div className="warning" role="status" aria-label="possible duplicate equipment warning">
+                  <strong>Possible duplicate equipment</strong>
+                  <ul>
+                    {equipmentQuickAddDuplicateWarnings.map((warning) => (
+                      <li key={warning.equipment.id}>
+                        {warning.equipment.name}{warning.equipment.isArchived ? ' (archived)' : ''}: matches {warning.matchedFields.join(', ')}.
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <div className="row">
+                <button type="button" onClick={addEquipment} disabled={isAddingEquipment}>
+                  {isAddingEquipment ? 'Adding Equipment...' : 'Add Equipment'}
+                </button>
+                <button type="button" className="secondary-button" onClick={() => setEquipmentQuickAddOpen(false)}>Cancel</button>
+              </div>
+              <p className="muted">Customer / service location: {selectedCustomer?.name ?? 'No customer'} / {selectedServiceLocation?.locationName ?? 'No service location'}</p>
+            </section>
+          ) : null}
+          <section className="quick-add-panel" aria-label="equipment service history">
+            <h3>Recent Equipment Service History</h3>
+            {!form.equipmentId ? (
+              <p className="muted">Select equipment to review recent service history before saving this ticket.</p>
+            ) : isLoadingEquipmentHistory ? (
+              <p className="muted" role="status">Loading recent equipment service history...</p>
+            ) : equipmentHistoryError ? (
+              <p className="error">{equipmentHistoryError}</p>
+            ) : equipmentHistory.length ? (
+              <ul className="history-context-list">
+                {equipmentHistory.map((item) => (
+                  <li key={item.jobTicketId}>
+                    <strong>{item.jobTicketNumber}: {item.title}</strong>
+                    <span>{jobStatusLabel(item.jobStatus)} - {item.completedAtUtc ? `Completed ${new Date(item.completedAtUtc).toLocaleDateString()}` : `Created ${new Date(item.createdAtUtc).toLocaleDateString()}`}</span>
                   </li>
                 ))}
               </ul>
-            </div>
-          ) : null}
-          <div className="row">
-            <button type="button" onClick={addEquipment} disabled={isAddingEquipment}>
-              {isAddingEquipment ? 'Adding Equipment...' : 'Add Equipment'}
-            </button>
-            <button type="button" className="secondary-button" onClick={() => setEquipmentQuickAddOpen(false)}>Cancel</button>
-          </div>
-          <p className="muted">Customer / service location: {selectedCustomer?.name ?? 'No customer'} / {selectedServiceLocation?.locationName ?? 'No service location'}</p>
+            ) : (
+              <p className="muted">No recent service history is visible for the selected equipment.</p>
+            )}
+            <p className="muted">Use this history for Manager/Admin reference only; it does not recommend parts or guarantee compatibility.</p>
+          </section>
         </section>
       ) : null}
-      <section className="quick-add-panel" aria-label="equipment service history">
-        <h3>Recent Equipment Service History</h3>
-        {!form.equipmentId ? (
-          <p className="muted">Select equipment to review recent service history before saving this ticket.</p>
-        ) : isLoadingEquipmentHistory ? (
-          <p className="muted" role="status">Loading recent equipment service history...</p>
-        ) : equipmentHistoryError ? (
-          <p className="error">{equipmentHistoryError}</p>
-        ) : equipmentHistory.length ? (
-          <ul className="history-context-list">
-            {equipmentHistory.map((item) => (
-              <li key={item.jobTicketId}>
-                <strong>{item.jobTicketNumber}: {item.title}</strong>
-                <span>{jobStatusLabel(item.jobStatus)} - {item.completedAtUtc ? `Completed ${new Date(item.completedAtUtc).toLocaleDateString()}` : `Created ${new Date(item.createdAtUtc).toLocaleDateString()}`}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="muted">No recent service history is visible for the selected equipment.</p>
-        )}
-        <p className="muted">Use this history for Manager/Admin reference only; it does not recommend parts or guarantee compatibility.</p>
-      </section>
-      <label>Priority<select value={form.priority} onChange={(e) => update('priority', Number(e.target.value))}>{priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-      <label>Status<select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>{jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-      <label>Description<textarea value={form.description ?? ''} onChange={(e) => update('description', e.target.value || null)} /></label>
-      <label>Purchase Order Number<input value={form.purchaseOrderNumber ?? ''} onChange={(e) => update('purchaseOrderNumber', e.target.value || null)} placeholder="Customer or internal PO reference" /></label>
-      <label>Billing Contact Name<input value={form.billingContactName ?? ''} onChange={(e) => update('billingContactName', e.target.value || null)} /></label>
-      <label>Billing Contact Phone<input value={form.billingContactPhone ?? ''} onChange={(e) => update('billingContactPhone', e.target.value || null)} /></label>
-      <label>Billing Contact Email<input type="email" value={form.billingContactEmail ?? ''} onChange={(e) => update('billingContactEmail', e.target.value || null)} /></label>
-      <label>Internal Notes<textarea value={form.internalNotes ?? ''} onChange={(e) => update('internalNotes', e.target.value || null)} /></label>
-      <label>Customer Notes<textarea value={form.customerFacingNotes ?? ''} onChange={(e) => update('customerFacingNotes', e.target.value || null)} /></label>
-      <label>Requested (UTC)<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-      <label>Scheduled Start (UTC)<input type="datetime-local" value={(form.scheduledStartAtUtc ?? '').slice(0, 16)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-      <label>Due (UTC)<input type="datetime-local" value={(form.dueAtUtc ?? '').slice(0, 16)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-      <button type="submit">{submitLabel}</button>
+
+      {activeEditorSection === 'scope' ? (
+        <section className="section-editor-panel stack" aria-label="Scope and notes edit section">
+          <div className="section-editor-heading">
+            <h3>Scope & Notes</h3>
+            <p className="muted">Edit the job description and notes visible to office or customer workflows.</p>
+          </div>
+          <label>Description<textarea value={form.description ?? ''} onChange={(e) => update('description', e.target.value || null)} /></label>
+          <label>Internal Notes<textarea value={form.internalNotes ?? ''} onChange={(e) => update('internalNotes', e.target.value || null)} /></label>
+          <label>Customer Notes<textarea value={form.customerFacingNotes ?? ''} onChange={(e) => update('customerFacingNotes', e.target.value || null)} /></label>
+        </section>
+      ) : null}
+
+      {activeEditorSection === 'billing' ? (
+        <section className="section-editor-panel stack" aria-label="Billing edit section">
+          <div className="section-editor-heading">
+            <h3>Billing</h3>
+            <p className="muted">Edit purchase order and billing contact details used for closeout review.</p>
+          </div>
+          <label>Purchase Order Number<input value={form.purchaseOrderNumber ?? ''} onChange={(e) => update('purchaseOrderNumber', e.target.value || null)} placeholder="Customer or internal PO reference" /></label>
+          <div className="section-editor-grid">
+            <label>Billing Contact Name<input value={form.billingContactName ?? ''} onChange={(e) => update('billingContactName', e.target.value || null)} /></label>
+            <label>Billing Contact Phone<input value={form.billingContactPhone ?? ''} onChange={(e) => update('billingContactPhone', e.target.value || null)} /></label>
+            <label>Billing Contact Email<input type="email" value={form.billingContactEmail ?? ''} onChange={(e) => update('billingContactEmail', e.target.value || null)} /></label>
+          </div>
+        </section>
+      ) : null}
+
+      {activeEditorSection === 'schedule' ? (
+        <section className="section-editor-panel stack" aria-label="Schedule edit section">
+          <div className="section-editor-heading">
+            <h3>Schedule</h3>
+            <p className="muted">Edit requested, scheduled start, and due dates for dispatch planning.</p>
+          </div>
+          <div className="section-editor-grid">
+            <label>Requested (UTC)<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+            <label>Scheduled Start (UTC)<input type="datetime-local" value={(form.scheduledStartAtUtc ?? '').slice(0, 16)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+            <label>Due (UTC)<input type="datetime-local" value={(form.dueAtUtc ?? '').slice(0, 16)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+          </div>
+        </section>
+      ) : null}
+
+      <div className="section-editor-save-row">
+        <span className="muted">Changes save through the existing ticket update workflow.</span>
+        <button type="submit">{submitLabel}</button>
+      </div>
     </form>
   )
 }

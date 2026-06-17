@@ -7,6 +7,7 @@ type WikiBlock =
   | { type: 'list'; items: string[] }
   | { type: 'image'; alt: string; src: string }
   | { type: 'table'; rows: string[][] }
+  | { type: 'code'; language: string; text: string }
 
 const wikiPath = '/docs/system-wiki.md'
 
@@ -60,6 +61,8 @@ function parseWiki(markdown: string): WikiBlock[] {
   let paragraph: string[] = []
   let list: string[] = []
   let table: string[][] = []
+  let code: string[] = []
+  let codeLanguage = ''
 
   const flushParagraph = () => {
     if (!paragraph.length) return
@@ -81,6 +84,27 @@ function parseWiki(markdown: string): WikiBlock[] {
 
   for (const rawLine of lines) {
     const line = rawLine.trim()
+
+    if (code.length || line.startsWith('```')) {
+      if (line.startsWith('```') && !code.length) {
+        flushParagraph()
+        flushList()
+        flushTable()
+        codeLanguage = line.slice(3).trim()
+        code = ['']
+        continue
+      }
+
+      if (line.startsWith('```')) {
+        blocks.push({ type: 'code', language: codeLanguage, text: code.slice(1).join('\n') })
+        code = []
+        codeLanguage = ''
+        continue
+      }
+
+      code.push(rawLine)
+      continue
+    }
 
     if (!line) {
       flushParagraph()
@@ -214,8 +238,17 @@ export function SystemWikiPage() {
                 return <ul key={index}>{block.items.map((item) => <li key={item}>{formatInline(item)}</li>)}</ul>
               }
 
-              if (block.type === 'image') {
-                return <img alt={block.alt} className="system-wiki-image" key={index} src={block.src} />
+      if (block.type === 'image') {
+        return <img alt={block.alt} className="system-wiki-image" key={index} src={block.src} />
+      }
+
+              if (block.type === 'code') {
+                return (
+                  <pre className="system-wiki-code" key={index}>
+                    {block.language ? <span>{block.language}</span> : null}
+                    <code>{block.text}</code>
+                  </pre>
+                )
               }
 
               return (

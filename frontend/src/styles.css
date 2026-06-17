@@ -2588,6 +2588,30 @@ td {
   padding: 0.1rem 0.25rem;
 }
 
+.system-wiki-code {
+  background: #0f172a;
+  border-radius: 8px;
+  color: #e2e8f0;
+  overflow-x: auto;
+  padding: 0.85rem;
+}
+
+.system-wiki-code span {
+  color: #93c5fd;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+
+.system-wiki-code code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  white-space: pre;
+}
+
 .system-wiki-document table {
   border-collapse: collapse;
   font-size: 0.9rem;
@@ -2616,6 +2640,96 @@ td {
   max-width: 100%;
 }
 
+.section-ticket-editor {
+  gap: 1rem;
+}
+
+.section-edit-readiness {
+  background: #f8fafc;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+
+.section-editor-nav {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.section-editor-nav button {
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  display: grid;
+  gap: 0.2rem;
+  min-height: 4.25rem;
+  padding: 0.65rem;
+  text-align: left;
+}
+
+.section-editor-nav button:hover,
+.section-editor-nav button:focus-visible {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16);
+}
+
+.section-editor-nav-active {
+  background: #eff6ff !important;
+  border-color: #1d4ed8 !important;
+}
+
+.section-editor-nav span {
+  font-weight: 800;
+}
+
+.section-editor-nav small {
+  color: #475569;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.section-editor-panel {
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.section-editor-heading {
+  margin-bottom: 0.25rem;
+}
+
+.section-editor-heading h3 {
+  margin: 0;
+}
+
+.section-editor-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.section-editor-save-row {
+  align-items: center;
+  border-top: 1px solid #dbe4f0;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding-top: 0.9rem;
+}
+
+.checkbox-row {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.checkbox-row input {
+  width: auto;
+}
+
 @media (max-width: 900px) {
   .system-wiki-hero {
     display: grid;
@@ -2627,6 +2741,11 @@ td {
 
   .system-wiki-toc {
     position: static;
+  }
+
+  .section-editor-save-row {
+    align-items: stretch;
+    display: grid;
   }
 }
 

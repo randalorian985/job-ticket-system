@@ -38,7 +38,7 @@ import {
 import { JobTicketEditorForm } from "./JobTicketEditorForm";
 import { activeDispatchStatusValues, getSafeManagerReturnContext } from "./managerTaskNavigation";
 
-type WorkbenchDrawer = "ticket" | "status" | "archive" | "part" | null;
+type WorkbenchDrawer = "ticket" | "status" | "archive" | "part" | "note" | "photo" | null;
 type WorkflowTab = "overview" | "dispatch" | "time" | "parts" | "files" | "closeout" | "activity";
 
 const workflowTabs: Array<{ value: WorkflowTab; label: string; description: string }> = [
@@ -73,6 +73,7 @@ type ActivityItem = {
 };
 
 const emptyDisplay = "-";
+const allowedManagerUploadTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const displayValue = (value?: string | null) => value?.trim() ? value : emptyDisplay;
 
 const currencyFormatter = new Intl.NumberFormat(undefined, {
@@ -180,6 +181,12 @@ export function JobTicketDetailPage() {
   const [partNeededBy, setPartNeededBy] = useState("");
   const [isSubmittingPart, setIsSubmittingPart] = useState(false);
   const [activeDrawer, setActiveDrawer] = useState<WorkbenchDrawer>(null);
+  const [quickNote, setQuickNote] = useState("");
+  const [isSavingQuickNote, setIsSavingQuickNote] = useState(false);
+  const [quickUploadFile, setQuickUploadFile] = useState<File | null>(null);
+  const [quickUploadCaption, setQuickUploadCaption] = useState("");
+  const [quickUploadForInvoice, setQuickUploadForInvoice] = useState(false);
+  const [isUploadingQuickFile, setIsUploadingQuickFile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -895,6 +902,82 @@ export function JobTicketDetailPage() {
     }
   };
 
+  const onAddQuickNote = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!jobTicketId || !quickNote.trim()) {
+      setError("Enter a note before saving.");
+      setMessage(null);
+      return;
+    }
+
+    setIsSavingQuickNote(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await jobTicketsApi.addWorkEntry(jobTicketId, {
+        employeeId: user?.employeeId ?? null,
+        entryType: 1,
+        notes: quickNote.trim(),
+        performedAtUtc: new Date().toISOString(),
+      });
+      setQuickNote("");
+      setActiveDrawer(null);
+      setMessage("Note added to the ticket history.");
+      await load();
+    } catch (requestError) {
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to add note.",
+      );
+      setMessage(null);
+    } finally {
+      setIsSavingQuickNote(false);
+    }
+  };
+
+  const onUploadQuickFile = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!jobTicketId || !quickUploadFile) {
+      setError("Choose a photo or file before uploading.");
+      setMessage(null);
+      return;
+    }
+
+    if (!allowedManagerUploadTypes.includes(quickUploadFile.type)) {
+      setError("Unsupported file type. Allowed: jpg, png, webp, or pdf.");
+      setMessage(null);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("File", quickUploadFile);
+    formData.append("Caption", quickUploadCaption);
+    formData.append("IsInvoiceAttachment", quickUploadForInvoice ? "true" : "false");
+
+    setIsUploadingQuickFile(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await filesApi.upload(jobTicketId, formData);
+      setQuickUploadFile(null);
+      setQuickUploadCaption("");
+      setQuickUploadForInvoice(false);
+      setActiveDrawer(null);
+      setMessage("Photo/file uploaded.");
+      await load();
+    } catch (requestError) {
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to upload photo or file.",
+      );
+      setMessage(null);
+    } finally {
+      setIsUploadingQuickFile(false);
+    }
+  };
+
   const editPayload: CreateJobTicketDto | null = job
     ? {
         customerId: job.customerId,
@@ -1192,6 +1275,30 @@ export function JobTicketDetailPage() {
                   </button>
                   <button
                     type="button"
+                    title="Add a Manager/Admin note to this ticket's history."
+                    onClick={() => openWorkflowDrawer("activity", "note")}
+                  >
+                    Add Note
+                  </button>
+                  <button
+                    type="button"
+                    title="Upload a job photo, document, or invoice attachment."
+                    onClick={() => openWorkflowDrawer("files", "photo")}
+                  >
+                    Add Photo
+                  </button>
+                  <button
+                    type="button"
+                    title="Open labor and time entries for review or approval follow-up."
+                    onClick={() => {
+                      selectWorkflowTab("time");
+                      setActiveDrawer(null);
+                    }}
+                  >
+                    Add Labor
+                  </button>
+                  <button
+                    type="button"
                     className="action-wide"
                     title="Record a used part or create a request for office ordering."
                     onClick={() => openWorkflowDrawer("parts", "part")}
@@ -1318,6 +1425,74 @@ export function JobTicketDetailPage() {
                       }
                     }}
                   />
+                </section>
+              ) : null}
+
+              {activeDrawer === "note" ? (
+                <section className="workbench-drawer no-print" aria-label="quick note panel">
+                  <div className="workbench-panel-heading">
+                    <div>
+                      <h3>Add Note</h3>
+                      <p className="muted">Save a Manager/Admin work note to the ticket history without opening the full editor.</p>
+                    </div>
+                    <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                  </div>
+                  <form className="stack" onSubmit={onAddQuickNote}>
+                    <label>Ticket Note
+                      <textarea
+                        aria-label="Ticket note"
+                        value={quickNote}
+                        onChange={(event) => setQuickNote(event.target.value)}
+                        placeholder="Add a clear note for dispatch, closeout, or customer follow-up."
+                      />
+                    </label>
+                    <div className="row">
+                      <button type="submit" disabled={isSavingQuickNote}>{isSavingQuickNote ? "Saving note..." : "Save Note"}</button>
+                      <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Cancel</button>
+                    </div>
+                  </form>
+                </section>
+              ) : null}
+
+              {activeDrawer === "photo" ? (
+                <section className="workbench-drawer no-print" aria-label="quick photo upload panel">
+                  <div className="workbench-panel-heading">
+                    <div>
+                      <h3>Add Photo</h3>
+                      <p className="muted">Upload a job photo, PDF, or closeout attachment from the ticket workspace.</p>
+                    </div>
+                    <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                  </div>
+                  <form className="stack" onSubmit={onUploadQuickFile}>
+                    <label>Photo or File
+                      <input
+                        aria-label="Photo or file"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                        onChange={(event) => setQuickUploadFile(event.target.files?.[0] ?? null)}
+                      />
+                    </label>
+                    <label>Caption
+                      <input
+                        value={quickUploadCaption}
+                        onChange={(event) => setQuickUploadCaption(event.target.value)}
+                        placeholder="Optional caption or closeout note"
+                      />
+                    </label>
+                    <label className="checkbox-row">
+                      <input
+                        type="checkbox"
+                        checked={quickUploadForInvoice}
+                        onChange={(event) => setQuickUploadForInvoice(event.target.checked)}
+                      />
+                      Mark for invoice review
+                    </label>
+                    <div className="row">
+                      <button type="submit" disabled={isUploadingQuickFile}>{isUploadingQuickFile ? "Uploading..." : "Upload Photo/File"}</button>
+                      <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Cancel</button>
+                    </div>
+                    <p className="muted">Allowed file types: JPG, PNG, WebP, or PDF.</p>
+                  </form>
                 </section>
               ) : null}
 
