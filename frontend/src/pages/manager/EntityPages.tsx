@@ -6,6 +6,7 @@ export { UnauthorizedPage } from './users/UnauthorizedPage'
 export { UsersPage } from './users/UsersPage'
 export { SystemWikiPage } from './wiki/SystemWikiPage'
 
+export { DispatchBoardPage } from './DispatchBoardPage'
 export { InventoryPage } from './InventoryPage'
 export { PartRequestsPage } from './PartRequestsPage'
 export { PartsUsageHistoryPage } from './PartsUsageHistoryPage'

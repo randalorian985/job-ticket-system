@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
+import { masterDataApi } from '../../api/masterDataApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import { AppRouter } from '../AppRouter'
@@ -14,7 +15,20 @@ vi.mock('../../features/auth/AuthContext', () => ({
 vi.mock('../../api/jobTicketsApi', () => ({
   jobTicketsApi: {
     listMine: vi.fn(),
-    listAll: vi.fn()
+    listAll: vi.fn(),
+    listAssignments: vi.fn(),
+    get: vi.fn(),
+    update: vi.fn(),
+    changeStatus: vi.fn(),
+    addAssignment: vi.fn(),
+    removeAssignment: vi.fn(),
+    addWorkEntry: vi.fn()
+  }
+}))
+
+vi.mock('../../api/masterDataApi', () => ({
+  masterDataApi: {
+    listEquipment: vi.fn()
   }
 }))
 
@@ -65,6 +79,8 @@ describe('AppRouter authentication rendering', () => {
       text: () => Promise.resolve('# Job Ticket System Wiki\n\n## Reports\n\nReports support CSV export and print/save-PDF output.')
     }))
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([])
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([])
     vi.mocked(usersApi.list).mockResolvedValue([])
     vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([])
   })
@@ -370,5 +386,23 @@ describe('AppRouter authentication rendering', () => {
     expect(await screen.findByRole('heading', { name: 'System Wiki' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Reports' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Open markdown' })).toHaveAttribute('href', '/docs/system-wiki.md')
+  })
+
+  it('manager users can open the dispatch board', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: managerUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    render(
+      <MemoryRouter future={routerFuture} initialEntries={['/manage/dispatch']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Dispatch Board' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Create Job Request' })).toHaveAttribute('href', '/manage/job-tickets/new')
   })
 })

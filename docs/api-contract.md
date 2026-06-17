@@ -30,6 +30,31 @@ Job-ticket list and detail responses keep relationship IDs for API operations an
 - Employee and Manager/Admin screens display these labels instead of exposing customer, service-location, equipment, or employee GUIDs.
 - Authorization, schema, migrations, enum values, and write request DTOs are unchanged.
 
+## Dispatch Board
+The Manager/Admin Dispatch Board at `/manage/dispatch` is a frontend workflow over existing APIs.
+
+Existing APIs used:
+- `GET /api/job-tickets`
+- `GET /api/job-tickets/{jobTicketId}`
+- `PUT /api/job-tickets/{jobTicketId}`
+- `POST /api/job-tickets/{jobTicketId}/status`
+- `GET /api/job-tickets/{jobTicketId}/assignments`
+- `POST /api/job-tickets/{jobTicketId}/assignments`
+- `DELETE /api/job-tickets/{jobTicketId}/assignments/{employeeId}`
+- `POST /api/job-tickets/{jobTicketId}/work-entries`
+- `GET /api/equipment`
+- `GET /api/users/assignable-employees`
+
+Behavior:
+- board views, lifecycle labels, missing-assignment warnings, and same-day crane/operator/crew conflict warnings are frontend-derived from loaded ticket, equipment, and assignment data;
+- scheduling updates the existing ticket schedule/equipment fields;
+- operator assignment uses the existing lead-assignment flag;
+- crew assignment uses existing non-lead ticket assignments;
+- En Route and On Site actions currently record dispatch work-entry notes while preserving existing job-ticket enum values;
+- Start Work, Complete Work, Finalize Ticket, and Invoiced/Ready-for-Billing handoff use existing job-ticket status values.
+
+This does not add a backend dispatch-job API, backend dispatch status enum, schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
+
 ## Manager/Admin Master Data
 Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the already-documented DTO fields for customer contact/account details, service-location status/address/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.
 
