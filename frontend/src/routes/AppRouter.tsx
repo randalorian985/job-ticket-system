@@ -6,6 +6,7 @@ import { LoginPage } from '../pages/employee/LoginPage'
 import { MyJobsPage } from '../pages/employee/MyJobsPage'
 import {
   CustomersPage,
+  DispatchBoardPage,
   EquipmentPage,
   InventoryPage,
   PartRequestsPage,
@@ -55,6 +56,7 @@ export function AppRouter() {
       <Route element={<ProtectedRoute allowedRoles={['Manager', 'Admin']} />}>
         <Route path="/manage" element={<ManagerShell />}>
           <Route index element={<ManagerDashboardPage />} />
+          <Route path="dispatch" element={<DispatchBoardPage />} />
           <Route path="job-tickets" element={<JobTicketListPage />} />
           <Route path="job-tickets/new" element={<JobTicketCreatePage />} />
           <Route path="job-tickets/:jobTicketId" element={<JobTicketDetailPage />} />

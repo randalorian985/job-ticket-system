@@ -10,6 +10,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Manager/Admin reports are organized into invoice/closeout, labor/parts, and service-history sections with shared filters, source-ID validation, date/paging validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from the currently loaded rows.
 - Manager/Admin screen cleanup separates report catalog/results, master-data list/editor, and Admin user list/editor states into focused screens without changing backend APIs; Admin user management now filters accounts by search, role, and active/inactive status.
 - Manager/Admin job-ticket queue can export the currently visible filtered ticket rows to client-side CSV for dispatch handoff without adding backend export APIs.
+- Manager/Admin Dispatch Board is now a first-class operational screen at `/manage/dispatch`, with Unscheduled, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views. Dispatchers can schedule jobs, assign crane/equipment, assign operator/crew, move day-of work forward, open tickets, and finalize completed tickets using existing ticket, assignment, work-entry, and status APIs.
 - Labor report totals are labeled as time-entry labor-rate snapshot values and preserve the existing API fallback behavior for legacy entries without captured snapshots.
 - Parts Request Workflow Phase 2 adds in-ticket Add / Request Part flows without adding purchasing, receiving, inventory expansion, recommendations, or automatic compatibility decisions.
 - Technicians can search/select existing parts through a technician-safe lookup or type a new/unlisted part from inside an assigned service ticket.
@@ -27,9 +28,11 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 ## Current UI Direction
 The Manager/Admin Service Ticket Workspace Redesign is implemented for the job-ticket detail/workspace flow, and the same restrained operational design system is applied across the rest of the existing application.
 
-The service-ticket side now centers on a coherent field-service workbench: work queue, ticket workspace, technician assignment, service scope, labor, parts, files/photos, status, and invoice-ready closeout. The design direction remains adapted to Crane's job-ticket scope.
+The service-ticket side now centers on a coherent field-service operations flow: Dispatch Board, work queue, ticket workspace, technician assignment, service scope, labor, parts, files/photos, status, and invoice-ready closeout. The design direction remains adapted to Crane's job-ticket scope.
 
 This UI direction does not approve external client portals, online payments, quote approval automation, customer notification automation, purchasing expansion, inventory expansion, parts recommendations, AI/scoring, automatic compatibility, or automatic approval.
+
+The Dispatch Board is currently ticket-backed. It does not add a separate dispatch-job table, backend dispatch enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
 
 ## Scope Boundary
 The project remains centered on the job-ticket workflow:

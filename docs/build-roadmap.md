@@ -52,6 +52,13 @@ Manager/Admin Section-Based Ticket Editing and Quick Actions was implemented on 
 - Add Note uses the existing job-ticket work-entry API; Add Photo uses the existing job-ticket file upload API; Add Labor opens the existing Labor workflow tab; Change Status keeps the existing guarded status review panel;
 - no database schema, migration, enum, authorization, route, backend API, DTO, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval behavior was added.
 
+Manager/Admin Dispatch Board was implemented on June 17, 2026:
+- affected modules: `frontend/src/pages/manager/DispatchBoardPage.tsx`, `frontend/src/pages/manager/dispatchWorkflow.ts`, Manager/Admin routing/navigation, dispatch board tests, shared styles, README, project scope, API contract, roadmap, and client wiki documentation;
+- `/manage/dispatch` is now the first-class dispatch workflow for Unscheduled Jobs, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views;
+- dispatch cards show customer, job site, requested/scheduled timing, job type/title, crane/equipment, operator, crew, dispatch lifecycle label, ticket review label, and conflict/missing-assignment warnings;
+- card-level actions support scheduling, crane/equipment assignment, operator/crew assignment, dispatch notes, day-of status movement, ticket open, ticket finalization, and billing-readiness handoff through existing APIs;
+- the implementation is ticket-backed and does not add a dispatch-job table, backend enum values, migrations, automatic scheduling, automatic approval, customer-signature API, billing/payment API, purchasing expansion, inventory expansion, recommendation/scoring/AI, or automatic compatibility behavior.
+
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
 - Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;
