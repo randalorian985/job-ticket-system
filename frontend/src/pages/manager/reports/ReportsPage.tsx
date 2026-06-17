@@ -950,6 +950,18 @@ export function ReportsPage() {
             <button type="button" className="secondary-button" onClick={() => setActiveScreen('catalog')}>
               Back to report catalog
             </button>
+            {mode ? (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => apply(mode)}
+                disabled={loadingMode !== null}
+                title="Run this report again with the current source and filters."
+                aria-label={`Run ${title} again`}
+              >
+                {loadingMode === mode ? 'Running...' : 'Run again'}
+              </button>
+            ) : null}
             {hasRows ? (
               <button type="button" className="secondary-button" onClick={printReport}>
                 Print / Save PDF

@@ -210,6 +210,17 @@ describe('ReportsPage', () => {
       employeeId: 'emp-7'
     }))
 
+    fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Job again' }))
+    await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledTimes(2))
+    expect(screen.getByLabelText('report preview')).toBeVisible()
+    expect(reportsApi.getLaborByJob).toHaveBeenLastCalledWith({
+      offset: 0,
+      limit: 75,
+      customerId: 'customer-1',
+      serviceLocationId: 'location-1',
+      employeeId: 'emp-7'
+    })
+
     fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
     expect(within(laborByJobCard).getByLabelText('Labor by Job employee filter')).toHaveValue('')
     expect(within(laborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(50)
