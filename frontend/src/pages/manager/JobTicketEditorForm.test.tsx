@@ -62,6 +62,10 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
 
   afterEach(() => cleanup())
 
+  const openEditSection = (name: string) => {
+    fireEvent.click(screen.getByRole('button', { name }))
+  }
+
   it('summarizes completed dispatch requirements', () => {
     render(
       <JobTicketEditorForm
@@ -144,12 +148,14 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     expect(screen.getByText('Due date: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
     expect(screen.getByText('Job instructions: Add job instructions or notes for the technician.')).toBeInTheDocument()
 
+    openEditSection('Schedule')
     fireEvent.change(screen.getByLabelText('Scheduled Start (UTC)'), { target: { value: '2026-04-02T09:30' } })
     expect(screen.getByText('Next required update: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Due (UTC)'), { target: { value: '2026-04-03T17:00' } })
     expect(screen.getByText('Next required update: Add job instructions or notes for the technician.')).toBeInTheDocument()
 
+    openEditSection('Scope & Notes')
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Replace seal and test restart.' } })
 
     expect(screen.getByText('Ready to dispatch')).toBeInTheDocument()
@@ -211,6 +217,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add customer' }))
     fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'Northwind' } })
     fireEvent.change(screen.getByLabelText('Account Number'), { target: { value: 'NW-10' } })
@@ -232,6 +239,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     expect(screen.getByLabelText('Billing Party')).toHaveValue('c2')
     expect(screen.getByLabelText('Service Location')).toHaveValue('')
     expect(screen.getByLabelText('Equipment')).toHaveValue('')
+    openEditSection('Billing')
     expect(screen.getByLabelText('Billing Contact Name')).toHaveValue('Nora North')
     expect(screen.getByLabelText('Billing Contact Phone')).toHaveValue('555-0200')
     expect(screen.getByLabelText('Billing Contact Email')).toHaveValue('nora@example.com')
@@ -254,6 +262,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add customer' }))
     fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
 
@@ -286,6 +295,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add location' }))
     fireEvent.change(screen.getByLabelText('Location Name'), { target: { value: 'North Shop' } })
     fireEvent.change(screen.getByLabelText('Street Address'), { target: { value: '55 North St' } })
@@ -334,6 +344,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
     fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Pump 9' } })
     fireEvent.change(screen.getByLabelText('Equipment Number'), { target: { value: 'EQ-9' } })
@@ -388,6 +399,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     expect(await screen.findByText('JT-1001: Replace hydraulic hose')).toBeInTheDocument()
     expect(reportsApi.getEquipmentHistory).toHaveBeenCalledWith('eq1', { offset: 0, limit: 3 })
     const serviceHistory = screen.getByLabelText('equipment service history')
@@ -409,6 +421,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     expect(screen.getByText('Select equipment to review recent service history before saving this ticket.')).toBeInTheDocument()
     expect(reportsApi.getEquipmentHistory).not.toHaveBeenCalled()
 
@@ -449,6 +462,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
     fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: ' truck 7 ' } })
     fireEvent.change(screen.getByLabelText('Serial Number'), { target: { value: 'sn-7' } })
@@ -508,6 +522,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
     fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Pump 9' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
@@ -530,6 +545,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
+    openEditSection('Customer & Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
     fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Truck 8' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))

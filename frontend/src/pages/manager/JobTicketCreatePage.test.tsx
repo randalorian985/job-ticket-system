@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../api/masterDataApi'
@@ -16,6 +16,8 @@ describe('JobTicketCreatePage', () => {
     render(<MemoryRouter future={routerFuture}><JobTicketCreatePage /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Create Job Ticket' })).toBeInTheDocument()
     expect(screen.getByLabelText('Job Type')).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'ticket edit sections' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Billing' }))
     expect(screen.getByLabelText('Purchase Order Number')).toBeInTheDocument()
     expect(screen.getByLabelText('Billing Contact Name')).toBeInTheDocument()
     expect(screen.getByText('Create Ticket')).toBeInTheDocument()

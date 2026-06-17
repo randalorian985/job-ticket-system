@@ -15,17 +15,17 @@ import { JobTicketDetailPage } from './JobTicketDetailPage'
 
 vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn() } }))
-vi.mock('../../api/filesApi', () => ({ filesApi: { list: vi.fn(), getDownloadUrl: vi.fn(() => '#') } }))
+vi.mock('../../api/filesApi', () => ({ filesApi: { list: vi.fn(), upload: vi.fn(), getDownloadUrl: vi.fn(() => '#') } }))
 vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn(), listAssignableEmployees: vi.fn() } }))
 vi.mock('../../api/partRequestsApi', () => ({ partRequestsApi: { createForJobTicket: vi.fn() } }))
-vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn() } }))
+vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn(), addWorkEntry: vi.fn() } }))
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
 vi.mock('../../api/reportsApi', () => ({ reportsApi: { getInvoiceReadySummary: vi.fn() } }))
 
 describe('JobTicketDetailPage', () => {
   const setupBaseMocks = () => {
     vi.spyOn(window, 'print').mockImplementation(() => undefined)
-    vi.mocked(useAuth).mockReturnValue({ user: { role: 'Manager' } } as any)
+    vi.mocked(useAuth).mockReturnValue({ user: { employeeId: 'manager-1', role: 'Manager' } } as any)
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -69,6 +69,8 @@ describe('JobTicketDetailPage', () => {
     ] as any)
     vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:00:00Z', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
     vi.mocked(filesApi.list).mockResolvedValue([{ id: 'f1', jobTicketId: 'j1', originalFileName: 'photo.jpg' }] as any)
+    vi.mocked(filesApi.upload).mockResolvedValue({ id: 'f2', jobTicketId: 'j1', originalFileName: 'after.jpg' } as any)
+    vi.mocked(jobTicketsApi.addWorkEntry).mockResolvedValue({ id: 'w2', jobTicketId: 'j1', notes: 'Manager note' } as any)
     vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([
       { id: 'e1', firstName: 'Alex', lastName: 'Rivera' },
       { id: 'e2', firstName: 'Blair', lastName: 'Stone' }
@@ -209,6 +211,37 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('Approved Labor Lines')).toBeInTheDocument()
     expect(screen.getByText('Riley Tech')).toBeInTheDocument()
     expect(screen.getAllByText('P-100 - Hydraulic hose').length).toBeGreaterThan(0)
+  })
+
+  it('opens quick actions for notes, photos, labor, and status review', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Note' }))
+    expect(screen.getByRole('heading', { name: 'Add Note' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Ticket note'), { target: { value: 'Manager follow-up note' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Note' }))
+    await waitFor(() => expect(jobTicketsApi.addWorkEntry).toHaveBeenCalledWith('j1', expect.objectContaining({
+      employeeId: 'manager-1',
+      entryType: 1,
+      notes: 'Manager follow-up note'
+    })))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Photo' }))
+    expect(screen.getByRole('heading', { name: 'Add Photo' })).toBeInTheDocument()
+    const file = new File(['photo'], 'after.jpg', { type: 'image/jpeg' })
+    fireEvent.change(screen.getByLabelText('Photo or file'), { target: { files: [file] } })
+    fireEvent.change(screen.getByLabelText('Caption'), { target: { value: 'After repair' } })
+    fireEvent.click(screen.getByLabelText('Mark for invoice review'))
+    fireEvent.click(screen.getByRole('button', { name: 'Upload Photo/File' }))
+    await waitFor(() => expect(filesApi.upload).toHaveBeenCalledWith('j1', expect.any(FormData)))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }))
+    expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
+
+    openStatusPanel()
+    expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
   })
 
   it('shows invoice handoff readiness when closeout signals are complete', async () => {
