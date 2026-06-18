@@ -165,6 +165,7 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Actions' })).toBeInTheDocument()
+    expect(screen.getByRole('tooltip', { name: 'These checks identify missing information before dispatch review. Completed checks stay available below.' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Service Details' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Status & Priority' })).toBeInTheDocument()
     selectWorkflowTab('Dispatch')
@@ -178,7 +179,7 @@ describe('JobTicketDetailPage', () => {
     selectWorkflowTab('History')
     expect(screen.getByRole('heading', { name: 'Ticket History' })).toBeInTheDocument()
     selectWorkflowTab('Invoice Review')
-    expect(screen.getByRole('heading', { name: 'Invoice Review' })).toBeInTheDocument()
+    expect(screen.getByLabelText('invoice review')).toHaveFocus()
     expectRenderedText('Ready for dispatch review')
     expectRenderedText('Next Required UpdateAll dispatch requirements are complete.')
     expectRenderedText('Assigned employees: Alex Rivera.')
@@ -188,17 +189,20 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByText('8 of 8 complete')).toBeInTheDocument()
     expect(screen.getByText('No dispatch blockers are currently visible.')).toBeInTheDocument()
     expect(screen.getByText('Review 8 completed requirements')).toBeInTheDocument()
-    expect(screen.getByRole('tooltip', { name: 'These checks identify missing information before dispatch review. Completed checks stay available below.' })).toBeInTheDocument()
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
     selectWorkflowTab('Parts')
     expect(screen.getByRole('tabpanel', { name: 'Parts' })).toHaveAttribute('aria-label', 'parts used and requested panel')
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openStatusPanel()
     expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
+    expect(screen.getByLabelText('status workflow review')).toHaveFocus()
     expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openArchivePanel()
     expect(screen.getByRole('heading', { name: 'Archive Review' })).toBeInTheDocument()
+    expect(screen.getByLabelText('archive workflow review')).toHaveFocus()
     expect(screen.getByLabelText('Archive Reason')).toBeInTheDocument()
   })
 
@@ -220,6 +224,9 @@ describe('JobTicketDetailPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Note' }))
     expect(screen.getByRole('heading', { name: 'Add Note' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'History' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('button', { name: 'Back to ticket overview' })).toBeInTheDocument()
+    expect(screen.getByLabelText('quick note panel')).toHaveFocus()
     fireEvent.change(screen.getByLabelText('Ticket note'), { target: { value: 'Manager follow-up note' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Note' }))
     await waitFor(() => expect(jobTicketsApi.addWorkEntry).toHaveBeenCalledWith('j1', expect.objectContaining({
@@ -228,8 +235,11 @@ describe('JobTicketDetailPage', () => {
       notes: 'Manager follow-up note'
     })))
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
+    expect(screen.queryByLabelText('quick note panel')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Add Photo' }))
     expect(screen.getByRole('heading', { name: 'Add Photo' })).toBeInTheDocument()
+    expect(screen.getByLabelText('quick photo upload panel')).toHaveFocus()
     const file = new File(['photo'], 'after.jpg', { type: 'image/jpeg' })
     fireEvent.change(screen.getByLabelText('Photo or file'), { target: { files: [file] } })
     fireEvent.change(screen.getByLabelText('Caption'), { target: { value: 'After repair' } })
@@ -237,9 +247,13 @@ describe('JobTicketDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Upload Photo/File' }))
     await waitFor(() => expect(filesApi.upload).toHaveBeenCalledWith('j1', expect.any(FormData)))
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
+    expect(screen.queryByLabelText('quick photo upload panel')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }))
     expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
+    expect(screen.getByLabelText('labor and time entries panel')).toHaveFocus()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openStatusPanel()
     expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
   })
@@ -678,7 +692,7 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByLabelText('service details, customer, location, and equipment')).toHaveAttribute('hidden')
     fireEvent.keyDown(screen.getByRole('tab', { name: 'Parts' }), { key: 'ArrowRight' })
     expect(screen.getByRole('tab', { name: 'Files' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Files' })).toHaveFocus()
+    await waitFor(() => expect(screen.getByLabelText('job files and photos panel')).toHaveFocus())
   })
 
   it('recommends closeout work instead of dispatch for a completed ticket', async () => {

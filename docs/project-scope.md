@@ -93,6 +93,7 @@ Implemented redesign focus:
 - dashboard summary links that open the corresponding filtered queue;
 - queue-aware breadcrumbs that preserve the originating job queue across ticket review;
 - ticket workflow tabs for Overview, Dispatch, Time, Parts, Files, Closeout, and Activity, with a visible recommended next action.
+- service-ticket workflow stabilization keeps direct tab/action navigation in the focused `view=workflow` screen, focuses opened action panels, and closes focused drawers when returning to the ticket overview.
 
 The current dispatch board is ticket-backed. It does not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or schema migration. En Route and On Site are recorded as ticket work-entry notes until a future approved backend dispatch model exists.
 

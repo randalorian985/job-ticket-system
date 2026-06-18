@@ -36,4 +36,6 @@ Quick actions in `JobTicketDetailPage.tsx` should remain focused:
 - Add Labor opens the existing Labor workflow tab.
 - Change Status opens the existing status review drawer.
 
+Workflow tab and quick-action navigation is URL-backed. Direct tab/action selection should set the selected `tab` and the focused `view=workflow` state so the target panel appears immediately under the workflow tabs on mobile. Open drawers must have a stable focus target, and **Back to ticket overview** should close any open focused drawer before returning to the normal overview.
+
 Do not add Manager/Admin-only quick actions that bypass existing authorization, DTO validation, or workflow review panels.
