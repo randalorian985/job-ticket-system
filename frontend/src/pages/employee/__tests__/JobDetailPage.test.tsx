@@ -226,6 +226,43 @@ describe('JobDetailPage', () => {
     expect(screen.getAllByText('Clock in to this ticket before adding work notes, parts, or photos.').length).toBeGreaterThan(0)
   })
 
+  it('keeps a saved mobile work note distinct from a failed post-save refresh', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.addWorkEntry).mockResolvedValue({
+      id: 'work-2',
+      jobTicketId: 'job-1',
+      entryType: 1,
+      notes: 'Checked line routing',
+      performedAtUtc: '2026-04-28T10:00:00Z',
+      employeeId: 'employee-1'
+    } as any)
+    mockOpenEntry()
+
+    renderJobDetail()
+
+    expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+    vi.mocked(jobTicketsApi.get).mockRejectedValueOnce(new Error('refresh failed'))
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Work note'), 'Checked line routing')
+    await user.click(screen.getByRole('button', { name: 'Save Work Note' }))
+
+    await waitFor(() => {
+      expect(jobTicketsApi.addWorkEntry).toHaveBeenCalledWith('job-1', expect.objectContaining({
+        employeeId: 'employee-1',
+        entryType: 1,
+        notes: 'Checked line routing'
+      }))
+    })
+    expect(await screen.findByText('Work note saved, but refreshed job details could not be loaded. Refresh this page before continuing.')).toBeInTheDocument()
+    expect(screen.queryByText('Unable to save work note.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save Work Note' })).toBeEnabled()
+  })
+
   it('does not show the clock-out form for an open entry on another ticket', async () => {
     mockEmployeeAuth()
     mockJob()

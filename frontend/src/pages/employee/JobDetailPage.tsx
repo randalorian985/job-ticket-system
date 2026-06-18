@@ -208,6 +208,38 @@ export function JobDetailPage() {
     }
   }
 
+  const handleRefreshError = (requestError: unknown, fallbackMessage: string, preferFallbackMessage = false) => {
+    if (requestError instanceof ApiError) {
+      if (requestError.status === 401) {
+        logout()
+        navigate('/login', { replace: true })
+        return
+      }
+
+      if (requestError.status === 403) {
+        setError('Access denied. You can only view jobs assigned to you.')
+        return
+      }
+
+      setError(preferFallbackMessage ? fallbackMessage : requestError.message)
+      return
+    }
+
+    setError(fallbackMessage)
+  }
+
+  const refreshAfterAction = async (successContext: string) => {
+    try {
+      await refreshDetails()
+    } catch (requestError) {
+      handleRefreshError(
+        requestError,
+        `${successContext}, but refreshed job details could not be loaded. Refresh this page before continuing.`,
+        true
+      )
+    }
+  }
+
   useEffect(() => {
     if (!jobTicketId || !user) {
       return
@@ -216,25 +248,7 @@ export function JobDetailPage() {
     let isMounted = true
 
     refreshDetails()
-      .catch((requestError) => {
-        if (requestError instanceof ApiError) {
-          if (requestError.status === 401) {
-            logout()
-            navigate('/login', { replace: true })
-            return
-          }
-
-          if (requestError.status === 403) {
-            setError('Access denied. You can only view jobs assigned to you.')
-            return
-          }
-
-          setError(requestError.message)
-          return
-        }
-
-        setError('Unable to load job details.')
-      })
+      .catch((requestError) => handleRefreshError(requestError, 'Unable to load job details.'))
       .finally(() => {
         if (isMounted) {
           setIsLoading(false)
@@ -280,7 +294,7 @@ export function JobDetailPage() {
         note: clockNote || null
       })
       setClockNote('')
-      await refreshDetails()
+      await refreshAfterAction('Clock-in saved')
     } catch (clockError) {
       if (clockError instanceof ApiError) {
         setError(clockError.message)
@@ -323,7 +337,7 @@ export function JobDetailPage() {
       })
       setClockWorkSummary('')
       setClockNote('')
-      await refreshDetails()
+      await refreshAfterAction('Clock-out saved')
     } catch (clockError) {
       if (clockError instanceof ApiError) {
         setError(clockError.message)
@@ -356,7 +370,7 @@ export function JobDetailPage() {
         performedAtUtc: null
       })
       setWorkNote('')
-      await refreshDetails()
+      await refreshAfterAction('Work note saved')
     } catch (saveError) {
       setError(saveError instanceof ApiError ? saveError.message : 'Unable to save work note.')
     } finally {
@@ -403,7 +417,7 @@ export function JobDetailPage() {
       setPartRequestNotes('')
       setPartRequestUrgency('')
       setPartRequestNeededBy('')
-      await refreshDetails()
+      await refreshAfterAction('Part entry saved')
     } catch (saveError) {
       setError(saveError instanceof ApiError ? saveError.message : 'Unable to add or request part.')
     } finally {
@@ -438,7 +452,7 @@ export function JobDetailPage() {
       await filesApi.upload(jobTicketId, formData)
       setUploadFile(null)
       setUploadCaption('')
-      await refreshDetails()
+      await refreshAfterAction('Photo/file uploaded')
     } catch (uploadError) {
       setError(uploadError instanceof ApiError ? uploadError.message : 'Unable to upload file.')
     } finally {

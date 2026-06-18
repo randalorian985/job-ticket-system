@@ -633,78 +633,79 @@ export function JobTicketDetailPage() {
     if (!jobTicketId) return;
 
     setIsLoading(true);
-    const [
-      jobResponse,
-      assignmentResponse,
-      entryResponse,
-      timeResponse,
-      partsResponse,
-      filesResponse,
-      invoiceResponse,
-      customerResponse,
-      locationResponse,
-      equipmentResponse,
-      catalogPartResponse,
-    ] = await Promise.all([
-      jobTicketsApi.get(jobTicketId),
-      jobTicketsApi.listAssignments(jobTicketId)
-        .then((items) => ({ items, failed: false }))
-        .catch(() => ({ items: [], failed: true })),
-      jobTicketsApi.listWorkEntries(jobTicketId),
-      timeEntriesApi.listByJob(jobTicketId).catch(() => []),
-      jobTicketsApi.listParts(jobTicketId),
-      filesApi.list(jobTicketId),
-      reportsApi.getInvoiceReadySummary(jobTicketId)
-        .then((summary) => ({ summary, error: null as string | null }))
-        .catch((requestError) => {
-          if (requestError instanceof ApiError && requestError.status === 404) {
-            return { summary: null, error: null };
-          }
+    try {
+      const [
+        jobResponse,
+        assignmentResponse,
+        entryResponse,
+        timeResponse,
+        partsResponse,
+        filesResponse,
+        invoiceResponse,
+        customerResponse,
+        locationResponse,
+        equipmentResponse,
+        catalogPartResponse,
+      ] = await Promise.all([
+        jobTicketsApi.get(jobTicketId),
+        jobTicketsApi.listAssignments(jobTicketId)
+          .then((items) => ({ items, failed: false }))
+          .catch(() => ({ items: [], failed: true })),
+        jobTicketsApi.listWorkEntries(jobTicketId),
+        timeEntriesApi.listByJob(jobTicketId).catch(() => []),
+        jobTicketsApi.listParts(jobTicketId),
+        filesApi.list(jobTicketId),
+        reportsApi.getInvoiceReadySummary(jobTicketId)
+          .then((summary) => ({ summary, error: null as string | null }))
+          .catch((requestError) => {
+            if (requestError instanceof ApiError && requestError.status === 404) {
+              return { summary: null, error: null };
+            }
 
-          return { summary: null, error: "Invoice-ready summary is unavailable right now." };
-        }),
-      masterDataApi.listCustomers(),
-      masterDataApi.listServiceLocations(),
-      masterDataApi.listEquipment(),
-      masterDataApi.listParts(),
-    ]);
+            return { summary: null, error: "Invoice-ready summary is unavailable right now." };
+          }),
+        masterDataApi.listCustomers(),
+        masterDataApi.listServiceLocations(),
+        masterDataApi.listEquipment(),
+        masterDataApi.listParts(),
+      ]);
 
-    setJob(jobResponse);
-    setStatusValue(String(jobResponse.status));
-    setAssignmentLoadFailed(assignmentResponse.failed);
-    setAssignments(assignmentResponse.items);
-    setEntries(entryResponse);
-    setTimeEntries(timeResponse);
-    setParts(partsResponse);
-    setFiles(filesResponse);
-    setInvoiceSummary(invoiceResponse.summary);
-    setInvoiceSummaryError(invoiceResponse.error);
-    setCustomers(customerResponse);
-    setLocations(locationResponse);
-    setEquipment(equipmentResponse);
-    setCatalogParts(catalogPartResponse.filter((part) => !part.isArchived));
+      setJob(jobResponse);
+      setStatusValue(String(jobResponse.status));
+      setAssignmentLoadFailed(assignmentResponse.failed);
+      setAssignments(assignmentResponse.items);
+      setEntries(entryResponse);
+      setTimeEntries(timeResponse);
+      setParts(partsResponse);
+      setFiles(filesResponse);
+      setInvoiceSummary(invoiceResponse.summary);
+      setInvoiceSummaryError(invoiceResponse.error);
+      setCustomers(customerResponse);
+      setLocations(locationResponse);
+      setEquipment(equipmentResponse);
+      setCatalogParts(catalogPartResponse.filter((part) => !part.isArchived));
 
-    if (user?.role === "Admin" || user?.role === "Manager") {
-      setEmployees(await usersApi.listAssignableEmployees().catch(() => []));
-    }
+      if (user?.role === "Admin" || user?.role === "Manager") {
+        setEmployees(await usersApi.listAssignableEmployees().catch(() => []));
+      }
 
-    setError(null);
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    load().catch((requestError) => {
+      setError(null);
+    } catch (requestError) {
       if (
         requestError instanceof ApiError &&
         (requestError.status === 401 || requestError.status === 403)
       ) {
         setError("You do not have permission to load this manager view.");
-        setIsLoading(false);
-        return;
+      } else {
+        setError("Unable to load job ticket details.");
       }
-      setError("Unable to load job ticket details.");
+    } finally {
       setIsLoading(false);
-    });
+    }
+  };
+
+  useEffect(() => {
+    load();
   }, [jobTicketId]);
 
   const toggleDrawer = (drawer: WorkbenchDrawer) => {
