@@ -115,6 +115,7 @@ describe('PurchasingWorkbenchPage', () => {
       vendorId: 'vendor-a',
       lines: [expect.objectContaining({ partId: 'part-a', quantityOrdered: 6, unitCost: 12 })]
     })), { timeout: 3000 })
+    expect(await screen.findByText('Purchase order created.')).toBeInTheDocument()
   })
 
   it('reviews a purchase order and saves receiving plus invoice landed costs', async () => {
@@ -135,6 +136,7 @@ describe('PurchasingWorkbenchPage', () => {
     await waitFor(() => expect(purchasingApi.receivePurchaseOrder).toHaveBeenCalledWith('po-a', expect.objectContaining({
       lines: [{ lineId: 'line-a', receivedQuantity: 4 }]
     })))
+    expect(await screen.findByText('Receiving saved.')).toBeInTheDocument()
 
     await user.type(within(review).getByRole('textbox', { name: 'Vendor invoice number' }), 'INV-77')
     await user.clear(within(review).getByRole('spinbutton', { name: 'Freight cost' }))
@@ -147,6 +149,7 @@ describe('PurchasingWorkbenchPage', () => {
       freightCost: 7,
       lines: [expect.objectContaining({ partId: 'part-a' })]
     })))
+    expect(await screen.findByText('Vendor invoice and landed costs saved.')).toBeInTheDocument()
   })
 
   it('hides receiving after closing an eligible purchase order', async () => {

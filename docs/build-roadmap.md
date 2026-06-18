@@ -67,6 +67,13 @@ Manager/Admin Service Ticket Workflow Audit and repair was completed on June 18,
 - the audit report is documented in `docs/service-ticket-workflow-audit-2026-06-18.md`;
 - no backend API behavior, schema, migration, enum, auth, role, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, invoice-generation, payment, or customer portal behavior was added.
 
+Active client-facing workflow tightening was completed on June 18, 2026:
+- Dispatch Board copy now clarifies that En Route and On Site are ticket-history updates while the board remains backed by existing ticket status values;
+- Dispatch cards label the loaded ticket title as Job / Scope instead of presenting it as a separate job-type field;
+- Purchasing support now gives visible success/error and in-progress feedback for create, submit, receiving, close, archive, and vendor-invoice save actions;
+- the client wiki was aligned to those active workflow behaviors;
+- no backend API, schema, migration, enum, auth, role, inventory reintroduction, purchasing expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval behavior was added.
+
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
 - Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;
