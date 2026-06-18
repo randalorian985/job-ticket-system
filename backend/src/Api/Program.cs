@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using JobTicketSystem.Api.Auth;
 using JobTicketSystem.Api.Pilot;
+using JobTicketSystem.Api.Production;
 using JobTicketSystem.Api.TestEnvironment;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.Inventory;
@@ -106,6 +107,7 @@ builder.Services.AddScoped<ITimeEntriesService, TimeEntriesService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IPurchaseOrdersService, PurchaseOrdersService>();
 builder.Services.AddScoped<IPilotDemoSeedService, PilotDemoSeedService>();
+builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 builder.Services.AddHostedService<TestEnvironmentBootstrapHostedService>();
 builder.Services.AddHostedService<PilotDemoSeedHostedService>();
 

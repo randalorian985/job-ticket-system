@@ -14,7 +14,7 @@
 - Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)
 - Technician-safe part lookup (`/api/parts/lookup`)
 - Job tickets (`/api/job-tickets/*`)
-- Job-ticket files/photos (`/api/job-ticket-files/*`)
+- Job-ticket files/photos (`/api/job-tickets/{jobTicketId}/files/*`)
 - Time entries (`/api/time-entries/*`)
 - Reporting (`/api/reports/*`)
 - Parts usage history visibility (`/api/parts/usage-history`)
@@ -116,6 +116,24 @@ Behavior:
 - missing matching clock-in returns a controlled validation error: `Clock in to this job ticket before recording field work.`;
 - Manager/Admin users can continue back-office coordination and review actions without this employee clock-in gate;
 - this guard does not change DTO shapes, role policies, backend enum values, schema, migrations, purchasing behavior, inventory behavior, recommendations, AI/scoring, automatic compatibility, or automatic approval.
+
+## Job-Ticket Files And Photos
+
+Job-ticket file/photo upload continues to use:
+
+- `POST /api/job-tickets/{jobTicketId}/files`
+- Authorization: `AssignedEmployeeOrManager`
+
+Accepted file types:
+
+- JPG/JPEG;
+- PNG;
+- WebP;
+- PDF.
+
+The maximum upload size is 50 MB. The same limit is enforced by the HTTP controller and the application service.
+
+Employee uploads, file caption/visibility updates, and file archives remain subject to the employee field-recording guard above. Manager/Admin users can continue ticket file/photo review and invoice-attachment coordination without an employee clock-in gate.
 
 ## Reporting
 Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports UI groups the existing endpoints into invoice/closeout, labor/parts, and service-history sections, then performs browser print/save-PDF output and client-side CSV export from the currently loaded table rows. There is no server-side PDF renderer, server-side export job, invoice generation, payment workflow, customer portal workflow, recommendation engine, AI/scoring, automatic compatibility decision, or automatic approval behavior in this reporting slice.

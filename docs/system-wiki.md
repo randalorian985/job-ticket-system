@@ -305,6 +305,8 @@ Employees can add an optional caption.
 
 Unsupported file types are rejected.
 
+Files must be 50 MB or smaller.
+
 ## Manager/Admin Workspace
 
 ### Dashboard
