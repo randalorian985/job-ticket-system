@@ -74,6 +74,14 @@ Active client-facing workflow tightening was completed on June 18, 2026:
 - the client wiki was aligned to those active workflow behaviors;
 - no backend API, schema, migration, enum, auth, role, inventory reintroduction, purchasing expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval behavior was added.
 
+Production readiness hardening was completed on June 18, 2026:
+- production Docker Compose and nginx health-proxy configuration are now source-controlled;
+- production startup uses an explicit `DatabaseMigrations__ApplyOnStartup` switch instead of relying on test/demo seed hosted services for migration execution;
+- production Compose disables test bootstrap and pilot demo seeding during normal restarts;
+- job-ticket file/photo uploads enforce the existing 50 MB boundary in the application service as well as at the HTTP request limit;
+- production backup, verification, rollback, monitoring, and client-UAT gates are documented in `docs/production-readiness-runbook.md` and `docs/production-readiness-audit-2026-06-18.md`;
+- no schema migration, historical migration edit, API route/DTO change, enum change, auth weakening, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, client portal, payment, or invoice-generation behavior was added.
+
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
 - Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;

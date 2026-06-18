@@ -91,6 +91,30 @@ public sealed class JobTicketFileServicesTests
     }
 
     [Fact]
+    public async Task Upload_rejects_file_size_over_limit()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedReferencesAsync(context);
+        var service = new JobTicketFilesService(context, CreateStorageProvider(), new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        await using var stream = new MemoryStream(CreateJpegBytes());
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.UploadAsync(refs.JobTicket.Id, new UploadJobTicketFileDto(
+            "photo.jpg",
+            "image/jpeg",
+            JobTicketFilesService.MaxUploadFileSizeBytes + 1,
+            stream,
+            null,
+            FileVisibility.Internal,
+            false,
+            null,
+            null,
+            null)));
+
+        Assert.Equal("File size must be 50 MB or smaller.", exception.Message);
+        Assert.Empty(context.JobTicketFiles);
+    }
+
+    [Fact]
     public async Task Upload_rejects_unsupported_content_type()
     {
         await using var context = CreateContext();
