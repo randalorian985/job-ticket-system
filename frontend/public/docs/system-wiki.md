@@ -42,6 +42,14 @@ The screenshots below appear again in the workflow sections where they are most 
 | Job-ticket queue | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
 | Job-ticket workspace | [job-ticket-workspace.png](assets/system-wiki/job-ticket-workspace.png) |
 | Section-based ticket editor | [ticket-section-editor.png](assets/system-wiki/ticket-section-editor.png) |
+| Quick note workflow | [ticket-quick-note.png](assets/system-wiki/ticket-quick-note.png) |
+| Status review workflow | [ticket-status-review.png](assets/system-wiki/ticket-status-review.png) |
+| Labor workflow | [ticket-labor-workflow.png](assets/system-wiki/ticket-labor-workflow.png) |
+| Parts add/request workflow | [ticket-parts-workflow.png](assets/system-wiki/ticket-parts-workflow.png) |
+| Mobile ticket workspace | [ticket-workspace-mobile.png](assets/system-wiki/ticket-workspace-mobile.png) |
+| Mobile ticket editor | [ticket-edit-mobile.png](assets/system-wiki/ticket-edit-mobile.png) |
+| Mobile labor workflow | [ticket-labor-mobile.png](assets/system-wiki/ticket-labor-mobile.png) |
+| Mobile parts workflow | [ticket-parts-mobile.png](assets/system-wiki/ticket-parts-mobile.png) |
 | Time approval | [time-approval.png](assets/system-wiki/time-approval.png) |
 | Parts requests | [part-requests.png](assets/system-wiki/part-requests.png) |
 | Master data customers | [master-data-customers.png](assets/system-wiki/master-data-customers.png) |
@@ -599,6 +607,8 @@ The same dispatch-readiness review remains visible above the edit sections. User
 
 ![Section-based ticket editor with dispatch readiness](assets/system-wiki/ticket-section-editor.png)
 
+Workflow tabs and action buttons now open the selected ticket workflow in a focused view. This means the selected panel appears directly under the workflow heading and tabs instead of requiring mobile users to scroll past the overview rail. The focused view includes a **Back to ticket overview** control, and that control closes any open focused panel before returning to the normal ticket overview.
+
 The edit workflow should preserve:
 - customer/service-location relationships;
 - equipment relationships;
@@ -655,6 +665,10 @@ Mobile users should prefer:
 - the Status Review panel for status changes;
 - section editing only when ticket details need to change.
 
+![Mobile ticket workspace](assets/system-wiki/ticket-workspace-mobile.png)
+
+![Mobile ticket editor](assets/system-wiki/ticket-edit-mobile.png)
+
 ### Section-Based Editing Architecture
 Section-based editing is a frontend presentation architecture. It does not split the backend ticket update command. The frontend keeps one edit draft and one save action so existing validation, API contracts, and persistence behavior remain stable.
 
@@ -682,12 +696,48 @@ The enhancement does not weaken authorization. It only changes the Manager/Admin
 
 ### Quick Actions
 Quick actions are short paths for common ticket updates:
-- **Add Note** opens a focused note panel and saves a Manager/Admin work entry to ticket history.
-- **Add Photo** opens a focused upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
-- **Add Labor** opens the existing Labor workflow tab for time/labor review and follow-up.
-- **Change Status** opens the existing Status Review panel with warnings and status selection.
+- **Add Note** opens the focused History workflow with a note panel and saves a Manager/Admin work entry to ticket history.
+- **Add Photo** opens the focused Files workflow with an upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
+- **Add Labor** opens the focused Labor workflow tab for time/labor review and follow-up.
+- **Change Status** opens a focused Status Review panel with warnings and status selection.
+- **Open Add / Request Part Panel** opens the focused Parts workflow with the existing in-ticket add/request form.
 
 Quick actions are intended for small updates. Use the section editor when relationship, billing, schedule, or detailed ticket fields need to change.
+
+![Quick note workflow](assets/system-wiki/ticket-quick-note.png)
+
+![Status review workflow](assets/system-wiki/ticket-status-review.png)
+
+![Labor workflow](assets/system-wiki/ticket-labor-workflow.png)
+
+![Parts add/request workflow](assets/system-wiki/ticket-parts-workflow.png)
+
+Mobile focused workflows keep the selected panel directly under the workflow tabs so users do not need to hunt below the ticket overview rail.
+
+![Mobile labor workflow](assets/system-wiki/ticket-labor-mobile.png)
+
+![Mobile parts workflow](assets/system-wiki/ticket-parts-mobile.png)
+
+### Ticket Workflow Audit And Repairs
+The Service Ticket workflow audit completed on June 18, 2026 verified the existing business workflow without redesigning it. The audit covered workflow tabs, ticket actions, workflow cards, mobile visibility, and accessibility cues.
+
+Findings and repairs:
+- workflow tabs already changed active content, but action shortcuts could leave the target panel below the normal overview rail on mobile;
+- quick-action drawers did not have a reliable focus target, which made the opened panel less obvious for keyboard and assistive-technology users;
+- the focused workflow panel could take focus back from an opened drawer;
+- **Back to ticket overview** returned from focused mode but did not close an open focused drawer;
+- active tab and drawer focus contrast needed stronger shared styling.
+
+Implemented repairs:
+- direct workflow tab and action-rail navigation now sets the URL-backed `view=workflow` state;
+- Add Note, Add Photo, Add Labor, Add / Request Part, Edit Ticket, Change Status, and Archive Review open focused panels where appropriate;
+- drawer panels receive programmatic focus when opened;
+- workflow panel focus waits when a drawer is active;
+- **Back to ticket overview** clears open focused drawers;
+- global error messages announce as alerts;
+- active workflow tabs and focused drawers use stronger shared contrast/focus styling.
+
+See [Service Ticket Workflow Audit - June 18, 2026](/docs/service-ticket-workflow-audit-2026-06-18.md) for the detailed audit report, root cause notes, regression results, and remaining recommendations.
 
 ### Assignment Management
 Managers/Admins can assign active, non-archived Employee users to tickets.

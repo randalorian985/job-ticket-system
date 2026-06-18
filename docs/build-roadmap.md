@@ -59,6 +59,14 @@ Manager/Admin Dispatch Board was implemented on June 17, 2026:
 - card-level actions support scheduling, crane/equipment assignment, operator/crew assignment, dispatch notes, day-of status movement, ticket open, ticket finalization, and billing-readiness handoff through existing APIs;
 - the implementation is ticket-backed and does not add a dispatch-job table, backend enum values, migrations, automatic scheduling, automatic approval, customer-signature API, billing/payment API, purchasing expansion, inventory expansion, recommendation/scoring/AI, or automatic compatibility behavior.
 
+Manager/Admin Service Ticket Workflow Audit and repair was completed on June 18, 2026:
+- affected modules: `frontend/src/pages/manager/JobTicketDetailPage.tsx`, `frontend/src/pages/manager/JobTicketDetailPage.test.tsx`, shared styles, page/route developer notes, client wiki documentation, and ticket workflow screenshots;
+- direct workflow-tab and action-rail navigation now opens the selected ticket workflow in the focused `view=workflow` screen;
+- Edit Ticket, Change Status, Archive Review, Add Note, Add Photo, Add Labor, and Add / Request Part now land users on the relevant focused panel or tab with stronger focus/contrast feedback;
+- **Back to ticket overview** closes open focused drawers before returning to the normal ticket overview;
+- the audit report is documented in `docs/service-ticket-workflow-audit-2026-06-18.md`;
+- no backend API behavior, schema, migration, enum, auth, role, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, invoice-generation, payment, or customer portal behavior was added.
+
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
 - Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;

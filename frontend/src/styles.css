@@ -1636,6 +1636,11 @@ td {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
+.workbench-drawer:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 3px;
+}
+
 .confirmation-panel {
   background: #fff8e8;
   border: 1px solid #f0d798;
@@ -2134,11 +2139,21 @@ td {
 }
 
 .ticket-workflow-tabs button:hover,
-.ticket-workflow-tabs button:focus-visible,
-.ticket-workflow-tabs .ticket-workflow-tab-active {
+.ticket-workflow-tabs button:focus-visible {
   background: #eef2ff;
   border-color: #a5b4fc;
   color: #243b8f;
+}
+
+.ticket-workflow-tabs button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(49, 87, 200, 0.18);
+  outline: none;
+}
+
+.ticket-workflow-tabs .ticket-workflow-tab-active {
+  background: #243b8f;
+  border-color: #243b8f;
+  color: #ffffff;
 }
 
 .dispatch-board-page {

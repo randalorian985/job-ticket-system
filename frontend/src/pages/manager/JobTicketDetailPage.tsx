@@ -1002,7 +1002,10 @@ export function JobTicketDetailPage() {
       }
     : null;
 
-  const selectWorkflowTab = (tab: WorkflowTab) => {
+  const selectWorkflowTab = (tab: WorkflowTab, focusWorkflow = true) => {
+    if (focusWorkflow) {
+      setActiveDrawer(null);
+    }
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams);
       if (tab === "overview") {
@@ -1010,11 +1013,15 @@ export function JobTicketDetailPage() {
       } else {
         nextParams.set("tab", tab);
       }
+      if (focusWorkflow) {
+        nextParams.set("view", "workflow");
+      }
       return nextParams;
     }, { replace: true });
   };
 
   const openRecommendedWorkflow = (tab: WorkflowTab) => {
+    setActiveDrawer(null);
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams);
       if (tab === "overview") nextParams.delete("tab");
@@ -1025,6 +1032,7 @@ export function JobTicketDetailPage() {
   };
 
   const closeWorkflowFocus = () => {
+    setActiveDrawer(null);
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams);
       nextParams.delete("view");
@@ -1033,7 +1041,9 @@ export function JobTicketDetailPage() {
   };
 
   const openWorkflowDrawer = (tab: WorkflowTab, drawer: Exclude<WorkbenchDrawer, null>) => {
-    selectWorkflowTab(tab);
+    if (activeDrawer !== drawer) {
+      selectWorkflowTab(tab, true);
+    }
     toggleDrawer(drawer);
   };
 
@@ -1049,7 +1059,7 @@ export function JobTicketDetailPage() {
 
     event.preventDefault();
     const nextTab = workflowTabs[nextIndex].value;
-    selectWorkflowTab(nextTab);
+    selectWorkflowTab(nextTab, true);
     document.getElementById(`ticket-workflow-tab-${nextTab}`)?.focus();
   };
 
@@ -1079,9 +1089,14 @@ export function JobTicketDetailPage() {
   const activeWorkflowLabel = workflowTabs.find((tab) => tab.value === activeTab)?.label ?? "Overview";
 
   useEffect(() => {
-    if (!workflowFocusMode) return;
-    document.getElementById(`ticket-workflow-panel-${primaryWorkflowPanelNames[activeTab]}`)?.focus({ preventScroll: true });
-  }, [activeTab, workflowFocusMode]);
+    if (!workflowFocusMode || activeDrawer) return;
+    document.getElementById(`ticket-workflow-panel-${primaryWorkflowPanelNames[activeTab]}`)?.focus();
+  }, [activeDrawer, activeTab, workflowFocusMode]);
+
+  useEffect(() => {
+    if (!activeDrawer) return;
+    document.getElementById(`ticket-workbench-drawer-${activeDrawer}`)?.focus();
+  }, [activeDrawer]);
 
   if (!canShow) return <section className="card">Missing job id.</section>;
 
@@ -1098,7 +1113,7 @@ export function JobTicketDetailPage() {
           Loading job review details...
         </p>
       ) : null}
-      {error ? <p className="error">{error}</p> : null}
+      {error ? <p className="error" role="alert">{error}</p> : null}
       {message ? <p className="success" role="status">{message}</p> : null}
       {job ? (
         <>
@@ -1120,14 +1135,14 @@ export function JobTicketDetailPage() {
               <button
                 type="button"
                 title="Edit ticket details without leaving this workspace."
-                onClick={() => toggleDrawer("ticket")}
+                onClick={() => openWorkflowDrawer("overview", "ticket")}
               >
                 {activeDrawer === "ticket" ? "Close Ticket Editor" : "Edit Ticket"}
               </button>
               <button
                 type="button"
                 title="Review readiness warnings before changing ticket status."
-                onClick={() => toggleDrawer("status")}
+                onClick={() => openWorkflowDrawer("overview", "status")}
               >
                 {activeDrawer === "status" ? "Close Status Panel" : "Change Status"}
               </button>
@@ -1135,7 +1150,7 @@ export function JobTicketDetailPage() {
                 type="button"
                 className="secondary-button"
                 title="Review archive impact and enter a reason before confirmation."
-                onClick={() => toggleDrawer("archive")}
+                onClick={() => openWorkflowDrawer("overview", "archive")}
               >
                 {activeDrawer === "archive" ? "Close Archive Panel" : "Archive Review"}
               </button>
@@ -1212,7 +1227,7 @@ export function JobTicketDetailPage() {
                   title={tab.description}
                   className={activeTab === tab.value ? "ticket-workflow-tab-active" : ""}
                   key={tab.value}
-                  onClick={() => selectWorkflowTab(tab.value)}
+                  onClick={() => selectWorkflowTab(tab.value, true)}
                   onKeyDown={(event) => handleWorkflowTabKeyDown(event, tab.value)}
                 >
                   {tab.label}
@@ -1262,14 +1277,14 @@ export function JobTicketDetailPage() {
                   <button
                     type="button"
                     title="Edit customer, scheduling, service, and billing details."
-                    onClick={() => toggleDrawer("ticket")}
+                    onClick={() => openWorkflowDrawer("overview", "ticket")}
                   >
                     Edit Ticket
                   </button>
                   <button
                     type="button"
                     title="Review warnings and choose the ticket's next status."
-                    onClick={() => toggleDrawer("status")}
+                    onClick={() => openWorkflowDrawer("overview", "status")}
                   >
                     Change Status
                   </button>
@@ -1291,7 +1306,7 @@ export function JobTicketDetailPage() {
                     type="button"
                     title="Open labor and time entries for review or approval follow-up."
                     onClick={() => {
-                      selectWorkflowTab("time");
+                      selectWorkflowTab("time", true);
                       setActiveDrawer(null);
                     }}
                   >
@@ -1309,7 +1324,7 @@ export function JobTicketDetailPage() {
                     type="button"
                     className="secondary-button action-wide"
                     title="Review archive impact and enter a reason before confirmation."
-                    onClick={() => toggleDrawer("archive")}
+                    onClick={() => openWorkflowDrawer("overview", "archive")}
                   >
                     Archive Review
                   </button>
@@ -1389,7 +1404,7 @@ export function JobTicketDetailPage() {
 
             <div className="ticket-workbench-main">
               {activeDrawer === "ticket" && editPayload ? (
-                <section className="workbench-drawer no-print" aria-label="ticket editor panel">
+                <section id="ticket-workbench-drawer-ticket" className="workbench-drawer no-print" aria-label="ticket editor panel" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Edit Ticket</h3>
@@ -1429,7 +1444,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "note" ? (
-                <section className="workbench-drawer no-print" aria-label="quick note panel">
+                <section id="ticket-workbench-drawer-note" className="workbench-drawer no-print" aria-label="quick note panel" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Add Note</h3>
@@ -1455,7 +1470,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "photo" ? (
-                <section className="workbench-drawer no-print" aria-label="quick photo upload panel">
+                <section id="ticket-workbench-drawer-photo" className="workbench-drawer no-print" aria-label="quick photo upload panel" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Add Photo</h3>
@@ -1497,7 +1512,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "status" ? (
-                <section className="workbench-drawer no-print" aria-label="status workflow review">
+                <section id="ticket-workbench-drawer-status" className="workbench-drawer no-print" aria-label="status workflow review" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Status Review</h3>
@@ -1548,7 +1563,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "archive" ? (
-                <section className="workbench-drawer no-print" aria-label="archive workflow review">
+                <section id="ticket-workbench-drawer-archive" className="workbench-drawer no-print" aria-label="archive workflow review" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Archive Review</h3>
@@ -1914,7 +1929,7 @@ export function JobTicketDetailPage() {
                 </section>
                 <p className="muted">{partsReview.nextAction}</p>
                 {activeDrawer === "part" ? (
-                  <section className="workbench-drawer no-print" aria-label="add or request part drawer">
+                  <section id="ticket-workbench-drawer-part" className="workbench-drawer no-print" aria-label="add or request part drawer" tabIndex={-1}>
                     <div className="workbench-panel-heading">
                       <div>
                         <h4>Add / Request Part</h4>
