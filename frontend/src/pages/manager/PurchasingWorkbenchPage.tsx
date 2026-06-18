@@ -23,6 +23,8 @@ type InvoiceFormState = {
   landedCostNotes: string
 }
 
+type PurchasingAction = 'create' | 'submit' | 'receive' | 'close' | 'invoice' | 'archive'
+
 const currencyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 const quantityFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 })
 
@@ -73,7 +75,9 @@ function createInvoiceState(order?: PurchaseOrderDto | null): InvoiceFormState {
 
 export function PurchasingWorkbenchPage() {
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [busyAction, setBusyAction] = useState<PurchasingAction | null>(null)
   const [parts, setParts] = useState<PartDto[]>([])
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderListItemDto[]>([])
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrderDto | null>(null)
@@ -130,6 +134,9 @@ export function PurchasingWorkbenchPage() {
 
   const submitCreate = async (event: FormEvent) => {
     event.preventDefault()
+    setMessage(null)
+    setError(null)
+    setBusyAction('create')
     try {
       const created = await purchasingApi.createPurchaseOrder({
         vendorId: form.vendorId,
@@ -142,20 +149,39 @@ export function PurchasingWorkbenchPage() {
       await refresh()
       await loadOrder(created.id)
       setError(null)
+      setMessage('Purchase order created.')
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : 'Unable to create purchase order.')
+      setMessage(null)
+    } finally {
+      setBusyAction(null)
     }
   }
 
   const submitOrder = async () => {
     if (!selectedOrder) return
-    await purchasingApi.submitPurchaseOrder(selectedOrder.id)
-    await refresh()
-    await loadOrder(selectedOrder.id)
+    setMessage(null)
+    setError(null)
+    setBusyAction('submit')
+    try {
+      await purchasingApi.submitPurchaseOrder(selectedOrder.id)
+      await refresh()
+      await loadOrder(selectedOrder.id)
+      setError(null)
+      setMessage('Purchase order submitted.')
+    } catch (exception) {
+      setError(exception instanceof Error ? exception.message : 'Unable to submit purchase order.')
+      setMessage(null)
+    } finally {
+      setBusyAction(null)
+    }
   }
 
   const submitReceive = async () => {
     if (!selectedOrder) return
+    setMessage(null)
+    setError(null)
+    setBusyAction('receive')
     try {
       await purchasingApi.receivePurchaseOrder(selectedOrder.id, {
         receivedAtUtc: new Date().toISOString(),
@@ -164,26 +190,40 @@ export function PurchasingWorkbenchPage() {
       await refresh()
       await loadOrder(selectedOrder.id)
       setError(null)
+      setMessage('Receiving saved.')
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : 'Unable to receive purchase order.')
+      setMessage(null)
+    } finally {
+      setBusyAction(null)
     }
   }
 
   const closeSelected = async () => {
     if (!selectedOrder) return
+    setMessage(null)
+    setError(null)
+    setBusyAction('close')
     try {
       await purchasingApi.closePurchaseOrder(selectedOrder.id)
       await refresh()
       await loadOrder(selectedOrder.id)
       setError(null)
+      setMessage('Purchase order closed.')
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : 'Unable to close purchase order.')
+      setMessage(null)
+    } finally {
+      setBusyAction(null)
     }
   }
 
   const submitInvoice = async (event: FormEvent) => {
     event.preventDefault()
     if (!selectedOrder) return
+    setMessage(null)
+    setError(null)
+    setBusyAction('invoice')
     try {
       await purchasingApi.updatePurchaseOrder(selectedOrder.id, {
         purchaseOrderNumber: selectedOrder.purchaseOrderNumber,
@@ -201,20 +241,36 @@ export function PurchasingWorkbenchPage() {
       await refresh()
       await loadOrder(selectedOrder.id)
       setError(null)
+      setMessage('Vendor invoice and landed costs saved.')
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : 'Unable to update vendor invoice and landed costs.')
+      setMessage(null)
+    } finally {
+      setBusyAction(null)
     }
   }
 
   const archiveSelected = async () => {
     if (!selectedOrder) return
-    if (selectedOrder.isArchived) {
-      await purchasingApi.unarchivePurchaseOrder(selectedOrder.id)
-    } else {
-      await purchasingApi.archivePurchaseOrder(selectedOrder.id)
+    setMessage(null)
+    setError(null)
+    setBusyAction('archive')
+    try {
+      if (selectedOrder.isArchived) {
+        await purchasingApi.unarchivePurchaseOrder(selectedOrder.id)
+      } else {
+        await purchasingApi.archivePurchaseOrder(selectedOrder.id)
+      }
+      await refresh()
+      await loadOrder(selectedOrder.id)
+      setError(null)
+      setMessage(selectedOrder.isArchived ? 'Purchase order unarchived.' : 'Purchase order archived.')
+    } catch (exception) {
+      setError(exception instanceof Error ? exception.message : 'Unable to update purchase order archive status.')
+      setMessage(null)
+    } finally {
+      setBusyAction(null)
     }
-    await refresh()
-    await loadOrder(selectedOrder.id)
   }
 
   if (isLoading) return <section className="card"><p>Loading purchasing workflow…</p></section>
@@ -223,7 +279,8 @@ export function PurchasingWorkbenchPage() {
     <section className="stack">
       <article className="card">
         <h2>Purchasing Workbench</h2>
-        <p className="muted">Manager/Admin workflow for purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording. This phase records purchasing costs without adding warehouse, truck inventory, recommendations, or transaction-ledger workflows.</p>
+        <p className="muted">Manager/Admin workflow for purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording. Inventory remains hidden until that workflow is completed.</p>
+        {message ? <p role="status" className="success">{message}</p> : null}
         {error ? <p role="alert" className="error">{error}</p> : null}
       </article>
 
@@ -260,7 +317,7 @@ export function PurchasingWorkbenchPage() {
           <label>Notes
             <textarea aria-label="Purchase order notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
           </label>
-          <button type="submit">Create purchase order</button>
+          <button type="submit" disabled={busyAction !== null}>{busyAction === 'create' ? 'Creating...' : 'Create purchase order'}</button>
         </form>
         {selectedPart ? <p className="muted">Selected part status: {getStockStatus(selectedPart)} · on hand {quantityFormatter.format(selectedPart.quantityOnHand)} · reorder threshold {quantityFormatter.format(selectedPart.reorderThreshold)}</p> : null}
       </article>
@@ -306,10 +363,10 @@ export function PurchasingWorkbenchPage() {
             </table>
           </div>
           <div className="inline-links">
-            {selectedOrder.status === 1 ? <button type="button" onClick={submitOrder}>Submit PO</button> : null}
-            {selectedOrder.status !== 1 && selectedOrder.status !== 6 && selectedOrder.status !== 7 ? <button type="button" onClick={submitReceive}>Save receiving</button> : null}
-            {!selectedOrder.isArchived && (selectedOrder.status === 4 || selectedOrder.status === 5) ? <button type="button" onClick={closeSelected}>Close PO</button> : null}
-            <button type="button" onClick={archiveSelected}>{selectedOrder.isArchived ? 'Unarchive' : 'Archive'}</button>
+            {selectedOrder.status === 1 ? <button type="button" disabled={busyAction !== null} onClick={submitOrder}>{busyAction === 'submit' ? 'Submitting...' : 'Submit PO'}</button> : null}
+            {selectedOrder.status !== 1 && selectedOrder.status !== 6 && selectedOrder.status !== 7 ? <button type="button" disabled={busyAction !== null} onClick={submitReceive}>{busyAction === 'receive' ? 'Saving receiving...' : 'Save receiving'}</button> : null}
+            {!selectedOrder.isArchived && (selectedOrder.status === 4 || selectedOrder.status === 5) ? <button type="button" disabled={busyAction !== null} onClick={closeSelected}>{busyAction === 'close' ? 'Closing...' : 'Close PO'}</button> : null}
+            <button type="button" disabled={busyAction !== null} onClick={archiveSelected}>{busyAction === 'archive' ? 'Working...' : selectedOrder.isArchived ? 'Unarchive' : 'Archive'}</button>
           </div>
 
           <form className="form-grid" onSubmit={submitInvoice}>
@@ -337,7 +394,7 @@ export function PurchasingWorkbenchPage() {
             <label>Landed-cost notes
               <textarea aria-label="Landed-cost notes" value={invoiceForm.landedCostNotes} onChange={(event) => setInvoiceForm({ ...invoiceForm, landedCostNotes: event.target.value })} />
             </label>
-            <button type="submit">Save invoice and landed costs</button>
+            <button type="submit" disabled={busyAction !== null}>{busyAction === 'invoice' ? 'Saving invoice...' : 'Save invoice and landed costs'}</button>
           </form>
           <p className="muted">Invoice subtotal {currencyFormatter.format(selectedOrder.invoiceSubtotal)} · landed costs {currencyFormatter.format(selectedOrder.landedCostTotal)}</p>
         </article>

@@ -132,9 +132,11 @@ describe('DispatchBoardPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Dispatch Board' })).toBeInTheDocument()
+    expect(screen.getByText('This board is ticket-backed. En Route and On Site actions add dispatch history notes while preserving the current ticket status model.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Unscheduled Jobs/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Acme · Downtown Yard')).toBeInTheDocument()
+    expect(screen.getByText('Job / Scope')).toBeInTheDocument()
     expect(screen.getByText('Operator or crew assignment is missing.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Create Job Request' })).toHaveAttribute('href', '/manage/job-tickets/new')
 
@@ -143,6 +145,7 @@ describe('DispatchBoardPage', () => {
     expect(screen.getByText('JT-2')).toBeInTheDocument()
     expect(screen.getByText('Olivia Operator')).toBeInTheDocument()
     expect(screen.getByText('Dispatch planning')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mark En Route' })).toHaveAttribute('title', 'Records an En Route dispatch note on the ticket.')
     expect(screen.getByRole('link', { name: 'Open Ticket' })).toHaveAttribute('href', '/manage/job-tickets/job-2')
   })
 

@@ -444,6 +444,8 @@ Board views:
 - **Needs Ticket Review**: completed work that should move into ticket review;
 - **Ready for Billing**: reviewed/finalized work that can be handed to reporting/billing review.
 
+Because dispatch is currently ticket-backed, **En Route** and **On Site** actions add ticket history notes and preserve the existing ticket status model. The board still shows those actions so dispatchers can record day-of movement without opening ticket detail.
+
 Each card shows:
 - customer;
 - job site/location;
@@ -918,6 +920,8 @@ Managers/Admins can work with:
 - receipt recording for purchase-order quantities.
 
 This is existing purchasing support. It is not approval to expand into a larger purchasing, accounting, receiving, or vendor-invoice product without a separate approved scope.
+
+The purchasing screen shows success and error feedback for create, submit, receiving, close, archive, and vendor-invoice save actions. Inventory remains hidden until that workflow is completed, so users should treat purchasing as purchase-order coordination rather than a complete warehouse workflow.
 
 ![Manager/Admin purchasing support screen](assets/system-wiki/purchasing.png)
 
