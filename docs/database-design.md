@@ -9,7 +9,7 @@ Entity Framework Core
 ## Current Baseline
 This document summarizes the implemented database shape for the current Job Ticket Management System baseline. It is descriptive documentation only; schema changes still require scoped EF Core migrations and roadmap approval.
 
-The implemented model supports the protected job-ticket baseline, Manager/Admin workflows, reporting/time review, file uploads, parts request review, existing purchasing support, and the existing inventory foundation.
+The implemented model supports the protected job-ticket baseline, Manager/Admin workflows, reporting/time review, file uploads, parts request review, existing purchasing support, and inventory API foundation tables. Inventory remains hidden from Manager/Admin navigation until that workflow is completed and reintroduced.
 
 This document does not approve purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory expansion, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
 

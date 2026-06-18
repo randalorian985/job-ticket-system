@@ -5,7 +5,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 ## Current Project State
 - Core backend/API workflows remain implemented and validated.
 - Employee mobile workflow remains implemented.
-- Manager/Admin job-ticket, assignment, reporting, master-data, purchasing-support, and inventory-foundation workflows remain implemented on `main`.
+- Manager/Admin job-ticket, assignment, reporting, master-data, and purchasing-support workflows remain implemented on `main`; Inventory is hidden from the menu and client wiki until that workflow is completed.
 - Manager/Admin Phase 3B master-data polish has started with expanded existing-field create/edit forms and active-only relationship defaults for customers, service locations, equipment, vendors, part categories, and parts, while preserving existing archive/unarchive workflows and APIs.
 - Manager/Admin reports are organized into invoice/closeout, labor/parts, and service-history sections with shared filters, source-ID validation, date/paging validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from the currently loaded rows.
 - Manager/Admin screen cleanup separates report catalog/results, master-data list/editor, and Admin user list/editor states into focused screens without changing backend APIs; Admin user management now filters accounts by search, role, and active/inactive status.

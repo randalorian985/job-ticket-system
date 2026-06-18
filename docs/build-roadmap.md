@@ -189,7 +189,8 @@ Future service-ticket workspace follow-up PRs must be stabilization, validation,
 - Reporting and time-review workflows.
 - Admin-only user management at `/manage/users`.
 - Parts usage history visibility with cautious non-recommendation wording.
-- Existing purchasing support and inventory foundation already present on `main`.
+- Existing purchasing support already present on `main`.
+- Inventory remains hidden from Manager/Admin navigation and the client wiki until the workflow is completed, validated, documented, and explicitly reintroduced.
 
 ## Historical Review Documents
 Older review and gap-analysis documents are retained for audit history only. They do not override this roadmap, the README, the project scope, or the API contract.
@@ -245,9 +246,9 @@ Merge readiness requires:
 - receiving expansion;
 - vendor invoice tracking expansion;
 - landed-cost expansion;
-- warehouse inventory expansion beyond the existing inventory-foundation baseline;
+- warehouse inventory expansion;
 - truck inventory expansion;
-- inventory transactions beyond the existing baseline;
+- inventory workflow reintroduction or expansion;
 - low-stock alerts;
 - replenishment workflows;
 - external client portal or Client Hub workflow;

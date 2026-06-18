@@ -54,7 +54,6 @@ The screenshots below appear again in the workflow sections where they are most 
 | Parts requests | [part-requests.png](assets/system-wiki/part-requests.png) |
 | Master data customers | [master-data-customers.png](assets/system-wiki/master-data-customers.png) |
 | Purchasing support | [purchasing.png](assets/system-wiki/purchasing.png) |
-| Inventory foundation | [inventory.png](assets/system-wiki/inventory.png) |
 | Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) |
 | Admin users | [admin-users.png](assets/system-wiki/admin-users.png) |
 
@@ -94,7 +93,7 @@ Manager users can:
 - manage customer, location, equipment, vendor, part category, and part records;
 - review part requests;
 - use reports;
-- use the existing purchasing-support and inventory-foundation screens.
+- use the existing purchasing-support screen.
 
 Manager users cannot:
 - access Admin-only user management;
@@ -134,7 +133,6 @@ Admin users can:
 - `/manage/equipment`: equipment.
 - `/manage/parts`: parts, vendors, and part categories.
 - `/manage/part-requests`: parts request queue.
-- `/manage/inventory`: inventory foundation.
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
 - `/manage/time-approval`: time approval queue.
@@ -890,7 +888,7 @@ Managers/Admins can:
 - filter and review categories.
 
 ### Parts
-Part records represent catalog parts used in job tickets, part requests, reports, purchasing support, and inventory foundation.
+Part records represent catalog parts used in job tickets, part requests, reports, and purchasing support.
 
 Managers/Admins can:
 - create parts;
@@ -922,31 +920,6 @@ Managers/Admins can work with:
 This is existing purchasing support. It is not approval to expand into a larger purchasing, accounting, receiving, or vendor-invoice product without a separate approved scope.
 
 ![Manager/Admin purchasing support screen](assets/system-wiki/purchasing.png)
-
-## Inventory Foundation
-
-The inventory screen provides a foundation for stock visibility and transaction review.
-
-Managers/Admins can:
-- create and edit stock locations;
-- archive/unarchive stock locations;
-- view stock summaries;
-- filter stock by location and part;
-- view inventory transactions;
-- create manual adjustments with a reason.
-
-Inventory transactions can include receipt transactions from purchasing support and manual adjustments.
-
-This foundation does not include:
-- warehouse expansion;
-- truck inventory expansion;
-- transfer workflows;
-- low-stock alerts;
-- replenishment automation;
-- recommendation scoring;
-- AI guidance.
-
-![Manager/Admin inventory foundation screen](assets/system-wiki/inventory.png)
 
 ## Reports
 
@@ -1126,6 +1099,7 @@ The system currently does not include:
 - receiving expansion beyond the existing baseline;
 - vendor invoice tracking expansion;
 - landed-cost expansion beyond existing supported fields;
+- inventory workflow;
 - warehouse inventory expansion;
 - truck inventory expansion;
 - low-stock alerts;
@@ -1187,7 +1161,6 @@ Use this checklist when introducing the system to a client team.
 - Maintain part, vendor, and category data.
 - Review Needs ordered part requests.
 - Use purchasing support carefully within current scope.
-- Review inventory foundation records.
 - Produce closeout reports.
 
 ## Demo Users

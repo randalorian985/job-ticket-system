@@ -89,6 +89,13 @@ describe('ManagerShell', () => {
     expect(screen.getByText('Parts & Supply')).toBeInTheDocument()
   })
 
+  it('keeps unfinished inventory workflow out of manager navigation', () => {
+    renderShell('/manage/reports')
+
+    expect(screen.queryByRole('option', { name: 'Inventory' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Inventory' })).not.toBeInTheDocument()
+  })
+
   it('closes the previously opened desktop menu when another menu opens', async () => {
     const user = userEvent.setup()
     renderShell('/manage/reports')

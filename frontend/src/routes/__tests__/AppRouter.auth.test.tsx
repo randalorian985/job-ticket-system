@@ -405,4 +405,22 @@ describe('AppRouter authentication rendering', () => {
     expect(await screen.findByRole('heading', { name: 'Dispatch Board' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Create Job Request' })).toHaveAttribute('href', '/manage/job-tickets/new')
   })
+
+  it('redirects the unfinished inventory route back to the Manager/Admin dashboard', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: managerUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    render(
+      <MemoryRouter future={routerFuture} initialEntries={['/manage/inventory']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Inventory Operations' })).not.toBeInTheDocument()
+  })
 })
