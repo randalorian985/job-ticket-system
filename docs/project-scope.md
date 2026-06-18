@@ -14,7 +14,7 @@ Core scope:
 - supporting Employee and Manager/Admin workflows around job-ticket operations.
 
 ## Current Control State
-- The implemented baseline includes auth, employee mobile workflow, Manager/Admin job-ticket workflow, reporting/time review, master data, purchasing support, and inventory foundation already present on `main`.
+- The implemented baseline includes auth, employee mobile workflow, Manager/Admin job-ticket workflow, reporting/time review, master data, and purchasing support already present on `main`. Inventory remains hidden from the Manager/Admin menu and client wiki until that workflow is completed.
 - Parts Request Workflow Phase 2 is added as a job-ticket-first workflow.
 - Technicians can search/select an existing catalog part through a safe lookup or type a new/unlisted part from inside an assigned service/job ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
@@ -158,7 +158,7 @@ Allowed back-office fields in Phase 2:
 
 Manager/Admin ticket detail may show and create ticket parts/requests, summarize waiting-on-parts state, and route Needs ordered work into the back-office review queue. This remains a ticket-support workflow, not a purchasing or inventory workflow.
 
-This does not approve new or expanded purchase-order behavior beyond the existing purchasing-support baseline, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory expansion, inventory transactions beyond the existing inventory-foundation baseline, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
+This does not approve new or expanded purchase-order behavior beyond the existing purchasing-support baseline, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory expansion, inventory workflow reintroduction, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
 
 ## Protected Baseline
 The following must remain stable:
@@ -182,9 +182,9 @@ The following are not approved as part of Parts Request Workflow Phase 2, UI pol
 - receiving expansion;
 - vendor invoice tracking expansion;
 - landed-cost expansion;
-- warehouse inventory expansion beyond the existing inventory-foundation baseline;
+- warehouse inventory expansion;
 - truck inventory expansion;
-- inventory transactions beyond the existing inventory-foundation baseline;
+- inventory workflow reintroduction or expansion;
 - low-stock alerts;
 - replenishment workflows;
 - recommendation engine;

@@ -20,7 +20,7 @@
 - Parts usage history visibility (`/api/parts/usage-history`)
 - Parts request workflow Phase 2 (`/api/part-requests/*`)
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
-- Inventory foundation (`/api/inventory/*`)
+- Inventory API foundation (`/api/inventory/*`, currently hidden from Manager/Admin navigation and client wiki)
 
 ## Job Ticket Display Fields
 Job-ticket list and detail responses keep relationship IDs for API operations and also include human-readable fields for UI display.
@@ -284,8 +284,8 @@ Behavior:
 
 This section documents the existing baseline only. It does not approve new purchasing expansion, new receiving expansion, vendor invoice workflow expansion, accounting integration, invoice generation, payment tracking, replenishment, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior.
 
-## Existing Inventory Foundation
-The inventory API is an implemented Manager/Admin baseline workflow for stock locations, current stock visibility, transaction review, purchase-order receipt transactions, and manual adjustments.
+## Existing Inventory API Foundation
+The inventory API foundation exists for stock locations, current stock visibility, transaction review, purchase-order receipt transactions, and manual adjustments. The Manager/Admin Inventory screen is currently hidden from navigation and omitted from the client wiki because the workflow is not complete enough for client use.
 
 Authorization: `ManagerOrAdmin`.
 
@@ -313,7 +313,7 @@ Behavior:
 - transaction review is filterable by stock location and part;
 - manual adjustments require stock location, part, non-zero quantity delta, and reason.
 
-This section documents the existing inventory foundation only. It does not approve warehouse/truck inventory expansion, transfer workflows, low-stock alerts, replenishment, average-cost or landed-cost inventory accounting expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval behavior.
+This section documents the existing inventory API foundation only. It does not approve reintroducing the Inventory UI, warehouse/truck inventory expansion, transfer workflows, low-stock alerts, replenishment, average-cost or landed-cost inventory accounting expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval behavior.
 
 ## Protected Boundaries
 - `/manage` remains Manager/Admin-only.

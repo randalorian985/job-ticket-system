@@ -41,7 +41,6 @@ const navGroups: ManagerNavGroup[] = [
     items: [
       { label: 'Parts', to: '/manage/parts' },
       { label: 'Part Requests', to: '/manage/part-requests' },
-      { label: 'Inventory', to: '/manage/inventory' },
       { label: 'Purchasing', to: '/manage/purchasing' },
       { label: 'Parts Usage History', to: '/manage/parts-usage-history' }
     ]

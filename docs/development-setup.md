@@ -1,6 +1,6 @@
 # Development Setup
 
-This guide explains how to prepare a local development environment for the live Job Ticket Management System platform. The repository is no longer scaffold-only: the validated baseline now includes the core backend/API, employee mobile workflow, Manager/Admin workflows, Phase 4A local pilot readiness, Phase 4B workflow polish, Parts Request Workflow Phase 2, existing purchasing support, and the existing inventory foundation.
+This guide explains how to prepare a local development environment for the live Job Ticket Management System platform. The repository is no longer scaffold-only: the validated baseline now includes the core backend/API, employee mobile workflow, Manager/Admin workflows, Phase 4A local pilot readiness, Phase 4B workflow polish, Parts Request Workflow Phase 2, and existing purchasing support. Inventory remains hidden from Manager/Admin navigation until that workflow is completed and reintroduced.
 
 Use `README.md`, `docs/build-roadmap.md`, `docs/project-scope.md`, and `docs/api-contract.md` as the current scope contract. This setup guide does not approve purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory, replenishment, compatibility recommendations, AI/scoring, automatic compatibility decisions, or automatic approval.
 
