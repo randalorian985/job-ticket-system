@@ -46,6 +46,7 @@ The screenshots below appear again in the workflow sections where they are most 
 | Status review workflow | [ticket-status-review.png](assets/system-wiki/ticket-status-review.png) |
 | Labor workflow | [ticket-labor-workflow.png](assets/system-wiki/ticket-labor-workflow.png) |
 | Parts add/request workflow | [ticket-parts-workflow.png](assets/system-wiki/ticket-parts-workflow.png) |
+| Invoice review workflow | [ticket-invoice-review.png](assets/system-wiki/ticket-invoice-review.png) |
 | Mobile ticket workspace | [ticket-workspace-mobile.png](assets/system-wiki/ticket-workspace-mobile.png) |
 | Mobile ticket editor | [ticket-edit-mobile.png](assets/system-wiki/ticket-edit-mobile.png) |
 | Mobile labor workflow | [ticket-labor-mobile.png](assets/system-wiki/ticket-labor-mobile.png) |
@@ -615,6 +616,8 @@ The ticket overview also includes a workflow-guidance area:
 - **Recommended next action** names the next practical step, explains the blocker or reason, shows the target workflow, and opens that workflow directly.
 - **Ticket workflow path** shows Dispatch, Field Work, Parts / Files, and Invoice Review so office users can jump to the right stage without hunting through the page.
 - The **Invoice Review** workflow shows open closeout requirements before invoice totals so billing handoff work is visible before users review dollars.
+
+![Invoice review workflow](assets/system-wiki/ticket-invoice-review.png)
 
 The edit workflow should preserve:
 - customer/service-location relationships;
