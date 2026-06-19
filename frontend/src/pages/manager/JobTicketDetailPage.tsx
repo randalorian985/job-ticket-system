@@ -1080,13 +1080,53 @@ export function JobTicketDetailPage() {
       : closeoutReview.warnings.length
         ? "closeout"
         : "overview";
-  const recommendedAction = hasActiveDispatchBlocker
+  const recommendedActionDetail = hasActiveDispatchBlocker
     ? dispatchWarnings[0]
     : partsReview.blockerCount
       ? partsReview.nextAction
       : closeoutReview.warnings[0] ?? "Review the service details and continue the current workflow.";
   const recommendedWorkflowLabel = workflowTabs.find((tab) => tab.value === recommendedWorkflow)?.label ?? "Overview";
   const activeWorkflowLabel = workflowTabs.find((tab) => tab.value === activeTab)?.label ?? "Overview";
+  const recommendedActionTitle = hasActiveDispatchBlocker
+    ? "Resolve dispatch blocker"
+    : partsReview.blockerCount
+      ? "Review parts blocker"
+      : closeoutReview.warnings.length
+        ? "Finish invoice review"
+        : "Review service details";
+  const recommendedActionStatus = hasActiveDispatchBlocker
+    ? `${dispatchWarnings.length} dispatch item${dispatchWarnings.length === 1 ? "" : "s"} open`
+    : partsReview.blockerCount
+      ? `${partsReview.blockerCount} parts blocker${partsReview.blockerCount === 1 ? "" : "s"}`
+      : closeoutReview.warnings.length
+        ? `${closeoutReview.warnings.length} invoice review item${closeoutReview.warnings.length === 1 ? "" : "s"} open`
+        : "No immediate blockers visible";
+  const workflowPathSteps = [
+    {
+      label: "Dispatch",
+      value: "dispatch" as WorkflowTab,
+      summary: dispatchWarnings.length ? `${dispatchWarnings.length} open` : "Ready",
+      state: dispatchWarnings.length ? "open" : "ready",
+    },
+    {
+      label: "Field Work",
+      value: "time" as WorkflowTab,
+      summary: `${entries.length + timeEntries.length} labor notes`,
+      state: entries.length || timeEntries.length ? "ready" : "open",
+    },
+    {
+      label: "Parts / Files",
+      value: partsReview.blockerCount ? "parts" as WorkflowTab : "files" as WorkflowTab,
+      summary: partsReview.blockerCount ? `${partsReview.blockerCount} blockers` : `${parts.length + files.length} records`,
+      state: partsReview.blockerCount ? "alert" : "ready",
+    },
+    {
+      label: "Invoice Review",
+      value: "closeout" as WorkflowTab,
+      summary: closeoutReview.warnings.length ? `${closeoutReview.warnings.length} open` : "Ready",
+      state: closeoutReview.warnings.length ? "open" : "ready",
+    },
+  ];
 
   useEffect(() => {
     if (!workflowFocusMode || activeDrawer) return;
@@ -1186,7 +1226,13 @@ export function JobTicketDetailPage() {
           <section className="ticket-recommended-action no-print" aria-label="recommended action" hidden={workflowFocusMode}>
             <div>
               <span>Recommended next action</span>
-              <strong>{recommendedAction}</strong>
+              <strong>{recommendedActionTitle}</strong>
+              <p>{recommendedActionDetail}</p>
+            </div>
+            <div className="ticket-recommended-target">
+              <span>Target workflow</span>
+              <strong>{recommendedWorkflowLabel}</strong>
+              <small>{recommendedActionStatus}</small>
             </div>
             <span className="tooltip-anchor">
               <button
@@ -1195,12 +1241,27 @@ export function JobTicketDetailPage() {
                 title={`Open the ${recommendedWorkflowLabel} workflow screen`}
                 onClick={() => openRecommendedWorkflow(recommendedWorkflow)}
               >
-                Open workflow
+                Open {recommendedWorkflowLabel}
               </button>
               <span id="open-workflow-tooltip" className="control-tooltip" role="tooltip">
                 Open the recommended {recommendedWorkflowLabel} screen for this ticket.
               </span>
             </span>
+          </section>
+
+          <section className="ticket-workflow-path no-print" aria-label="ticket workflow path" hidden={workflowFocusMode}>
+            {workflowPathSteps.map((step) => (
+              <button
+                type="button"
+                className={`ticket-workflow-path-step ticket-workflow-path-${step.state}`}
+                key={step.label}
+                onClick={() => selectWorkflowTab(step.value, true)}
+                title={`Open ${step.label} workflow`}
+              >
+                <span>{step.label}</span>
+                <strong>{step.summary}</strong>
+              </button>
+            ))}
           </section>
 
           {workflowFocusMode ? (
@@ -1235,6 +1296,16 @@ export function JobTicketDetailPage() {
               ))}
             </div>
           </nav>
+
+          <section className="ticket-mobile-quick-actions no-print" aria-label="mobile ticket quick actions" hidden={workflowFocusMode}>
+            <button type="button" aria-label="Quick Add Note" onClick={() => openWorkflowDrawer("activity", "note")}>Add Note</button>
+            <button type="button" aria-label="Quick Add Photo" onClick={() => openWorkflowDrawer("files", "photo")}>Add Photo</button>
+            <button type="button" aria-label="Quick Labor" onClick={() => {
+              selectWorkflowTab("time", true);
+              setActiveDrawer(null);
+            }}>Labor</button>
+            <button type="button" aria-label="Quick Status" onClick={() => openWorkflowDrawer("overview", "status")}>Status</button>
+          </section>
 
           <section className="ticket-workbench-kpis" aria-label="ticket workspace summary" hidden={workflowFocusMode}>
             <div className={dispatchWarnings.length ? "metric-tile metric-tile-review" : "metric-tile metric-tile-ready"}>
@@ -2090,6 +2161,26 @@ export function JobTicketDetailPage() {
                     {closeoutReview.warnings.length ? "Needs closeout review" : "Ready for invoice handoff"}
                   </span>
                 </div>
+                <section className={closeoutReview.warnings.length ? "closeout-next-steps closeout-next-steps-open" : "closeout-next-steps closeout-next-steps-ready"} aria-label="invoice review next steps">
+                  <div>
+                    <span>{closeoutReview.warnings.length ? "Open closeout requirements" : "Invoice review path"}</span>
+                    <strong>{closeoutReview.warnings.length ? `${closeoutReview.warnings.length} item${closeoutReview.warnings.length === 1 ? "" : "s"} need attention` : "Ready for billing handoff"}</strong>
+                  </div>
+                  {closeoutReview.warnings.length ? (
+                    <ol>
+                      {closeoutReview.warnings.slice(0, 4).map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>Labor, time approval, parts, documentation, notes, billing details, and closeout status are ready for invoice review.</p>
+                  )}
+                  <div className="closeout-action-row">
+                    <button type="button" className="secondary-button" onClick={() => openWorkflowDrawer("overview", "status")}>Change Status</button>
+                    <button type="button" className="secondary-button" onClick={() => selectWorkflowTab("time", true)}>Review Labor</button>
+                    <button type="button" className="secondary-button" onClick={() => openWorkflowDrawer("files", "photo")}>Add File</button>
+                  </div>
+                </section>
                 <div className="fact-grid">
                   <div>
                     <span>Invoice Checks</span>
