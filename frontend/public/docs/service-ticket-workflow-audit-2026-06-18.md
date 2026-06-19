@@ -91,6 +91,7 @@ Updated or added screenshots in `docs/assets/system-wiki` and `frontend/public/d
 - `ticket-status-review.png`
 - `ticket-labor-workflow.png`
 - `ticket-parts-workflow.png`
+- `ticket-invoice-review.png`
 - `ticket-workspace-mobile.png`
 - `ticket-edit-mobile.png`
 - `ticket-labor-mobile.png`

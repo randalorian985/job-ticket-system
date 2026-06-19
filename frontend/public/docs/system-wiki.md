@@ -46,6 +46,7 @@ The screenshots below appear again in the workflow sections where they are most 
 | Status review workflow | [ticket-status-review.png](assets/system-wiki/ticket-status-review.png) |
 | Labor workflow | [ticket-labor-workflow.png](assets/system-wiki/ticket-labor-workflow.png) |
 | Parts add/request workflow | [ticket-parts-workflow.png](assets/system-wiki/ticket-parts-workflow.png) |
+| Invoice review workflow | [ticket-invoice-review.png](assets/system-wiki/ticket-invoice-review.png) |
 | Mobile ticket workspace | [ticket-workspace-mobile.png](assets/system-wiki/ticket-workspace-mobile.png) |
 | Mobile ticket editor | [ticket-edit-mobile.png](assets/system-wiki/ticket-edit-mobile.png) |
 | Mobile labor workflow | [ticket-labor-mobile.png](assets/system-wiki/ticket-labor-mobile.png) |
@@ -54,7 +55,6 @@ The screenshots below appear again in the workflow sections where they are most 
 | Parts requests | [part-requests.png](assets/system-wiki/part-requests.png) |
 | Master data customers | [master-data-customers.png](assets/system-wiki/master-data-customers.png) |
 | Purchasing support | [purchasing.png](assets/system-wiki/purchasing.png) |
-| Inventory foundation | [inventory.png](assets/system-wiki/inventory.png) |
 | Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) |
 | Admin users | [admin-users.png](assets/system-wiki/admin-users.png) |
 
@@ -94,7 +94,7 @@ Manager users can:
 - manage customer, location, equipment, vendor, part category, and part records;
 - review part requests;
 - use reports;
-- use the existing purchasing-support and inventory-foundation screens.
+- use the existing purchasing-support screen.
 
 Manager users cannot:
 - access Admin-only user management;
@@ -134,7 +134,6 @@ Admin users can:
 - `/manage/equipment`: equipment.
 - `/manage/parts`: parts, vendors, and part categories.
 - `/manage/part-requests`: parts request queue.
-- `/manage/inventory`: inventory foundation.
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
 - `/manage/time-approval`: time approval queue.
@@ -448,6 +447,8 @@ Board views:
 - **Needs Ticket Review**: completed work that should move into ticket review;
 - **Ready for Billing**: reviewed/finalized work that can be handed to reporting/billing review.
 
+Because dispatch is currently ticket-backed, **En Route** and **On Site** actions add ticket history notes and preserve the existing ticket status model. The board still shows those actions so dispatchers can record day-of movement without opening ticket detail.
+
 Each card shows:
 - customer;
 - job site/location;
@@ -615,6 +616,8 @@ The ticket overview also includes a workflow-guidance area:
 - **Recommended next action** names the next practical step, explains the blocker or reason, shows the target workflow, and opens that workflow directly.
 - **Ticket workflow path** shows Dispatch, Field Work, Parts / Files, and Invoice Review so office users can jump to the right stage without hunting through the page.
 - The **Invoice Review** workflow shows open closeout requirements before invoice totals so billing handoff work is visible before users review dollars.
+
+![Invoice review workflow](assets/system-wiki/ticket-invoice-review.png)
 
 The edit workflow should preserve:
 - customer/service-location relationships;
@@ -900,7 +903,7 @@ Managers/Admins can:
 - filter and review categories.
 
 ### Parts
-Part records represent catalog parts used in job tickets, part requests, reports, purchasing support, and inventory foundation.
+Part records represent catalog parts used in job tickets, part requests, reports, and purchasing support.
 
 Managers/Admins can:
 - create parts;
@@ -931,32 +934,9 @@ Managers/Admins can work with:
 
 This is existing purchasing support. It is not approval to expand into a larger purchasing, accounting, receiving, or vendor-invoice product without a separate approved scope.
 
+The purchasing screen shows success and error feedback for create, submit, receiving, close, archive, and vendor-invoice save actions. Inventory remains hidden until that workflow is completed, so users should treat purchasing as purchase-order coordination rather than a complete warehouse workflow.
+
 ![Manager/Admin purchasing support screen](assets/system-wiki/purchasing.png)
-
-## Inventory Foundation
-
-The inventory screen provides a foundation for stock visibility and transaction review.
-
-Managers/Admins can:
-- create and edit stock locations;
-- archive/unarchive stock locations;
-- view stock summaries;
-- filter stock by location and part;
-- view inventory transactions;
-- create manual adjustments with a reason.
-
-Inventory transactions can include receipt transactions from purchasing support and manual adjustments.
-
-This foundation does not include:
-- warehouse expansion;
-- truck inventory expansion;
-- transfer workflows;
-- low-stock alerts;
-- replenishment automation;
-- recommendation scoring;
-- AI guidance.
-
-![Manager/Admin inventory foundation screen](assets/system-wiki/inventory.png)
 
 ## Reports
 
@@ -1136,6 +1116,7 @@ The system currently does not include:
 - receiving expansion beyond the existing baseline;
 - vendor invoice tracking expansion;
 - landed-cost expansion beyond existing supported fields;
+- inventory workflow;
 - warehouse inventory expansion;
 - truck inventory expansion;
 - low-stock alerts;
@@ -1197,7 +1178,6 @@ Use this checklist when introducing the system to a client team.
 - Maintain part, vendor, and category data.
 - Review Needs ordered part requests.
 - Use purchasing support carefully within current scope.
-- Review inventory foundation records.
 - Produce closeout reports.
 
 ## Demo Users
