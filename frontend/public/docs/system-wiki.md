@@ -611,6 +611,11 @@ The same dispatch-readiness review remains visible above the edit sections. User
 
 Workflow tabs and action buttons now open the selected ticket workflow in a focused view. This means the selected panel appears directly under the workflow heading and tabs instead of requiring mobile users to scroll past the overview rail. The focused view includes a **Back to ticket overview** control, and that control closes any open focused panel before returning to the normal ticket overview.
 
+The ticket overview also includes a workflow-guidance area:
+- **Recommended next action** names the next practical step, explains the blocker or reason, shows the target workflow, and opens that workflow directly.
+- **Ticket workflow path** shows Dispatch, Field Work, Parts / Files, and Invoice Review so office users can jump to the right stage without hunting through the page.
+- The **Invoice Review** workflow shows open closeout requirements before invoice totals so billing handoff work is visible before users review dollars.
+
 The edit workflow should preserve:
 - customer/service-location relationships;
 - equipment relationships;
@@ -630,6 +635,7 @@ User experience improvements:
 - mobile users can edit one section at a time instead of working through a long stacked form;
 - dispatch-readiness feedback remains visible while editing;
 - quick actions let users add notes, upload photos/files, review labor, or change status without opening the full editor.
+- mobile ticket shortcuts keep Add Note, Add Photo, Labor, and Status close to the top of the ticket overview.
 
 Technical implementation details:
 - `JobTicketEditorForm` owns the section state and still emits the same ticket update payload.
@@ -666,6 +672,8 @@ Mobile users should prefer:
 - the Labor tab for reviewing labor/time entries;
 - the Status Review panel for status changes;
 - section editing only when ticket details need to change.
+
+On the mobile ticket overview, the compact quick-action row gives direct access to Add Note, Add Photo, Labor, and Status without waiting for users to scroll into the side rail.
 
 ![Mobile ticket workspace](assets/system-wiki/ticket-workspace-mobile.png)
 

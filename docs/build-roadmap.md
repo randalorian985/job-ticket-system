@@ -82,6 +82,13 @@ Production readiness hardening was completed on June 18, 2026:
 - production backup, verification, rollback, monitoring, and client-UAT gates are documented in `docs/production-readiness-runbook.md` and `docs/production-readiness-audit-2026-06-18.md`;
 - no schema migration, historical migration edit, API route/DTO change, enum change, auth weakening, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, client portal, payment, or invoice-generation behavior was added.
 
+Manager/Admin ticket workflow refinement was completed on June 18, 2026:
+- the ticket overview recommended-action card now names the next step, target workflow, and visible blocker count;
+- a ticket workflow path lets users jump between Dispatch, Field Work, Parts / Files, and Invoice Review without changing the underlying ticket-backed workflow;
+- mobile ticket overview adds compact Add Note, Add Photo, Labor, and Status shortcuts near the top of the page;
+- Invoice Review now surfaces open closeout requirements before invoice-ready totals and keeps direct status/labor/file follow-up actions visible;
+- this is a frontend workflow-clarity refinement only and does not add backend APIs, routes, DTOs, schema migrations, enum changes, auth changes, new dispatch models, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, client portal, payment, or invoice-generation behavior.
+
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
 - Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;
