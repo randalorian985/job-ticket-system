@@ -609,6 +609,21 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('Status updated.')).toBeInTheDocument()
   })
 
+  it('surfaces refresh failures after a status update without leaving the ticket loading', async () => {
+    renderPage()
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    vi.mocked(jobTicketsApi.get).mockRejectedValueOnce(new Error('reload failed'))
+
+    openStatusPanel()
+    fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '4' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Update to In Progress' }))
+
+    await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('j1', { status: 4 }))
+    expect(await screen.findByText('Status updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Unable to load job ticket details.')).toBeInTheDocument()
+    expect(screen.queryByText('Loading job review details...')).not.toBeInTheDocument()
+  })
+
   it('feeds closeout warnings into invoice status review', async () => {
     renderPage()
     expect(await screen.findByText('JT-1')).toBeInTheDocument()

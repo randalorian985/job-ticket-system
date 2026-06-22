@@ -55,7 +55,7 @@ describe('ManagerDashboardPage', () => {
     expect(within(shortcuts).getByRole('link', { name: 'Part Requests' })).toHaveAttribute('href', '/manage/part-requests')
 
     const kpis = screen.getByLabelText('operations summary')
-    expect(within(kpis).getByText('Open Jobs')).toBeInTheDocument()
+    expect(await within(kpis).findByText('Open Jobs')).toBeInTheDocument()
     expect(within(kpis).getByText('Assigned')).toBeInTheDocument()
     expect(within(kpis).getByText('In Progress')).toBeInTheDocument()
     expect(within(kpis).getByText('Waiting on Parts')).toBeInTheDocument()

@@ -1060,6 +1060,7 @@ Common validation examples:
 - employees must be clocked into the selected job before recording field work.
 
 When a request fails, the screen should show a useful error message and keep the user in the workflow.
+Manager/Admin ticket workspace refreshes, Employee mobile post-action refreshes, and Parts Request Queue filter reloads should also clear loading states after failures, so users are not left waiting without feedback or told that a saved action failed.
 
 ## Recommended Operating Process
 
