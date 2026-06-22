@@ -1154,6 +1154,25 @@ tbody tr:hover td {
   padding: 0.4rem 0.65rem;
 }
 
+.ticket-workflow-tabs button.ticket-workflow-tab-active,
+.ticket-workflow-tabs button[aria-selected="true"] {
+  background: #243b8f;
+  border-color: #243b8f;
+  color: #ffffff;
+  opacity: 1;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.ticket-workflow-tabs button.ticket-workflow-tab-active:hover,
+.ticket-workflow-tabs button.ticket-workflow-tab-active:focus-visible,
+.ticket-workflow-tabs button[aria-selected="true"]:hover,
+.ticket-workflow-tabs button[aria-selected="true"]:focus-visible {
+  background: #1d2f78;
+  border-color: #1d2f78;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
 .ticket-recommended-action {
   border-radius: 7px;
 }

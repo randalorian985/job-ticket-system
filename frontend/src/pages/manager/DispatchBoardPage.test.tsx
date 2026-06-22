@@ -132,9 +132,11 @@ describe('DispatchBoardPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Dispatch Board' })).toBeInTheDocument()
+    expect(screen.getByText('This board is ticket-backed. En Route and On Site actions add dispatch history notes while preserving the current ticket status model.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Unscheduled Jobs/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Acme · Downtown Yard')).toBeInTheDocument()
+    expect(screen.getByText('Job / Scope')).toBeInTheDocument()
     expect(screen.getByText('Operator or crew assignment is missing.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Create Job Request' })).toHaveAttribute('href', '/manage/job-tickets/new')
 
@@ -143,6 +145,7 @@ describe('DispatchBoardPage', () => {
     expect(screen.getByText('JT-2')).toBeInTheDocument()
     expect(screen.getByText('Olivia Operator')).toBeInTheDocument()
     expect(screen.getByText('Dispatch planning')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mark En Route' })).toHaveAttribute('title', 'Records an En Route dispatch note on the ticket.')
     expect(screen.getByRole('link', { name: 'Open Ticket' })).toHaveAttribute('href', '/manage/job-tickets/job-2')
   })
 
@@ -153,8 +156,10 @@ describe('DispatchBoardPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Schedule' }))
 
     const drawer = screen.getByLabelText('schedule job')
-    fireEvent.change(within(drawer).getByLabelText('Scheduled date/time'), { target: { value: '2026-06-17T15:00' } })
-    fireEvent.change(within(drawer).getByLabelText('Due date/time'), { target: { value: '2026-06-17T21:00' } })
+    const scheduledInput = '2026-06-17T15:00'
+    const dueInput = '2026-06-17T21:00'
+    fireEvent.change(within(drawer).getByLabelText('Scheduled date/time'), { target: { value: scheduledInput } })
+    fireEvent.change(within(drawer).getByLabelText('Due date/time'), { target: { value: dueInput } })
     fireEvent.change(within(drawer).getByLabelText('Crane assignment'), { target: { value: 'eq-1' } })
     fireEvent.change(within(drawer).getByLabelText('Operator assignment'), { target: { value: 'emp-1' } })
     fireEvent.click(within(drawer).getByLabelText('Casey Crew'))
@@ -164,8 +169,8 @@ describe('DispatchBoardPage', () => {
     await waitFor(() => expect(jobTicketsApi.update).toHaveBeenCalledWith('job-1', expect.objectContaining({
       equipmentId: 'eq-1',
       status: 3,
-      scheduledStartAtUtc: '2026-06-17T20:00:00.000Z',
-      dueAtUtc: '2026-06-18T02:00:00.000Z',
+      scheduledStartAtUtc: new Date(scheduledInput).toISOString(),
+      dueAtUtc: new Date(dueInput).toISOString(),
       internalNotes: 'Dispatch notes: Use east gate.'
     })))
     expect(jobTicketsApi.addAssignment).toHaveBeenCalledWith('job-1', { employeeId: 'emp-1', isLead: true })

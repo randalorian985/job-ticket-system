@@ -59,6 +59,36 @@ Manager/Admin Dispatch Board was implemented on June 17, 2026:
 - card-level actions support scheduling, crane/equipment assignment, operator/crew assignment, dispatch notes, day-of status movement, ticket open, ticket finalization, and billing-readiness handoff through existing APIs;
 - the implementation is ticket-backed and does not add a dispatch-job table, backend enum values, migrations, automatic scheduling, automatic approval, customer-signature API, billing/payment API, purchasing expansion, inventory expansion, recommendation/scoring/AI, or automatic compatibility behavior.
 
+Manager/Admin Service Ticket Workflow Audit and repair was completed on June 18, 2026:
+- affected modules: `frontend/src/pages/manager/JobTicketDetailPage.tsx`, `frontend/src/pages/manager/JobTicketDetailPage.test.tsx`, shared styles, page/route developer notes, client wiki documentation, and ticket workflow screenshots;
+- direct workflow-tab and action-rail navigation now opens the selected ticket workflow in the focused `view=workflow` screen;
+- Edit Ticket, Change Status, Archive Review, Add Note, Add Photo, Add Labor, and Add / Request Part now land users on the relevant focused panel or tab with stronger focus/contrast feedback;
+- **Back to ticket overview** closes open focused drawers before returning to the normal ticket overview;
+- the audit report is documented in `docs/service-ticket-workflow-audit-2026-06-18.md`;
+- no backend API behavior, schema, migration, enum, auth, role, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, invoice-generation, payment, or customer portal behavior was added.
+
+Active client-facing workflow tightening was completed on June 18, 2026:
+- Dispatch Board copy now clarifies that En Route and On Site are ticket-history updates while the board remains backed by existing ticket status values;
+- Dispatch cards label the loaded ticket title as Job / Scope instead of presenting it as a separate job-type field;
+- Purchasing support now gives visible success/error and in-progress feedback for create, submit, receiving, close, archive, and vendor-invoice save actions;
+- the client wiki was aligned to those active workflow behaviors;
+- no backend API, schema, migration, enum, auth, role, inventory reintroduction, purchasing expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval behavior was added.
+
+Production readiness hardening was completed on June 18, 2026:
+- production Docker Compose and nginx health-proxy configuration are now source-controlled;
+- production startup uses an explicit `DatabaseMigrations__ApplyOnStartup` switch instead of relying on test/demo seed hosted services for migration execution;
+- production Compose disables test bootstrap and pilot demo seeding during normal restarts;
+- job-ticket file/photo uploads enforce the existing 50 MB boundary in the application service as well as at the HTTP request limit;
+- production backup, verification, rollback, monitoring, and client-UAT gates are documented in `docs/production-readiness-runbook.md` and `docs/production-readiness-audit-2026-06-18.md`;
+- no schema migration, historical migration edit, API route/DTO change, enum change, auth weakening, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, client portal, payment, or invoice-generation behavior was added.
+
+Manager/Admin ticket workflow refinement was completed on June 18, 2026:
+- the ticket overview recommended-action card now names the next step, target workflow, and visible blocker count;
+- a ticket workflow path lets users jump between Dispatch, Field Work, Parts / Files, and Invoice Review without changing the underlying ticket-backed workflow;
+- mobile ticket overview adds compact Add Note, Add Photo, Labor, and Status shortcuts near the top of the page;
+- Invoice Review now surfaces open closeout requirements before invoice-ready totals and keeps direct status/labor/file follow-up actions visible;
+- this is a frontend workflow-clarity refinement only and does not add backend APIs, routes, DTOs, schema migrations, enum changes, auth changes, new dispatch models, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, client portal, payment, or invoice-generation behavior.
+
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
 - Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;
@@ -181,7 +211,8 @@ Future service-ticket workspace follow-up PRs must be stabilization, validation,
 - Reporting and time-review workflows.
 - Admin-only user management at `/manage/users`.
 - Parts usage history visibility with cautious non-recommendation wording.
-- Existing purchasing support and inventory foundation already present on `main`.
+- Existing purchasing support already present on `main`.
+- Inventory remains hidden from Manager/Admin navigation and the client wiki until the workflow is completed, validated, documented, and explicitly reintroduced.
 
 ## Historical Review Documents
 Older review and gap-analysis documents are retained for audit history only. They do not override this roadmap, the README, the project scope, or the API contract.
@@ -237,9 +268,9 @@ Merge readiness requires:
 - receiving expansion;
 - vendor invoice tracking expansion;
 - landed-cost expansion;
-- warehouse inventory expansion beyond the existing inventory-foundation baseline;
+- warehouse inventory expansion;
 - truck inventory expansion;
-- inventory transactions beyond the existing baseline;
+- inventory workflow reintroduction or expansion;
 - low-stock alerts;
 - replenishment workflows;
 - external client portal or Client Hub workflow;

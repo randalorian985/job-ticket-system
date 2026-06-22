@@ -20,6 +20,8 @@ public interface IJobTicketFilesService
 
 public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileStorageProvider storageProvider, ICurrentUserContext currentUserContext) : IJobTicketFilesService
 {
+    public const long MaxUploadFileSizeBytes = 50_000_000;
+
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".jpg", ".jpeg", ".png", ".webp", ".pdf"
@@ -71,6 +73,11 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
         if (request.FileSizeBytes <= 0)
         {
             throw new ValidationException("File size must be greater than zero.");
+        }
+
+        if (request.FileSizeBytes > MaxUploadFileSizeBytes)
+        {
+            throw new ValidationException("File size must be 50 MB or smaller.");
         }
 
         if (request.Content is null || !request.Content.CanRead)

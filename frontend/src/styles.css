@@ -1636,6 +1636,11 @@ td {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
+.workbench-drawer:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 3px;
+}
+
 .confirmation-panel {
   background: #fff8e8;
   border: 1px solid #f0d798;
@@ -1915,6 +1920,13 @@ td {
   gap: 0.2rem;
 }
 
+.ticket-recommended-action p {
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 750;
+  margin: 0;
+}
+
 .ticket-recommended-action span {
   color: #3157c8;
   font-size: 0.75rem;
@@ -1922,8 +1934,125 @@ td {
   text-transform: uppercase;
 }
 
+.ticket-recommended-target {
+  background: #ffffff;
+  border: 1px solid #d5e2f2;
+  border-radius: 7px;
+  min-width: 12rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.ticket-recommended-target small {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .ticket-recommended-action button {
   flex: 0 0 auto;
+  width: auto;
+}
+
+.ticket-workflow-path {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ticket-workflow-path-step {
+  align-items: start;
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  color: #111827;
+  display: grid;
+  gap: 0.25rem;
+  min-height: 4rem;
+  padding: 0.7rem;
+  text-align: left;
+}
+
+.ticket-workflow-path-step span {
+  color: #475569;
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ticket-workflow-path-step strong {
+  font-size: 0.95rem;
+}
+
+.ticket-workflow-path-ready {
+  border-color: #9bd0b5;
+}
+
+.ticket-workflow-path-open {
+  background: #fffaf0;
+  border-color: #e3bf69;
+}
+
+.ticket-workflow-path-alert {
+  background: #fff4f6;
+  border-color: #e6a6b2;
+}
+
+.ticket-mobile-quick-actions {
+  display: none;
+}
+
+.closeout-next-steps {
+  border: 1px solid;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+}
+
+.closeout-next-steps span {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.closeout-next-steps strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.closeout-next-steps ol,
+.closeout-next-steps p {
+  margin: 0;
+}
+
+.closeout-next-steps ol {
+  display: grid;
+  gap: 0.35rem;
+  padding-left: 1.2rem;
+}
+
+.closeout-next-steps-open {
+  background: #fffaf0;
+  border-color: #e3bf69;
+  color: #5f3b00;
+}
+
+.closeout-next-steps-ready {
+  background: #edf9f3;
+  border-color: #8ac8a8;
+  color: #075d3c;
+}
+
+.closeout-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.closeout-action-row button {
+  min-height: 2.15rem;
+  padding: 0.42rem 0.65rem;
   width: auto;
 }
 
@@ -2134,11 +2263,21 @@ td {
 }
 
 .ticket-workflow-tabs button:hover,
-.ticket-workflow-tabs button:focus-visible,
-.ticket-workflow-tabs .ticket-workflow-tab-active {
+.ticket-workflow-tabs button:focus-visible {
   background: #eef2ff;
   border-color: #a5b4fc;
   color: #243b8f;
+}
+
+.ticket-workflow-tabs button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(49, 87, 200, 0.18);
+  outline: none;
+}
+
+.ticket-workflow-tabs .ticket-workflow-tab-active {
+  background: #243b8f;
+  border-color: #243b8f;
+  color: #ffffff;
 }
 
 .dispatch-board-page {
@@ -2383,6 +2522,48 @@ td {
   }
 
   .ticket-recommended-action button {
+    width: 100%;
+  }
+
+  .ticket-recommended-target {
+    min-width: 0;
+  }
+
+  .ticket-workflow-path {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ticket-workflow-path-step {
+    min-height: 3.45rem;
+    padding: 0.6rem;
+  }
+
+  .ticket-mobile-quick-actions {
+    background: #f8fafc;
+    border: 1px solid #d7dee8;
+    border-radius: 8px;
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 0.45rem;
+    position: sticky;
+    top: 0.4rem;
+    z-index: 8;
+  }
+
+  .ticket-mobile-quick-actions button {
+    font-size: 0.78rem;
+    min-height: 2.2rem;
+    padding: 0.35rem 0.25rem;
+    width: 100%;
+  }
+
+  .closeout-action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .closeout-action-row button {
     width: 100%;
   }
 

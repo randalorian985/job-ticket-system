@@ -8,7 +8,6 @@ import {
   CustomersPage,
   DispatchBoardPage,
   EquipmentPage,
-  InventoryPage,
   PartRequestsPage,
   PartsApprovalPage,
   PartsPage,
@@ -65,7 +64,7 @@ export function AppRouter() {
           <Route path="equipment" element={<EquipmentPage />} />
           <Route path="parts" element={<PartsPage />} />
           <Route path="part-requests" element={<PartRequestsPage />} />
-          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="inventory" element={<Navigate to="/manage" replace />} />
           <Route path="purchasing" element={<PurchasingWorkbenchPage />} />
           <Route path="parts-usage-history" element={<PartsUsageHistoryPage />} />
           <Route path="time-approval" element={<TimeApprovalPage />} />

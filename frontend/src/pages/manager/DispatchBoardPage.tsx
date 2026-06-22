@@ -257,7 +257,7 @@ export function DispatchBoardPage() {
         <div className="dispatch-card-grid">
           <div><span>Requested</span><strong>{formatDate(job.requestedAtUtc)}</strong></div>
           <div><span>Scheduled</span><strong>{formatDate(job.scheduledStartAtUtc)}</strong></div>
-          <div><span>Job Type</span><strong>{job.title}</strong></div>
+          <div><span>Job / Scope</span><strong>{job.title}</strong></div>
           <div><span>Crane Needed</span><strong>{equipmentName ?? 'Confirm crane'}</strong></div>
           <div><span>Assigned Crane</span><strong>{equipmentName ?? 'Unassigned'}</strong></div>
           <div><span>Operator</span><strong>{lead ? getAssignmentName(lead) : 'Unassigned'}</strong></div>
@@ -277,8 +277,8 @@ export function DispatchBoardPage() {
           <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Assign Operator</button>
           <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Assign Crew</button>
           <button type="button" className="compact-button" disabled={!job.scheduledStartAtUtc || !assignments.length} onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked dispatched.', 'Dispatch update: job dispatched.')}>Dispatch</button>
-          <button type="button" className="compact-button secondary-button" disabled={job.status === DISPATCH_STATUS.Completed || job.status === DISPATCH_STATUS.Invoiced} onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked en route.', 'Dispatch update: crew en route.')}>Mark En Route</button>
-          <button type="button" className="compact-button secondary-button" disabled={job.status === DISPATCH_STATUS.Completed || job.status === DISPATCH_STATUS.Invoiced} onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked on site.', 'Dispatch update: crew on site.')}>Mark On Site</button>
+          <button type="button" className="compact-button secondary-button" disabled={job.status === DISPATCH_STATUS.Completed || job.status === DISPATCH_STATUS.Invoiced} title="Records an En Route dispatch note on the ticket." onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked en route.', 'Dispatch update: crew en route.')}>Mark En Route</button>
+          <button type="button" className="compact-button secondary-button" disabled={job.status === DISPATCH_STATUS.Completed || job.status === DISPATCH_STATUS.Invoiced} title="Records an On Site dispatch note on the ticket." onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked on site.', 'Dispatch update: crew on site.')}>Mark On Site</button>
           <button type="button" className="compact-button" disabled={!assignments.length} onClick={() => changeStatus(job, DISPATCH_STATUS.InProgress, 'Work started.')}>Start Work</button>
           <button type="button" className="compact-button" disabled={job.status === DISPATCH_STATUS.Completed || job.status === DISPATCH_STATUS.Invoiced} onClick={() => changeStatus(job, DISPATCH_STATUS.Completed, 'Work completed.')}>Complete Work</button>
           {job.status === DISPATCH_STATUS.Completed ? (
@@ -309,6 +309,9 @@ export function DispatchBoardPage() {
           <span key={step}>{step}</span>
         ))}
       </section>
+      <p className="muted dispatch-board-note">
+        This board is ticket-backed. En Route and On Site actions add dispatch history notes while preserving the current ticket status model.
+      </p>
 
       <nav className="dispatch-board-tabs" aria-label="dispatch board views">
         {boardTabs.map((tab) => (

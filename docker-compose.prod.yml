@@ -1,0 +1,83 @@
+name: job-ticket-system
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: job-ticket-sqlserver
+    env_file:
+      - .env.production
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      SA_PASSWORD: "${SA_PASSWORD}"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "${SA_PASSWORD}", "-C", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: job-ticket-api:prod
+    container_name: job-ticket-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DOTNET_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=JobTicketDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      FileStorage__RootPath: /app/storage
+      Jwt__Issuer: "${JWT_ISSUER}"
+      Jwt__Audience: "${JWT_AUDIENCE}"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      DatabaseMigrations__ApplyOnStartup: "true"
+      TestBootstrap__Enabled: "false"
+      TestBootstrap__MigrateDatabase: "false"
+      PilotDemoSeed__Enabled: "false"
+      PilotDemoSeed__MigrateDatabase: "false"
+    volumes:
+      - api_files:/app/storage
+      - api_dataprotection:/root/.aspnet/DataProtection-Keys
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: job-ticket-frontend:prod
+    container_name: job-ticket-frontend
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./deploy/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  api_files:
+  api_dataprotection:

@@ -11,7 +11,7 @@ In scope:
 - Choose and verify a SQL Server dependency.
 - Restore, build, and test the backend.
 - Build and preview the frontend.
-- Smoke-check public readiness endpoints, seeded pilot credentials, route boundaries, employee ticket workflow, in-ticket parts add/request flow, Manager/Admin parts request review, and existing purchasing-support/inventory-foundation baseline visibility.
+- Smoke-check public readiness endpoints, seeded pilot credentials, route boundaries, employee ticket workflow, in-ticket parts add/request flow, Manager/Admin parts request review, and existing purchasing-support baseline visibility.
 
 Out of scope:
 - Production deployment.
@@ -197,7 +197,7 @@ Use this path after backend, frontend preview, and seed data are running:
 9. Open the Manager/Admin console at `/manage` and then the parts request queue.
 10. Search/filter the queue and confirm Needs ordered requests from `PILOT-PARTS-003` plus the newly submitted unlisted request appear.
 11. Select a request, match it to a catalog part if appropriate, update status/internal notes/cost/billable price/billable state, and save.
-12. Open Purchasing and Inventory from the Manager/Admin navigation and confirm the existing baseline pages render; do not use this walkthrough to validate new purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory, replenishment, recommendations, or AI/scoring.
+12. Open Purchasing from the Manager/Admin navigation and confirm the existing baseline page renders; Inventory is intentionally hidden until that workflow is completed. Do not use this walkthrough to validate new purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory, replenishment, recommendations, or AI/scoring.
 13. Open reports and confirm `PILOT-READY-001` appears in invoice-ready or cost summary reporting.
 14. Optional Admin check: sign in as `pilot.admin` and confirm `/manage/users` is available.
 

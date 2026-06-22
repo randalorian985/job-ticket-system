@@ -5,12 +5,13 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 ## Current Project State
 - Core backend/API workflows remain implemented and validated.
 - Employee mobile workflow remains implemented.
-- Manager/Admin job-ticket, assignment, reporting, master-data, purchasing-support, and inventory-foundation workflows remain implemented on `main`.
+- Manager/Admin job-ticket, assignment, reporting, master-data, and purchasing-support workflows remain implemented on `main`; Inventory is hidden from the menu and client wiki until that workflow is completed.
 - Manager/Admin Phase 3B master-data polish has started with expanded existing-field create/edit forms and active-only relationship defaults for customers, service locations, equipment, vendors, part categories, and parts, while preserving existing archive/unarchive workflows and APIs.
 - Manager/Admin reports are organized into invoice/closeout, labor/parts, and service-history sections with shared filters, source-ID validation, date/paging validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from the currently loaded rows.
 - Manager/Admin screen cleanup separates report catalog/results, master-data list/editor, and Admin user list/editor states into focused screens without changing backend APIs; Admin user management now filters accounts by search, role, and active/inactive status.
 - Manager/Admin job-ticket queue can export the currently visible filtered ticket rows to client-side CSV for dispatch handoff without adding backend export APIs.
 - Manager/Admin Dispatch Board is now a first-class operational screen at `/manage/dispatch`, with Unscheduled, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views. Dispatchers can schedule jobs, assign crane/equipment, assign operator/crew, move day-of work forward, open tickets, and finalize completed tickets using existing ticket, assignment, work-entry, and status APIs.
+- Production deployment configuration and readiness runbooks are source-controlled, with explicit migration startup, disabled normal production seed/bootstrap services, health proxying, backup/restore guidance, rollback steps, and client-UAT gates documented.
 - Labor report totals are labeled as time-entry labor-rate snapshot values and preserve the existing API fallback behavior for legacy entries without captured snapshots.
 - Parts Request Workflow Phase 2 adds in-ticket Add / Request Part flows without adding purchasing, receiving, inventory expansion, recommendations, or automatic compatibility decisions.
 - Technicians can search/select existing parts through a technician-safe lookup or type a new/unlisted part from inside an assigned service ticket.
@@ -18,7 +19,8 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office order/request queue item.
 - Technicians must be clocked into the selected job ticket before recording field work through work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
 - Manager/Admin service-ticket detail now presents a cohesive field-service workbench with ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
-- Manager/Admin ticket actions use focused panels for section-based ticket editing, quick notes, photo/file upload, labor review, status review, archive review, and Add / Request Part while staying on existing ticket, part-request, assignment, file, time, and reporting APIs.
+- Manager/Admin ticket actions use URL-backed focused workflow panels for section-based ticket editing, quick notes, photo/file upload, labor review, status review, archive review, and Add / Request Part while staying on existing ticket, part-request, assignment, file, time, and reporting APIs.
+- Manager/Admin ticket workflow guidance now highlights the recommended next action, target workflow, workflow path, mobile quick actions, and invoice-review requirements without changing backend APIs or business workflow.
 - Manager/Admin task navigation uses URL-backed queue filters, dashboard links into filtered queues, queue-aware return links, workflow tabs, and a recommended next action that opens the selected ticket workflow in a focused view.
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
 - Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
@@ -52,6 +54,8 @@ Parts Request Workflow Phase 2 is not a purchasing, receiving, vendor invoice, l
 - Service-ticket workflow audit: [docs/service-ticket-workflow-audit.md](docs/service-ticket-workflow-audit.md)
 - Development setup and validation: [docs/development-setup.md](docs/development-setup.md)
 - Test environment setup and workarounds: [docs/test-environment-setup.md](docs/test-environment-setup.md)
+- Production readiness runbook: [docs/production-readiness-runbook.md](docs/production-readiness-runbook.md)
+- Production readiness audit: [docs/production-readiness-audit-2026-06-18.md](docs/production-readiness-audit-2026-06-18.md)
 - Historical audit log: [docs/historical-bug-regression-audit.md](docs/historical-bug-regression-audit.md)
 - Database design: [docs/database-design.md](docs/database-design.md)
 - Local demo runbook: [docs/local-demo-runbook.md](docs/local-demo-runbook.md)

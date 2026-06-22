@@ -42,11 +42,19 @@ The screenshots below appear again in the workflow sections where they are most 
 | Job-ticket queue | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
 | Job-ticket workspace | [job-ticket-workspace.png](assets/system-wiki/job-ticket-workspace.png) |
 | Section-based ticket editor | [ticket-section-editor.png](assets/system-wiki/ticket-section-editor.png) |
+| Quick note workflow | [ticket-quick-note.png](assets/system-wiki/ticket-quick-note.png) |
+| Status review workflow | [ticket-status-review.png](assets/system-wiki/ticket-status-review.png) |
+| Labor workflow | [ticket-labor-workflow.png](assets/system-wiki/ticket-labor-workflow.png) |
+| Parts add/request workflow | [ticket-parts-workflow.png](assets/system-wiki/ticket-parts-workflow.png) |
+| Invoice review workflow | [ticket-invoice-review.png](assets/system-wiki/ticket-invoice-review.png) |
+| Mobile ticket workspace | [ticket-workspace-mobile.png](assets/system-wiki/ticket-workspace-mobile.png) |
+| Mobile ticket editor | [ticket-edit-mobile.png](assets/system-wiki/ticket-edit-mobile.png) |
+| Mobile labor workflow | [ticket-labor-mobile.png](assets/system-wiki/ticket-labor-mobile.png) |
+| Mobile parts workflow | [ticket-parts-mobile.png](assets/system-wiki/ticket-parts-mobile.png) |
 | Time approval | [time-approval.png](assets/system-wiki/time-approval.png) |
 | Parts requests | [part-requests.png](assets/system-wiki/part-requests.png) |
 | Master data customers | [master-data-customers.png](assets/system-wiki/master-data-customers.png) |
 | Purchasing support | [purchasing.png](assets/system-wiki/purchasing.png) |
-| Inventory foundation | [inventory.png](assets/system-wiki/inventory.png) |
 | Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) |
 | Admin users | [admin-users.png](assets/system-wiki/admin-users.png) |
 
@@ -86,7 +94,7 @@ Manager users can:
 - manage customer, location, equipment, vendor, part category, and part records;
 - review part requests;
 - use reports;
-- use the existing purchasing-support and inventory-foundation screens.
+- use the existing purchasing-support screen.
 
 Manager users cannot:
 - access Admin-only user management;
@@ -126,7 +134,6 @@ Admin users can:
 - `/manage/equipment`: equipment.
 - `/manage/parts`: parts, vendors, and part categories.
 - `/manage/part-requests`: parts request queue.
-- `/manage/inventory`: inventory foundation.
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
 - `/manage/time-approval`: time approval queue.
@@ -299,6 +306,8 @@ Employees can add an optional caption.
 
 Unsupported file types are rejected.
 
+Files must be 50 MB or smaller.
+
 ## Manager/Admin Workspace
 
 ### Dashboard
@@ -437,6 +446,8 @@ Board views:
 - **Completed**: completed, reviewed, finalized, and invoiced ticket-backed work;
 - **Needs Ticket Review**: completed work that should move into ticket review;
 - **Ready for Billing**: reviewed/finalized work that can be handed to reporting/billing review.
+
+Because dispatch is currently ticket-backed, **En Route** and **On Site** actions add ticket history notes and preserve the existing ticket status model. The board still shows those actions so dispatchers can record day-of movement without opening ticket detail.
 
 Each card shows:
 - customer;
@@ -599,6 +610,15 @@ The same dispatch-readiness review remains visible above the edit sections. User
 
 ![Section-based ticket editor with dispatch readiness](assets/system-wiki/ticket-section-editor.png)
 
+Workflow tabs and action buttons now open the selected ticket workflow in a focused view. This means the selected panel appears directly under the workflow heading and tabs instead of requiring mobile users to scroll past the overview rail. The focused view includes a **Back to ticket overview** control, and that control closes any open focused panel before returning to the normal ticket overview.
+
+The ticket overview also includes a workflow-guidance area:
+- **Recommended next action** names the next practical step, explains the blocker or reason, shows the target workflow, and opens that workflow directly.
+- **Ticket workflow path** shows Dispatch, Field Work, Parts / Files, and Invoice Review so office users can jump to the right stage without hunting through the page.
+- The **Invoice Review** workflow shows open closeout requirements before invoice totals so billing handoff work is visible before users review dollars.
+
+![Invoice review workflow](assets/system-wiki/ticket-invoice-review.png)
+
 The edit workflow should preserve:
 - customer/service-location relationships;
 - equipment relationships;
@@ -618,6 +638,7 @@ User experience improvements:
 - mobile users can edit one section at a time instead of working through a long stacked form;
 - dispatch-readiness feedback remains visible while editing;
 - quick actions let users add notes, upload photos/files, review labor, or change status without opening the full editor.
+- mobile ticket shortcuts keep Add Note, Add Photo, Labor, and Status close to the top of the ticket overview.
 
 Technical implementation details:
 - `JobTicketEditorForm` owns the section state and still emits the same ticket update payload.
@@ -655,6 +676,12 @@ Mobile users should prefer:
 - the Status Review panel for status changes;
 - section editing only when ticket details need to change.
 
+On the mobile ticket overview, the compact quick-action row gives direct access to Add Note, Add Photo, Labor, and Status without waiting for users to scroll into the side rail.
+
+![Mobile ticket workspace](assets/system-wiki/ticket-workspace-mobile.png)
+
+![Mobile ticket editor](assets/system-wiki/ticket-edit-mobile.png)
+
 ### Section-Based Editing Architecture
 Section-based editing is a frontend presentation architecture. It does not split the backend ticket update command. The frontend keeps one edit draft and one save action so existing validation, API contracts, and persistence behavior remain stable.
 
@@ -682,12 +709,48 @@ The enhancement does not weaken authorization. It only changes the Manager/Admin
 
 ### Quick Actions
 Quick actions are short paths for common ticket updates:
-- **Add Note** opens a focused note panel and saves a Manager/Admin work entry to ticket history.
-- **Add Photo** opens a focused upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
-- **Add Labor** opens the existing Labor workflow tab for time/labor review and follow-up.
-- **Change Status** opens the existing Status Review panel with warnings and status selection.
+- **Add Note** opens the focused History workflow with a note panel and saves a Manager/Admin work entry to ticket history.
+- **Add Photo** opens the focused Files workflow with an upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
+- **Add Labor** opens the focused Labor workflow tab for time/labor review and follow-up.
+- **Change Status** opens a focused Status Review panel with warnings and status selection.
+- **Open Add / Request Part Panel** opens the focused Parts workflow with the existing in-ticket add/request form.
 
 Quick actions are intended for small updates. Use the section editor when relationship, billing, schedule, or detailed ticket fields need to change.
+
+![Quick note workflow](assets/system-wiki/ticket-quick-note.png)
+
+![Status review workflow](assets/system-wiki/ticket-status-review.png)
+
+![Labor workflow](assets/system-wiki/ticket-labor-workflow.png)
+
+![Parts add/request workflow](assets/system-wiki/ticket-parts-workflow.png)
+
+Mobile focused workflows keep the selected panel directly under the workflow tabs so users do not need to hunt below the ticket overview rail.
+
+![Mobile labor workflow](assets/system-wiki/ticket-labor-mobile.png)
+
+![Mobile parts workflow](assets/system-wiki/ticket-parts-mobile.png)
+
+### Ticket Workflow Audit And Repairs
+The Service Ticket workflow audit completed on June 18, 2026 verified the existing business workflow without redesigning it. The audit covered workflow tabs, ticket actions, workflow cards, mobile visibility, and accessibility cues.
+
+Findings and repairs:
+- workflow tabs already changed active content, but action shortcuts could leave the target panel below the normal overview rail on mobile;
+- quick-action drawers did not have a reliable focus target, which made the opened panel less obvious for keyboard and assistive-technology users;
+- the focused workflow panel could take focus back from an opened drawer;
+- **Back to ticket overview** returned from focused mode but did not close an open focused drawer;
+- active tab and drawer focus contrast needed stronger shared styling.
+
+Implemented repairs:
+- direct workflow tab and action-rail navigation now sets the URL-backed `view=workflow` state;
+- Add Note, Add Photo, Add Labor, Add / Request Part, Edit Ticket, Change Status, and Archive Review open focused panels where appropriate;
+- drawer panels receive programmatic focus when opened;
+- workflow panel focus waits when a drawer is active;
+- **Back to ticket overview** clears open focused drawers;
+- global error messages announce as alerts;
+- active workflow tabs and focused drawers use stronger shared contrast/focus styling.
+
+See [Service Ticket Workflow Audit - June 18, 2026](/docs/service-ticket-workflow-audit-2026-06-18.md) for the detailed audit report, root cause notes, regression results, and remaining recommendations.
 
 ### Assignment Management
 Managers/Admins can assign active, non-archived Employee users to tickets.
@@ -840,7 +903,7 @@ Managers/Admins can:
 - filter and review categories.
 
 ### Parts
-Part records represent catalog parts used in job tickets, part requests, reports, purchasing support, and inventory foundation.
+Part records represent catalog parts used in job tickets, part requests, reports, and purchasing support.
 
 Managers/Admins can:
 - create parts;
@@ -871,32 +934,9 @@ Managers/Admins can work with:
 
 This is existing purchasing support. It is not approval to expand into a larger purchasing, accounting, receiving, or vendor-invoice product without a separate approved scope.
 
+The purchasing screen shows success and error feedback for create, submit, receiving, close, archive, and vendor-invoice save actions. Inventory remains hidden until that workflow is completed, so users should treat purchasing as purchase-order coordination rather than a complete warehouse workflow.
+
 ![Manager/Admin purchasing support screen](assets/system-wiki/purchasing.png)
-
-## Inventory Foundation
-
-The inventory screen provides a foundation for stock visibility and transaction review.
-
-Managers/Admins can:
-- create and edit stock locations;
-- archive/unarchive stock locations;
-- view stock summaries;
-- filter stock by location and part;
-- view inventory transactions;
-- create manual adjustments with a reason.
-
-Inventory transactions can include receipt transactions from purchasing support and manual adjustments.
-
-This foundation does not include:
-- warehouse expansion;
-- truck inventory expansion;
-- transfer workflows;
-- low-stock alerts;
-- replenishment automation;
-- recommendation scoring;
-- AI guidance.
-
-![Manager/Admin inventory foundation screen](assets/system-wiki/inventory.png)
 
 ## Reports
 
@@ -1077,6 +1117,7 @@ The system currently does not include:
 - receiving expansion beyond the existing baseline;
 - vendor invoice tracking expansion;
 - landed-cost expansion beyond existing supported fields;
+- inventory workflow;
 - warehouse inventory expansion;
 - truck inventory expansion;
 - low-stock alerts;
@@ -1138,7 +1179,6 @@ Use this checklist when introducing the system to a client team.
 - Maintain part, vendor, and category data.
 - Review Needs ordered part requests.
 - Use purchasing support carefully within current scope.
-- Review inventory foundation records.
 - Produce closeout reports.
 
 ## Demo Users

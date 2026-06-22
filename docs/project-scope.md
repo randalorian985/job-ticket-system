@@ -14,12 +14,13 @@ Core scope:
 - supporting Employee and Manager/Admin workflows around job-ticket operations.
 
 ## Current Control State
-- The implemented baseline includes auth, employee mobile workflow, Manager/Admin job-ticket workflow, reporting/time review, master data, purchasing support, and inventory foundation already present on `main`.
+- The implemented baseline includes auth, employee mobile workflow, Manager/Admin job-ticket workflow, reporting/time review, master data, and purchasing support already present on `main`. Inventory remains hidden from the Manager/Admin menu and client wiki until that workflow is completed.
 - Parts Request Workflow Phase 2 is added as a job-ticket-first workflow.
 - Technicians can search/select an existing catalog part through a safe lookup or type a new/unlisted part from inside an assigned service/job ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
 - Technician field recording now requires an open time entry for the selected job ticket before an Employee records work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
+- File/photo uploads accept JPG/JPEG, PNG, WebP, and PDF files up to 50 MB, with the limit enforced in both the HTTP layer and application service.
 - Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket detail uses focused in-page panels for section-based ticket editing, quick notes, photo/file upload, labor review, status changes, archive review, and Add / Request Part actions backed by existing APIs; the recommended action opens the relevant workflow tab in a focused ticket view.
 - Manager/Admin Dispatch Board is implemented as the first-class dispatch workflow at `/manage/dispatch`. It provides Unscheduled Jobs, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views; card-level Schedule, Assign Crane, Assign Operator, Assign Crew, Dispatch, Mark En Route, Mark On Site, Start Work, Complete Work, Open Ticket, Finalize Ticket, and Ready for Billing actions; and a focused Schedule Job panel backed by existing job-ticket update, assignment, status, and work-entry APIs.
@@ -93,6 +94,8 @@ Implemented redesign focus:
 - dashboard summary links that open the corresponding filtered queue;
 - queue-aware breadcrumbs that preserve the originating job queue across ticket review;
 - ticket workflow tabs for Overview, Dispatch, Time, Parts, Files, Closeout, and Activity, with a visible recommended next action.
+- service-ticket workflow stabilization keeps direct tab/action navigation in the focused `view=workflow` screen, focuses opened action panels, and closes focused drawers when returning to the ticket overview.
+- ticket workflow refinement keeps the same ticket-backed workbench but makes the next action, target workflow, mobile quick actions, and invoice-review closeout requirements more visible.
 
 The current dispatch board is ticket-backed. It does not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or schema migration. En Route and On Site are recorded as ticket work-entry notes until a future approved backend dispatch model exists.
 
@@ -157,7 +160,7 @@ Allowed back-office fields in Phase 2:
 
 Manager/Admin ticket detail may show and create ticket parts/requests, summarize waiting-on-parts state, and route Needs ordered work into the back-office review queue. This remains a ticket-support workflow, not a purchasing or inventory workflow.
 
-This does not approve new or expanded purchase-order behavior beyond the existing purchasing-support baseline, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory expansion, inventory transactions beyond the existing inventory-foundation baseline, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
+This does not approve new or expanded purchase-order behavior beyond the existing purchasing-support baseline, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory expansion, inventory workflow reintroduction, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
 
 ## Protected Baseline
 The following must remain stable:
@@ -181,9 +184,9 @@ The following are not approved as part of Parts Request Workflow Phase 2, UI pol
 - receiving expansion;
 - vendor invoice tracking expansion;
 - landed-cost expansion;
-- warehouse inventory expansion beyond the existing inventory-foundation baseline;
+- warehouse inventory expansion;
 - truck inventory expansion;
-- inventory transactions beyond the existing inventory-foundation baseline;
+- inventory workflow reintroduction or expansion;
 - low-stock alerts;
 - replenishment workflows;
 - recommendation engine;
