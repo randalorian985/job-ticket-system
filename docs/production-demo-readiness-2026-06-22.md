@@ -25,18 +25,20 @@ curl -fsS https://dev.mudbugdigital.com/health
 On the VPS, create and verify a fresh backup before risky changes:
 
 ```bash
-PROJECT_DIR=/opt/job-ticket-system RETENTION_DAYS=14 ./scripts/production-backup.sh
+cd /opt/job-ticket-system
+PROJECT_DIR=/opt/job-ticket-system RETENTION_DAYS=14 bash scripts/production-backup.sh
 ```
 
-For a recurring daily backup, install the script and cron entry as root:
+For the current Ubuntu/systemd VPS, install the recurring daily backup timer as root:
 
 ```bash
+cd /opt/job-ticket-system
 install -m 750 scripts/production-backup.sh /usr/local/sbin/job-ticket-production-backup
-cat >/etc/cron.d/job-ticket-production-backup <<'CRON'
-SHELL=/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-15 2 * * * root PROJECT_DIR=/opt/job-ticket-system RETENTION_DAYS=14 /usr/local/sbin/job-ticket-production-backup >> /var/log/job-ticket-production-backup.log 2>&1
-CRON
+install -m 644 deploy/systemd/job-ticket-production-backup.service /etc/systemd/system/job-ticket-production-backup.service
+install -m 644 deploy/systemd/job-ticket-production-backup.timer /etc/systemd/system/job-ticket-production-backup.timer
+systemctl daemon-reload
+systemctl enable --now job-ticket-production-backup.timer
+systemctl list-timers job-ticket-production-backup.timer
 ```
 
 ## Remaining Go-Live Gates

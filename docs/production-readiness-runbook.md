@@ -92,7 +92,19 @@ PROJECT_DIR=/opt/job-ticket-system RETENTION_DAYS=14 bash scripts/production-bac
 
 The script writes to `/opt/job-ticket-system/backups/<UTC stamp>/`, runs SQL Server `RESTORE VERIFYONLY`, archives the `api_files` volume, and removes backup directories older than `RETENTION_DAYS`.
 
-To install a recurring daily backup as root:
+To install a recurring daily backup on the current Ubuntu/systemd VPS as root:
+
+```bash
+cd /opt/job-ticket-system
+install -m 750 scripts/production-backup.sh /usr/local/sbin/job-ticket-production-backup
+install -m 644 deploy/systemd/job-ticket-production-backup.service /etc/systemd/system/job-ticket-production-backup.service
+install -m 644 deploy/systemd/job-ticket-production-backup.timer /etc/systemd/system/job-ticket-production-backup.timer
+systemctl daemon-reload
+systemctl enable --now job-ticket-production-backup.timer
+systemctl list-timers job-ticket-production-backup.timer
+```
+
+If a future host uses cron instead of systemd timers, use this fallback after confirming the cron service is installed and active:
 
 ```bash
 cd /opt/job-ticket-system
@@ -116,10 +128,11 @@ set +a
 
 stamp="<backup stamp>"
 backup_dir="/opt/job-ticket-system/backups/$stamp"
-docker cp "$backup_dir/job-ticket-$stamp.bak" job-ticket-sqlserver:/var/opt/mssql/backups/verify.bak
+docker cp "$backup_dir/job-ticket-$stamp.bak" job-ticket-sqlserver:/var/opt/mssql/backups/manual-verify.bak
+docker exec job-ticket-sqlserver chown mssql:mssql /var/opt/mssql/backups/manual-verify.bak
 docker exec job-ticket-sqlserver /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P "$SA_PASSWORD" -C \
-  -Q "RESTORE VERIFYONLY FROM DISK = N'/var/opt/mssql/backups/verify.bak'"
+  -S localhost -U sa -P "$SA_PASSWORD" -C -b \
+  -Q "RESTORE VERIFYONLY FROM DISK = N'/var/opt/mssql/backups/manual-verify.bak'"
 ```
 
 A full restore drill should restore into a temporary database, confirm key tables are readable, then drop the temporary database. Run that drill before declaring client production go-live readiness.
