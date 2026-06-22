@@ -81,6 +81,21 @@ Expected:
 - API logs show migrations are up to date.
 - API logs do not show `Test environment bootstrap` or `Phase 4A local pilot seed data` running during normal production restart.
 
+## Post-Merge Checklist For Employee/Queue Density Updates
+
+Use this checklist after the Employee clock-in-first and Manager/Admin compact queue PR is validated, reviewed, and merged to `main`. Do not deploy it directly from a draft PR or feature branch.
+
+1. Confirm the merged commit passed backend restore/build/test and frontend install/build/test.
+2. Create and verify a production backup with `scripts/production-backup.sh`.
+3. Pull latest `main` on the VPS with `git pull --ff-only origin main`.
+4. Rebuild and restart with `docker compose --env-file .env.production -f docker-compose.prod.yml build` and `docker compose --env-file .env.production -f docker-compose.prod.yml up -d`.
+5. Confirm `/health` returns `Healthy` locally and through the public site.
+6. Smoke-test `/jobs` as an Employee and confirm assigned jobs show as concise cards.
+7. Open an Employee job detail and confirm field notes, parts, photos, and history appear only after clock-in to that ticket.
+8. Smoke-test `/manage/job-tickets` as Manager/Admin and confirm **Rich cards** and **Compact list** both work without changing filters or CSV export.
+9. Confirm `/manage`, `/manage/job-tickets`, and `/manage/users` route protections still enforce Employee, Manager, and Admin boundaries.
+10. Refresh the wiki screenshots for `employee-jobs.png`, `employee-job-detail.png`, and `job-ticket-queue.png` from the deployed or approved preview environment before a client-facing demo.
+
 ## Backup
 
 Create and verify an online SQL Server backup plus uploaded-files archive before risky deploys and at the chosen recurring backup interval:

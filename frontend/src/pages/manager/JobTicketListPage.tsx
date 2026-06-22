@@ -52,6 +52,8 @@ type QueueExportRow = {
   completedAtUtc: string
 }
 
+type TicketViewMode = 'rich' | 'compact'
+
 const queueExportColumns: CsvColumn<QueueExportRow>[] = [
   { header: 'Ticket Number', value: (row) => row.ticketNumber },
   { header: 'Title', value: (row) => row.title },
@@ -70,7 +72,20 @@ const queueExportColumns: CsvColumn<QueueExportRow>[] = [
   { header: 'Completed Date (UTC)', value: (row) => row.completedAtUtc }
 ]
 
+const ticketViewModeStorageKey = 'job-ticket-manager-queue-view-mode'
 const dateForExport = (value?: string | null) => value ? value.slice(0, 10) : ''
+
+const getStoredTicketViewMode = (): TicketViewMode => {
+  if (typeof window === 'undefined') {
+    return 'rich'
+  }
+
+  try {
+    return window.localStorage.getItem(ticketViewModeStorageKey) === 'compact' ? 'compact' : 'rich'
+  } catch {
+    return 'rich'
+  }
+}
 
 const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[] | null): DispatchReadiness => {
   if (!activeStatusValues.has(job.status)) {
@@ -151,6 +166,7 @@ export function JobTicketListPage() {
   const [assignmentDataUnavailable, setAssignmentDataUnavailable] = useState(false)
   const [customers, setCustomers] = useState<Record<string, CustomerDto>>({})
   const [locations, setLocations] = useState<Record<string, ServiceLocationDto>>({})
+  const [ticketViewMode, setTicketViewMode] = useState<TicketViewMode>(getStoredTicketViewMode)
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const queueFilters = readJobTicketQueueFilters(searchParams)
@@ -192,6 +208,14 @@ export function JobTicketListPage() {
 
       return nextParams
     }, { replace: true })
+  }
+  const updateTicketViewMode = (mode: TicketViewMode) => {
+    setTicketViewMode(mode)
+    try {
+      window.localStorage.setItem(ticketViewModeStorageKey, mode)
+    } catch {
+      // Local storage is optional; the view still changes for the current session.
+    }
   }
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -464,7 +488,7 @@ export function JobTicketListPage() {
         <p className="queue-warning warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and dispatch-readiness filters are unavailable until assignments reload.</p>
       ) : null}
 
-      {isLoading ? <p className="muted" role="status">Loading manager job tickets…</p> : null}
+      {isLoading ? <p className="muted" role="status">Loading manager job tickets...</p> : null}
       {error ? <p className="error">{error}</p> : null}
       {!isLoading && !error && !jobs.length ? <p className="muted">No job tickets found. Create a ticket to start the pilot workflow.</p> : null}
       {!isLoading && !error && jobs.length > 0 && !filteredJobs.length ? <p className="muted">No job tickets match the current filters. Reset filters to see all tickets.</p> : null}
@@ -476,11 +500,69 @@ export function JobTicketListPage() {
               <h3>Ticket Queue</h3>
               <span className="muted">Showing {filteredJobs.length} of {jobs.length} tickets.</span>
             </div>
-            <a className="button-link secondary-link" href={queueCsvHref} download={queueCsvFileName}>
-              Export visible queue as CSV
-            </a>
+            <div className="queue-results-actions">
+              <div className="ticket-view-toggle" role="group" aria-label="ticket queue view">
+                <button
+                  aria-pressed={ticketViewMode === 'rich'}
+                  className="secondary-button compact-button"
+                  onClick={() => updateTicketViewMode('rich')}
+                  type="button"
+                >
+                  Rich cards
+                </button>
+                <button
+                  aria-pressed={ticketViewMode === 'compact'}
+                  className="secondary-button compact-button"
+                  onClick={() => updateTicketViewMode('compact')}
+                  type="button"
+                >
+                  Compact list
+                </button>
+              </div>
+              <a className="button-link secondary-link" href={queueCsvHref} download={queueCsvFileName}>
+                Export visible queue as CSV
+              </a>
+            </div>
           </div>
-          <ul className="review-list ticket-queue-list">
+          {ticketViewMode === 'compact' ? (
+            <div className="compact-ticket-list" aria-label="compact ticket list">
+              <div className="compact-ticket-list-header" aria-hidden="true">
+                <span>Ticket</span>
+                <span>Customer / Location</span>
+                <span>Assigned Tech</span>
+                <span>Status / Priority</span>
+                <span>Schedule</span>
+                <span>Due</span>
+                <span>Action</span>
+              </div>
+              {filteredJobs.map((job) => {
+                const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
+                const leadAssignments = assignments?.filter((item) => item.isLead) ?? []
+                const leadSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : leadAssignments.length ? leadAssignments.map(getAssignmentDisplayName).join(', ') : 'Needs lead'
+                const assignmentSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : assignments?.length ? assignments.map(getAssignmentDisplayName).join(', ') : 'Unassigned'
+                const readiness = getDispatchReadiness(job, assignments)
+                const readinessClass = readiness.isReady ? 'readiness-ready' : readiness.openItems > 0 || assignmentDataUnavailable ? 'readiness-review' : 'readiness-inactive'
+                const customerName = customers[job.customerId]?.name ?? job.customerName ?? 'Customer unavailable'
+                const locationName = locations[job.serviceLocationId]?.locationName ?? job.serviceLocationName ?? 'Location unavailable'
+
+                return (
+                  <article key={job.id} className={`compact-ticket-row ${readinessClass}`} aria-label={`${job.ticketNumber} compact ticket`}>
+                    <div className="compact-ticket-primary">
+                      <Link className="ticket-number-link" to={getTicketDetailPath(job.id)}>{job.ticketNumber}</Link>
+                      <span>{job.title}</span>
+                    </div>
+                    <div><strong>{customerName}</strong><span>{locationName}</span></div>
+                    <div><strong>{leadSummary}</strong><span>{assignmentSummary}</span></div>
+                    <div><strong>{getJobTicketStatusLabel(job.status)}</strong><span>{getJobTicketPriorityLabel(job.priority)}</span></div>
+                    <div><strong>{formatDate(job.scheduledStartAtUtc)}</strong><span>{readiness.label}</span></div>
+                    <div><strong>{formatDate(job.dueAtUtc)}</strong><span>{readiness.openItems ? readiness.nextStep : 'Ready for dispatch review.'}</span></div>
+                    <Link className="button-link secondary-link compact-ticket-open" to={getTicketDetailPath(job.id)}>Open</Link>
+                  </article>
+                )
+              })}
+            </div>
+          ) : (
+            <ul className="review-list ticket-queue-list">
             {filteredJobs.map((job) => {
               const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
               const leadAssignments = assignments?.filter((item) => item.isLead) ?? []
@@ -519,7 +601,8 @@ export function JobTicketListPage() {
                 </li>
               )
             })}
-          </ul>
+            </ul>
+          )}
         </section>
       ) : null}
     </section>

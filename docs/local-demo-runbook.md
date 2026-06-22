@@ -120,6 +120,7 @@ dotnet run --project backend/src/Api/Api.csproj --urls http://localhost:5000
 Expected backend log behavior:
 - On a fresh local database, the API applies EF Core migrations, creates the pilot seed dataset, and logs the demo user/job-ticket counts.
 - On a previously seeded local database, startup reports the seed is already present and does not duplicate records.
+- To pick up newly added seed records in an older local demo database, reset the local database/volume first, then rerun the pilot seed startup command.
 - In non-demo environments, omit `PilotDemoSeed__Enabled=true` so the seed hosted service does nothing.
 
 Keep this process running for the rest of the demo.
@@ -157,11 +158,15 @@ Use these credentials only against local seeded pilot databases:
 | Admin | `pilot.admin` | `PilotDemo123!` | Admin-only route and user-management checks. |
 | Manager | `pilot.manager` | `PilotDemo123!` | Manager console, approvals, master-data, reports, and parts request queue checks. |
 | Employee | `pilot.tech` | `PilotDemo123!` | Employee ticket, time, file, and in-ticket parts checks. |
+| Employee | `pilot.tech.backup` | `PilotDemo123!` | Secondary technician assignment and needs-lead checks. |
 
 Seeded tickets to reference during a walkthrough:
 - `PILOT-READY-001`: completed ticket with approved labor/part lines, invoice-ready reporting data, and an approved Needs ordered catalog-matched parts request example.
 - `PILOT-ACTIVE-002`: employee-assigned ticket for clock-in/out, work-note, file/photo, and existing-part selection without Needs ordered.
 - `PILOT-PARTS-003`: waiting-on-parts ticket with pending existing-part Needs ordered, pending unlisted Needs ordered, and rejected unlisted Needs ordered examples for Manager/Admin review.
+- `PILOT-UNSCHEDULED-004`: submitted, unassigned ticket with missing schedule and due date for queue/dispatch readiness review.
+- `PILOT-NEEDS-LEAD-005`: assigned ticket with a technician but no lead tech marked.
+- `PILOT-TODAY-006`: urgent in-progress dockside crane service ticket assigned to both pilot technicians.
 
 Seeded safe lookup catalog examples:
 - `PILOT-FILTER-001` Compressor intake filter.
@@ -187,18 +192,22 @@ Use these checks after the backend and frontend preview are both running.
 Use this path after backend, frontend preview, and seed data are running:
 
 1. Sign in as `pilot.tech` and confirm the employee lands on `/jobs`.
-2. Open ticket `PILOT-ACTIVE-002`.
-3. Clock in with browser location permissions enabled, or provide allowed local location values if the browser prompts.
-4. Add a work note describing the inspection.
-5. In `Add / Request Part`, search for `PILOT-HOSE-003` or `hose`, select `Hydraulic return hose`, clear `Needs ordered`, and submit it as a ticket part.
-6. In `Add / Request Part`, type a new/unlisted part such as `Unlisted crane pendant cable`, leave `Needs ordered` checked, add notes, and submit it to the parts request queue.
-7. Clock out with a short work summary.
-8. Sign out, then sign in as `pilot.manager`.
-9. Open the Manager/Admin console at `/manage` and then the parts request queue.
-10. Search/filter the queue and confirm Needs ordered requests from `PILOT-PARTS-003` plus the newly submitted unlisted request appear.
-11. Select a request, match it to a catalog part if appropriate, update status/internal notes/cost/billable price/billable state, and save.
-12. Open Purchasing from the Manager/Admin navigation and confirm the existing baseline page renders; Inventory is intentionally hidden until that workflow is completed. Do not use this walkthrough to validate new purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory, replenishment, recommendations, or AI/scoring.
-13. Open reports and confirm `PILOT-READY-001` appears in invoice-ready or cost summary reporting.
+2. Confirm `/jobs` shows concise assigned-job cards without a summary dashboard or separate next-up panel.
+3. Open ticket `PILOT-ACTIVE-002`.
+4. Confirm work notes, parts, photos, work entries, parts, and files are hidden until clock-in.
+5. Clock in with browser location permissions enabled, or provide allowed local location values if the browser prompts.
+6. Add a work note describing the inspection.
+7. In `Add / Request Part`, search for `PILOT-HOSE-003` or `hose`, select `Hydraulic return hose`, clear `Needs ordered`, and submit it as a ticket part.
+8. In `Add / Request Part`, type a new/unlisted part such as `Unlisted crane pendant cable`, leave `Needs ordered` checked, add notes, and submit it to the parts request queue.
+9. Clock out with a short work summary.
+10. Sign out, then sign in as `pilot.manager`.
+11. Open the Manager/Admin console at `/manage`, then open `/manage/job-tickets`.
+12. Switch between **Rich cards** and **Compact list** and confirm the same filters, ticket links, and CSV export remain available.
+13. Open the parts request queue.
+14. Search/filter the queue and confirm Needs ordered requests from `PILOT-PARTS-003` plus the newly submitted unlisted request appear.
+15. Select a request, match it to a catalog part if appropriate, update status/internal notes/cost/billable price/billable state, and save.
+16. Open Purchasing from the Manager/Admin navigation and confirm the existing baseline page renders; Inventory is intentionally hidden until that workflow is completed. Do not use this walkthrough to validate new purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory, replenishment, recommendations, or AI/scoring.
+17. Open reports and confirm `PILOT-READY-001` appears in invoice-ready or cost summary reporting.
 14. Optional Admin check: sign in as `pilot.admin` and confirm `/manage/users` is available.
 
 Automated backend validation for the representative seed path is covered by `PilotDemoSeedTests`:

@@ -34,10 +34,10 @@ The screenshots below appear again in the workflow sections where they are most 
 | Screen | Screenshot |
 | --- | --- |
 | Login | [login.png](assets/system-wiki/login.png) |
-| Employee assigned jobs | [employee-jobs.png](assets/system-wiki/employee-jobs.png) |
-| Employee job detail | [employee-job-detail.png](assets/system-wiki/employee-job-detail.png) |
+| Employee assigned jobs concise list | [employee-jobs.png](assets/system-wiki/employee-jobs.png) |
+| Employee job detail clock-in-first workflow | [employee-job-detail.png](assets/system-wiki/employee-job-detail.png) |
 | Manager/Admin dashboard | [manager-dashboard.png](assets/system-wiki/manager-dashboard.png) |
-| Job-ticket queue | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
+| Job-ticket queue rich and compact views | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
 | Job-ticket workspace | [job-ticket-workspace.png](assets/system-wiki/job-ticket-workspace.png) |
 | Dispatch board | [dispatch-board.png](assets/system-wiki/dispatch-board.png) |
 | Dispatch unscheduled-ticket warnings | [dispatch-unscheduled-jobs.png](assets/system-wiki/dispatch-unscheduled-jobs.png) |
@@ -163,6 +163,8 @@ The source-controlled backup entrypoint is `scripts/production-backup.sh`. It cr
 
 See [Production Demo Readiness - June 22, 2026](/docs/production-demo-readiness-2026-06-22.md) and [Production Readiness Runbook](/docs/production-readiness-runbook.md) for the command-level checklist.
 
+For the Employee clock-in-first and Manager/Admin compact queue update, deploy only after the draft PR is reviewed, validated, and merged to `main`. The VPS checklist in the production runbook includes the required post-merge smoke tests and screenshot refresh targets.
+
 ## Sign-In And Session Behavior
 
 1. The user opens the application and signs in with a username and password.
@@ -178,20 +180,19 @@ See [Production Demo Readiness - June 22, 2026](/docs/production-demo-readiness-
 ## Employee Workflow
 
 ### Assigned Jobs List
-The employee job list shows assigned work in a mobile-friendly layout.
+The employee job list is a short mobile work list, not a dashboard. Each card gives the technician enough context to choose the right job without scanning extra summary panels.
 
 Employees can review:
 - ticket number;
 - title;
-- status;
 - priority;
+- status;
 - scheduled start;
 - due date;
-- customer;
-- service location;
-- equipment;
-- readiness status;
-- next required update.
+- customer and service location;
+- equipment being serviced;
+- readiness status and the next required update;
+- one primary action: **Open / Clock In** when the job is ready, or **Review Job** when setup needs attention.
 
 ![Employee assigned jobs list](assets/system-wiki/employee-jobs.png)
 
@@ -208,8 +209,10 @@ When an employee opens a job, the detail screen shows:
 - status and priority;
 - customer, service location, and equipment labels;
 - job description;
-- readiness checks;
-- clock-in/clock-out controls;
+- a short "Before You Start" readiness review;
+- clock-in/clock-out controls.
+
+Before clock-in, the deeper field tools are hidden behind a clear message. After the technician clocks into that exact ticket, the active-job tools appear:
 - work note form;
 - add/request part form;
 - upload photo/file form;
@@ -274,6 +277,8 @@ The guard applies to:
 - photo/file uploads.
 
 If an employee is clocked into another job, they must open that active ticket or clock out before recording work on a different ticket.
+
+The Employee screen hides the field-recording forms until the technician is clocked into that exact ticket. This keeps mobile scrolling short and prevents work notes, parts, or photos from being added to the wrong time entry.
 
 Manager/Admin back-office actions are not gated by an employee clock-in.
 
@@ -359,6 +364,12 @@ Managers/Admins can filter by:
 Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and dispatch readiness. It does not create a server-side export job.
 
 Queue URLs are shareable. If a Manager/Admin opens a ticket from a filtered queue, the ticket detail can preserve a safe return link back to that queue.
+
+The queue has two view modes:
+- **Rich cards**: the full review card view with readiness detail, assignment context, and timing fields.
+- **Compact list**: a denser operating list that prioritizes ticket number, title, customer/location, assigned tech, status, priority, scheduled date, due date, and the Open action.
+
+The selected view is remembered in the browser for that Manager/Admin user session. It does not change the ticket data, filters, CSV export, routes, or authorization rules.
 
 Important queue concepts:
 - active job queue;
@@ -1075,24 +1086,26 @@ Manager/Admin ticket workspace refreshes, Employee mobile post-action refreshes,
 ### Daily Manager/Admin Flow
 1. Open the dashboard.
 2. Review urgent queue summaries.
-3. Open Dispatch for unscheduled, today, tomorrow, and next-seven-day active tickets.
-4. Use Schedule & Assign to set the schedule, confirm the crane/equipment being serviced, and assign the lead operator and crew.
-5. Record En Route or On Site, then move active tickets through Start Work and Complete Work.
-6. Review completed work in the ticket workspace.
-7. Review tickets waiting on parts.
-8. Review pending time entries.
-9. Review reports for closeout and invoice-ready work.
+3. Open Job Tickets and choose **Compact list** for fast scanning or **Rich cards** for deeper readiness review.
+4. Open Dispatch for unscheduled, today, tomorrow, and next-seven-day active tickets.
+5. Use Schedule & Assign to set the schedule, confirm the crane/equipment being serviced, and assign the lead operator and crew.
+6. Record En Route or On Site, then move active tickets through Start Work and Complete Work.
+7. Review completed work in the ticket workspace.
+8. Review tickets waiting on parts.
+9. Review pending time entries.
+10. Review reports for closeout and invoice-ready work.
 
 ### Technician Field Flow
 1. Sign in.
 2. Open assigned jobs.
-3. Review the first assigned job and readiness checks.
-4. Open the job.
+3. Pick the correct job from the concise card list.
+4. Open the job and review the "Before You Start" readiness summary.
 5. Clock in with GPS.
-6. Record work notes as work is performed.
-7. Add/request parts as needed.
-8. Upload photos or PDFs as supporting evidence.
-9. Clock out with a required work summary.
+6. Use the active-job tools that appear after clock-in.
+7. Record work notes as work is performed.
+8. Add/request parts as needed.
+9. Upload photos or PDFs as supporting evidence.
+10. Clock out with a required work summary.
 
 ### Back-Office Parts Flow
 1. Open the parts request queue.

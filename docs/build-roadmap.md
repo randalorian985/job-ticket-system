@@ -14,6 +14,14 @@ Use this roadmap together with:
 ## Current Roadmap Checkpoint
 The project remains explicitly centered on the original job-ticket system scope.
 
+Employee/Manager workflow stabilization is implemented in the current draft PR:
+- Employee `/jobs` is a concise assigned-work list without extra dashboard panels;
+- Employee job detail is clock-in-first, showing ticket context, readiness, and time controls before clock-in, then revealing notes, parts, photos, work entries, parts, and files only while clocked into that ticket;
+- Manager/Admin `/manage/job-tickets` keeps the existing rich readiness card view and adds a persisted compact list view for dense operating review;
+- pilot seed data now creates six demo job tickets across ready-for-invoice, assigned, waiting-on-parts, unassigned, needs-lead, and urgent in-progress scenarios;
+- documentation and client wiki wording are aligned to the simplified Employee flow, compact queue mode, service-equipment meaning, and VPS post-merge checklist;
+- no backend API behavior, schema migration, enum change, auth weakening, route-guard weakening, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, customer portal, payment, or invoice-generation behavior is added.
+
 Parts Request Workflow Phase 2 is merged and protected on `main`. It builds on Phase 1 and smooths the service-ticket parts workflow:
 - technician-safe part lookup from the assigned job-ticket detail screen;
 - selecting existing catalog parts without exposing cost, price, vendor, inventory, catalog-admin, or billing fields;

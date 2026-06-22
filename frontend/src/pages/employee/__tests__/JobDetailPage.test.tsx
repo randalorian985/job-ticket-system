@@ -174,7 +174,7 @@ describe('JobDetailPage', () => {
         caption: 'Before photo'
       }
     ])
-    mockNoOpenEntry()
+    mockOpenEntry()
 
     renderJobDetail()
 
@@ -197,15 +197,12 @@ describe('JobDetailPage', () => {
     expect(within(jobReadiness).getByText('7 / 7')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('The job requirements are complete for assigned work.')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('This ticket has the information needed to start work.')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Ticket is available for field work.')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Customer: Acme Manufacturing')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Service location: North Plant')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Equipment being serviced: Hydraulic Lift 7')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Job instructions are available.')).toBeInTheDocument()
-    expect(screen.getByText('Job setup is ready for clock-in.')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Ready for field work.')).toBeInTheDocument()
+    expect(within(jobReadiness).queryByLabelText('open job requirements')).not.toBeInTheDocument()
+    expect(screen.getByText('Job setup is ready for active work.')).toBeInTheDocument()
   })
 
-  it('keeps field recording disabled until the technician clocks into this ticket', async () => {
+  it('hides field recording tools until the technician clocks into this ticket', async () => {
     mockEmployeeAuth()
     mockJob()
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
@@ -218,12 +215,14 @@ describe('JobDetailPage', () => {
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeEnabled()
     expect(screen.getByLabelText('Clock note (optional)')).toBeEnabled()
-    expect(screen.getByLabelText('Work note')).toBeDisabled()
-    expect(screen.getByLabelText('Photo or file')).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Save Work Note' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Add / Request Part' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled()
-    expect(screen.getAllByText('Clock in to this ticket before adding work notes, parts, or photos.').length).toBeGreaterThan(0)
+    expect(screen.getByLabelText('field tools locked')).toBeInTheDocument()
+    expect(screen.getByText('Clock in to add notes, parts, and photos')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Work note')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Photo or file')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Save Work Note' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add / Request Part' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Upload' })).not.toBeInTheDocument()
+    expect(screen.getByText('Clock in to this ticket before adding work notes, parts, or photos.')).toBeInTheDocument()
   })
 
   it('keeps a saved mobile work note distinct from a failed post-save refresh', async () => {
@@ -473,7 +472,7 @@ describe('JobDetailPage', () => {
       }
     ])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    mockNoOpenEntry()
+    mockOpenEntry()
 
     renderJobDetail()
 

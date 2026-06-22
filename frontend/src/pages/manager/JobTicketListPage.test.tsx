@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/httpClient'
@@ -25,6 +25,7 @@ describe('Manager list pages', () => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
+    window.localStorage.clear()
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
       { id: 'c-1', name: 'Acme' },
       { id: 'c-2', name: 'Bravo' }
@@ -72,6 +73,49 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Next required update: Set a scheduled start time before dispatch.')).toBeInTheDocument()
     expect(screen.getByText('Due')).toBeInTheDocument()
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+  })
+
+  it('switches to a compact ticket list and persists the manager preference', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      {
+        id: 'job-1',
+        ticketNumber: 'JT-1',
+        title: 'Fix compressor',
+        status: 4,
+        priority: 3,
+        customerId: 'c-1',
+        serviceLocationId: 's-1',
+        scheduledStartAtUtc: '2026-05-12T08:00:00Z',
+        dueAtUtc: '2026-05-13T08:00:00Z'
+      }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rich cards' })).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Compact list' }))
+
+    const compactList = screen.getByLabelText('compact ticket list')
+    expect(screen.getByRole('button', { name: 'Compact list' })).toHaveAttribute('aria-pressed', 'true')
+    expect(window.localStorage.getItem('job-ticket-manager-queue-view-mode')).toBe('compact')
+    expect(within(compactList).getByText('Fix compressor')).toBeInTheDocument()
+    expect(within(compactList).getByText('Acme')).toBeInTheDocument()
+    expect(within(compactList).getByText('HQ')).toBeInTheDocument()
+    expect(within(compactList).getAllByText('Alex Rivera').length).toBeGreaterThan(0)
+    expect(within(compactList).getByText('In Progress')).toBeInTheDocument()
+    expect(within(compactList).getByText('High')).toBeInTheDocument()
+    expect(within(compactList).getByRole('link', { name: 'Open' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/manage/job-tickets/job-1')
+    )
+
+    cleanup()
+    renderPage()
+
+    expect(await screen.findByLabelText('compact ticket list')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Compact list' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('falls back to assignment ids when assignment names are not present', async () => {
