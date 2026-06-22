@@ -177,6 +177,7 @@ export function JobDetailPage() {
   const fieldRecordGateMessage = isClockedIntoAnotherJob
     ? 'You are clocked into another job. Open that ticket or clock out before recording field work here.'
     : 'Clock in to this ticket before adding work notes, parts, or photos.'
+  const canUseActiveJobTools = isClockedIntoThisJob
 
   const refreshDetails = async () => {
     if (!jobTicketId || !user) {
@@ -497,7 +498,7 @@ export function JobDetailPage() {
         <p className="employee-job-description">{job.description ?? 'No description provided.'}</p>
       </section>
 
-      <section className="card stack" aria-label="job readiness review">
+      <section className="card stack employee-readiness-card" aria-label="job readiness review">
         <h2>Before You Start</h2>
         <div className="review-grid">
           <div>
@@ -518,17 +519,19 @@ export function JobDetailPage() {
           </div>
         </div>
         <p className="muted">{employeeJobReadiness.guidance}</p>
-        <ul className="muted" aria-label="job readiness checks">
-          {employeeJobReadiness.checks.map((check) => (
-            <li key={check.label}>
-              <strong>{check.label}:</strong> {check.detail}
-            </li>
-          ))}
-        </ul>
+        {employeeJobReadiness.warnings.length ? (
+          <ul className="muted check-list" aria-label="open job requirements">
+            {employeeJobReadiness.warnings.map((warning) => (
+              <li key={warning} className="check-item-open">{warning}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="success">Ready for field work.</p>
+        )}
       </section>
 
-      <section className="card stack">
-        <h2>Clock In / Clock Out</h2>
+      <section className="card stack employee-clock-card">
+        <h2>{isClockedIntoThisJob ? 'Active Job Time' : 'Clock In to Start Job'}</h2>
         <p className="muted">
           Open entry: {openEntry
             ? isClockedIntoThisJob
@@ -539,7 +542,7 @@ export function JobDetailPage() {
         <p className="muted">
           {employeeJobReadiness.warnings.length
             ? 'Job setup needs manager review before starting new work.'
-            : 'Job setup is ready for clock-in.'}
+            : isClockedIntoThisJob ? 'Job setup is ready for active work.' : 'Job setup is ready for clock-in.'}
         </p>
         {isClockedIntoAnotherJob ? (
           <p className="warning">
@@ -579,6 +582,16 @@ export function JobDetailPage() {
         )}
       </section>
 
+      {!canUseActiveJobTools ? (
+        <section className="card stack employee-field-tools-gate" aria-label="field tools locked">
+          <h2>Clock in to add notes, parts, and photos</h2>
+          <p className="muted">{fieldRecordGateMessage}</p>
+          <p className="muted">The active job tools appear here after clock-in so field updates stay tied to the correct ticket and time entry.</p>
+        </section>
+      ) : null}
+
+      {canUseActiveJobTools ? (
+        <section className="employee-active-job-tools stack" aria-label="active job tools">
       <section className="card stack">
         <h2>Add Work Note</h2>
         {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
@@ -757,6 +770,8 @@ export function JobDetailPage() {
           ))}
         </ul>
       </section>
+        </section>
+      ) : null}
     </main>
   )
 }

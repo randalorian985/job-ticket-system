@@ -36,6 +36,7 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
         var admin = CreateUser("Avery", "Admin", AdminUserName, "pilot.admin@example.local", SystemRoles.Admin, 85m, 65m, 140m);
         var manager = CreateUser("Morgan", "Manager", ManagerUserName, "pilot.manager@example.local", SystemRoles.Manager, 75m, 55m, 125m);
         var technician = CreateUser("Taylor", "Technician", EmployeeUserName, "pilot.tech@example.local", SystemRoles.Employee, 65m, 42m, 110m);
+        var secondTechnician = CreateUser("Riley", "Technician", "pilot.tech.backup", "pilot.tech.backup@example.local", SystemRoles.Employee, 62m, 40m, 105m);
 
         var customer = new Customer
         {
@@ -103,6 +104,61 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             LocationDescription = "North mechanical room",
             Latitude = 30.2672m,
             Longitude = -97.7431m,
+            Status = EquipmentStatus.Active
+        };
+
+        var portCustomer = new Customer
+        {
+            Name = "Phase 4A Port Services",
+            AccountNumber = "PILOT-4A-PORT",
+            ContactName = "Sam Dock",
+            Email = "dock.operations@example.local",
+            Phone = "555-0144",
+            BillingAddressLine1 = "410 Harbor Loop",
+            BillingCity = "Houston",
+            BillingState = "TX",
+            BillingPostalCode = "77002",
+            Status = CustomerStatus.Active
+        };
+
+        var portLocation = new ServiceLocation
+        {
+            Customer = portCustomer,
+            CompanyName = portCustomer.Name,
+            LocationName = "Dockside Yard",
+            OnSiteContactName = "Sam Dock",
+            OnSiteContactPhone = "555-0145",
+            OnSiteContactEmail = "dock.site@example.local",
+            AddressLine1 = "25 Crane Berth Road",
+            City = "Houston",
+            State = "TX",
+            PostalCode = "77003",
+            Country = "USA",
+            AccessInstructions = "Use the south service gate and call the dock lead on arrival.",
+            SafetyRequirements = "Hard hat, vest, and fall-protection briefing required.",
+            SiteNotes = "Second seeded customer for queue, dispatch, and mobile workflow demos.",
+            Latitude = 29.7604m,
+            Longitude = -95.3698m,
+            IsActive = true
+        };
+
+        var portCrane = new Equipment
+        {
+            Customer = portCustomer,
+            ServiceLocation = portLocation,
+            OwnerCustomer = portCustomer,
+            ResponsibleBillingCustomer = billingCustomer,
+            Name = "Dockside 90-ton crane",
+            EquipmentNumber = "EQ-PILOT-CRANE-090",
+            UnitNumber = "CR-90",
+            Manufacturer = "Demo Lift Systems",
+            ModelNumber = "DL-900",
+            SerialNumber = "DL900-PILOT",
+            EquipmentType = "Crane",
+            Year = 2021,
+            LocationDescription = "South dock service bay",
+            Latitude = 29.7604m,
+            Longitude = -95.3698m,
             Status = EquipmentStatus.Active
         };
 
@@ -366,7 +422,38 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             AddedByEmployee = technician
         });
 
-        dbContext.AddRange(admin, manager, technician, customer, billingCustomer, serviceLocation, equipment, vendor, category, filter, belt, hose, sealKit, completedTicket, assignedTicket, waitingTicket);
+        var unscheduledTicket = BuildTicket("PILOT-UNSCHEDULED-004", portCustomer, billingCustomer, portLocation, portCrane, manager, JobTicketStatus.Submitted, JobTicketPriority.High, now.AddHours(-10), now.AddDays(2), now.AddDays(4), "Dockside crane inspection waiting on schedule");
+        unscheduledTicket.ScheduledStartAtUtc = null;
+        unscheduledTicket.DueAtUtc = null;
+        unscheduledTicket.Description = "Inspect hoist brake behavior and document the customer's crane condition before scheduling field work.";
+        unscheduledTicket.CustomerFacingNotes = "Customer requested a schedule confirmation before the field visit.";
+        unscheduledTicket.WorkEntries.Add(new JobWorkEntry
+        {
+            Employee = manager,
+            EntryType = WorkEntryType.Note,
+            Notes = "Seed unassigned ticket for Manager/Admin compact queue, unassigned filter, and dispatch-readiness review.",
+            PerformedAtUtc = now.AddHours(-8)
+        });
+
+        var needsLeadTicket = BuildTicket("PILOT-NEEDS-LEAD-005", customer, billingCustomer, serviceLocation, equipment, manager, JobTicketStatus.Assigned, JobTicketPriority.Normal, now.AddDays(-1), now.AddHours(5), now.AddDays(2), "Compressor vibration check needs lead tech");
+        needsLeadTicket.Description = "Follow up on vibration readings and confirm whether the compressor skid needs a return visit.";
+        needsLeadTicket.CustomerFacingNotes = "Assigned technician is available, but the lead tech still needs to be marked before dispatch.";
+        needsLeadTicket.AssignedEmployees.Add(new JobTicketEmployee { Employee = secondTechnician, AssignedAtUtc = now.AddHours(-20), AssignedByUserId = manager.Id, IsLead = false });
+
+        var todayTicket = BuildTicket("PILOT-TODAY-006", portCustomer, billingCustomer, portLocation, portCrane, manager, JobTicketStatus.InProgress, JobTicketPriority.Urgent, now.AddDays(-2), now.AddHours(1), now.AddDays(1), "Urgent dockside crane return-to-service check");
+        todayTicket.Description = "Verify limit switch behavior, photograph the control cabinet, and record any parts that need office ordering.";
+        todayTicket.CustomerFacingNotes = "Technician should clock in before adding field notes, parts, or photos.";
+        todayTicket.AssignedEmployees.Add(new JobTicketEmployee { Employee = technician, AssignedAtUtc = now.AddDays(-2), AssignedByUserId = manager.Id, IsLead = true });
+        todayTicket.AssignedEmployees.Add(new JobTicketEmployee { Employee = secondTechnician, AssignedAtUtc = now.AddDays(-2), AssignedByUserId = manager.Id, IsLead = false });
+        todayTicket.WorkEntries.Add(new JobWorkEntry
+        {
+            Employee = manager,
+            EntryType = WorkEntryType.Note,
+            Notes = "Seed urgent active ticket for Employee mobile clock-in and Manager/Admin compact queue walkthroughs.",
+            PerformedAtUtc = now.AddHours(-6)
+        });
+
+        dbContext.AddRange(admin, manager, technician, secondTechnician, customer, billingCustomer, portCustomer, serviceLocation, portLocation, equipment, portCrane, vendor, category, filter, belt, hose, sealKit, completedTicket, assignedTicket, waitingTicket, unscheduledTicket, needsLeadTicket, todayTicket);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await BuildSummaryAsync(true, cancellationToken);

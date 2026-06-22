@@ -19,7 +19,7 @@ Core scope:
 - Technicians can search/select an existing catalog part through a safe lookup or type a new/unlisted part from inside an assigned service/job ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
-- Technician field recording now requires an open time entry for the selected job ticket before an Employee records work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
+- Technician field recording now requires an open time entry for the selected job ticket before an Employee records work notes, parts, part requests, or file/photo uploads; the Employee job detail screen hides those deeper field tools until clock-in, and Manager/Admin back-office actions are not gated by an employee clock-in.
 - File/photo uploads accept JPG/JPEG, PNG, WebP, and PDF files up to 50 MB, with the limit enforced in both the HTTP layer and application service.
 - Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket detail uses focused in-page panels for section-based ticket editing, quick notes, photo/file upload, labor review, status changes, archive review, and Add / Request Part actions backed by existing APIs; the recommended action opens the relevant workflow tab in a focused ticket view.
@@ -28,7 +28,7 @@ Core scope:
 - Manager/Admin reporting is implemented as a bounded reports hub for the existing reporting domains: invoice/closeout review, job cost summaries, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history. The frontend validates required source IDs, date ranges, and paging values before calling existing report APIs.
 - Reporting UI polish includes clear sections, shared filters, required source-ID validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from currently loaded rows only.
 - Manager/Admin screen cleanup uses distinct report catalog/results, master-data list/editor, and Admin user list/editor states while preserving create/update/archive and account-management outcomes. Admin user management includes client-side account search, role filtering, and active/inactive filtering.
-- Manager/Admin job-ticket queue export produces client-side CSV from the currently visible filtered ticket rows, including readable customer, service-location, assignment, lead, and dispatch-readiness labels. This does not add backend export endpoints or reporting jobs.
+- Manager/Admin job-ticket queue supports both rich readiness cards and a persisted compact operating list for dense day-to-day scanning. Queue export produces client-side CSV from the currently visible filtered ticket rows, including readable customer, service-location, assignment, lead, and dispatch-readiness labels. This does not add backend export endpoints or reporting jobs.
 - Labor reporting labels totals as time-entry labor-rate snapshot values and keeps the existing API behavior that falls back only for legacy entries without captured snapshots.
 - Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
@@ -38,6 +38,7 @@ Core scope:
 - Manager/Admin task navigation now uses URL-backed job-ticket queue filters, dashboard links into exact queues, queue-aware return links, workflow tabs, and the `view=workflow` ticket focus state; these are frontend navigation contracts only and do not change backend APIs or business rules.
 - Manager/Admin Time Approval is now a queue-first workflow with default pending-entry loading, employee-name filtering, broad job/customer/site/location search, contextual review details, bulk approve, reject, and edit-and-approve with audit-safe adjustment records.
 - The latest post-Time Approval regression audit is recorded in the historical audit log and keeps the project in a clean planning state for the next selected Manager/Admin workflow lane.
+- Local pilot seed data now covers six demo tickets across ready-for-invoice, assigned field work, waiting-on-parts, unassigned scheduling, missing-lead review, and urgent in-progress work without adding migrations or production seed behavior.
 
 ## Current Planning Direction
 The next feature work should remain a bounded Manager/Admin workflow slice, selected only after any active audit or stabilization PR is closed and GitHub checks are clean.
