@@ -109,9 +109,6 @@ export const getDispatchReadiness = (
       }
     })
 
-    if (candidate.equipmentName && job.equipmentName && candidate.equipmentName === job.equipmentName) {
-      conflicts.push(`Crane/equipment also scheduled on ${candidate.ticketNumber}.`)
-    }
   })
 
   employeeConflictNames.forEach((name) => conflicts.push(`${name} is already assigned to another job that day.`))

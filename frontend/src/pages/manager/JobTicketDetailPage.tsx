@@ -306,11 +306,11 @@ export function JobTicketDetailPage() {
           : "Service location is not selected.",
       },
       {
-        label: "Equipment decision",
+        label: "Service equipment",
         isReady: Boolean(job),
         detail: job?.equipmentId
-          ? "Equipment is selected."
-          : "No equipment is attached; this ticket can be dispatched without equipment.",
+          ? "Crane/equipment being serviced is selected."
+          : "No service equipment is selected; check the job scope for component-only work.",
       },
     ];
     const warnings = checks
@@ -353,11 +353,11 @@ export function JobTicketDetailPage() {
           : "Customer or service location is missing.",
       },
       {
-        label: "Equipment verification",
+        label: "Service equipment review",
         isReady: Boolean(job?.equipmentId),
         detail: job?.equipmentId
-          ? "Equipment is attached for review."
-          : "Confirm whether this ticket should remain without equipment before invoice review.",
+          ? "Crane/equipment being serviced is listed for review."
+          : "If no service equipment is listed, confirm the component or part is clear in the job scope before invoice review.",
       },
       {
         label: "Billing information",
@@ -1417,9 +1417,9 @@ export function JobTicketDetailPage() {
                         : "Location status unavailable"}
                     </p>
                   </section>
-                  <section className="context-block" aria-label="equipment">
-                    <span>Equipment</span>
-                    <h4>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentName ?? "Equipment unavailable") : "No equipment attached"}</h4>
+                  <section className="context-block" aria-label="equipment being serviced">
+                    <span>Crane / Equipment Being Serviced</span>
+                    <h4>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentName ?? "Equipment unavailable") : "See job scope"}</h4>
                     <p>{displayValue(selectedEquipment?.equipmentType)} {displayValue(selectedEquipment?.manufacturer)} {displayValue(selectedEquipment?.modelNumber)}</p>
                     {!selectedEquipment && job.equipmentNumber ? <p className="muted">Equipment {job.equipmentNumber}</p> : null}
                     <p className="muted">Unit {displayValue(selectedEquipment?.unitNumber)} | Serial {displayValue(selectedEquipment?.serialNumber)}</p>
@@ -1574,7 +1574,7 @@ export function JobTicketDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="muted">Assignment, lead tech, schedule, due date, customer, service location, and equipment decision are all present.</p>
+                  <p className="muted">Employee assignment, lead tech, schedule, due date, customer, service location, and service equipment choice are all present.</p>
                 )}
               </article>
 

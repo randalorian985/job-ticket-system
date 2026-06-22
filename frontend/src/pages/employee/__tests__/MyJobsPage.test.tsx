@@ -111,7 +111,7 @@ describe('MyJobsPage', () => {
     expect(screen.getByText('Acme Manufacturing')).toBeInTheDocument()
     expect(screen.getByText('North Plant')).toBeInTheDocument()
     expect(screen.getByText('Press 12')).toBeInTheDocument()
-    expect(screen.getByText('No equipment attached')).toBeInTheDocument()
+    expect(screen.getByText('See job instructions')).toBeInTheDocument()
     expect(screen.queryByText(/customer-1|location-1/)).not.toBeInTheDocument()
 
     await waitFor(() => {

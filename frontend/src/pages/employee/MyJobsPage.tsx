@@ -154,7 +154,7 @@ export function MyJobsPage() {
               <div className="assigned-job-context">
                 <div><strong>Customer</strong><span>{displayRelatedName(job.customerName, 'Customer unavailable')}</span></div>
                 <div><strong>Service location</strong><span>{displayRelatedName(job.serviceLocationName, 'Service location unavailable')}</span></div>
-                <div><strong>Equipment</strong><span>{displayRelatedName(job.equipmentName, 'No equipment attached')}</span></div>
+                <div><strong>Equipment Being Serviced</strong><span>{displayRelatedName(job.equipmentName, 'See job instructions')}</span></div>
               </div>
               <p className="muted">Next required update: {readiness.nextStep}</p>
               <Link className="button-link secondary-link" to={`/jobs/${job.id}`}>Open Job</Link>

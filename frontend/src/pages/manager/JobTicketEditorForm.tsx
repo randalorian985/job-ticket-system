@@ -80,7 +80,7 @@ const ticketEditorSections: Array<{
   description: string
 }> = [
   { value: 'identity', label: 'Basics', description: 'Title, type, priority, and status.' },
-  { value: 'relationships', label: 'Customer & Equipment', description: 'Customer, location, billing party, and equipment.' },
+  { value: 'relationships', label: 'Customer & Service Equipment', description: 'Customer, location, billing party, and the crane/equipment being serviced.' },
   { value: 'scope', label: 'Scope & Notes', description: 'Job description, internal notes, and customer notes.' },
   { value: 'billing', label: 'Billing', description: 'Purchase order and billing contact details.' },
   { value: 'schedule', label: 'Schedule', description: 'Requested, scheduled, and due dates.' }
@@ -207,7 +207,7 @@ function quickAddErrorMessage(error: unknown, fallback: string) {
 }
 
 export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditCheck[] {
-  const hasEquipmentAssignment = Boolean(form.equipmentId)
+  const hasServiceEquipment = Boolean(form.equipmentId)
   const isActiveDispatchStatus = activeDispatchStatuses.has(form.status)
 
   return [
@@ -229,9 +229,9 @@ export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditC
       detail: form.serviceLocationId ? 'Service location is selected.' : 'Select the service location before dispatch review.'
     },
     {
-      label: 'Equipment decision',
+      label: 'Service equipment',
       isReady: true,
-      detail: hasEquipmentAssignment ? 'Equipment is selected.' : 'This ticket can be dispatched without equipment.'
+      detail: hasServiceEquipment ? 'Crane/equipment being serviced is selected.' : 'No service equipment is selected; use the job scope for component-only work.'
     },
     {
       label: 'Scheduled start',
@@ -639,7 +639,7 @@ export function JobTicketEditorForm({
             ))}
           </ul>
         ) : (
-          <p className="muted">Dispatch status, customer, service location, equipment decision, schedule, due date, and job instructions are ready.</p>
+          <p className="muted">Dispatch status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.</p>
         )}
       </section>
 
@@ -699,8 +699,8 @@ export function JobTicketEditorForm({
       {activeEditorSection === 'relationships' ? (
         <section className="section-editor-panel stack" aria-label="Customer and equipment edit section">
           <div className="section-editor-heading">
-            <h3>Customer & Equipment</h3>
-            <p className="muted">Edit the customer, service location, billing party, and equipment relationships.</p>
+            <h3>Customer & Service Equipment</h3>
+            <p className="muted">Choose the customer, work location, billing party, and crane/equipment being serviced.</p>
           </div>
           <div className="field-with-action">
             <label>Customer
@@ -766,9 +766,9 @@ export function JobTicketEditorForm({
           ) : null}
           <label>Billing Party<select value={form.billingPartyCustomerId} onChange={(e) => update('billingPartyCustomerId', e.target.value)}><option value="">Select billing party</option>{allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
           <div className="field-with-action">
-            <label>Equipment
+            <label>Crane / Equipment Being Serviced
               <select value={form.equipmentId ?? ''} onChange={(e) => update('equipmentId', e.target.value || null)}>
-                <option value="">None</option>
+                <option value="">No equipment record</option>
                 {filteredEquipment.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </label>
@@ -776,6 +776,7 @@ export function JobTicketEditorForm({
               Quick add equipment
             </button>
           </div>
+          <p className="muted">Choose the customer's crane or equipment this ticket is for. For component-only work, describe the part in Job Title and Service Instructions.</p>
           {equipmentQuickAddMessage ? <p className="success" role="status">{equipmentQuickAddMessage}</p> : null}
           {equipmentQuickAddError ? <p className="error">{equipmentQuickAddError}</p> : null}
           {equipmentQuickAddOpen ? (
@@ -814,7 +815,7 @@ export function JobTicketEditorForm({
           <section className="quick-add-panel" aria-label="equipment service history">
             <h3>Recent Equipment Service History</h3>
             {!form.equipmentId ? (
-              <p className="muted">Select equipment to review recent service history before saving this ticket.</p>
+              <p className="muted">Select the crane/equipment being serviced to review its recent service history before saving this ticket.</p>
             ) : isLoadingEquipmentHistory ? (
               <p className="muted" role="status">Loading recent equipment service history...</p>
             ) : equipmentHistoryError ? (

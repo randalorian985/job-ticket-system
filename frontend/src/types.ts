@@ -89,6 +89,7 @@ export type JobTicketListItemDto = {
   completedAtUtc?: string | null
   customerName?: string | null
   serviceLocationName?: string | null
+  equipmentId?: string | null
   equipmentName?: string | null
 }
 

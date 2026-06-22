@@ -147,7 +147,7 @@ export function DispatchBoardPage() {
     setScheduleDraft({
       scheduledStartAtUtc: toInputDateTime(job.scheduledStartAtUtc),
       dueAtUtc: toInputDateTime(job.dueAtUtc),
-      equipmentId: '',
+      equipmentId: job.equipmentId ?? '',
       operatorEmployeeId: lead?.employeeId ?? '',
       crewEmployeeIds: assignments.filter((assignment) => !assignment.isLead).map((assignment) => assignment.employeeId),
       notes: ''
@@ -258,8 +258,7 @@ export function DispatchBoardPage() {
           <div><span>Requested</span><strong>{formatDate(job.requestedAtUtc)}</strong></div>
           <div><span>Scheduled</span><strong>{formatDate(job.scheduledStartAtUtc)}</strong></div>
           <div><span>Job / Scope</span><strong>{job.title}</strong></div>
-          <div><span>Crane Needed</span><strong>{equipmentName ?? 'Confirm crane'}</strong></div>
-          <div><span>Assigned Crane</span><strong>{equipmentName ?? 'Unassigned'}</strong></div>
+          <div><span>Crane / Equipment Being Serviced</span><strong>{equipmentName ?? 'See job scope'}</strong></div>
           <div><span>Operator</span><strong>{lead ? getAssignmentName(lead) : 'Unassigned'}</strong></div>
           <div><span>Crew</span><strong>{crew.length ? crew.map(getAssignmentName).join(', ') : 'No crew assigned'}</strong></div>
           <div><span>Ticket Status</span><strong>{getTicketReviewStatus(job)}</strong></div>
@@ -269,11 +268,11 @@ export function DispatchBoardPage() {
             {[...readiness.conflicts, ...readiness.missing].map((item) => <span key={item}>{item}</span>)}
           </div>
         ) : (
-          <p className="dispatch-ready-line">No assignment conflicts or missing dispatch fields are visible.</p>
+          <p className="dispatch-ready-line">No employee assignment conflicts or missing dispatch fields are visible.</p>
         )}
         <div className="dispatch-card-actions">
           <button type="button" className="compact-button" onClick={() => openSchedule(job)}>Schedule</button>
-          <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Assign Crane</button>
+          <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Edit Service Equipment</button>
           <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Assign Operator</button>
           <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Assign Crew</button>
           <button type="button" className="compact-button" disabled={!job.scheduledStartAtUtc || !assignments.length} onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked dispatched.', 'Dispatch update: job dispatched.')}>Dispatch</button>
@@ -299,13 +298,13 @@ export function DispatchBoardPage() {
         <div>
           <p className="eyebrow">Manager/Admin Dispatch</p>
           <h2>Dispatch Board</h2>
-          <p className="muted">Schedule jobs, assign cranes/operators/crew, move day-of work forward, and open ticket review without starting from the ticket detail screen.</p>
+          <p className="muted">Schedule jobs, confirm the crane or equipment being serviced, assign operators and crew, move day-of work forward, and open ticket review without starting from the ticket detail screen.</p>
         </div>
         <Link className="button-link" to="/manage/job-tickets/new">Create Job Request</Link>
       </header>
 
       <section className="dispatch-lifecycle-strip" aria-label="dispatch lifecycle">
-        {['Job Request', 'Review / Estimate', 'Schedule', 'Assign Crane', 'Assign Operator / Crew', 'Dispatch', 'En Route', 'On Site', 'In Progress', 'Work Complete', 'Ticket Review', 'Ready for Billing'].map((step) => (
+        {['Job Request', 'Review / Estimate', 'Schedule', 'Confirm Service Equipment', 'Assign Operator / Crew', 'Dispatch', 'En Route', 'On Site', 'In Progress', 'Work Complete', 'Ticket Review', 'Ready for Billing'].map((step) => (
           <span key={step}>{step}</span>
         ))}
       </section>
@@ -352,8 +351,8 @@ export function DispatchBoardPage() {
                 <label>Requested date/time<input value={toInputDateTime(selectedJob.requestedAtUtc)} readOnly /></label>
                 <label>Scheduled date/time<input type="datetime-local" value={scheduleDraft.scheduledStartAtUtc} onChange={(event) => setScheduleDraft({ ...scheduleDraft, scheduledStartAtUtc: event.target.value })} required /></label>
                 <label>Due date/time<input type="datetime-local" value={scheduleDraft.dueAtUtc} onChange={(event) => setScheduleDraft({ ...scheduleDraft, dueAtUtc: event.target.value })} /></label>
-                <label>Crane assignment<select value={scheduleDraft.equipmentId} onChange={(event) => setScheduleDraft({ ...scheduleDraft, equipmentId: event.target.value })}>
-                  <option value="">No crane selected</option>
+                <label>Crane / equipment being serviced<select value={scheduleDraft.equipmentId} onChange={(event) => setScheduleDraft({ ...scheduleDraft, equipmentId: event.target.value })}>
+                  <option value="">No equipment record selected</option>
                   {equipment.map((item) => <option key={item.id} value={item.id}>{item.equipmentNumber ? `${item.equipmentNumber} - ` : ''}{item.name}</option>)}
                 </select></label>
                 <label>Operator assignment<select value={scheduleDraft.operatorEmployeeId} onChange={(event) => setScheduleDraft({ ...scheduleDraft, operatorEmployeeId: event.target.value, crewEmployeeIds: scheduleDraft.crewEmployeeIds.filter((id) => id !== event.target.value) })} required>
@@ -386,10 +385,10 @@ export function DispatchBoardPage() {
                   jobs,
                   assignmentsByJob
                 ).conflicts.map((warning) => <span key={warning}>{warning}</span>)}
-                <span>Save is allowed with warnings so dispatch can resolve real-world exceptions intentionally.</span>
+                <span>Save is allowed with employee scheduling warnings so dispatch can resolve real-world exceptions intentionally.</span>
               </div>
               <div className="section-editor-save-row">
-                <span className="muted">Existing ticket data is preserved; schedule, crane/equipment, operator, crew, and notes are updated through current ticket APIs.</span>
+                <span className="muted">Existing ticket data is preserved; schedule, service equipment, operator, crew, and notes are updated through current ticket APIs.</span>
                 <button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Schedule'}</button>
               </div>
             </form>
