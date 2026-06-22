@@ -1200,15 +1200,11 @@ Use this checklist when introducing the system to a client team.
 - Use purchasing support carefully within current scope.
 - Produce closeout reports.
 
-## Demo Users
+## Demo Access
 
-Local demo environments may include these users:
-- `pilot.admin` / `PilotDemo123!`
-- `pilot.manager` / `PilotDemo123!`
-- `pilot.tech` / `PilotDemo123!`
-- bootstrap-only admin: `test.admin` / `TestAdmin123!`
+Demo, pilot, and training accounts are environment-specific. For customer sessions, provide usernames and temporary passwords through the agreed handoff channel instead of publishing credentials in the wiki.
 
-Demo users are for local/pilot environments only and should not be treated as production credentials.
+Demo users are for controlled demo or pilot environments only and should not be treated as production credentials.
 
 ## Support Notes
 
