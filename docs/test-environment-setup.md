@@ -184,7 +184,7 @@ Use this order:
 6. Record a blocker only after documenting which workarounds were attempted and why they were insufficient for the current task.
 
 Current known workaround:
-- GitHub Actions posts `scheduled-runner-bundle` manifest and chunk comments to issue #166 for the latest `main`.
+- GitHub Actions posts `scheduled-runner-bundle` manifest and chunk comments to issue #319 for the latest `main`.
 - The scheduled runner can reconstruct a checkout-like workspace from those chunks when normal GitHub checkout remains blocked.
 - Connector-created PRs must not be called merge-worthy until GitHub Actions or another checkout-capable environment has passed required validation.
 
