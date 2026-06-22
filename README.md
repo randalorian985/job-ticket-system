@@ -12,6 +12,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Manager/Admin job-ticket queue can export the currently visible filtered ticket rows to client-side CSV for dispatch handoff without adding backend export APIs.
 - Manager/Admin Dispatch Board is now a first-class operational screen at `/manage/dispatch`, with Unscheduled, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views. Dispatchers can schedule jobs, assign crane/equipment, assign operator/crew, move day-of work forward, open tickets, and finalize completed tickets using existing ticket, assignment, work-entry, and status APIs.
 - Production deployment configuration and readiness runbooks are source-controlled, with explicit migration startup, disabled normal production seed/bootstrap services, health proxying, backup/restore guidance, rollback steps, and client-UAT gates documented.
+- Controlled production-demo readiness is documented with a source-controlled SQL/uploaded-files backup verification script and clear full go-live gates.
 - Labor report totals are labeled as time-entry labor-rate snapshot values and preserve the existing API fallback behavior for legacy entries without captured snapshots.
 - Parts Request Workflow Phase 2 adds in-ticket Add / Request Part flows without adding purchasing, receiving, inventory expansion, recommendations, or automatic compatibility decisions.
 - Technicians can search/select existing parts through a technician-safe lookup or type a new/unlisted part from inside an assigned service ticket.
@@ -55,6 +56,7 @@ Parts Request Workflow Phase 2 is not a purchasing, receiving, vendor invoice, l
 - Development setup and validation: [docs/development-setup.md](docs/development-setup.md)
 - Test environment setup and workarounds: [docs/test-environment-setup.md](docs/test-environment-setup.md)
 - Production readiness runbook: [docs/production-readiness-runbook.md](docs/production-readiness-runbook.md)
+- Production demo readiness: [docs/production-demo-readiness-2026-06-22.md](docs/production-demo-readiness-2026-06-22.md)
 - Production readiness audit: [docs/production-readiness-audit-2026-06-18.md](docs/production-readiness-audit-2026-06-18.md)
 - Historical audit log: [docs/historical-bug-regression-audit.md](docs/historical-bug-regression-audit.md)
 - Database design: [docs/database-design.md](docs/database-design.md)

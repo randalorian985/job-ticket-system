@@ -83,43 +83,30 @@ Expected:
 
 ## Backup
 
-Create an online SQL Server backup before risky deploys and at the chosen recurring backup interval:
+Create and verify an online SQL Server backup plus uploaded-files archive before risky deploys and at the chosen recurring backup interval:
 
 ```bash
 cd /opt/job-ticket-system
-set -a
-. ./.env.production
-set +a
-
-stamp="$(date +%Y%m%d%H%M%S)"
-backup_dir="/opt/job-ticket-system/backups/$stamp"
-mkdir -p "$backup_dir"
-
-docker exec job-ticket-sqlserver mkdir -p /var/opt/mssql/backups
-docker exec job-ticket-sqlserver /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P "$SA_PASSWORD" -C \
-  -Q "BACKUP DATABASE [JobTicketDb] TO DISK = N'/var/opt/mssql/backups/job-ticket-$stamp.bak' WITH INIT, COPY_ONLY"
-
-docker cp "job-ticket-sqlserver:/var/opt/mssql/backups/job-ticket-$stamp.bak" "$backup_dir/job-ticket-$stamp.bak"
-ls -lh "$backup_dir"
+PROJECT_DIR=/opt/job-ticket-system RETENTION_DAYS=14 bash scripts/production-backup.sh
 ```
 
-Back up uploaded files/photos by archiving the `api_files` volume:
+The script writes to `/opt/job-ticket-system/backups/<UTC stamp>/`, runs SQL Server `RESTORE VERIFYONLY`, archives the `api_files` volume, and removes backup directories older than `RETENTION_DAYS`.
+
+To install a recurring daily backup as root:
 
 ```bash
-stamp="$(date +%Y%m%d%H%M%S)"
-backup_dir="/opt/job-ticket-system/backups/$stamp"
-mkdir -p "$backup_dir"
-
-docker run --rm \
-  -v job-ticket-system_api_files:/source:ro \
-  -v "$backup_dir:/backup" \
-  alpine tar -czf "/backup/api-files-$stamp.tgz" -C /source .
+cd /opt/job-ticket-system
+install -m 750 scripts/production-backup.sh /usr/local/sbin/job-ticket-production-backup
+cat >/etc/cron.d/job-ticket-production-backup <<'CRON'
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+15 2 * * * root PROJECT_DIR=/opt/job-ticket-system RETENTION_DAYS=14 /usr/local/sbin/job-ticket-production-backup >> /var/log/job-ticket-production-backup.log 2>&1
+CRON
 ```
 
 ## Backup Verification
 
-Minimum backup verification:
+Minimum backup verification is built into `scripts/production-backup.sh`. If a backup is being checked manually, use:
 
 ```bash
 cd /opt/job-ticket-system
@@ -127,6 +114,8 @@ set -a
 . ./.env.production
 set +a
 
+stamp="<backup stamp>"
+backup_dir="/opt/job-ticket-system/backups/$stamp"
 docker cp "$backup_dir/job-ticket-$stamp.bak" job-ticket-sqlserver:/var/opt/mssql/backups/verify.bak
 docker exec job-ticket-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P "$SA_PASSWORD" -C \
@@ -188,11 +177,11 @@ Before declaring full client production readiness, complete and record human UAT
 
 ## Current Readiness Classification
 
-The app can be treated as deployment-ready for controlled pilot/staging use only after validation passes, VPS health is green, and backups are verified.
+The app can be treated as deployment-ready for a controlled production demo or pilot/staging use only after validation passes, VPS health is green, and backups are verified. The June 22 production-demo checklist is tracked in [Production Demo Readiness - 2026-06-22](./production-demo-readiness-2026-06-22.md).
 
 Do not call it full client production-ready until:
 
-- a recurring backup job and retention policy are active;
+- the recurring backup job and retention policy are active on the VPS;
 - at least one restore drill has been completed;
 - uptime/log alerts are configured;
 - client UAT is signed off;

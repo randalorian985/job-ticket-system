@@ -141,11 +141,13 @@ Screenshot status:
 ## GitHub And VPS Update Status
 
 GitHub:
-- Changes were prepared on branch `codex/service-ticket-workflow-audit` for pull request review.
+- The service-ticket workflow repair branch has been merged into `main`.
+- Current production-demo readiness follow-up is tracked in [Production Demo Readiness - 2026-06-22](./production-demo-readiness-2026-06-22.md).
 
 VPS:
-- VPS deployment could not be completed from this workstation because no deploy script, host target, SSH config, or deploy environment variable was available in the repository or local environment.
-- The local backend dependency required for a seeded production-like smoke test was also unavailable: SQL Server was not listening on `localhost:1433`, Docker daemon access was unavailable, and `http://localhost:5000/health` was not reachable.
+- VPS deployment is available through the source-controlled production Compose stack and runbook.
+- The production runbook now includes the source-controlled `scripts/production-backup.sh` backup/verification flow for controlled demo operations.
+- For each demo release, confirm container health and `/health` on both the local VPS proxy and public endpoint after pulling `main`.
 
 ## Files Changed
 
@@ -162,6 +164,6 @@ VPS:
 
 ## Remaining Recommendations
 
-- Run a seeded browser smoke test against the local API before client handoff to visually confirm desktop and mobile layouts with real demo data.
+- Run the production-demo checklist before each client handoff and record the deployed commit plus backup stamp.
 - Capture dedicated error-state screenshots if the client wants troubleshooting visuals in the wiki.
 - Consider a shared frontend async-load helper if more Manager/Admin pages develop the same loading/error pattern.
