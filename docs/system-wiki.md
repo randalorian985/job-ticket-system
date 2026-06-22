@@ -21,7 +21,8 @@ For a first client walkthrough, use this order:
 3. Walk technicians through [Employee Workflow](#employee-workflow).
 4. Walk office staff through [Manager/Admin Workspace](#manageradmin-workspace).
 5. Review [Time Tracking And Approval](#time-tracking-and-approval), [Parts And Part Requests](#parts-and-part-requests), and [Reports](#reports).
-6. Finish with [Current Scope Boundaries](#current-scope-boundaries) so the client knows what is intentionally not included.
+6. Review [Production Demo Operations](#production-demo-operations) before a VPS-backed client demo.
+7. Finish with [Current Scope Boundaries](#current-scope-boundaries) so the client knows what is intentionally not included.
 
 For live training, use the [Client Training Checklist](#client-training-checklist) near the end of this wiki.
 
@@ -140,6 +141,24 @@ Admin users can:
 - `/manage/parts-approval`: parts approval workflow.
 - `/manage/reports`: reports hub.
 - `/manage/users`: Admin-only user management.
+
+## Production Demo Operations
+
+The current VPS baseline is ready for controlled production demos after validation, health checks, and backup verification pass. This is separate from full client production go-live, which still requires restore-drill evidence, off-host backup storage, alerting, and UAT signoff.
+
+Before a client-facing VPS demo, the operator should confirm:
+- frontend and backend validation passed for the deployed commit;
+- `GET /health` returns `Healthy` through the public site and the local VPS proxy;
+- SQL Server, API, and frontend containers are healthy;
+- a fresh backup exists under `/opt/job-ticket-system/backups/<UTC stamp>/`;
+- the SQL backup reported `RESTORE VERIFYONLY` as valid;
+- uploaded files/photos were archived with the same backup stamp;
+- `job-ticket-production-backup.timer` is active on the VPS for recurring backups;
+- normal production restarts keep `TestBootstrap` and `PilotDemoSeed` disabled.
+
+The source-controlled backup entrypoint is `scripts/production-backup.sh`. It creates a SQL Server backup, verifies it, archives uploaded files/photos, and applies retention cleanup. The current Ubuntu VPS runs that script through the `job-ticket-production-backup.timer` systemd timer.
+
+See [Production Demo Readiness - June 22, 2026](/docs/production-demo-readiness-2026-06-22.md) and [Production Readiness Runbook](/docs/production-readiness-runbook.md) for the command-level checklist.
 
 ## Sign-In And Session Behavior
 
