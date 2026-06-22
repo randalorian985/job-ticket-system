@@ -422,7 +422,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     )
 
     openEditSection('Customer & Service Equipment')
-    expect(screen.getByText('Select equipment to review recent service history before saving this ticket.')).toBeInTheDocument()
+    expect(screen.getByText('Select the crane/equipment being serviced to review its recent service history before saving this ticket.')).toBeInTheDocument()
     expect(reportsApi.getEquipmentHistory).not.toHaveBeenCalled()
 
     fireEvent.change(screen.getByLabelText('Crane / Equipment Being Serviced'), { target: { value: 'eq1' } })
