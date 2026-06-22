@@ -1015,6 +1015,23 @@ Important reporting boundaries:
 - The system does not provide a customer portal.
 - The system does not run server-side reporting jobs.
 
+### Future Service Estimate / Quote Export Direction
+
+Real crane-company service estimates read as formal customer-facing work-order quote packets rather than generic reports. When this becomes approved scope, the export should use Company Configuration for the crane company's own identity and continue using customer, work site, contact, and equipment data from job-ticket/customer records.
+
+A future service estimate or quote export should support:
+- branded header with company logo, company address/contact details, and optional compliance or association marks;
+- document stripe with document type, quote/work-order number, page count, and date;
+- customer block separate from work-site block;
+- customer contact, phone, email, and salesperson/service representative details;
+- equipment block with serial number, unit make, unit description, and unit model;
+- description-of-work section;
+- parts, mileage, labor, and miscellaneous line items with part number, description, quantity, unit measure, unit cost, and total cost;
+- estimate total separated clearly from line-item details;
+- terms, finance-charge language, or other legal footer text managed as future company/export configuration.
+
+This is future export guidance only. It does not change the current customer-selection workflow, does not create quotes, and does not replace the existing browser print/save-PDF report output.
+
 ![Manager/Admin reports hub](assets/system-wiki/reports-hub.png)
 
 ## Company Configuration
@@ -1166,6 +1183,7 @@ The system currently does not include:
 - client hub workflow;
 - online payments;
 - payment collection;
+- formal service estimate/quote generation;
 - quote approval automation;
 - customer notification automation;
 - new purchasing expansion beyond the existing baseline;
