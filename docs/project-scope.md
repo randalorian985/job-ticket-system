@@ -24,7 +24,7 @@ Core scope:
 - Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket detail uses focused in-page panels for section-based ticket editing, quick notes, photo/file upload, labor review, status changes, archive review, and Add / Request Part actions backed by existing APIs; the recommended action opens the relevant workflow tab in a focused ticket view.
 - On a job ticket, the crane/equipment field means the customer's unit being serviced. It is not a company crane assignment; only employees are assigned to tickets. Component or part details belong in the job scope or service instructions.
-- Manager/Admin Dispatch Board is implemented as the first-class dispatch workflow at `/manage/dispatch`. It provides Unscheduled Jobs, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views; card-level Schedule, Edit Service Equipment, Assign Operator, Assign Crew, Dispatch, Mark En Route, Mark On Site, Start Work, Complete Work, Open Ticket, Finalize Ticket, and Ready for Billing actions; and a focused Schedule Job panel backed by existing job-ticket update, assignment, status, and work-entry APIs.
+- Manager/Admin Dispatch at `/manage/dispatch` is the shared schedule for active job tickets. It provides Unscheduled Tickets, Today, Tomorrow, and Next 7 Days views; one Schedule & Assign panel; and guarded En Route, On Site, Start Work, Complete Work, and Open Ticket actions backed by existing job-ticket update, assignment, status, and work-entry APIs. Completed-work review stays in the ticket workspace, and billing-ready review stays in Reports.
 - Manager/Admin reporting is implemented as a bounded reports hub for the existing reporting domains: invoice/closeout review, job cost summaries, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history. The frontend validates required source IDs, date ranges, and paging values before calling existing report APIs.
 - Reporting UI polish includes clear sections, shared filters, required source-ID validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from currently loaded rows only.
 - Manager/Admin screen cleanup uses distinct report catalog/results, master-data list/editor, and Admin user list/editor states while preserving create/update/archive and account-management outcomes. Admin user management includes client-side account search, role filtering, and active/inactive filtering.
@@ -80,7 +80,7 @@ This planning direction does not approve purchasing expansion, receiving, vendor
 The Manager/Admin service-ticket side should move toward a field-service operations workbench rather than a collection of disconnected forms.
 
 Implemented redesign focus:
-- first-class dispatch board for scheduling, selecting the customer's crane/equipment being serviced, operator/crew assignment, day-of movement, ticket review, and billing-readiness handoff;
+- focused Dispatch board for active-ticket scheduling, selecting the customer's crane/equipment being serviced, operator/crew assignment, and day-of coordination;
 - ticket overview and status/priority clarity;
 - customer, service location, and equipment context near the top of the ticket;
 - technician assignments and scheduling/visit context where existing APIs support it;
@@ -98,7 +98,7 @@ Implemented redesign focus:
 - service-ticket workflow stabilization keeps direct tab/action navigation in the focused `view=workflow` screen, focuses opened action panels, and closes focused drawers when returning to the ticket overview.
 - ticket workflow refinement keeps the same ticket-backed workbench but makes the next action, target workflow, mobile quick actions, and invoice-review closeout requirements more visible.
 
-The current dispatch board is ticket-backed. It does not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or schema migration. En Route and On Site are recorded as ticket work-entry notes until a future approved backend dispatch model exists.
+The current dispatch board is intentionally ticket-backed. It does not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or schema migration. En Route and On Site are recorded as ticket work-entry notes while the ticket remains Assigned.
 
 The design may take inspiration from field-service lifecycle products and dense repair-ticket detail views, but it must be adapted to Crane's actual job-ticket workflow. The intended flow is work queue to ticket workspace to closeout/invoice-ready review.
 

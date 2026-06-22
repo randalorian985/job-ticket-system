@@ -179,7 +179,7 @@ Production go-live should add automated uptime monitoring, log retention, backup
 Before declaring full client production readiness, complete and record human UAT for:
 
 - login and role boundaries;
-- dispatch board scheduling, assignment, day-of movement, ticket review, and ready-for-billing handoff;
+- active-ticket dispatch scheduling, assignment, and guarded day-of movement, with completed-ticket review in the ticket workspace and billing-ready review in Reports;
 - ticket creation, focused ticket editing, status change, labor, note, photo/file, parts, and archive-review flows;
 - reports generation, CSV export, and browser print/save-PDF behavior;
 - purchasing-support baseline actions;

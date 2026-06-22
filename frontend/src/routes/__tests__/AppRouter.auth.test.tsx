@@ -412,7 +412,7 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Dispatch Board' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Create Job Request' })).toHaveAttribute('href', '/manage/job-tickets/new')
+    expect(screen.getByRole('link', { name: 'Create Job Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
   })
 
   it('redirects the unfinished inventory route back to the Manager/Admin dashboard', async () => {

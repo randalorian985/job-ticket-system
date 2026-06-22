@@ -76,8 +76,8 @@ const jobs = [
     serviceLocationId: 's-3',
     serviceLocationName: 'South Site',
     requestedAtUtc: '2026-06-15T13:00:00Z',
-    scheduledStartAtUtc: '2026-06-16T15:00:00Z',
-    dueAtUtc: '2026-06-16T20:00:00Z',
+    scheduledStartAtUtc: '2026-06-17T16:00:00Z',
+    dueAtUtc: '2026-06-17T20:00:00Z',
     equipmentId: 'eq-2',
     equipmentName: 'Crane 90T'
   }
@@ -132,26 +132,34 @@ describe('DispatchBoardPage', () => {
     vi.mocked(jobTicketsApi.addWorkEntry).mockResolvedValue({} as any)
   })
 
-  it('renders first-class dispatch views and job cards with assignment and ticket context', async () => {
+  it('keeps dispatch focused on active ticket scheduling and day-of coordination', async () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Dispatch Board' })).toBeInTheDocument()
-    expect(screen.getByText('This board is ticket-backed. En Route and On Site actions add dispatch history notes while preserving the current ticket status model.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Unscheduled Jobs/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText('Job tickets are the only work records. Dispatch updates their schedule and employee assignments; ticket review and billing stay in their existing workflows.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Unscheduled Tickets/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /Next 7 Days/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Needs Ticket Review/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Ready for Billing/ })).not.toBeInTheDocument()
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Acme · Downtown Yard')).toBeInTheDocument()
     expect(screen.getByText('Job / Scope')).toBeInTheDocument()
     expect(screen.getByText('Crane / Equipment Being Serviced')).toBeInTheDocument()
     expect(screen.queryByText('Assigned Crane')).not.toBeInTheDocument()
     expect(screen.getByText('Operator or crew assignment is missing.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Create Job Request' })).toHaveAttribute('href', '/manage/job-tickets/new')
+    expect(screen.getByRole('link', { name: 'Create Job Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
+    expect(screen.queryByText('Job Request')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mark En Route' })).toBeDisabled()
 
     fireEvent.click(screen.getByRole('button', { name: /Today/ }))
 
     expect(screen.getByText('JT-2')).toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
     expect(screen.getByText('Olivia Operator')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch planning')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Mark En Route' })).toHaveAttribute('title', 'Records an En Route dispatch note on the ticket.')
+    expect(screen.getByText('Assigned')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mark En Route' })).toHaveAttribute('title', 'Records an En Route note on the ticket.')
+    expect(screen.getByRole('button', { name: 'Mark En Route' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Complete Work' })).toBeDisabled()
     expect(screen.getByRole('link', { name: 'Open Ticket' })).toHaveAttribute('href', '/manage/job-tickets/job-2')
   })
 
@@ -159,9 +167,9 @@ describe('DispatchBoardPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule & Assign' }))
 
-    const drawer = screen.getByLabelText('schedule job')
+    const drawer = screen.getByLabelText('schedule and assign ticket')
     const scheduledInput = '2026-06-17T15:00'
     const dueInput = '2026-06-17T21:00'
     fireEvent.change(within(drawer).getByLabelText('Scheduled date/time'), { target: { value: scheduledInput } })
@@ -170,7 +178,7 @@ describe('DispatchBoardPage', () => {
     fireEvent.change(within(drawer).getByLabelText('Operator assignment'), { target: { value: 'emp-1' } })
     fireEvent.click(within(drawer).getByLabelText('Casey Crew'))
     fireEvent.change(within(drawer).getByLabelText('Dispatch notes'), { target: { value: 'Use east gate.' } })
-    fireEvent.click(within(drawer).getByRole('button', { name: 'Save Schedule' }))
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Save Dispatch Plan' }))
 
     await waitFor(() => expect(jobTicketsApi.update).toHaveBeenCalledWith('job-1', expect.objectContaining({
       equipmentId: 'eq-1',
@@ -187,9 +195,9 @@ describe('DispatchBoardPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule & Assign' }))
 
-    const drawer = screen.getByLabelText('schedule job')
+    const drawer = screen.getByLabelText('schedule and assign ticket')
     fireEvent.change(within(drawer).getByLabelText('Scheduled date/time'), { target: { value: '2026-06-17T15:00' } })
     fireEvent.change(within(drawer).getByLabelText('Crane / equipment being serviced'), { target: { value: 'eq-1' } })
     fireEvent.change(within(drawer).getByLabelText('Operator assignment'), { target: { value: 'emp-1' } })
@@ -215,13 +223,12 @@ describe('DispatchBoardPage', () => {
     await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('job-2', { status: 4 }))
   })
 
-  it('surfaces completed work for ticket review and billing readiness', async () => {
+  it('does not duplicate completed-ticket review or billing workflows', async () => {
     renderPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: /Needs Ticket Review/ }))
-    expect(screen.getByText('JT-3')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Finalize Ticket' }))
-
-    await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('job-3', { status: 10 }))
+    fireEvent.click(await screen.findByRole('button', { name: /Today/ }))
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Finalize Ticket' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Ready for Billing' })).not.toBeInTheDocument()
   })
 })
