@@ -133,7 +133,7 @@ public sealed class JobTicketFilesService(ApplicationDbContext dbContext, IFileS
 
             if (jobTicket.EquipmentId.HasValue && jobTicket.EquipmentId.Value != equipment.Id)
             {
-                throw new ValidationException("EquipmentId must match the job ticket equipment when one is assigned.");
+                throw new ValidationException("EquipmentId must match the equipment selected for service on the job ticket.");
             }
 
             if (!jobTicket.EquipmentId.HasValue && jobTicket.ServiceLocationId != equipment.ServiceLocationId)

@@ -145,11 +145,11 @@ export function JobDetailPage() {
           : 'Service location is not selected.'
       },
       {
-        label: 'Equipment assignment',
+        label: 'Equipment being serviced',
         isReady: Boolean(job),
         detail: job?.equipmentId
-          ? `Equipment: ${displayRelatedName(job.equipmentName, 'Equipment details unavailable')}`
-          : 'No equipment is attached for this ticket.'
+          ? `Equipment being serviced: ${displayRelatedName(job.equipmentName, 'Equipment details unavailable')}`
+          : 'No equipment record is listed. Check the job instructions for the component or part being serviced.'
       },
       {
         label: 'Job instructions',
@@ -491,7 +491,7 @@ export function JobDetailPage() {
         <div className="employee-job-context">
           <div><span>Customer</span><strong>{displayRelatedName(job.customerName, 'Customer unavailable')}</strong></div>
           <div><span>Service location</span><strong>{displayRelatedName(job.serviceLocationName, 'Service location unavailable')}</strong></div>
-          <div><span>Equipment</span><strong>{job.equipmentId ? displayRelatedName(job.equipmentName, 'Equipment unavailable') : 'No equipment attached'}</strong></div>
+          <div><span>Equipment Being Serviced</span><strong>{job.equipmentId ? displayRelatedName(job.equipmentName, 'Equipment unavailable') : 'See job instructions'}</strong></div>
           <div><span>Priority</span><strong>{getJobTicketPriorityLabel(job.priority)}</strong></div>
         </div>
         <p className="employee-job-description">{job.description ?? 'No description provided.'}</p>

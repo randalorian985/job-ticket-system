@@ -57,10 +57,11 @@ The feature adds the `CompanyConfigurations` table. It does not change `Customer
 ## Job Ticket Display Fields
 Job-ticket list and detail responses keep relationship IDs for API operations and also include human-readable fields for UI display.
 
-- `JobTicketListItemDto` includes `customerName`, `serviceLocationName`, and optional `equipmentName`.
+- `JobTicketListItemDto` includes `customerName`, `serviceLocationName`, optional `equipmentId`, and optional `equipmentName`.
 - `JobTicketDto` includes `customerName`, `serviceLocationName`, `billingPartyCustomerName`, optional `equipmentName`, optional `equipmentNumber`, and optional `assignedManagerEmployeeName`.
-- Employee and Manager/Admin screens display these labels instead of exposing customer, service-location, equipment, or employee GUIDs.
-- Authorization, schema, migrations, enum values, and write request DTOs are unchanged.
+- `equipmentId` identifies the customer's crane/equipment being serviced on the job ticket. It is not a dispatched crane assignment. Employee assignments remain separate job-ticket assignment records.
+- Employee and Manager/Admin screens display readable labels instead of exposing customer, service-location, equipment, or employee GUIDs.
+- Authorization, schema, migrations, enum values, and write request DTOs are unchanged. The list response adds only the optional service-equipment ID needed to preserve the ticket selection in Dispatch.
 
 ## Dispatch Board
 The Manager/Admin Dispatch Board at `/manage/dispatch` is a frontend workflow over existing APIs.
@@ -78,8 +79,9 @@ Existing APIs used:
 - `GET /api/users/assignable-employees`
 
 Behavior:
-- board views, lifecycle labels, missing-assignment warnings, and same-day crane/operator/crew conflict warnings are frontend-derived from loaded ticket, equipment, and assignment data;
-- scheduling updates the existing ticket schedule/equipment fields;
+- board views, lifecycle labels, missing-assignment warnings, and same-day operator/crew conflict warnings are frontend-derived from loaded ticket and employee-assignment data;
+- scheduling updates the existing ticket schedule and serviced-equipment fields;
+- matching service equipment on more than one ticket is not treated as a dispatch resource conflict;
 - operator assignment uses the existing lead-assignment flag;
 - crew assignment uses existing non-lead ticket assignments;
 - En Route and On Site actions currently record dispatch work-entry notes while preserving existing job-ticket enum values;

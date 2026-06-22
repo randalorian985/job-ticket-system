@@ -88,6 +88,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
                 x.CompletedAtUtc,
                 x.Customer.Name,
                 x.ServiceLocation.LocationName,
+                x.EquipmentId,
                 x.Equipment != null ? x.Equipment.Name : null))
             .ToListAsync(cancellationToken);
     }
@@ -1035,6 +1036,7 @@ public sealed record JobTicketListItemDto(
     DateTime? CompletedAtUtc,
     string CustomerName,
     string ServiceLocationName,
+    Guid? EquipmentId,
     string? EquipmentName);
 
 public sealed record JobTicketDto(

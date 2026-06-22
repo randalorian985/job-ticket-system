@@ -454,7 +454,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('Ticket part added.')).toBeInTheDocument()
   })
 
-  it('treats a no-equipment decision as dispatch-ready when the other requirements are complete', async () => {
+  it('treats a component-only ticket as dispatch-ready when the other requirements are complete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -477,7 +477,7 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Ready for dispatch review')
-    expectRenderedText('this ticket can be dispatched without equipment')
+    expectRenderedText('check the job scope for component-only work')
   })
 
   it('marks completed tickets as outside active dispatch even when detail context is complete', async () => {

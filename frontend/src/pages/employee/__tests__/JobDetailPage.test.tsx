@@ -200,7 +200,7 @@ describe('JobDetailPage', () => {
     expect(within(jobReadiness).getByText('Ticket is available for field work.')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('Customer: Acme Manufacturing')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('Service location: North Plant')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Equipment: Hydraulic Lift 7')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Equipment being serviced: Hydraulic Lift 7')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('Job instructions are available.')).toBeInTheDocument()
     expect(screen.getByText('Job setup is ready for clock-in.')).toBeInTheDocument()
   })

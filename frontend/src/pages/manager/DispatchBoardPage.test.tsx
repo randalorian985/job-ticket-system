@@ -46,6 +46,7 @@ const jobs = [
     requestedAtUtc: '2026-06-17T12:00:00Z',
     scheduledStartAtUtc: null,
     dueAtUtc: null,
+    equipmentId: null,
     equipmentName: null
   },
   {
@@ -61,6 +62,7 @@ const jobs = [
     requestedAtUtc: '2026-06-17T13:00:00Z',
     scheduledStartAtUtc: '2026-06-17T15:00:00Z',
     dueAtUtc: '2026-06-17T20:00:00Z',
+    equipmentId: 'eq-1',
     equipmentName: 'Crane 40T'
   },
   {
@@ -76,6 +78,7 @@ const jobs = [
     requestedAtUtc: '2026-06-15T13:00:00Z',
     scheduledStartAtUtc: '2026-06-16T15:00:00Z',
     dueAtUtc: '2026-06-16T20:00:00Z',
+    equipmentId: 'eq-2',
     equipmentName: 'Crane 90T'
   }
 ]
@@ -119,6 +122,7 @@ describe('DispatchBoardPage', () => {
       requestedAtUtc: '2026-06-17T12:00:00Z',
       scheduledStartAtUtc: null,
       dueAtUtc: null,
+      equipmentId: null,
       internalNotes: null
     } as any)
     vi.mocked(jobTicketsApi.update).mockResolvedValue({} as any)
@@ -137,6 +141,8 @@ describe('DispatchBoardPage', () => {
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('Acme · Downtown Yard')).toBeInTheDocument()
     expect(screen.getByText('Job / Scope')).toBeInTheDocument()
+    expect(screen.getByText('Crane / Equipment Being Serviced')).toBeInTheDocument()
+    expect(screen.queryByText('Assigned Crane')).not.toBeInTheDocument()
     expect(screen.getByText('Operator or crew assignment is missing.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Create Job Request' })).toHaveAttribute('href', '/manage/job-tickets/new')
 
@@ -149,7 +155,7 @@ describe('DispatchBoardPage', () => {
     expect(screen.getByRole('link', { name: 'Open Ticket' })).toHaveAttribute('href', '/manage/job-tickets/job-2')
   })
 
-  it('schedules a job and updates crane, operator, and crew through existing APIs', async () => {
+  it('schedules a job and updates service equipment, operator, and crew through existing APIs', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
@@ -160,7 +166,7 @@ describe('DispatchBoardPage', () => {
     const dueInput = '2026-06-17T21:00'
     fireEvent.change(within(drawer).getByLabelText('Scheduled date/time'), { target: { value: scheduledInput } })
     fireEvent.change(within(drawer).getByLabelText('Due date/time'), { target: { value: dueInput } })
-    fireEvent.change(within(drawer).getByLabelText('Crane assignment'), { target: { value: 'eq-1' } })
+    fireEvent.change(within(drawer).getByLabelText('Crane / equipment being serviced'), { target: { value: 'eq-1' } })
     fireEvent.change(within(drawer).getByLabelText('Operator assignment'), { target: { value: 'emp-1' } })
     fireEvent.click(within(drawer).getByLabelText('Casey Crew'))
     fireEvent.change(within(drawer).getByLabelText('Dispatch notes'), { target: { value: 'Use east gate.' } })
@@ -185,11 +191,12 @@ describe('DispatchBoardPage', () => {
 
     const drawer = screen.getByLabelText('schedule job')
     fireEvent.change(within(drawer).getByLabelText('Scheduled date/time'), { target: { value: '2026-06-17T15:00' } })
-    fireEvent.change(within(drawer).getByLabelText('Crane assignment'), { target: { value: 'eq-1' } })
+    fireEvent.change(within(drawer).getByLabelText('Crane / equipment being serviced'), { target: { value: 'eq-1' } })
     fireEvent.change(within(drawer).getByLabelText('Operator assignment'), { target: { value: 'emp-1' } })
 
     expect(within(drawer).getByText('Olivia Operator is already assigned to another job that day.')).toBeInTheDocument()
-    expect(within(drawer).getByText('Save is allowed with warnings so dispatch can resolve real-world exceptions intentionally.')).toBeInTheDocument()
+    expect(within(drawer).queryByText('Crane/equipment also scheduled on JT-2.')).not.toBeInTheDocument()
+    expect(within(drawer).getByText('Save is allowed with employee scheduling warnings so dispatch can resolve real-world exceptions intentionally.')).toBeInTheDocument()
   })
 
   it('moves day-of dispatch actions from the card without opening ticket detail', async () => {

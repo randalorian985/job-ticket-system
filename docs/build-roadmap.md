@@ -55,9 +55,15 @@ Manager/Admin Section-Based Ticket Editing and Quick Actions was implemented on 
 Manager/Admin Dispatch Board was implemented on June 17, 2026:
 - affected modules: `frontend/src/pages/manager/DispatchBoardPage.tsx`, `frontend/src/pages/manager/dispatchWorkflow.ts`, Manager/Admin routing/navigation, dispatch board tests, shared styles, README, project scope, API contract, roadmap, and client wiki documentation;
 - `/manage/dispatch` is now the first-class dispatch workflow for Unscheduled Jobs, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views;
-- dispatch cards show customer, job site, requested/scheduled timing, job type/title, crane/equipment, operator, crew, dispatch lifecycle label, ticket review label, and conflict/missing-assignment warnings;
-- card-level actions support scheduling, crane/equipment assignment, operator/crew assignment, dispatch notes, day-of status movement, ticket open, ticket finalization, and billing-readiness handoff through existing APIs;
+- dispatch cards show customer, job site, requested/scheduled timing, job type/title, the customer's crane/equipment being serviced, operator, crew, dispatch lifecycle label, ticket review label, and employee conflict/missing-assignment warnings;
+- card-level actions support scheduling, selecting service equipment, operator/crew assignment, dispatch notes, day-of status movement, ticket open, ticket finalization, and billing-readiness handoff through existing APIs;
 - the implementation is ticket-backed and does not add a dispatch-job table, backend enum values, migrations, automatic scheduling, automatic approval, customer-signature API, billing/payment API, purchasing expansion, inventory expansion, recommendation/scoring/AI, or automatic compatibility behavior.
+
+Service-equipment meaning was corrected throughout the active system on June 22, 2026:
+- people are assigned to tickets; the crane/equipment field identifies the customer's unit being serviced;
+- component-only work is described in the ticket job scope or service instructions;
+- Dispatch no longer presents the customer's crane as an assigned resource or raises same-equipment resource conflicts;
+- `JobTicketListItemDto` now includes the optional equipment ID so Dispatch preserves the ticket's service-equipment selection without a schema or write-DTO change.
 
 Manager/Admin Service Ticket Workflow Audit and repair was completed on June 18, 2026:
 - affected modules: `frontend/src/pages/manager/JobTicketDetailPage.tsx`, `frontend/src/pages/manager/JobTicketDetailPage.test.tsx`, shared styles, page/route developer notes, client wiki documentation, and ticket workflow screenshots;

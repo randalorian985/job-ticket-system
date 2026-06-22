@@ -10,7 +10,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Manager/Admin reports are organized into invoice/closeout, labor/parts, and service-history sections with shared filters, source-ID validation, date/paging validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from the currently loaded rows.
 - Manager/Admin screen cleanup separates report catalog/results, master-data list/editor, and Admin user list/editor states into focused screens without changing backend APIs; Admin user management now filters accounts by search, role, and active/inactive status.
 - Manager/Admin job-ticket queue can export the currently visible filtered ticket rows to client-side CSV for dispatch handoff without adding backend export APIs.
-- Manager/Admin Dispatch Board is now a first-class operational screen at `/manage/dispatch`, with Unscheduled, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views. Dispatchers can schedule jobs, assign crane/equipment, assign operator/crew, move day-of work forward, open tickets, and finalize completed tickets using existing ticket, assignment, work-entry, and status APIs.
+- Manager/Admin Dispatch Board is now a first-class operational screen at `/manage/dispatch`, with Unscheduled, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views. Dispatchers can schedule jobs, confirm the customer's crane/equipment being serviced, assign operators/crew, move day-of work forward, open tickets, and finalize completed tickets using existing ticket, employee-assignment, work-entry, and status APIs.
 - Production deployment configuration and readiness runbooks are source-controlled, with explicit migration startup, disabled normal production seed/bootstrap services, health proxying, backup/restore guidance, rollback steps, and client-UAT gates documented.
 - Controlled production-demo readiness is documented with a source-controlled SQL/uploaded-files backup verification script and clear full go-live gates.
 - Labor report totals are labeled as time-entry labor-rate snapshot values and preserve the existing API fallback behavior for legacy entries without captured snapshots.
@@ -35,7 +35,7 @@ The service-ticket side now centers on a coherent field-service operations flow:
 
 This UI direction does not approve external client portals, online payments, quote approval automation, customer notification automation, purchasing expansion, inventory expansion, parts recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
-The Dispatch Board is currently ticket-backed. It does not add a separate dispatch-job table, backend dispatch enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
+The Dispatch Board is currently ticket-backed. A crane/equipment selection identifies the customer's unit being serviced; it is not a dispatched company resource or employee assignment. Specific components or parts being serviced belong in the ticket's job scope and instructions. The board does not add a separate dispatch-job table, backend dispatch enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
 
 ## Scope Boundary
 The project remains centered on the job-ticket workflow:
