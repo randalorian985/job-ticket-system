@@ -10,9 +10,7 @@ import { formatDate } from './managerDisplay'
 import {
   DISPATCH_STATUS,
   getAssignmentName,
-  getDispatchLifecycleStatus,
   getDispatchReadiness,
-  getTicketReviewStatus,
   jobBelongsToDispatchView,
   type DispatchBoardView
 } from './dispatchWorkflow'
@@ -32,13 +30,10 @@ type BoardTab = {
 }
 
 const boardTabs: BoardTab[] = [
-  { value: 'unscheduled', label: 'Unscheduled Jobs' },
+  { value: 'unscheduled', label: 'Unscheduled Tickets' },
   { value: 'today', label: 'Today' },
   { value: 'tomorrow', label: 'Tomorrow' },
-  { value: 'this-week', label: 'This Week' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'needs-ticket-review', label: 'Needs Ticket Review' },
-  { value: 'ready-for-billing', label: 'Ready for Billing' }
+  { value: 'this-week', label: 'Next 7 Days' }
 ]
 
 const toInputDateTime = (value?: string | null) => value ? value.slice(0, 16) : ''
@@ -54,8 +49,8 @@ const buildTicketUpdatePayload = (ticket: JobTicketDto, draft: ScheduleDraft) =>
   description: ticket.description ?? null,
   jobType: ticket.jobType ?? null,
   priority: ticket.priority,
-  status: ticket.status === DISPATCH_STATUS.Draft || ticket.status === DISPATCH_STATUS.Requested
-    ? DISPATCH_STATUS.Scheduled
+  status: ticket.status === DISPATCH_STATUS.Draft || ticket.status === DISPATCH_STATUS.Submitted
+    ? DISPATCH_STATUS.Assigned
     : ticket.status,
   requestedAtUtc: ticket.requestedAtUtc ?? null,
   scheduledStartAtUtc: fromInputDateTime(draft.scheduledStartAtUtc),
@@ -94,7 +89,6 @@ export function DispatchBoardPage() {
   const equipmentById = useMemo(() => Object.fromEntries(equipment.map((item) => [item.id, item])), [equipment])
   const employeesById = useMemo(() => Object.fromEntries(employees.map((item) => [item.id, item])), [employees])
   const selectedJob = useMemo(() => jobs.find((job) => job.id === selectedJobId) ?? null, [jobs, selectedJobId])
-  const selectedAssignments = selectedJob ? assignmentsByJob[selectedJob.id] ?? [] : []
 
   const loadBoard = async () => {
     setIsLoading(true)
@@ -134,9 +128,9 @@ export function DispatchBoardPage() {
     const now = new Date()
     return Object.fromEntries(boardTabs.map((tab) => [
       tab.value,
-      jobs.filter((job) => jobBelongsToDispatchView(tab.value, job, assignmentsByJob[job.id] ?? [], now))
+      jobs.filter((job) => jobBelongsToDispatchView(tab.value, job, now))
     ])) as Record<DispatchBoardView, JobTicketListItemDto[]>
-  }, [assignmentsByJob, jobs])
+  }, [jobs])
 
   const activeJobs = jobsByView[activeView] ?? []
 
@@ -180,7 +174,7 @@ export function DispatchBoardPage() {
     }
 
     if (!scheduleDraft.operatorEmployeeId) {
-      setError('Assign an operator before saving the dispatch schedule.')
+      setError('Assign an operator before saving the dispatch plan.')
       return
     }
 
@@ -206,11 +200,11 @@ export function DispatchBoardPage() {
         }
       }
 
-      setMessage('Dispatch schedule saved.')
+      setMessage('Dispatch plan saved.')
       setSelectedJobId(null)
       await loadBoard()
     } catch {
-      setError('Unable to save the dispatch schedule.')
+      setError('Unable to save the dispatch plan.')
     } finally {
       setIsSaving(false)
     }
@@ -231,7 +225,7 @@ export function DispatchBoardPage() {
       setMessage(successMessage)
       await loadBoard()
     } catch {
-      setError('Unable to update dispatch status.')
+      setError('Unable to update the ticket status.')
     }
   }
 
@@ -240,9 +234,10 @@ export function DispatchBoardPage() {
     const lead = assignments.find((assignment) => assignment.isLead)
     const crew = assignments.filter((assignment) => !assignment.isLead)
     const readiness = getDispatchReadiness(job, assignments, jobs, assignmentsByJob)
-    const lifecycle = getDispatchLifecycleStatus(job, assignments)
     const equipmentName = job.equipmentName ?? (job.id === selectedJob?.id && scheduleDraft.equipmentId ? equipmentById[scheduleDraft.equipmentId]?.name : null)
     const hasWarnings = readiness.conflicts.length > 0 || readiness.missing.length > 0
+    const isReadyForDayOfWork = Boolean(job.scheduledStartAtUtc && lead)
+    const isAssigned = job.status === DISPATCH_STATUS.Assigned
 
     return (
       <article className={`dispatch-job-card${hasWarnings ? ' dispatch-job-card-warning' : ''}`} key={job.id}>
@@ -252,16 +247,16 @@ export function DispatchBoardPage() {
             <h3>{job.title}</h3>
             <p className="muted">{job.customerName ?? 'Customer unavailable'} · {job.serviceLocationName ?? 'Location unavailable'}</p>
           </div>
-          <span className="status-chip">{lifecycle}</span>
+          <span className="status-chip">{getJobTicketStatusLabel(job.status)}</span>
         </div>
         <div className="dispatch-card-grid">
-          <div><span>Requested</span><strong>{formatDate(job.requestedAtUtc)}</strong></div>
+          <div><span>Customer Requested</span><strong>{formatDate(job.requestedAtUtc)}</strong></div>
           <div><span>Scheduled</span><strong>{formatDate(job.scheduledStartAtUtc)}</strong></div>
           <div><span>Job / Scope</span><strong>{job.title}</strong></div>
           <div><span>Crane / Equipment Being Serviced</span><strong>{equipmentName ?? 'See job scope'}</strong></div>
           <div><span>Operator</span><strong>{lead ? getAssignmentName(lead) : 'Unassigned'}</strong></div>
           <div><span>Crew</span><strong>{crew.length ? crew.map(getAssignmentName).join(', ') : 'No crew assigned'}</strong></div>
-          <div><span>Ticket Status</span><strong>{getTicketReviewStatus(job)}</strong></div>
+          <div><span>Priority</span><strong>{getJobTicketPriorityLabel(job.priority)}</strong></div>
         </div>
         {hasWarnings ? (
           <div className="dispatch-warning-panel" role="status">
@@ -271,21 +266,11 @@ export function DispatchBoardPage() {
           <p className="dispatch-ready-line">No employee assignment conflicts or missing dispatch fields are visible.</p>
         )}
         <div className="dispatch-card-actions">
-          <button type="button" className="compact-button" onClick={() => openSchedule(job)}>Schedule</button>
-          <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Edit Service Equipment</button>
-          <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Assign Operator</button>
-          <button type="button" className="compact-button secondary-button" onClick={() => openSchedule(job)}>Assign Crew</button>
-          <button type="button" className="compact-button" disabled={!job.scheduledStartAtUtc || !assignments.length} onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked dispatched.', 'Dispatch update: job dispatched.')}>Dispatch</button>
-          <button type="button" className="compact-button secondary-button" disabled={job.status === DISPATCH_STATUS.Completed || job.status === DISPATCH_STATUS.Invoiced} title="Records an En Route dispatch note on the ticket." onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked en route.', 'Dispatch update: crew en route.')}>Mark En Route</button>
-          <button type="button" className="compact-button secondary-button" disabled={job.status === DISPATCH_STATUS.Completed || job.status === DISPATCH_STATUS.Invoiced} title="Records an On Site dispatch note on the ticket." onClick={() => changeStatus(job, DISPATCH_STATUS.Scheduled, 'Job marked on site.', 'Dispatch update: crew on site.')}>Mark On Site</button>
-          <button type="button" className="compact-button" disabled={!assignments.length} onClick={() => changeStatus(job, DISPATCH_STATUS.InProgress, 'Work started.')}>Start Work</button>
-          <button type="button" className="compact-button" disabled={job.status === DISPATCH_STATUS.Completed || job.status === DISPATCH_STATUS.Invoiced} onClick={() => changeStatus(job, DISPATCH_STATUS.Completed, 'Work completed.')}>Complete Work</button>
-          {job.status === DISPATCH_STATUS.Completed ? (
-            <button type="button" className="compact-button" onClick={() => changeStatus(job, DISPATCH_STATUS.Reviewed, 'Ticket finalized for billing review.')}>Finalize Ticket</button>
-          ) : null}
-          {job.status === DISPATCH_STATUS.Reviewed ? (
-            <Link className="button-link compact-button" to={`/manage/reports`}>Ready for Billing</Link>
-          ) : null}
+          <button type="button" className="compact-button" onClick={() => openSchedule(job)}>Schedule &amp; Assign</button>
+          <button type="button" className="compact-button secondary-button" disabled={!isAssigned || !isReadyForDayOfWork} title="Records an En Route note on the ticket." onClick={() => changeStatus(job, DISPATCH_STATUS.Assigned, 'Crew marked en route.', 'Dispatch update: crew en route.')}>Mark En Route</button>
+          <button type="button" className="compact-button secondary-button" disabled={!isAssigned || !isReadyForDayOfWork} title="Records an On Site note on the ticket." onClick={() => changeStatus(job, DISPATCH_STATUS.Assigned, 'Crew marked on site.', 'Dispatch update: crew on site.')}>Mark On Site</button>
+          <button type="button" className="compact-button" disabled={!isAssigned || !isReadyForDayOfWork} onClick={() => changeStatus(job, DISPATCH_STATUS.InProgress, 'Work started.')}>Start Work</button>
+          <button type="button" className="compact-button" disabled={job.status !== DISPATCH_STATUS.InProgress} onClick={() => changeStatus(job, DISPATCH_STATUS.Completed, 'Work completed.')}>Complete Work</button>
           <Link className="button-link secondary-link compact-button" to={`/manage/job-tickets/${job.id}`}>Open Ticket</Link>
         </div>
       </article>
@@ -298,18 +283,13 @@ export function DispatchBoardPage() {
         <div>
           <p className="eyebrow">Manager/Admin Dispatch</p>
           <h2>Dispatch Board</h2>
-          <p className="muted">Schedule jobs, confirm the crane or equipment being serviced, assign operators and crew, move day-of work forward, and open ticket review without starting from the ticket detail screen.</p>
+          <p className="muted">Plan active tickets and coordinate today's field work.</p>
         </div>
-        <Link className="button-link" to="/manage/job-tickets/new">Create Job Request</Link>
+        <Link className="button-link" to="/manage/job-tickets/new">Create Job Ticket</Link>
       </header>
 
-      <section className="dispatch-lifecycle-strip" aria-label="dispatch lifecycle">
-        {['Job Request', 'Review / Estimate', 'Schedule', 'Confirm Service Equipment', 'Assign Operator / Crew', 'Dispatch', 'En Route', 'On Site', 'In Progress', 'Work Complete', 'Ticket Review', 'Ready for Billing'].map((step) => (
-          <span key={step}>{step}</span>
-        ))}
-      </section>
       <p className="muted dispatch-board-note">
-        This board is ticket-backed. En Route and On Site actions add dispatch history notes while preserving the current ticket status model.
+        Job tickets are the only work records. Dispatch updates their schedule and employee assignments; ticket review and billing stay in their existing workflows.
       </p>
 
       <nav className="dispatch-board-tabs" aria-label="dispatch board views">
@@ -330,25 +310,25 @@ export function DispatchBoardPage() {
       {message ? <p className="success" role="status">{message}</p> : null}
       {error ? <p className="error" role="alert">{error}</p> : null}
       {isLoading ? <p className="muted" role="status">Loading dispatch board...</p> : null}
-      {!isLoading && !activeJobs.length ? <p className="empty-state">No jobs are in this dispatch view.</p> : null}
+      {!isLoading && !activeJobs.length ? <p className="empty-state">No tickets are in this dispatch view.</p> : null}
 
-      <section className="dispatch-card-list" aria-label={`${boardTabs.find((tab) => tab.value === activeView)?.label ?? 'Dispatch'} jobs`}>
+      <section className="dispatch-card-list" aria-label={`${boardTabs.find((tab) => tab.value === activeView)?.label ?? 'Dispatch'} tickets`}>
         {activeJobs.map(renderJobCard)}
       </section>
 
       {selectedJob ? (
-        <section className="dispatch-schedule-drawer" aria-label="schedule job">
+        <section className="dispatch-schedule-drawer" aria-label="schedule and assign ticket">
           <div className="dispatch-schedule-panel">
             <div className="workbench-panel-heading">
               <div>
-                <h3>Schedule Job</h3>
+                <h3>Schedule &amp; Assign Ticket</h3>
                 <p className="muted">{selectedJob.ticketNumber} · {selectedJob.customerName ?? 'Customer unavailable'} · {selectedJob.serviceLocationName ?? 'Location unavailable'}</p>
               </div>
               <button type="button" className="secondary-button" onClick={closeSchedule}>Cancel</button>
             </div>
             <form className="stack" onSubmit={saveSchedule}>
               <div className="dispatch-schedule-grid">
-                <label>Requested date/time<input value={toInputDateTime(selectedJob.requestedAtUtc)} readOnly /></label>
+                <label>Customer requested date/time<input value={toInputDateTime(selectedJob.requestedAtUtc)} readOnly /></label>
                 <label>Scheduled date/time<input type="datetime-local" value={scheduleDraft.scheduledStartAtUtc} onChange={(event) => setScheduleDraft({ ...scheduleDraft, scheduledStartAtUtc: event.target.value })} required /></label>
                 <label>Due date/time<input type="datetime-local" value={scheduleDraft.dueAtUtc} onChange={(event) => setScheduleDraft({ ...scheduleDraft, dueAtUtc: event.target.value })} /></label>
                 <label>Crane / equipment being serviced<select value={scheduleDraft.equipmentId} onChange={(event) => setScheduleDraft({ ...scheduleDraft, equipmentId: event.target.value })}>
@@ -389,7 +369,7 @@ export function DispatchBoardPage() {
               </div>
               <div className="section-editor-save-row">
                 <span className="muted">Existing ticket data is preserved; schedule, service equipment, operator, crew, and notes are updated through current ticket APIs.</span>
-                <button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Schedule'}</button>
+                <button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Dispatch Plan'}</button>
               </div>
             </form>
           </div>

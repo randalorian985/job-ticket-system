@@ -2300,34 +2300,13 @@ td {
   margin-bottom: 0.25rem;
 }
 
-.dispatch-lifecycle-strip {
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  display: flex;
-  gap: 0.45rem;
-  overflow-x: auto;
-  padding: 0.65rem;
-}
-
-.dispatch-lifecycle-strip span {
-  background: #f2f5fa;
-  border: 1px solid #d7dee8;
-  border-radius: 999px;
-  color: #334155;
-  flex: 0 0 auto;
-  font-size: 0.78rem;
-  font-weight: 850;
-  padding: 0.38rem 0.6rem;
-}
-
 .dispatch-board-tabs {
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
   gap: 0.45rem;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   padding: 0.55rem;
 }
 

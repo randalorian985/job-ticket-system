@@ -79,15 +79,18 @@ Existing APIs used:
 - `GET /api/users/assignable-employees`
 
 Behavior:
-- board views, lifecycle labels, missing-assignment warnings, and same-day operator/crew conflict warnings are frontend-derived from loaded ticket and employee-assignment data;
-- scheduling updates the existing ticket schedule and serviced-equipment fields;
+- Unscheduled Tickets, Today, Tomorrow, and Next 7 Days views are frontend-derived from loaded ticket data and exclude Completed, Cancelled, Reviewed, and Invoiced tickets;
+- the board displays existing job-ticket status labels instead of a separate dispatch lifecycle;
+- Schedule & Assign updates the existing ticket schedule, serviced-equipment, lead-operator, crew, due-date, and notes data;
+- saving a Draft or Submitted ticket with a schedule and lead operator changes its existing status to Assigned;
 - matching service equipment on more than one ticket is not treated as a dispatch resource conflict;
 - operator assignment uses the existing lead-assignment flag;
 - crew assignment uses existing non-lead ticket assignments;
-- En Route and On Site actions currently record dispatch work-entry notes while preserving existing job-ticket enum values;
-- Start Work, Complete Work, Finalize Ticket, and Invoiced/Ready-for-Billing handoff use existing job-ticket status values.
+- En Route and On Site require an Assigned ticket with a schedule and lead operator, then record work-entry notes while preserving the Assigned status;
+- Start Work changes Assigned to In Progress, and Complete Work changes In Progress to Completed;
+- ticket review/finalization and billing-ready review remain in the existing ticket workspace and Reports workflows.
 
-This does not add a backend dispatch-job API, backend dispatch status enum, schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
+This does not add a backend dispatch-job record or API, backend dispatch status enum, schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
 
 ## Manager/Admin Master Data
 Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the already-documented DTO fields for customer contact/account details, service-location status/address/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.

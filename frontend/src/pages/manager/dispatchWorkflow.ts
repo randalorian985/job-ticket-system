@@ -2,10 +2,11 @@ import type { JobTicketAssignmentDto, JobTicketListItemDto } from '../../types'
 
 export const DISPATCH_STATUS = {
   Draft: 1,
-  Requested: 2,
-  Scheduled: 3,
+  Submitted: 2,
+  Assigned: 3,
   InProgress: 4,
   Completed: 7,
+  Cancelled: 8,
   Invoiced: 9,
   Reviewed: 10
 } as const
@@ -15,23 +16,6 @@ export type DispatchBoardView =
   | 'today'
   | 'tomorrow'
   | 'this-week'
-  | 'completed'
-  | 'needs-ticket-review'
-  | 'ready-for-billing'
-
-export type DispatchLifecycleStatus =
-  | 'Requested'
-  | 'Needs Scheduling'
-  | 'Scheduled'
-  | 'Dispatched'
-  | 'En Route'
-  | 'On Site'
-  | 'In Progress'
-  | 'Work Complete'
-  | 'Ticket In Review'
-  | 'Ticket Finalized'
-  | 'Ready for Billing'
-  | 'Invoiced'
 
 export type DispatchReadiness = {
   conflicts: string[]
@@ -39,6 +23,13 @@ export type DispatchReadiness = {
 }
 
 const startOfDay = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate())
+
+const inactiveDispatchStatuses = new Set<number>([
+  DISPATCH_STATUS.Completed,
+  DISPATCH_STATUS.Cancelled,
+  DISPATCH_STATUS.Invoiced,
+  DISPATCH_STATUS.Reviewed
+])
 
 const sameDay = (left: Date, right: Date) => startOfDay(left).getTime() === startOfDay(right).getTime()
 
@@ -51,25 +42,6 @@ const isWithinThisWeek = (value: Date, now: Date) => {
 
 export const getAssignmentName = (assignment: JobTicketAssignmentDto) =>
   assignment.employeeName?.trim() || 'Employee unavailable'
-
-export const getDispatchLifecycleStatus = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[]): DispatchLifecycleStatus => {
-  if (job.status === DISPATCH_STATUS.Invoiced) return 'Invoiced'
-  if (job.status === DISPATCH_STATUS.Reviewed) return 'Ticket Finalized'
-  if (job.status === DISPATCH_STATUS.Completed) return 'Work Complete'
-  if (job.status === DISPATCH_STATUS.InProgress) return 'In Progress'
-  if (job.status === DISPATCH_STATUS.Scheduled && job.scheduledStartAtUtc && assignments.length) return 'Dispatched'
-  if (job.scheduledStartAtUtc) return 'Scheduled'
-  if (job.status === DISPATCH_STATUS.Draft || job.status === DISPATCH_STATUS.Requested) return 'Needs Scheduling'
-  return 'Requested'
-}
-
-export const getTicketReviewStatus = (job: JobTicketListItemDto) => {
-  if (job.status === DISPATCH_STATUS.Invoiced) return 'Invoiced'
-  if (job.status === DISPATCH_STATUS.Reviewed) return 'Ticket finalized'
-  if (job.status === DISPATCH_STATUS.Completed) return 'Needs ticket review'
-  if (job.status === DISPATCH_STATUS.InProgress) return 'Field work active'
-  return 'Dispatch planning'
-}
 
 export const getDispatchReadiness = (
   job: JobTicketListItemDto,
@@ -95,7 +67,7 @@ export const getDispatchReadiness = (
   const scheduledDay = startOfDay(scheduledStart).getTime()
   const activeConflictingJobs = allJobs.filter((candidate) => {
     if (candidate.id === job.id || !candidate.scheduledStartAtUtc) return false
-    if ([DISPATCH_STATUS.Completed, DISPATCH_STATUS.Invoiced].includes(candidate.status as 7 | 9)) return false
+    if (inactiveDispatchStatuses.has(candidate.status)) return false
     return startOfDay(new Date(candidate.scheduledStartAtUtc)).getTime() === scheduledDay
   })
 
@@ -119,29 +91,22 @@ export const getDispatchReadiness = (
 export const jobBelongsToDispatchView = (
   view: DispatchBoardView,
   job: JobTicketListItemDto,
-  assignments: JobTicketAssignmentDto[],
   now = new Date()
 ) => {
   const scheduled = job.scheduledStartAtUtc ? new Date(job.scheduledStartAtUtc) : null
-  const lifecycleStatus = getDispatchLifecycleStatus(job, assignments)
+  const isActive = !inactiveDispatchStatuses.has(job.status)
   const tomorrow = new Date(startOfDay(now))
   tomorrow.setDate(tomorrow.getDate() + 1)
 
   switch (view) {
     case 'unscheduled':
-      return !scheduled && job.status !== DISPATCH_STATUS.Completed && job.status !== DISPATCH_STATUS.Invoiced
+      return !scheduled && isActive
     case 'today':
-      return Boolean(scheduled && sameDay(scheduled, now) && job.status !== DISPATCH_STATUS.Completed && job.status !== DISPATCH_STATUS.Invoiced)
+      return Boolean(scheduled && sameDay(scheduled, now) && isActive)
     case 'tomorrow':
-      return Boolean(scheduled && sameDay(scheduled, tomorrow) && job.status !== DISPATCH_STATUS.Completed && job.status !== DISPATCH_STATUS.Invoiced)
+      return Boolean(scheduled && sameDay(scheduled, tomorrow) && isActive)
     case 'this-week':
-      return Boolean(scheduled && isWithinThisWeek(scheduled, now) && job.status !== DISPATCH_STATUS.Completed && job.status !== DISPATCH_STATUS.Invoiced)
-    case 'completed':
-      return lifecycleStatus === 'Work Complete' || lifecycleStatus === 'Ticket Finalized' || lifecycleStatus === 'Invoiced'
-    case 'needs-ticket-review':
-      return job.status === DISPATCH_STATUS.Completed
-    case 'ready-for-billing':
-      return job.status === DISPATCH_STATUS.Reviewed
+      return Boolean(scheduled && isWithinThisWeek(scheduled, now) && isActive)
     default:
       return true
   }
