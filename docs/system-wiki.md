@@ -17,12 +17,13 @@ Screenshots in this wiki are captured from the demo/pilot environment. They are 
 For a first client walkthrough, use this order:
 
 1. Start with [Roles And Access](#roles-and-access) so users understand what each account type can do.
-2. Review [Sign-In And Session Behavior](#sign-in-and-session-behavior).
-3. Walk technicians through [Employee Workflow](#employee-workflow).
-4. Walk office staff through [Manager/Admin Workspace](#manageradmin-workspace).
-5. Review [Time Tracking And Approval](#time-tracking-and-approval), [Parts And Part Requests](#parts-and-part-requests), and [Reports](#reports).
-6. Review [Production Demo Operations](#production-demo-operations) before a VPS-backed client demo.
-7. Finish with [Current Scope Boundaries](#current-scope-boundaries) so the client knows what is intentionally not included.
+2. Confirm [Company Configuration](#company-configuration) before showing branded UI or report output.
+3. Review [Sign-In And Session Behavior](#sign-in-and-session-behavior).
+4. Walk technicians through [Employee Workflow](#employee-workflow).
+5. Walk office staff through [Manager/Admin Workspace](#manageradmin-workspace).
+6. Review [Time Tracking And Approval](#time-tracking-and-approval), [Parts And Part Requests](#parts-and-part-requests), and [Reports](#reports).
+7. Review [Production Demo Operations](#production-demo-operations) before a VPS-backed client demo.
+8. Finish with [Current Scope Boundaries](#current-scope-boundaries) so the client knows what is intentionally not included.
 
 For live training, use the [Client Training Checklist](#client-training-checklist) near the end of this wiki.
 
@@ -106,6 +107,7 @@ Manager users cannot:
 Admins have Manager capabilities plus user administration.
 
 Admin users can:
+- manage Company Configuration for the crane company's own logo, profile, and colors;
 - create user accounts;
 - edit user account information;
 - deactivate/archive users;
@@ -140,6 +142,7 @@ Admin users can:
 - `/manage/time-approval`: time approval queue.
 - `/manage/parts-approval`: parts approval workflow.
 - `/manage/reports`: reports hub.
+- `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
 - `/manage/users`: Admin-only user management.
 
 ## Production Demo Operations
@@ -1005,6 +1008,7 @@ From generated report results, users can:
 Important reporting boundaries:
 - PDF output uses the browser print dialog.
 - CSV export is generated in the browser from currently loaded rows and includes report metadata at the top of the file.
+- Company Configuration details appear in report print/save-PDF headers and CSV metadata when saved.
 - Empty reports do not expose CSV or print/save-PDF actions.
 - The system does not generate invoices.
 - The system does not collect payments.
@@ -1012,6 +1016,38 @@ Important reporting boundaries:
 - The system does not run server-side reporting jobs.
 
 ![Manager/Admin reports hub](assets/system-wiki/reports-hub.png)
+
+## Company Configuration
+
+Company Configuration is Admin-only and represents the crane company's own identity. It is not the customer/account record used when choosing who work is for on a job ticket.
+
+Admin-only access:
+- `/manage/company-configuration`
+
+Admins can manage:
+- company name and legal name;
+- primary contact;
+- phone, email, and website;
+- address;
+- company logo;
+- primary, secondary, and accent colors.
+
+Company Configuration is used by:
+- the login screen brand area;
+- the Manager/Admin shell header;
+- generated report print/save-PDF headers;
+- generated report CSV metadata;
+- shared UI brand color variables.
+
+Logo upload accepts JPG/JPEG, PNG, and WebP images up to 2 MB. The upload path validates file extension, content type, size, and image signature before storing the file.
+
+Customer records remain separate. The Customers screen and job-ticket customer, billing-party customer, service-location, and equipment selections continue to represent the customer or account receiving the work.
+
+API summary:
+- `GET /api/company-configuration`: public branding/profile read for the UI.
+- `PUT /api/company-configuration`: Admin-only profile and color update.
+- `POST /api/company-configuration/logo`: Admin-only logo upload.
+- `GET /api/company-configuration/logo`: public logo stream when a logo exists.
 
 ## Admin User Management
 

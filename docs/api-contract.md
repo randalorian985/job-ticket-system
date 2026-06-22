@@ -6,9 +6,12 @@
 ## Public Endpoints
 - `GET /health` is public and unauthenticated.
 - `GET /api/system/info` is public and unauthenticated.
+- `GET /api/company-configuration` is public and unauthenticated so the UI can apply company branding before sign-in.
+- `GET /api/company-configuration/logo` is public and unauthenticated when a logo has been uploaded.
 
 ## Implemented API Groups
 - Authentication (`/api/auth/*`)
+- Company configuration and branding (`/api/company-configuration/*`)
 - User management (`/api/users/*`)
 - Assignable employee lookup (`/api/users/assignable-employees`)
 - Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)
@@ -21,6 +24,35 @@
 - Parts request workflow Phase 2 (`/api/part-requests/*`)
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
 - Inventory API foundation (`/api/inventory/*`, currently hidden from Manager/Admin navigation and client wiki)
+
+## Company Configuration And Branding
+Company Configuration stores the crane company's own profile, logo, and color scheme. It is separate from customer/account master data used to identify who the work is for.
+
+Endpoints:
+- `GET /api/company-configuration`
+  - Authorization: public.
+  - Returns `CompanyConfigurationDto`.
+  - Used by the UI shell, login screen, report preview, and client-side exports.
+- `PUT /api/company-configuration`
+  - Authorization: `AdminOnly`.
+  - Request DTO: `UpdateCompanyConfigurationDto`.
+  - Creates or updates the singleton company profile row.
+- `POST /api/company-configuration/logo`
+  - Authorization: `AdminOnly`.
+  - Request: multipart form file field named `file`.
+  - Accepts JPG/JPEG, PNG, or WebP images up to 2 MB.
+  - Validates extension, content type, file size, and file signature before storage.
+- `GET /api/company-configuration/logo`
+  - Authorization: public.
+  - Streams the uploaded logo or returns `404 Not Found` when no logo is available.
+
+`CompanyConfigurationDto` includes:
+- company profile fields: `companyName`, `legalName`, `contactName`, `email`, `phone`, `website`, address fields;
+- brand fields: `primaryColor`, `secondaryColor`, `accentColor`;
+- logo metadata: `hasLogo`, original file name, content type, file size, upload time;
+- audit timestamps.
+
+The feature adds the `CompanyConfigurations` table. It does not change `Customers`, customer selection, job-ticket customer/billing-party fields, service-location relationships, or master-data customer APIs.
 
 ## Job Ticket Display Fields
 Job-ticket list and detail responses keep relationship IDs for API operations and also include human-readable fields for UI display.
@@ -181,6 +213,7 @@ Endpoints:
 Client export behavior:
 - Print/save-PDF uses the browser print dialog from the generated report results screen.
 - CSV is produced in the Manager/Admin frontend from the rows currently loaded in the browser.
+- Company Configuration profile details are included in generated report headers and CSV metadata when available.
 - CSV values use raw DTO values and report labels, not localized display formatting.
 - Empty reports do not expose CSV or print/save-PDF export actions.
 - The frontend validates required source IDs, date ranges, and paging values before calling these existing report endpoints. This does not add a server-side export, reporting job, or new reporting API.
@@ -336,6 +369,7 @@ This section documents the existing inventory API foundation only. It does not a
 ## Protected Boundaries
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
+- `/manage/company-configuration` remains Admin-only.
 - User-management endpoints under `/api/users` remain Admin-only except for the narrow Manager/Admin `GET /api/users/assignable-employees` lookup documented above.
 - Admin user-management list search and role/status filters are frontend-only over the loaded `/api/users` results; they do not add query parameters or new user-management endpoints.
 - No backend enum numeric values are changed.

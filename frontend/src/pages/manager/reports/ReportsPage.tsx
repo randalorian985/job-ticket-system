@@ -5,6 +5,7 @@ import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { masterDataApi } from '../../../api/masterDataApi'
 import { reportsApi } from '../../../api/reportsApi'
 import { usersApi } from '../../../api/usersApi'
+import { useCompanyBranding } from '../../../features/companyBranding/CompanyBrandingContext'
 import { csvDataUri, escapeCsvValue, toCsv, type CsvColumn } from '../../../utils/csv'
 import type {
   AssignableEmployeeDto,
@@ -377,12 +378,16 @@ const reportCsvWithMetadata = (
   title: string,
   generatedAt: string | null,
   filterSummary: string,
+  companyName: string,
+  companyDetails: string[],
   rows: ReportRow[],
   columns: Array<ReportColumn<ReportRow>>
 ) => {
   if (!rows.length || !columns.length) return ''
 
   const metadataRows = [
+    ['Company', companyName],
+    ['Company details', companyDetails.join(' | ')],
     ['Report', title],
     ['Generated', generatedAt ?? ''],
     ['Applied scope', filterSummary],
@@ -394,6 +399,12 @@ const reportCsvWithMetadata = (
 }
 
 export function ReportsPage() {
+  const {
+    configuration: companyConfiguration,
+    logoUrl: companyLogoUrl,
+    initials: companyInitials,
+    addressLines: companyAddressLines
+  } = useCompanyBranding()
   const savedDefaults = useMemo(readSavedReportDefaults, [])
   const [activeScreen, setActiveScreen] = useState<'catalog' | 'results'>('catalog')
   const [filtersByMode, setFiltersByMode] = useState<ReportFiltersByMode>(savedDefaults.filtersByMode ?? {})
@@ -619,8 +630,21 @@ export function ReportsPage() {
     [customerLabelById, employeeLabelById, filtersByMode, mode, serviceLocationLabelById, sourceLabel]
   )
   const csv = useMemo(
-    () => reportCsvWithMetadata(title, generatedAt, filterSummary, rows, columns as Array<ReportColumn<ReportRow>>),
-    [columns, filterSummary, generatedAt, rows, title]
+    () => reportCsvWithMetadata(
+      title,
+      generatedAt,
+      filterSummary,
+      companyConfiguration.companyName,
+      [
+        ...companyAddressLines,
+        companyConfiguration.phone,
+        companyConfiguration.email,
+        companyConfiguration.website
+      ].filter((line): line is string => Boolean(line)),
+      rows,
+      columns as Array<ReportColumn<ReportRow>>
+    ),
+    [columns, companyAddressLines, companyConfiguration.companyName, companyConfiguration.email, companyConfiguration.phone, companyConfiguration.website, filterSummary, generatedAt, rows, title]
   )
   const csvHref = useMemo(() => csvDataUri(csv), [csv])
 
@@ -990,6 +1014,24 @@ export function ReportsPage() {
             <div>
               <span>Generated</span>
               <strong>{generatedAt ?? 'Pending'}</strong>
+            </div>
+          </div>
+        ) : null}
+        {mode ? (
+          <div className="report-company-branding">
+            {companyLogoUrl ? (
+              <img src={companyLogoUrl} alt={`${companyConfiguration.companyName} logo`} />
+            ) : (
+              <span className="product-mark" aria-hidden="true">{companyInitials}</span>
+            )}
+            <div>
+              <strong>{companyConfiguration.companyName}</strong>
+              <span>{[
+                ...companyAddressLines,
+                companyConfiguration.phone,
+                companyConfiguration.email,
+                companyConfiguration.website
+              ].filter(Boolean).join(' | ')}</span>
             </div>
           </div>
         ) : null}

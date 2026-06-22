@@ -6,6 +6,50 @@ export type SystemInfoDto = {
   version: string
 }
 
+export type CompanyConfigurationDto = {
+  id: string
+  companyName: string
+  legalName?: string | null
+  contactName?: string | null
+  email?: string | null
+  phone?: string | null
+  website?: string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  state?: string | null
+  postalCode?: string | null
+  country?: string | null
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string
+  hasLogo: boolean
+  logoOriginalFileName?: string | null
+  logoContentType?: string | null
+  logoFileSizeBytes?: number | null
+  logoUploadedAtUtc?: string | null
+  createdAtUtc?: string | null
+  updatedAtUtc?: string | null
+}
+
+export type UpdateCompanyConfigurationDto = {
+  companyName: string
+  legalName?: string | null
+  contactName?: string | null
+  email?: string | null
+  phone?: string | null
+  website?: string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  state?: string | null
+  postalCode?: string | null
+  country?: string | null
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string
+}
+
 export type ApiValidationError = {
   error?: string
   errors?: Record<string, string[]>

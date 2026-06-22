@@ -8,6 +8,10 @@
   --brand: #3157c8;
   --brand-strong: #24449f;
   --brand-soft: #edf2ff;
+  --brand-contrast: #ffffff;
+  --company-primary: #3157c8;
+  --company-secondary: #172033;
+  --company-accent: #087f5b;
   --success: #087f5b;
   --warning-strong: #9a6700;
   --danger: #b4234d;
@@ -168,6 +172,7 @@ button,
   border: 1px solid var(--brand);
   border-radius: 6px;
   box-shadow: none;
+  color: var(--brand-contrast);
   font-size: 0.86rem;
   font-weight: 750;
   min-height: 2.35rem;
@@ -319,7 +324,7 @@ td button {
 .manager-nav-menu-panel .active-nav-link {
   background: var(--brand);
   border-color: var(--brand);
-  color: #ffffff;
+  color: var(--brand-contrast);
 }
 
 .manager-nav-menu {
@@ -650,6 +655,45 @@ td button {
   color: var(--text-strong);
   font-size: 0.9rem;
   font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.report-company-branding {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d9e2ef;
+  border-left: 0.35rem solid var(--brand);
+  border-radius: 8px;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+}
+
+.report-company-branding img {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 7px;
+  flex: 0 0 3rem;
+  height: 3rem;
+  object-fit: contain;
+  padding: 0.2rem;
+  width: 3rem;
+}
+
+.report-company-branding div {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.report-company-branding strong {
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.report-company-branding span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
   overflow-wrap: anywhere;
 }
 
@@ -1092,17 +1136,56 @@ tbody tr:hover td {
   font-size: 1.45rem;
 }
 
+.login-logo {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 7px;
+  flex: 0 0 3rem;
+  height: 3rem;
+  object-fit: contain;
+  padding: 0.25rem;
+  width: 3rem;
+}
+
 .product-mark {
   align-items: center;
   background: var(--brand);
   border-radius: 7px;
-  color: #ffffff;
+  color: var(--brand-contrast);
   display: inline-flex;
   flex: 0 0 3rem;
   font-size: 1rem;
   font-weight: 900;
   height: 3rem;
   justify-content: center;
+}
+
+.company-brand-lockup {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.company-brand-lockup img {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 7px;
+  flex: 0 0 3rem;
+  height: 3rem;
+  object-fit: contain;
+  padding: 0.25rem;
+  width: 3rem;
+}
+
+.company-brand-lockup > div {
+  min-width: 0;
+}
+
+.company-brand-lockup h1,
+.company-brand-lockup h2,
+.company-brand-lockup h3 {
+  overflow-wrap: anywhere;
 }
 
 .login-submit {
@@ -1358,6 +1441,11 @@ tbody tr:hover td {
 }
 
 @media print {
+  .report-company-branding {
+    border-color: #cfd8e3;
+    break-inside: avoid;
+  }
+
   .report-result-meta {
     display: none;
   }

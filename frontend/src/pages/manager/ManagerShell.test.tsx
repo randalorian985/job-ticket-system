@@ -30,6 +30,7 @@ describe('ManagerShell', () => {
             <Route path="job-tickets/:jobTicketId" element={<p>Ticket detail page</p>} />
             <Route path="reports" element={<p>Reports page</p>} />
             <Route path="wiki" element={<p>Wiki page</p>} />
+            <Route path="company-configuration" element={<p>Company configuration page</p>} />
             <Route path="users" element={<p>Users page</p>} />
           </Route>
         </Routes>
@@ -61,6 +62,7 @@ describe('ManagerShell', () => {
   it('keeps admin-only navigation out of the manager section picker', () => {
     renderShell('/manage')
 
+    expect(screen.queryByRole('option', { name: 'Company Configuration' })).not.toBeInTheDocument()
     expect(screen.queryByRole('option', { name: 'Users' })).not.toBeInTheDocument()
     expect(screen.queryByText('Admin')).not.toBeInTheDocument()
   })
@@ -74,6 +76,7 @@ describe('ManagerShell', () => {
     renderShell('/manage/users')
 
     const sectionPicker = screen.getByLabelText('Manager section navigation')
+    expect(screen.getByRole('option', { name: 'Company Configuration' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Users' })).toBeInTheDocument()
     expect(sectionPicker).toHaveValue('/manage/users')
     expect(screen.getByText('Admin')).toBeInTheDocument()

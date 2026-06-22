@@ -4,7 +4,35 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace JobTicketSystem.Infrastructure.Persistence.Configurations;
 
-public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
+public sealed class CompanyConfigurationEntityConfiguration : IEntityTypeConfiguration<CompanyConfiguration>
+{
+    public void Configure(EntityTypeBuilder<CompanyConfiguration> builder)
+    {
+        builder.ConfigureAuditableEntity();
+        builder.Property(x => x.CompanyName).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.LegalName).HasMaxLength(200);
+        builder.Property(x => x.ContactName).HasMaxLength(200);
+        builder.Property(x => x.Email).HasMaxLength(320);
+        builder.Property(x => x.Phone).HasMaxLength(50);
+        builder.Property(x => x.Website).HasMaxLength(300);
+        builder.Property(x => x.AddressLine1).HasMaxLength(200);
+        builder.Property(x => x.AddressLine2).HasMaxLength(200);
+        builder.Property(x => x.City).HasMaxLength(100);
+        builder.Property(x => x.State).HasMaxLength(100);
+        builder.Property(x => x.PostalCode).HasMaxLength(20);
+        builder.Property(x => x.Country).HasMaxLength(100);
+        builder.Property(x => x.PrimaryColor).HasMaxLength(7).HasDefaultValue("#3157C8").IsRequired();
+        builder.Property(x => x.SecondaryColor).HasMaxLength(7).HasDefaultValue("#172033").IsRequired();
+        builder.Property(x => x.AccentColor).HasMaxLength(7).HasDefaultValue("#087F5B").IsRequired();
+        builder.Property(x => x.LogoStorageKey).HasMaxLength(1000);
+        builder.Property(x => x.LogoOriginalFileName).HasMaxLength(255);
+        builder.Property(x => x.LogoContentType).HasMaxLength(150);
+        builder.Property(x => x.LogoFileExtension).HasMaxLength(20);
+        builder.HasIndex(x => x.UpdatedAtUtc);
+    }
+}
+
+public sealed class CustomerEntityConfiguration : IEntityTypeConfiguration<Customer>
 {
     public void Configure(EntityTypeBuilder<Customer> builder)
     {

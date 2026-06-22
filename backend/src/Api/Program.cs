@@ -5,6 +5,7 @@ using JobTicketSystem.Api.Pilot;
 using JobTicketSystem.Api.Production;
 using JobTicketSystem.Api.TestEnvironment;
 using JobTicketSystem.Application.Auth;
+using JobTicketSystem.Application.CompanyConfiguration;
 using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.MasterData;
@@ -87,6 +88,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<ICompanyConfigurationService, CompanyConfigurationService>();
 builder.Services.AddScoped<ITestEnvironmentBootstrapService, TestEnvironmentBootstrapService>();
 builder.Services.AddScoped<ICustomersService, CustomersService>();
 builder.Services.AddScoped<IServiceLocationsService, ServiceLocationsService>();

@@ -207,7 +207,7 @@ describe('AppRouter authentication rendering', () => {
     expect(await screen.findByRole('heading', { name: 'Access Denied' })).toBeInTheDocument()
   })
 
-  it('manager dashboard renders and manager cannot access admin user route', async () => {
+  it('manager dashboard renders and manager cannot access admin routes', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: managerUser,
       isLoading: false,
@@ -226,6 +226,15 @@ describe('AppRouter authentication rendering', () => {
 
     render(
       <MemoryRouter future={routerFuture} initialEntries={['/manage/users']}>
+        <AppRouter />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Access Denied' })).toBeInTheDocument()
+
+    cleanup()
+    render(
+      <MemoryRouter future={routerFuture} initialEntries={['/manage/company-configuration']}>
         <AppRouter />
       </MemoryRouter>
     )

@@ -3,6 +3,32 @@ using JobTicketSystem.Domain.Enums;
 
 namespace JobTicketSystem.Domain.Entities;
 
+public sealed class CompanyConfiguration : AuditableEntity
+{
+    public string CompanyName { get; set; } = string.Empty;
+    public string? LegalName { get; set; }
+    public string? ContactName { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public string? Website { get; set; }
+    public string? AddressLine1 { get; set; }
+    public string? AddressLine2 { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? PostalCode { get; set; }
+    public string? Country { get; set; }
+    public string PrimaryColor { get; set; } = "#3157C8";
+    public string SecondaryColor { get; set; } = "#172033";
+    public string AccentColor { get; set; } = "#087F5B";
+    public string? LogoStorageKey { get; set; }
+    public string? LogoOriginalFileName { get; set; }
+    public string? LogoContentType { get; set; }
+    public string? LogoFileExtension { get; set; }
+    public long? LogoFileSizeBytes { get; set; }
+    public DateTime? LogoUploadedAtUtc { get; set; }
+    public Guid? UpdatedByUserId { get; set; }
+}
+
 public sealed class AuditLog
 {
     public Guid Id { get; set; } = Guid.NewGuid();

@@ -5,6 +5,7 @@ import { JobDetailPage } from '../pages/employee/JobDetailPage'
 import { LoginPage } from '../pages/employee/LoginPage'
 import { MyJobsPage } from '../pages/employee/MyJobsPage'
 import {
+  CompanyConfigurationPage,
   CustomersPage,
   DispatchBoardPage,
   EquipmentPage,
@@ -72,6 +73,7 @@ export function AppRouter() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="wiki" element={<SystemWikiPage />} />
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+            <Route path="company-configuration" element={<CompanyConfigurationPage />} />
             <Route path="users" element={<UsersPage />} />
           </Route>
         </Route>
