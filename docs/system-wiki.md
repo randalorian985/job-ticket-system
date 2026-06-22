@@ -39,6 +39,10 @@ The screenshots below appear again in the workflow sections where they are most 
 | Manager/Admin dashboard | [manager-dashboard.png](assets/system-wiki/manager-dashboard.png) |
 | Job-ticket queue | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
 | Job-ticket workspace | [job-ticket-workspace.png](assets/system-wiki/job-ticket-workspace.png) |
+| Dispatch board | [dispatch-board.png](assets/system-wiki/dispatch-board.png) |
+| Dispatch unscheduled-ticket warnings | [dispatch-unscheduled-jobs.png](assets/system-wiki/dispatch-unscheduled-jobs.png) |
+| Dispatch schedule and assign panel | [dispatch-schedule-job.png](assets/system-wiki/dispatch-schedule-job.png) |
+| Mobile Dispatch board | [dispatch-board-mobile.png](assets/system-wiki/dispatch-board-mobile.png) |
 | Section-based ticket editor | [ticket-section-editor.png](assets/system-wiki/ticket-section-editor.png) |
 | Quick note workflow | [ticket-quick-note.png](assets/system-wiki/ticket-quick-note.png) |
 | Status review workflow | [ticket-status-review.png](assets/system-wiki/ticket-status-review.png) |
@@ -451,6 +455,8 @@ Board views:
 
 Completed, cancelled, reviewed, and invoiced tickets do not appear in Dispatch. They remain available in the Job Tickets queue, ticket workspace, and reports.
 
+![Manager/Admin Dispatch board for active job tickets](assets/system-wiki/dispatch-board.png)
+
 Each card shows:
 - customer;
 - job site/location;
@@ -462,6 +468,8 @@ Each card shows:
 - assigned crew;
 - priority and current ticket status;
 - conflict or missing-assignment warnings.
+
+![Unscheduled Dispatch ticket with missing schedule and operator warnings](assets/system-wiki/dispatch-unscheduled-jobs.png)
 
 #### One Job-Ticket Workflow
 The job ticket moves through the existing workflow. Dispatch only owns the scheduling and day-of steps in the middle.
@@ -492,6 +500,8 @@ Use **Schedule & Assign** on a dispatch card. One focused panel handles the info
 - employee conflict warnings.
 
 Saving a Draft or Submitted ticket with a schedule and lead operator moves it to Assigned. A ticket that is already further along keeps its current status.
+
+![Schedule and assign ticket panel](assets/system-wiki/dispatch-schedule-job.png)
 
 #### Service Equipment Workflow
 Choose the customer's crane or equipment record that this ticket is servicing. This selection stays on the job ticket. It is not an assignment of a company crane.
@@ -530,6 +540,8 @@ On mobile:
 - card facts remain readable without narrow table columns;
 - primary actions remain visible on the card;
 - the Schedule & Assign panel fills the viewport with clear Save Dispatch Plan and Cancel controls.
+
+![Mobile Dispatch board](assets/system-wiki/dispatch-board-mobile.png)
 
 #### Permissions And Validation Rules
 Dispatch Board access is Manager/Admin-only through the existing `/manage` route boundary.
