@@ -51,16 +51,18 @@ docker exec "$sql_container" /opt/mssql-tools18/bin/sqlcmd \
   -U sa \
   -P "$sa_password" \
   -C \
+  -b \
   -Q "BACKUP DATABASE [JobTicketDb] TO DISK = N'/var/opt/mssql/backups/job-ticket-$stamp.bak' WITH INIT, COPY_ONLY"
 
-docker cp "$sql_container:/var/opt/mssql/backups/job-ticket-$stamp.bak" "$backup_dir/job-ticket-$stamp.bak"
-docker cp "$backup_dir/job-ticket-$stamp.bak" "$sql_container:/var/opt/mssql/backups/verify-$stamp.bak"
 docker exec "$sql_container" /opt/mssql-tools18/bin/sqlcmd \
   -S localhost \
   -U sa \
   -P "$sa_password" \
   -C \
-  -Q "RESTORE VERIFYONLY FROM DISK = N'/var/opt/mssql/backups/verify-$stamp.bak'"
+  -b \
+  -Q "RESTORE VERIFYONLY FROM DISK = N'/var/opt/mssql/backups/job-ticket-$stamp.bak'"
+
+docker cp "$sql_container:/var/opt/mssql/backups/job-ticket-$stamp.bak" "$backup_dir/job-ticket-$stamp.bak"
 
 docker run --rm \
   -v "$api_files_volume:/source:ro" \
