@@ -1113,10 +1113,7 @@ export function ReportsPage() {
           <section className="report-section report-section-panel stack" key={section.title} aria-label={section.title}>
             <div className="report-section-heading">
               <div>
-                <div className="report-section-title-row">
-                  <h3>{section.title}</h3>
-                  <span className="report-section-count">{section.modes.length} reports</span>
-                </div>
+                <h3>{section.title}</h3>
                 <p className="muted">{section.description}</p>
               </div>
             </div>

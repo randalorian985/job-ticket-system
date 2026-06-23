@@ -151,6 +151,8 @@ describe('ReportsPage', () => {
     expect(screen.getByRole('region', { name: 'report catalog' })).toBeInTheDocument()
     expect(screen.getByText(/Labor totals are labeled as time-entry labor-rate snapshot values/i)).toBeInTheDocument()
     expect(screen.queryByText('Report group')).not.toBeInTheDocument()
+    expect(screen.queryByText(/3 reports/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/2 reports/i)).not.toBeInTheDocument()
 
     const invoiceSection = screen.getByLabelText('Invoice and Closeout')
     expect(within(invoiceSection).getByText('Invoice-ready Summary')).toBeInTheDocument()

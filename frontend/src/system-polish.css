@@ -458,7 +458,6 @@ td button {
 }
 
 .report-hero-metrics span,
-.report-section-count,
 .report-card-top span {
   color: var(--text-muted);
   font-size: 0.72rem;
@@ -510,24 +509,8 @@ td button {
   min-width: 0;
 }
 
-.report-section-title-row {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
 .report-section-heading h3 {
   font-size: 1.1rem;
-}
-
-.report-section-count {
-  background: #eef4fb;
-  border: 1px solid #d5e1ef;
-  border-radius: 999px;
-  color: #2f4968;
-  flex: 0 0 auto;
-  padding: 0.22rem 0.5rem;
 }
 
 .report-action-grid {
@@ -1398,8 +1381,7 @@ tbody tr:hover td {
     width: 100%;
   }
 
-  .report-hero-layout .secondary-button,
-  .report-section-count {
+  .report-hero-layout .secondary-button {
     align-self: stretch;
     text-align: center;
   }
