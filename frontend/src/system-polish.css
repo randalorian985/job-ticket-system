@@ -500,10 +500,21 @@ td button {
   padding-bottom: 0.65rem;
 }
 
+.report-section-panel .report-section-heading {
+  display: block;
+}
+
 .report-section-heading > div {
   display: grid;
   gap: 0.12rem;
   min-width: 0;
+}
+
+.report-section-title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
 }
 
 .report-section-heading h3 {
@@ -516,11 +527,11 @@ td button {
   border-radius: 999px;
   color: #2f4968;
   flex: 0 0 auto;
-  padding: 0.35rem 0.6rem;
+  padding: 0.22rem 0.5rem;
 }
 
 .report-action-grid {
-  align-items: stretch;
+  align-items: start;
   gap: 0.75rem;
   grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
 }
@@ -533,7 +544,7 @@ td button {
   display: grid;
   gap: 0.7rem;
   grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto auto;
   min-height: 100%;
   padding: 0.75rem;
 }
@@ -613,6 +624,7 @@ td button {
   border-top: 1px solid #eef2f7;
   display: flex;
   justify-content: flex-end;
+  margin-top: 0.1rem;
   padding-top: 0.65rem;
 }
 
@@ -1488,13 +1500,99 @@ tbody tr:hover td {
 }
 
 @media print {
+  .print-report-surface {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .print-report-surface * {
+    scrollbar-width: none;
+  }
+
+  .print-report-surface *::-webkit-scrollbar {
+    display: none;
+  }
+
+  .report-document-head {
+    align-items: end;
+    border-bottom-color: #334155;
+    display: grid;
+    gap: 0.2in;
+    grid-template-columns: minmax(0, 1.15fr) minmax(2.15in, 0.85fr);
+    margin-bottom: 0.18in;
+    padding-bottom: 0.14in;
+  }
+
   .report-company-branding {
+    align-items: center;
+    background: #ffffff;
+    border: 0;
     border-color: #cfd8e3;
+    border-radius: 0;
     break-inside: avoid;
+    padding: 0;
+  }
+
+  .report-company-branding img,
+  .report-company-branding .product-mark {
+    flex-basis: 0.62in;
+    height: 0.62in;
+    width: 0.62in;
+  }
+
+  .report-company-branding strong {
+    font-size: 13pt;
+  }
+
+  .report-company-branding span {
+    font-size: 7.5pt;
+    line-height: 1.25;
+  }
+
+  .report-print-heading {
+    text-align: right;
+  }
+
+  .report-print-heading h2 {
+    font-size: 17pt;
+    line-height: 1.05;
+    margin: 0.03in 0;
+  }
+
+  .report-print-heading p {
+    font-size: 8pt;
   }
 
   .report-result-meta {
     display: none;
+  }
+
+  .report-result-summary {
+    border-color: #cbd5e1;
+    margin-bottom: 0.16in;
+    padding: 0.08in 0.1in;
+  }
+
+  .report-result-summary span {
+    font-size: 6.8pt;
+  }
+
+  .report-result-summary strong {
+    font-size: 8pt;
+  }
+
+  .print-report-surface .table-scroll,
+  .print-report-surface .table-wrapper,
+  .print-report-surface .report-results-table {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    max-height: none !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    padding: 0 !important;
   }
 
   .report-results-table {
@@ -1508,5 +1606,62 @@ tbody tr:hover td {
 
   .report-results-table th {
     position: static;
+  }
+
+  .print-report-surface .table-scroll table,
+  .print-report-surface .table-wrapper table,
+  .print-report-surface .report-results-grid {
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    font-size: 6.8pt !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  .print-report-surface caption {
+    border-bottom: 1px solid #cbd5e1;
+    color: #334155;
+    font-size: 7pt !important;
+    font-weight: 750;
+    margin-bottom: 0.04in;
+    padding: 0 0 0.05in !important;
+  }
+
+  .print-report-surface th,
+  .print-report-surface td {
+    font-size: 6.8pt !important;
+    line-height: 1.22;
+    overflow-wrap: anywhere !important;
+    padding: 0.04in 0.045in !important;
+    white-space: normal !important;
+    word-break: normal;
+  }
+
+  .print-report-surface th {
+    background: #e8edf3 !important;
+    color: #111827 !important;
+    font-size: 6.4pt !important;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .print-report-surface .primary-cell {
+    width: 0.78in;
+  }
+
+  .print-report-surface th.numeric-cell {
+    text-align: right;
+  }
+
+  .print-report-surface td.numeric-cell {
+    overflow-wrap: normal !important;
+    text-align: right;
+    white-space: nowrap !important;
+  }
+
+  .print-report-surface td.text-cell {
+    hyphens: auto;
   }
 }

@@ -631,12 +631,16 @@ export function ReportsPage() {
   )
   const companyReportDetails = useMemo(
     () => [
+      companyConfiguration.legalName && companyConfiguration.legalName !== companyConfiguration.companyName
+        ? companyConfiguration.legalName
+        : null,
+      companyConfiguration.contactName ? `Contact: ${companyConfiguration.contactName}` : null,
       ...companyAddressLines,
       companyConfiguration.phone,
       companyConfiguration.email,
       companyConfiguration.website
     ].filter((line): line is string => Boolean(line)),
-    [companyAddressLines, companyConfiguration.email, companyConfiguration.phone, companyConfiguration.website]
+    [companyAddressLines, companyConfiguration.companyName, companyConfiguration.contactName, companyConfiguration.email, companyConfiguration.legalName, companyConfiguration.phone, companyConfiguration.website]
   )
   const csv = useMemo(
     () => reportCsvWithMetadata(
@@ -1063,12 +1067,19 @@ export function ReportsPage() {
         ) : null}
         {hasRows ? (
           <div className="table-scroll report-results-table">
-            <table aria-label={`${title} results`}>
+            <table className="report-results-grid" aria-label={`${title} results`}>
               <caption>{title} results table with {rows.length} visible row{rows.length === 1 ? '' : 's'}.</caption>
               <thead>
                 <tr>
-                  {columns.map((column) => (
-                    <th key={column.header} className={column.align === 'number' ? 'numeric-cell' : undefined}>
+                  {columns.map((column, columnIndex) => (
+                    <th
+                      key={column.header}
+                      className={[
+                        'report-table-cell',
+                        columnIndex === 0 ? 'primary-cell' : '',
+                        column.align === 'number' ? 'numeric-cell' : 'text-cell'
+                      ].filter(Boolean).join(' ')}
+                    >
                       {column.header}
                     </th>
                   ))}
@@ -1077,8 +1088,15 @@ export function ReportsPage() {
               <tbody>
                 {rows.map((row, index) => (
                   <tr key={index}>
-                    {columns.map((column) => (
-                      <td key={column.header} className={column.align === 'number' ? 'numeric-cell' : undefined}>
+                    {columns.map((column, columnIndex) => (
+                      <td
+                        key={column.header}
+                        className={[
+                          'report-table-cell',
+                          columnIndex === 0 ? 'primary-cell' : '',
+                          column.align === 'number' ? 'numeric-cell' : 'text-cell'
+                        ].filter(Boolean).join(' ')}
+                      >
                         {column.render ? column.render(row as never) : column.value(row as never)}
                       </td>
                     ))}
@@ -1095,10 +1113,12 @@ export function ReportsPage() {
           <section className="report-section report-section-panel stack" key={section.title} aria-label={section.title}>
             <div className="report-section-heading">
               <div>
-                <h3>{section.title}</h3>
+                <div className="report-section-title-row">
+                  <h3>{section.title}</h3>
+                  <span className="report-section-count">{section.modes.length} reports</span>
+                </div>
                 <p className="muted">{section.description}</p>
               </div>
-              <span className="report-section-count">{section.modes.length} reports</span>
             </div>
             <div className="report-action-grid">
               {section.modes.map((reportMode) => (
