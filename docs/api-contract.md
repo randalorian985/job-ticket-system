@@ -135,7 +135,9 @@ This UI polish does not add endpoints, change authorization, add schema or migra
   - `dateToUtc`
   - `search` (ticket ID/number, job fields, customer, site, and location)
 - The Manager/Admin screen requests `approvalStatus=1` on initial load, so its pending work queue appears without requiring filter input. Omitting `approvalStatus` from the endpoint returns all statuses.
-- Results include manager-facing employee/job/customer/location labels and are ordered by newest `startedAtUtc` first. Approval and rejection continue to use Manager/Admin-only action endpoints.
+- Results include manager-facing employee/job/customer/location labels and are ordered by newest `startedAtUtc` first. Approval, rejection, edit, and delete actions continue to use Manager/Admin-only action endpoints.
+- `POST /api/time-entries/{id}/adjust` accepts editable time values plus a manager/admin reason and saves the edit without changing the current approval status.
+- `DELETE /api/time-entries/{id}` accepts `{ reason }`, requires `ManagerOrAdmin`, and soft-deletes the time entry so it no longer appears in review or reporting queries. It does not hard-delete the row.
 - Existing enum numeric values are unchanged.
 
 ## Assignable Employee Lookup
@@ -414,4 +416,4 @@ This section documents the existing inventory API foundation only. It does not a
 - Review results use the dedicated `TimeApprovalQueueItemDto`, retaining internal command IDs while exposing manager-facing employee, ticket, customer, site, location, job name, labor type, and note context.
 - `POST /api/time-entries/bulk-approve` accepts only `{ timeEntryIds }` and approves completed entries that are still pending. The authenticated Manager/Admin identity is the approver.
 - `POST /api/time-entries/{id}/edit-and-approve` accepts editable values plus a reason, then records the adjustment and approval atomically in one save. Actor identity and manager override authority are server-owned.
-- Single approve has no request body, reject accepts only `{ reason }`, and adjustment requests contain only editable values plus the reason. All actions retain the `ManagerOrAdmin` authorization policy, and single/bulk approval share the same completed-pending eligibility rule.
+- Single approve has no request body, reject accepts only `{ reason }`, delete accepts only `{ reason }`, and adjustment requests contain only editable values plus the reason. All actions retain the `ManagerOrAdmin` authorization policy, and single/bulk approval share the same completed-pending eligibility rule.

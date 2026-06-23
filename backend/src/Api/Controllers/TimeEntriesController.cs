@@ -174,6 +174,20 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
         }
     }
 
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult> ArchiveAsync(Guid id, [FromBody] ArchiveTimeEntryRequestDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await service.ArchiveAsync(id, request, currentUserContext.EmployeeId, cancellationToken) ? NoContent() : NotFound();
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
     private ActionResult HandleValidation(Exception exception)
     {
         return exception switch

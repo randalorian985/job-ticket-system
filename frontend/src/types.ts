@@ -370,6 +370,10 @@ export type RejectTimeEntryRequestDto = {
   reason: string
 }
 
+export type ArchiveTimeEntryRequestDto = {
+  reason: string
+}
+
 export type AdjustTimeEntryRequestDto = {
   reason: string
   startedAtUtc?: string | null

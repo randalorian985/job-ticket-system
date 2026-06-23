@@ -77,9 +77,9 @@ export function TimeApprovalPage() {
     try {
       await action()
       setError(null)
-      setMessage(successMessage)
       setReviewEntry(null)
       await load()
+      setMessage(successMessage)
       return true
     } catch (requestError) {
       setError(managerTimeError(requestError, 'Unable to update the time entry.'))
@@ -99,7 +99,9 @@ export function TimeApprovalPage() {
 
   const approve = (id: string) => runAction(() => timeEntriesApi.approve(id), 'Time entry approved.')
   const reject = (id: string, reason: string) => runAction(() => timeEntriesApi.reject(id, { reason }), 'Time entry rejected.')
+  const saveEdit = (id: string, request: AdjustTimeEntryRequestDto) => runAction(() => timeEntriesApi.adjust(id, request), 'Time entry changes were saved.')
   const editAndApprove = (id: string, request: AdjustTimeEntryRequestDto) => runAction(() => timeEntriesApi.editAndApprove(id, request), 'Time entry changes were saved and approved.')
+  const deleteEntry = (id: string, reason: string) => runAction(() => timeEntriesApi.deleteEntry(id, { reason }), 'Time entry deleted.')
   const bulkApprove = async () => {
     if (await runAction(() => timeEntriesApi.bulkApprove(selectedIds), 'Selected time entries approved.')) setSelectedIds([])
   }
@@ -136,7 +138,9 @@ export function TimeApprovalPage() {
           onClose={() => setReviewEntry(null)}
           onApprove={approve}
           onReject={reject}
+          onSaveEdit={saveEdit}
           onEditAndApprove={editAndApprove}
+          onDelete={deleteEntry}
           onValidationError={setError}
         />
       ) : null}

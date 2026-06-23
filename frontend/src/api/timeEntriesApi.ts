@@ -1,5 +1,6 @@
 import type {
   AdjustTimeEntryRequestDto,
+  ArchiveTimeEntryRequestDto,
   ClockInRequestDto,
   ClockOutRequestDto,
   RejectTimeEntryRequestDto,
@@ -62,6 +63,11 @@ export const timeEntriesApi = {
   adjust: (id: string, payload: AdjustTimeEntryRequestDto) =>
     apiRequest<TimeEntryDto>(`/api/time-entries/${id}/adjust`, {
       method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  deleteEntry: (id: string, payload: ArchiveTimeEntryRequestDto) =>
+    apiRequest<void>(`/api/time-entries/${id}`, {
+      method: 'DELETE',
       body: JSON.stringify(payload)
     })
 }

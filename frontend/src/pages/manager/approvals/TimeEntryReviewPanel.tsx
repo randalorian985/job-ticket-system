@@ -8,17 +8,20 @@ type Props = {
   onClose: () => void
   onApprove: (id: string) => Promise<unknown>
   onReject: (id: string, reason: string) => Promise<unknown>
+  onSaveEdit: (id: string, request: AdjustTimeEntryRequestDto) => Promise<unknown>
   onEditAndApprove: (id: string, request: AdjustTimeEntryRequestDto) => Promise<unknown>
+  onDelete: (id: string, reason: string) => Promise<unknown>
   onValidationError: (message: string) => void
 }
 
-export function TimeEntryReviewPanel({ entry, onClose, onApprove, onReject, onEditAndApprove, onValidationError }: Props) {
+export function TimeEntryReviewPanel({ entry, onClose, onApprove, onReject, onSaveEdit, onEditAndApprove, onDelete, onValidationError }: Props) {
   const [startedAt, setStartedAt] = useState('')
   const [endedAt, setEndedAt] = useState('')
   const [laborHours, setLaborHours] = useState('')
   const [billableHours, setBillableHours] = useState('')
   const [managerNote, setManagerNote] = useState('')
   const [rejectionReason, setRejectionReason] = useState(entry.rejectionReason ?? '')
+  const [deleteReason, setDeleteReason] = useState('')
 
   useEffect(() => {
     setStartedAt(toLocalDateTimeInput(entry.startedAtUtc))
@@ -27,6 +30,7 @@ export function TimeEntryReviewPanel({ entry, onClose, onApprove, onReject, onEd
     setBillableHours(String(entry.billableHours))
     setManagerNote('')
     setRejectionReason(entry.rejectionReason ?? '')
+    setDeleteReason('')
   }, [entry])
 
   const reject = () => {
@@ -34,27 +38,45 @@ export function TimeEntryReviewPanel({ entry, onClose, onApprove, onReject, onEd
     void onReject(entry.id, rejectionReason.trim())
   }
 
-  const editAndApprove = () => {
-    const approvedStart = new Date(startedAt)
-    const approvedEnd = new Date(endedAt)
+  const buildAdjustmentRequest = (requiresClosedEntry: boolean) => {
+    const approvedStart = startedAt ? new Date(startedAt) : null
+    const approvedEnd = endedAt ? new Date(endedAt) : null
     const approvedLaborHours = Number(laborHours)
     const approvedBillableHours = Number(billableHours)
 
-    if (!startedAt || !endedAt || approvedEnd <= approvedStart) return onValidationError('End time must be after start time.')
+    if (!approvedStart || Number.isNaN(approvedStart.getTime())) return onValidationError('Start time is required.')
+    if (requiresClosedEntry && !approvedEnd) return onValidationError('End time is required before approval.')
+    if (approvedEnd && Number.isNaN(approvedEnd.getTime())) return onValidationError('End time must be a valid date and time.')
+    if (approvedEnd && approvedEnd <= approvedStart) return onValidationError('End time must be after start time.')
     if (!Number.isFinite(approvedLaborHours) || approvedLaborHours < 0) return onValidationError('Total hours cannot be negative.')
     if (!Number.isFinite(approvedBillableHours) || approvedBillableHours < 0 || approvedBillableHours > approvedLaborHours) {
       return onValidationError('Billable hours must be between zero and total hours.')
     }
-    if (!managerNote.trim()) return onValidationError('A manager approval note is required when editing time.')
+    if (!managerNote.trim()) return onValidationError('A manager edit note is required when saving changes.')
 
-    void onEditAndApprove(entry.id, {
+    return {
       reason: managerNote.trim(),
       startedAtUtc: approvedStart.toISOString(),
-      endedAtUtc: approvedEnd.toISOString(),
+      endedAtUtc: approvedEnd ? approvedEnd.toISOString() : null,
       laborHours: approvedLaborHours,
       billableHours: approvedBillableHours,
       notes: managerNote.trim()
-    })
+    }
+  }
+
+  const saveEdit = () => {
+    const request = buildAdjustmentRequest(false)
+    if (request) void onSaveEdit(entry.id, request)
+  }
+
+  const editAndApprove = () => {
+    const request = buildAdjustmentRequest(true)
+    if (request) void onEditAndApprove(entry.id, request)
+  }
+
+  const deleteEntry = () => {
+    if (!deleteReason.trim()) return onValidationError('A delete reason is required.')
+    void onDelete(entry.id, deleteReason.trim())
   }
 
   return (
@@ -81,12 +103,15 @@ export function TimeEntryReviewPanel({ entry, onClose, onApprove, onReject, onEd
         <label>Total hours<input aria-label="Approved total hours" type="number" min="0" step="0.25" value={laborHours} onChange={(event) => setLaborHours(event.target.value)} /></label>
         <label>Billable hours<input aria-label="Approved billable hours" type="number" min="0" step="0.25" value={billableHours} onChange={(event) => setBillableHours(event.target.value)} /></label>
       </div>
-      <label>Manager approval note<textarea aria-label="Manager approval note" value={managerNote} onChange={(event) => setManagerNote(event.target.value)} placeholder="Required when changing submitted time" /></label>
+      <label>Manager edit note<textarea aria-label="Manager edit note" value={managerNote} onChange={(event) => setManagerNote(event.target.value)} placeholder="Required when saving time changes" /></label>
       <label>Rejection reason<textarea aria-label="Rejection reason" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} placeholder="Required to reject" /></label>
+      <label>Delete reason<textarea aria-label="Delete reason" value={deleteReason} onChange={(event) => setDeleteReason(event.target.value)} placeholder="Required to delete this time entry" /></label>
       <div className="row">
         <button type="button" disabled={entry.approvalStatus !== 1} onClick={() => void onApprove(entry.id)}>Approve</button>
+        <button type="button" onClick={saveEdit}>Save Edit</button>
         <button type="button" disabled={entry.approvalStatus !== 1} onClick={editAndApprove}>Save Changes &amp; Approve</button>
         <button type="button" disabled={entry.approvalStatus !== 1} onClick={reject}>Reject</button>
+        <button className="danger-button" type="button" onClick={deleteEntry}>Delete</button>
       </div>
     </article>
   )

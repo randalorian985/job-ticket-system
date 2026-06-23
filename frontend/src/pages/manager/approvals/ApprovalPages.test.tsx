@@ -11,7 +11,7 @@ vi.mock('../../../api/jobTicketsApi', () => ({ jobTicketsApi: { listAll: vi.fn()
 vi.mock('../../../api/timeEntriesApi', () => ({
   timeEntriesApi: {
     listByJob: vi.fn(), listForReview: vi.fn(), approve: vi.fn(), bulkApprove: vi.fn(), editAndApprove: vi.fn(),
-    reject: vi.fn(), clockIn: vi.fn(), clockOut: vi.fn(), getOpen: vi.fn(), adjust: vi.fn()
+    reject: vi.fn(), clockIn: vi.fn(), clockOut: vi.fn(), getOpen: vi.fn(), adjust: vi.fn(), deleteEntry: vi.fn()
   }
 }))
 vi.mock('../../../api/usersApi', () => ({ usersApi: { listAssignableEmployees: vi.fn() } }))
@@ -84,10 +84,12 @@ describe('TimeApprovalPage', () => {
     }))
   })
 
-  it('supports single approval, rejection, edit-and-approve, and bulk approval', async () => {
+  it('supports single approval, rejection, edit, edit-and-approve, delete, and bulk approval', async () => {
     vi.mocked(timeEntriesApi.approve).mockResolvedValue({ ...pendingEntry, approvalStatus: 2 })
     vi.mocked(timeEntriesApi.reject).mockResolvedValue({ ...pendingEntry, approvalStatus: 3 })
+    vi.mocked(timeEntriesApi.adjust).mockResolvedValue({ ...pendingEntry, laborHours: 1.75 })
     vi.mocked(timeEntriesApi.editAndApprove).mockResolvedValue({ ...pendingEntry, approvalStatus: 2 })
+    vi.mocked(timeEntriesApi.deleteEntry).mockResolvedValue(undefined)
     vi.mocked(timeEntriesApi.bulkApprove).mockResolvedValue([{ ...pendingEntry, approvalStatus: 2 }])
     renderWithRouter(<TimeApprovalPage />)
     await screen.findAllByText('Alex Rivera')
@@ -106,7 +108,21 @@ describe('TimeApprovalPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Review' }))
     fireEvent.change(screen.getByLabelText('Approved total hours'), { target: { value: '1.75' } })
     fireEvent.change(screen.getByLabelText('Approved billable hours'), { target: { value: '1.5' } })
-    fireEvent.change(screen.getByLabelText('Manager approval note'), { target: { value: 'Removed personal break' } })
+    fireEvent.change(screen.getByLabelText('Manager edit note'), { target: { value: 'Corrected break' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Edit' }))
+    await waitFor(() => expect(timeEntriesApi.adjust).toHaveBeenCalledWith('te-1', {
+      reason: 'Corrected break',
+      startedAtUtc: '2026-06-09T13:00:00.000Z',
+      endedAtUtc: '2026-06-09T15:00:00.000Z',
+      laborHours: 1.75,
+      billableHours: 1.5,
+      notes: 'Corrected break'
+    }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Review' }))
+    fireEvent.change(screen.getByLabelText('Approved total hours'), { target: { value: '1.75' } })
+    fireEvent.change(screen.getByLabelText('Approved billable hours'), { target: { value: '1.5' } })
+    fireEvent.change(screen.getByLabelText('Manager edit note'), { target: { value: 'Removed personal break' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes & Approve' }))
     await waitFor(() => expect(timeEntriesApi.editAndApprove).toHaveBeenCalledWith('te-1', {
       reason: 'Removed personal break',
@@ -116,6 +132,11 @@ describe('TimeApprovalPage', () => {
       billableHours: 1.5,
       notes: 'Removed personal break'
     }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Review' }))
+    fireEvent.change(screen.getByLabelText('Delete reason'), { target: { value: 'Duplicate time entry' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(timeEntriesApi.deleteEntry).toHaveBeenCalledWith('te-1', { reason: 'Duplicate time entry' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Review' }))
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }))
