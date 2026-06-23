@@ -2597,19 +2597,23 @@ td {
 
 }
 
-/* Manager time approval intentionally favors scan-friendly columns over compressed IDs. */
+/* Manager time approval columns should follow their content instead of reserving empty space. */
 .time-approval-table {
-  min-width: 88rem !important;
+  table-layout: auto;
+  width: max-content;
 }
 
 .time-approval-table th,
 .time-approval-table td {
   overflow-wrap: normal;
+  white-space: nowrap;
 }
 
 .time-approval-table th:nth-child(5),
 .time-approval-table td:nth-child(5) {
-  min-width: 18rem;
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .employee-combobox {
