@@ -596,35 +596,89 @@ pre {
   padding: 0.55rem 0.65rem;
 }
 
-.customer-info-field {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.customer-info-label {
-  color: #64748b;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.customer-info-value {
-  color: #1f2937;
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-
-.customer-info-field-empty .customer-info-value {
-  color: #64748b;
-  font-weight: 700;
-}
-
 .master-data-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
   justify-content: flex-end;
+}
+
+.customer-list {
+  gap: 0.45rem;
+}
+
+.customer-list-item {
+  align-items: center;
+  gap: 0.75rem;
+  grid-template-columns: minmax(13rem, 1.35fr) minmax(9rem, 0.8fr) minmax(12rem, 1fr) minmax(13rem, 1.25fr) auto;
+  padding: 0.62rem 0.75rem;
+}
+
+.customer-list-primary {
+  min-width: 0;
+}
+
+.customer-list-account {
+  color: #64748b;
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customer-list-field {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.customer-list-label {
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.customer-list-value {
+  color: #1f2937;
+  font-size: 0.86rem;
+  font-weight: 760;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customer-list-muted,
+.customer-list-field-empty .customer-list-value {
+  color: #64748b;
+  font-weight: 650;
+}
+
+.customer-list-field-stacked {
+  gap: 0.04rem;
+}
+
+.customer-list-billing .customer-list-value {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+
+.customer-list-actions {
+  flex-wrap: nowrap;
+}
+
+.customer-list-actions button {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.68rem;
 }
 
 .ticket-list-item {
@@ -1008,6 +1062,14 @@ pre {
   .queue-kpi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .customer-list-item {
+    grid-template-columns: minmax(13rem, 1.2fr) minmax(9rem, 0.8fr) minmax(12rem, 1fr) auto;
+  }
+
+  .customer-list-billing {
+    grid-column: 2 / 4;
+  }
 }
 
 @media (max-width: 720px) {
@@ -1030,6 +1092,20 @@ pre {
   .master-data-item {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .customer-list-item {
+    gap: 0.65rem;
+    grid-template-columns: 1fr;
+  }
+
+  .customer-list-billing {
+    grid-column: auto;
+  }
+
+  .customer-list-account,
+  .customer-list-value {
+    white-space: normal;
   }
 
   .master-data-actions {

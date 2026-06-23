@@ -182,7 +182,7 @@ describe('CustomersPage', () => {
     expect(await screen.findByText(/Acme/)).toBeInTheDocument()
     const acmeCard = screen.getByText(/Acme/).closest('.master-data-item')
     expect(acmeCard).not.toBeNull()
-    expect(within(acmeCard as HTMLElement).getByText('Billing address')).toBeInTheDocument()
+    expect(within(acmeCard as HTMLElement).getByText('Billing')).toBeInTheDocument()
     expect(within(acmeCard as HTMLElement).getByText('100 Main, Tulsa, OK, 74101')).toBeInTheDocument()
     expect(screen.getByText('Showing 2 of 2 loaded customers.')).toBeInTheDocument()
     expect(screen.getByText('1 active / 1 archived visible.')).toBeInTheDocument()

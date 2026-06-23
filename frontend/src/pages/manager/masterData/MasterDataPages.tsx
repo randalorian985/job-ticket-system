@@ -42,11 +42,11 @@ const customerBillingAddress = (customer: CustomerDto) => compactAddress(
   compactAddress(customer.billingCity, customer.billingState, customer.billingPostalCode)
 )
 const fallbackText = (value: string | null | undefined, fallback: string) => value?.trim() || fallback
-const customerInfoField = (label: string, value: string | null | undefined, fallback = 'Not provided') => (
-  <span className={`customer-info-field${value?.trim() ? '' : ' customer-info-field-empty'}`}>
-    <span className="customer-info-label">{label}</span>
-    <strong className="customer-info-value">{fallbackText(value, fallback)}</strong>
-  </span>
+const customerListField = (label: string, value: string | null | undefined, fallback = 'Not provided', className = '') => (
+  <div className={`customer-list-field${value?.trim() ? '' : ' customer-list-field-empty'}${className ? ` ${className}` : ''}`}>
+    <span className="customer-list-label">{label}</span>
+    <span className="customer-list-value">{fallbackText(value, fallback)}</span>
+  </div>
 )
 const customerHasBillingAddress = (customer?: CustomerDto | null) => Boolean(customer && (
   customer.billingAddressLine1?.trim() ||
@@ -255,39 +255,47 @@ export function CustomersPage() {
         <MasterDataFilters label="customers" search={search} searchPlaceholder="Search by name, account, contact, email, phone, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all') }} />
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="customers" />
         <MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="customers" />
-        <ul className="master-data-list">
-          {filteredItems.map((customer) => (
-            <MasterDataItem
-              key={customer.id}
-              title={customer.name}
-              statusArchived={customer.isArchived}
-              meta={[
-                customerInfoField('Account', customer.accountNumber, 'No account'),
-                customerInfoField('Contact', customer.contactName),
-                customerInfoField('Email', customer.email),
-                customerInfoField('Phone', customer.phone),
-                customerInfoField('Billing address', customerBillingAddress(customer), 'No billing address')
-              ]}
-              actions={<>
-                <button type="button" onClick={() => startEdit(customer)}>Edit</button>
-                <button type="button" onClick={async () => {
-                  if (!confirmArchiveAction('customer', customer.name, customer.isArchived)) return
-                  const action = customer.isArchived ? 'unarchived' : 'archived'
-                  try {
-                    setError(null)
-                    setSuccess(null)
-                    if (customer.isArchived) await masterDataApi.unarchiveCustomer(customer.id)
-                    else await masterDataApi.archiveCustomer(customer.id)
-                    await load()
-                    setSuccess(`Customer "${customer.name}" was ${action}.`)
-                  } catch {
-                    setSuccess(null)
-                    setError('Unable to update customer archive state.')
-                  }
-                }}>{customer.isArchived ? 'Unarchive' : 'Archive'}</button>
-              </>}
-            />
-          ))}
+        <ul className="master-data-list customer-list">
+          {filteredItems.map((customer) => {
+            const billingAddress = customerBillingAddress(customer)
+
+            return (
+              <li className="master-data-item customer-list-item" key={customer.id}>
+                <div className="customer-list-primary">
+                  <div className="master-data-title-row">
+                    <strong className="master-data-title">{customer.name}</strong>
+                    <span className={`status-pill ${customer.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(customer.isArchived)}</span>
+                  </div>
+                  <span className="customer-list-account">Account: {fallbackText(customer.accountNumber, 'No account')}</span>
+                </div>
+                {customerListField('Contact', customer.contactName)}
+                <div className="customer-list-field customer-list-field-stacked">
+                  <span className="customer-list-label">Email / phone</span>
+                  <span className={`customer-list-value${customer.email?.trim() ? '' : ' customer-list-muted'}`}>{fallbackText(customer.email, 'No email')}</span>
+                  <span className={`customer-list-value${customer.phone?.trim() ? '' : ' customer-list-muted'}`}>{fallbackText(customer.phone, 'No phone')}</span>
+                </div>
+                {customerListField('Billing', billingAddress, 'No billing address', 'customer-list-billing')}
+                <div className="master-data-actions customer-list-actions">
+                  <button type="button" onClick={() => startEdit(customer)}>Edit</button>
+                  <button type="button" onClick={async () => {
+                    if (!confirmArchiveAction('customer', customer.name, customer.isArchived)) return
+                    const action = customer.isArchived ? 'unarchived' : 'archived'
+                    try {
+                      setError(null)
+                      setSuccess(null)
+                      if (customer.isArchived) await masterDataApi.unarchiveCustomer(customer.id)
+                      else await masterDataApi.archiveCustomer(customer.id)
+                      await load()
+                      setSuccess(`Customer "${customer.name}" was ${action}.`)
+                    } catch {
+                      setSuccess(null)
+                      setError('Unable to update customer archive state.')
+                    }
+                  }}>{customer.isArchived ? 'Unarchive' : 'Archive'}</button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>
