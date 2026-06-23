@@ -574,7 +574,7 @@ export function JobTicketListPage() {
                     </div>
                     <div><strong>{customerName}</strong><span>{locationName}</span></div>
                     <div><strong>Lead: {leadSummary}</strong><span>{assignmentSummary}</span></div>
-                    <div className="compact-ticket-readiness"><strong>{readiness.label}</strong><span>{readiness.openItems ? readiness.nextStep : 'Ready for work.'}</span></div>
+                    <div className="compact-ticket-readiness"><strong>{readiness.label}</strong><span>{readiness.isReady ? 'Ready for work.' : readiness.nextStep}</span></div>
                     <div className="compact-ticket-timing"><strong>Scheduled: {formatDate(job.scheduledStartAtUtc)}</strong><span>Due: {formatDate(job.dueAtUtc)}</span></div>
                     <Link className="button-link secondary-link compact-ticket-open" to={getTicketDetailPath(job.id)}>Open Ticket</Link>
                   </article>

@@ -22,6 +22,12 @@
   margin: 0;
 }
 
+.assigned-job-heading > div,
+.employee-job-heading > div,
+.queue-results-heading > div {
+  min-width: 0;
+}
+
 .employee-eyebrow {
   font-size: 0.78rem;
   font-weight: 900;
@@ -38,6 +44,10 @@
 
 .assigned-job-card-compact.readiness-review {
   border-left-color: #b45309;
+}
+
+.assigned-job-card-compact.readiness-ready {
+  border-left-color: var(--accent-navy);
 }
 
 .assigned-job-title,
@@ -169,6 +179,7 @@
 .compact-ticket-list {
   display: grid;
   gap: 0.4rem;
+  overflow-x: auto;
 }
 
 .compact-ticket-list-header,
@@ -187,6 +198,7 @@
   border: 1px solid var(--line);
   border-left: 5px solid var(--inactive);
   border-radius: 8px;
+  min-width: 0;
   padding: 0.65rem;
 }
 

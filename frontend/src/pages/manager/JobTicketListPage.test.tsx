@@ -94,13 +94,24 @@ describe('Manager list pages', () => {
       {
         id: 'job-1',
         ticketNumber: 'JT-1',
-        title: 'Fix compressor',
+        title: 'Rotate VPS Root password',
         status: 4,
         priority: 3,
         customerId: 'c-1',
         serviceLocationId: 's-1',
         scheduledStartAtUtc: '2026-05-12T08:00:00Z',
         dueAtUtc: '2026-05-13T08:00:00Z'
+      },
+      {
+        id: 'job-3',
+        ticketNumber: 'JT-3',
+        title: 'Completed archive review',
+        status: 7,
+        priority: 1,
+        customerId: 'c-2',
+        serviceLocationId: 's-2',
+        scheduledStartAtUtc: '2026-05-11T08:00:00Z',
+        dueAtUtc: '2026-05-14T08:00:00Z'
       }
     ] as any)
 
@@ -114,7 +125,7 @@ describe('Manager list pages', () => {
     const compactList = screen.getByLabelText('compact ticket list')
     expect(screen.getByRole('button', { name: 'Compact list' })).toHaveAttribute('aria-pressed', 'true')
     expect(window.localStorage.getItem('job-ticket-manager-queue-view-mode')).toBe('compact')
-    expect(within(compactList).getByText('Fix compressor')).toBeInTheDocument()
+    expect(within(compactList).getByText('Rotate VPS Root password')).toBeInTheDocument()
     expect(within(compactList).getByText('Acme')).toBeInTheDocument()
     expect(within(compactList).getByText('HQ')).toBeInTheDocument()
     expect(within(compactList).getAllByText('Alex Rivera').length).toBeGreaterThan(0)
@@ -124,9 +135,12 @@ describe('Manager list pages', () => {
     expect(within(compactList).getByText('High')).toBeInTheDocument()
     expect(within(compactList).getByText('Ready to work')).toBeInTheDocument()
     expect(within(compactList).getByText('Ready for work.')).toBeInTheDocument()
-    expect(within(compactList).getByText(/Scheduled:/)).toBeInTheDocument()
-    expect(within(compactList).getByText(/Due:/)).toBeInTheDocument()
-    expect(within(compactList).getByRole('link', { name: 'Open Ticket' })).toHaveAttribute(
+    expect(within(compactList).getAllByText(/Scheduled:/)).toHaveLength(2)
+    expect(within(compactList).getAllByText(/Due:/)).toHaveLength(2)
+    const completedRow = within(compactList).getByLabelText('JT-3 compact ticket')
+    expect(within(completedRow).getByText('No assignment or schedule validation is needed until the ticket returns to an active status.')).toBeInTheDocument()
+    expect(within(completedRow).queryByText('Ready for work.')).not.toBeInTheDocument()
+    expect(within(compactList).getAllByRole('link', { name: 'Open Ticket' })[0]).toHaveAttribute(
       'href',
       expect.stringContaining('/manage/job-tickets/job-1')
     )

@@ -3,10 +3,10 @@ import { AppRouter } from './routes/AppRouter'
 import { AuthProvider } from './features/auth/AuthContext'
 import { CompanyBrandingProvider } from './features/companyBranding/CompanyBrandingContext'
 import './styles.css'
-import './mobile-density-polish.css'
 import './shell-overflow-fix.css'
 import './ui-smoothness.css'
 import './system-polish.css'
+import './mobile-density-polish.css'
 import { routerFuture } from './routes/routerFuture'
 
 const App = () => (
