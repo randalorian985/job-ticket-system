@@ -350,7 +350,7 @@ Typical dashboard actions include:
 - check assignment and schedule attention areas;
 - move into time approval, parts requests, reports, or master-data workflows.
 
-Dashboard links use the same Manager/Admin role boundary as the rest of the workspace.
+Dashboard links use the same Manager/Admin role boundary as the rest of the workspace. Primary and secondary dashboard actions use the shared Manager/Admin button styling so shortcuts look consistent with the job-ticket queue and wiki links.
 
 ![Manager/Admin dashboard](assets/system-wiki/manager-dashboard.png)
 
@@ -920,7 +920,7 @@ The frontend validates required source selections, date ranges, and paging value
 Report inputs are saved per report on the user's browser. For example, changing the selected job ticket on Invoice-ready Summary does not change the selected job ticket on Job Cost Summary. Use **Reset report inputs** to clear saved report defaults and return filters to their standard values.
 
 ### Report Output
-Generated reports continue to open in a separate results screen within the reports workflow.
+Generated reports continue to open in a separate results screen within the reports workflow. Report groups use unframed sections with repeated report cards, while generated output uses a single bordered preview surface.
 
 From generated report results, users can:
 - review report metadata, including visible row count, visible column count, generated time, and applied scope;

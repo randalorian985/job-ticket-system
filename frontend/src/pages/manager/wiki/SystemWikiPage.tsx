@@ -207,7 +207,7 @@ export function SystemWikiPage() {
           <p className="muted">Operational guide for job tickets, employee work, Manager/Admin workflows, reporting, master data, and training.</p>
         </div>
         <div className="row system-wiki-actions">
-          <a className="secondary-button" href={wikiPath} target="_blank" rel="noreferrer">Open markdown</a>
+          <a className="button-link secondary-link" href={wikiPath} target="_blank" rel="noreferrer">Open markdown</a>
           <button className="secondary-button" type="button" onClick={() => window.print()}>Print / Save PDF</button>
         </div>
       </header>

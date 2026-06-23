@@ -414,13 +414,14 @@ td button {
 }
 
 .report-hub {
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .report-hub-hero {
   background: #ffffff;
-  border-color: #cfd9e8;
-  gap: 0.7rem;
+  border-color: #d4deeb;
+  gap: 0.8rem;
+  padding: 1rem;
 }
 
 .report-hero-layout,
@@ -472,31 +473,31 @@ td button {
 
 .report-note-panel {
   align-items: center;
-  background: #f4fbf8;
-  border: 1px solid #b8dfce;
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
   border-radius: 7px;
-  color: #164233;
+  color: var(--text-strong);
   display: flex;
   gap: 0.65rem;
   padding: 0.55rem 0.7rem;
 }
 
 .report-note-panel span {
-  color: #36584d;
+  color: var(--text-muted);
   font-size: 0.84rem;
 }
 
 .report-section-panel {
-  background: #ffffff;
-  border: 1px solid #d9e2ef;
-  border-radius: 8px;
-  gap: 0.7rem;
-  padding: 0.75rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  gap: 0.65rem;
+  padding: 0;
 }
 
 .report-section-panel .report-section-heading {
   border-bottom: 1px solid #e5eaf1;
-  padding-bottom: 0.55rem;
+  padding-bottom: 0.65rem;
 }
 
 .report-section-heading h3 {
@@ -514,14 +515,15 @@ td button {
 
 .report-action-grid {
   align-items: stretch;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
 }
 
 .report-run-card {
   align-content: start;
   background: #ffffff;
-  border: 1px solid #d9e2ef;
+  border: 1px solid #d4deeb;
+  border-radius: 8px;
   box-shadow: 0 1px 2px rgba(23, 32, 51, 0.04);
   display: grid;
   gap: 0.65rem;
@@ -532,7 +534,7 @@ td button {
 
 .report-run-card:hover {
   border-color: #b8c7dd;
-  box-shadow: 0 10px 24px rgba(23, 32, 51, 0.08);
+  box-shadow: 0 8px 18px rgba(23, 32, 51, 0.07);
 }
 
 .report-card-top {
@@ -575,7 +577,7 @@ td button {
   background: #f8fafc;
   border: 1px solid #e0e7f0;
   border-radius: 7px;
-  padding: 0.45rem 0.55rem;
+  padding: 0.55rem 0.6rem;
 }
 
 .report-filter-details summary {
@@ -586,7 +588,7 @@ td button {
   background: #f8fafc;
   border: 1px solid #e0e7f0;
   border-radius: 7px;
-  padding: 0.5rem 0.55rem;
+  padding: 0.55rem 0.6rem;
 }
 
 .report-card-controls small {
@@ -609,9 +611,9 @@ td button {
 }
 
 .report-preview-panel {
-  border-color: #cfd9e8;
+  border-color: #d4deeb;
   gap: 0.75rem;
-  padding: 0.9rem;
+  padding: 1rem;
 }
 
 .report-result-meta {
@@ -646,7 +648,7 @@ td button {
 
 .report-result-summary {
   background: #f8fafc;
-  border-color: #d6e0ec;
+  border-color: #dbe4ef;
   gap: 0.2rem;
   padding: 0.65rem 0.75rem;
 }
@@ -660,9 +662,8 @@ td button {
 
 .report-company-branding {
   align-items: center;
-  background: #ffffff;
-  border: 1px solid #d9e2ef;
-  border-left: 0.35rem solid var(--brand);
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
   border-radius: 8px;
   display: flex;
   gap: 0.75rem;
@@ -716,9 +717,12 @@ td button {
 }
 
 .report-results-table {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
   border-radius: 8px;
   margin-top: 0.1rem;
   max-height: min(62vh, 44rem);
+  overflow: auto;
 }
 
 .report-results-table table {

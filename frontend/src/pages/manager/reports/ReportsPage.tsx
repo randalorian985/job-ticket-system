@@ -944,7 +944,7 @@ export function ReportsPage() {
             </p>
           </div>
           <div className="row">
-            <Link className="secondary-button" to="/manage/wiki#reports">Wiki</Link>
+            <Link className="button-link secondary-link" to="/manage/wiki#reports">Wiki</Link>
             <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
           </div>
         </div>
