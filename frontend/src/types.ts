@@ -50,6 +50,26 @@ export type UpdateCompanyConfigurationDto = {
   accentColor: string
 }
 
+export type TicketStatusFilterOptionDto = {
+  id: string
+  displayLabel: string
+  status: number
+  displayOrder: number
+  isActive: boolean
+}
+
+export type SaveTicketStatusFilterOptionDto = {
+  id?: string | null
+  displayLabel: string
+  status: number
+  displayOrder: number
+  isActive: boolean
+}
+
+export type SaveTicketStatusFilterConfigurationDto = {
+  options: SaveTicketStatusFilterOptionDto[]
+}
+
 export type ApiValidationError = {
   error?: string
   errors?: Record<string, string[]>

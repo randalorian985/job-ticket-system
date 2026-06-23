@@ -59,6 +59,7 @@ The screenshots below appear again in the workflow sections where they are most 
 | Purchasing support | [purchasing.png](assets/system-wiki/purchasing.png) |
 | Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) |
 | Admin users | [admin-users.png](assets/system-wiki/admin-users.png) |
+| Ticket filter configuration | [ticket-status-filters.png](assets/system-wiki/ticket-status-filters.png) |
 
 ## Roles And Access
 
@@ -108,6 +109,7 @@ Admins have Manager capabilities plus user administration.
 
 Admin users can:
 - manage Company Configuration for the crane company's own logo, profile, and colors;
+- manage which status filter boxes appear in the Manager/Admin job-ticket queue;
 - create user accounts;
 - edit user account information;
 - deactivate/archive users;
@@ -143,6 +145,7 @@ Admin users can:
 - `/manage/parts-approval`: parts approval workflow.
 - `/manage/reports`: reports hub.
 - `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
+- `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
 - `/manage/users`: Admin-only user management.
 
 ## Production Demo Operations
@@ -196,8 +199,10 @@ Employees can review:
 
 ![Employee assigned jobs list](assets/system-wiki/employee-jobs.png)
 
+Fully closed tickets do not appear in the normal employee assigned-job list. This includes Completed, Cancelled, Invoiced, and Reviewed tickets. Those tickets are not deleted; Managers/Admins can still find them in the job-ticket queue, ticket workspace, reports, history, and audit trails.
+
 Readiness helps employees understand whether a job has enough information to start. It may flag:
-- inactive or completed ticket status;
+- inactive field-work status;
 - missing scheduled start;
 - missing due date;
 - missing customer;
@@ -360,6 +365,10 @@ Managers/Admins can filter by:
 - dispatch readiness;
 - attention condition;
 - search text.
+
+The status filter boxes in the queue come from Admin configuration. Admins choose the display label, existing ticket status value, display order, and active/inactive flag. If no custom configuration exists, the queue uses the default active field-work filters: Submitted, Assigned, In Progress, Waiting on Parts, and Waiting on Customer.
+
+Changing these boxes does not create a new workflow. It only changes which status shortcuts appear in the Manager/Admin queue. Existing ticket status names, numeric values, status-change rules, and reports stay the same.
 
 Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and dispatch readiness. It does not create a server-side export job.
 
@@ -563,7 +572,7 @@ Validation and warnings preserve existing data integrity:
 - assignment conflicts are shown as warnings;
 - existing ticket update and employee-assignment APIs remain the persistence boundary;
 - no separate dispatch entity, status enum, database table, or API is introduced;
-- no auth weakening, enum renumbering, schema migration, automatic scheduling, or purchasing/inventory expansion is introduced.
+- no auth weakening, enum renumbering, Dispatch-specific schema migration, automatic scheduling, or purchasing/inventory expansion is introduced.
 
 ### Ticket Editing
 Managers/Admins edit ticket information through a focused in-page panel. The previous workflow opened one large edit form containing customer, service location, equipment, scope, billing, dates, status, and priority fields at the same time. That worked functionally, but it forced users to scan a long form and created extra mobile scrolling.
@@ -1012,6 +1021,37 @@ API summary:
 - `PUT /api/company-configuration`: Admin-only profile and color update.
 - `POST /api/company-configuration/logo`: Admin-only logo upload.
 - `GET /api/company-configuration/logo`: public logo stream when a logo exists.
+
+## Ticket Filter Configuration
+
+Ticket Filter Configuration is Admin-only and controls the status shortcut boxes shown in the Manager/Admin job-ticket queue.
+
+Admin-only access:
+- `/manage/ticket-status-filters`
+
+Admins can:
+- view the current status filter list;
+- add a filter that maps to an existing ticket status;
+- rename the label shown on a filter box;
+- change display order;
+- mark a filter active or inactive;
+- save the global filter list.
+
+Managers can use the resulting filters in the job-ticket queue, but Managers cannot edit the configuration. Employees cannot access this configuration.
+
+Important boundaries:
+- this is not a custom workflow engine;
+- it does not add new ticket statuses;
+- it does not change ticket status numeric values;
+- it does not change status transition rules;
+- inactive filters do not appear in the normal queue shortcut row;
+- closed tickets remain available to Manager/Admin users through queue filters, ticket workspace, reports, and history.
+
+API summary:
+- `GET /api/ticket-status-filters`: Manager/Admin-readable filter list.
+- `PUT /api/ticket-status-filters`: Admin-only save for labels, mapped existing status values, display order, and active/inactive flags.
+
+![Admin ticket filter configuration screen](assets/system-wiki/ticket-status-filters.png)
 
 ## Admin User Management
 

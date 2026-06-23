@@ -32,6 +32,20 @@ public sealed class CompanyConfigurationEntityConfiguration : IEntityTypeConfigu
     }
 }
 
+public sealed class TicketStatusFilterOptionEntityConfiguration : IEntityTypeConfiguration<TicketStatusFilterOption>
+{
+    public void Configure(EntityTypeBuilder<TicketStatusFilterOption> builder)
+    {
+        builder.ConfigureAuditableEntity();
+        builder.Property(x => x.DisplayLabel).HasMaxLength(80).IsRequired();
+        builder.Property(x => x.DisplayOrder).IsRequired();
+        builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
+        builder.HasIndex(x => x.DisplayOrder);
+        builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => new { x.IsActive, x.DisplayOrder });
+    }
+}
+
 public sealed class CustomerEntityConfiguration : IEntityTypeConfiguration<Customer>
 {
     public void Configure(EntityTypeBuilder<Customer> builder)

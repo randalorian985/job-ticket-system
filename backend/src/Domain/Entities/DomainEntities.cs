@@ -29,6 +29,15 @@ public sealed class CompanyConfiguration : AuditableEntity
     public Guid? UpdatedByUserId { get; set; }
 }
 
+public sealed class TicketStatusFilterOption : AuditableEntity
+{
+    public string DisplayLabel { get; set; } = string.Empty;
+    public JobTicketStatus Status { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; } = true;
+    public Guid? UpdatedByUserId { get; set; }
+}
+
 public sealed class AuditLog
 {
     public Guid Id { get; set; } = Guid.NewGuid();

@@ -17,6 +17,7 @@ import {
   ReportsPage,
   ServiceLocationsPage,
   SystemWikiPage,
+  TicketStatusFiltersPage,
   TimeApprovalPage,
   UnauthorizedPage,
   UsersPage
@@ -74,6 +75,7 @@ export function AppRouter() {
           <Route path="wiki" element={<SystemWikiPage />} />
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
             <Route path="company-configuration" element={<CompanyConfigurationPage />} />
+            <Route path="ticket-status-filters" element={<TicketStatusFiltersPage />} />
             <Route path="users" element={<UsersPage />} />
           </Route>
         </Route>

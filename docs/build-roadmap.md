@@ -18,9 +18,11 @@ Employee/Manager workflow stabilization is implemented in the current draft PR:
 - Employee `/jobs` is a concise assigned-work list without extra dashboard panels;
 - Employee job detail is clock-in-first, showing ticket context, readiness, and time controls before clock-in, then revealing notes, parts, photos, work entries, parts, and files only while clocked into that ticket;
 - Manager/Admin `/manage/job-tickets` keeps the existing rich readiness card view and adds a persisted compact list view for dense operating review;
+- Admin `/manage/ticket-status-filters` configures the Manager/Admin queue status filter boxes using display labels, existing ticket status values, display order, and active/inactive flags;
+- Employee assigned-job lists hide fully closed `Completed`, `Cancelled`, `Invoiced`, and `Reviewed` tickets while Manager/Admin users keep queue, workspace, report, and history access;
 - pilot seed data now creates six demo job tickets across ready-for-invoice, assigned, waiting-on-parts, unassigned, needs-lead, and urgent in-progress scenarios;
 - documentation and client wiki wording are aligned to the simplified Employee flow, compact queue mode, service-equipment meaning, and VPS post-merge checklist;
-- no backend API behavior, schema migration, enum change, auth weakening, route-guard weakening, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, customer portal, payment, or invoice-generation behavior is added.
+- this adds only the bounded ticket-status-filter configuration API/table/migration and does not change backend enum numeric values, lifecycle transitions, auth boundaries, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, customer portal, payment, or invoice-generation behavior.
 
 Parts Request Workflow Phase 2 is merged and protected on `main`. It builds on Phase 1 and smooths the service-ticket parts workflow:
 - technician-safe part lookup from the assigned job-ticket detail screen;

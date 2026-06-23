@@ -20,6 +20,7 @@ Core scope:
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
 - Technician field recording now requires an open time entry for the selected job ticket before an Employee records work notes, parts, part requests, or file/photo uploads; the Employee job detail screen hides those deeper field tools until clock-in, and Manager/Admin back-office actions are not gated by an employee clock-in.
+- Employee assigned-job lists exclude fully closed tickets (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`) without removing them from Manager/Admin queues, reports, history, or audit trails.
 - File/photo uploads accept JPG/JPEG, PNG, WebP, and PDF files up to 50 MB, with the limit enforced in both the HTTP layer and application service.
 - Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket detail uses focused in-page panels for section-based ticket editing, quick notes, photo/file upload, labor review, status changes, archive review, and Add / Request Part actions backed by existing APIs; the recommended action opens the relevant workflow tab in a focused ticket view.
@@ -29,6 +30,7 @@ Core scope:
 - Reporting UI polish includes clear sections, shared filters, required source-ID validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from currently loaded rows only.
 - Manager/Admin screen cleanup uses distinct report catalog/results, master-data list/editor, and Admin user list/editor states while preserving create/update/archive and account-management outcomes. Admin user management includes client-side account search, role filtering, and active/inactive filtering.
 - Manager/Admin job-ticket queue supports both rich readiness cards and a persisted compact operating list for dense day-to-day scanning. Queue export produces client-side CSV from the currently visible filtered ticket rows, including readable customer, service-location, assignment, lead, and dispatch-readiness labels. This does not add backend export endpoints or reporting jobs.
+- Admin-configured ticket status filter boxes are implemented for the Manager/Admin job-ticket queue. The configuration maps display labels, order, and active/inactive flags to existing `JobTicketStatus` values only; it seeds the default active field-work status filters and does not add a custom workflow engine, new status enum values, lifecycle transitions, hard deletes, or weakened authorization.
 - Labor reporting labels totals as time-entry labor-rate snapshot values and keeps the existing API behavior that falls back only for legacy entries without captured snapshots.
 - Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
@@ -99,7 +101,7 @@ Implemented redesign focus:
 - service-ticket workflow stabilization keeps direct tab/action navigation in the focused `view=workflow` screen, focuses opened action panels, and closes focused drawers when returning to the ticket overview.
 - ticket workflow refinement keeps the same ticket-backed workbench but makes the next action, target workflow, mobile quick actions, and invoice-review closeout requirements more visible.
 
-The current dispatch board is intentionally ticket-backed. It does not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or schema migration. En Route and On Site are recorded as ticket work-entry notes while the ticket remains Assigned.
+The current dispatch board is intentionally ticket-backed. It does not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or Dispatch-specific schema migration. En Route and On Site are recorded as ticket work-entry notes while the ticket remains Assigned.
 
 The design may take inspiration from field-service lifecycle products and dense repair-ticket detail views, but it must be adapted to Crane's actual job-ticket workflow. The intended flow is work queue to ticket workspace to closeout/invoice-ready review.
 
@@ -171,6 +173,7 @@ The following must remain stable:
 - employee assigned-job workflow;
 - Manager/Admin routes;
 - `/manage/users` Admin-only access;
+- `/manage/ticket-status-filters` Admin-only access;
 - DTO-based APIs;
 - soft-delete/archive behavior;
 - explicit backend enum numeric values;

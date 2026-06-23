@@ -106,7 +106,7 @@ describe('ManagerDashboardPage', () => {
     expect(screen.queryByText(/Next dispatch focus:/)).not.toBeInTheDocument()
   })
 
-  it('keeps admin-only user link limited to admin users', async () => {
+  it('keeps admin-only configuration links limited to admin users', async () => {
     vi.mocked(useAuth).mockReturnValue({ user: { role: 'Admin' } } as any)
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
 
@@ -116,6 +116,7 @@ describe('ManagerDashboardPage', () => {
       </MemoryRouter>
     )
 
+    expect(await screen.findByText('Ticket Filters')).toBeInTheDocument()
     expect(await screen.findByText('Users')).toBeInTheDocument()
   })
 })

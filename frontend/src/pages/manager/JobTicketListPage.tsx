@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
+import { ticketStatusFiltersApi } from '../../api/ticketStatusFiltersApi'
 import { ApiError } from '../../api/httpClient'
-import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto } from '../../types'
+import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto, TicketStatusFilterOptionDto } from '../../types'
 import { csvDataUri, toCsv, type CsvColumn } from '../../utils/csv'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from '../employee/jobDisplay'
-import { formatDate, jobStatusOptions, priorityOptions } from './managerDisplay'
+import { defaultTicketStatusFilterOptions, formatDate, priorityOptions } from './managerDisplay'
 import { activeDispatchStatusValues, buildJobTicketDetailPath, normalizeJobTicketQueueSearchParams, readJobTicketQueueFilters } from './managerTaskNavigation'
 
 const allFilterValue = 'all'
@@ -160,12 +161,18 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
 const getAssignmentDisplayName = (assignment: JobTicketAssignmentDto) =>
   assignment.employeeName?.trim() || 'Employee unavailable'
 
+const normalizeStatusFilterOptions = (options: TicketStatusFilterOptionDto[]) =>
+  options
+    .filter((option) => option.isActive && Number.isInteger(option.status) && option.status >= 1 && option.status <= 10)
+    .sort((left, right) => left.displayOrder - right.displayOrder || left.displayLabel.localeCompare(right.displayLabel))
+
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
   const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
   const [assignmentDataUnavailable, setAssignmentDataUnavailable] = useState(false)
   const [customers, setCustomers] = useState<Record<string, CustomerDto>>({})
   const [locations, setLocations] = useState<Record<string, ServiceLocationDto>>({})
+  const [ticketStatusFilters, setTicketStatusFilters] = useState<TicketStatusFilterOptionDto[]>(defaultTicketStatusFilterOptions)
   const [ticketViewMode, setTicketViewMode] = useState<TicketViewMode>(getStoredTicketViewMode)
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -238,6 +245,7 @@ export function JobTicketListPage() {
           masterDataApi.listCustomers(),
           masterDataApi.listServiceLocations()
         ])
+        const statusFilterResponse = await ticketStatusFiltersApi.list().catch(() => defaultTicketStatusFilterOptions)
 
         const assignmentResults = await Promise.all(
           tickets.map(async (ticket) => {
@@ -266,6 +274,7 @@ export function JobTicketListPage() {
         setAssignmentDataUnavailable(assignmentResults.some((item) => item.failed))
         setCustomers(Object.fromEntries(customersResponse.map((item) => [item.id, item])))
         setLocations(Object.fromEntries(locationsResponse.map((item) => [item.id, item])))
+        setTicketStatusFilters(statusFilterResponse.length ? statusFilterResponse : [])
         setError(null)
       } catch (requestError) {
         if (requestError instanceof ApiError && (requestError.status === 401 || requestError.status === 403)) {
@@ -292,6 +301,17 @@ export function JobTicketListPage() {
     () => Object.values(customers).sort((left, right) => left.name.localeCompare(right.name)),
     [customers]
   )
+  const configuredStatusFilters = useMemo(() => normalizeStatusFilterOptions(ticketStatusFilters), [ticketStatusFilters])
+  const selectedStatusFallback = useMemo(() => {
+    const selectedStatus = Number(statusFilter)
+    if (!Number.isInteger(selectedStatus) || selectedStatus < 1 || selectedStatus > 10) {
+      return null
+    }
+
+    return configuredStatusFilters.some((filter) => filter.status === selectedStatus)
+      ? null
+      : { value: selectedStatus, label: getJobTicketStatusLabel(selectedStatus) }
+  }, [configuredStatusFilters, statusFilter])
 
   const filteredJobs = useMemo(() => {
     const normalizedSearch = searchText.trim().toLocaleLowerCase()
@@ -348,6 +368,11 @@ export function JobTicketListPage() {
       needsDispatchReviewCount: needsDispatchReviewJobs.length
     }
   }, [assignmentDataUnavailable, assignmentMap, jobs])
+
+  const configuredStatusSummaries = useMemo(() => configuredStatusFilters.map((filter) => ({
+    ...filter,
+    count: jobs.filter((job) => job.status === filter.status).length
+  })), [configuredStatusFilters, jobs])
 
   const hasActiveFilters = statusFilter !== allFilterValue ||
     priorityFilter !== allFilterValue ||
@@ -425,7 +450,8 @@ export function JobTicketListPage() {
             <option value={allFilterValue}>All statuses</option>
             <option value="active">Active statuses</option>
             <option value="waiting">Waiting on parts or customer</option>
-            {jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            {configuredStatusFilters.map((item) => <option key={item.id} value={item.status}>{item.displayLabel}</option>)}
+            {selectedStatusFallback ? <option value={selectedStatusFallback.value}>{selectedStatusFallback.label}</option> : null}
           </select>
         </label>
         <label className="sr-label">
@@ -464,6 +490,25 @@ export function JobTicketListPage() {
             </div>
             {hasActiveFilters ? <span className="status-pill">Filtered view</span> : null}
           </div>
+          {configuredStatusSummaries.length ? (
+            <div className="queue-kpi-grid" aria-label="configured ticket status filters">
+              {configuredStatusSummaries.map((filter) => (
+                <button
+                  aria-pressed={statusFilter === String(filter.status) && priorityFilter === allFilterValue && dispatchReadinessFilter === allFilterValue && attentionFilter === allFilterValue}
+                  className="queue-kpi-card"
+                  key={filter.id}
+                  onClick={() => applyQueuePreset({ status: String(filter.status) })}
+                  title={`Show ${filter.displayLabel} tickets`}
+                  type="button"
+                >
+                  <span>{filter.displayLabel}</span>
+                  <strong>{filter.count}</strong>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="muted">No active status filter boxes are configured.</p>
+          )}
           <div className="queue-kpi-grid">
             <button aria-pressed={statusFilter === 'active' && priorityFilter === allFilterValue && dispatchReadinessFilter === allFilterValue && attentionFilter === allFilterValue} className="queue-kpi-card" onClick={() => applyQueuePreset({ status: 'active' })} title="Show submitted through waiting statuses" type="button"><span>Active tickets</span><strong>{triageSummary.activeCount}</strong></button>
             <button aria-pressed={statusFilter === 'active' && priorityFilter === '4'} className="queue-kpi-card queue-kpi-card-alert" onClick={() => applyQueuePreset({ status: 'active', priority: '4' })} title="Show urgent active tickets" type="button"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong></button>

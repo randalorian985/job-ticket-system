@@ -249,6 +249,48 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("CompanyConfigurations");
                 });
 
+            modelBuilder.Entity("JobTicketSystem.Domain.Entities.TicketStatusFilterOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DisplayLabel")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisplayOrder");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("IsActive", "DisplayOrder");
+
+                    b.ToTable("TicketStatusFilterOptions");
+                });
+
             modelBuilder.Entity("JobTicketSystem.Domain.Entities.Employee", b =>
                 {
                     b.Property<Guid>("Id")
