@@ -29,17 +29,20 @@ namespace Infrastructure.Persistence.Migrations
                     table.PrimaryKey("PK_TicketStatusFilterOptions", x => x.Id);
                 });
 
-            migrationBuilder.InsertData(
-                table: "TicketStatusFilterOptions",
-                columns: new[] { "Id", "DisplayLabel", "Status", "DisplayOrder", "IsActive", "UpdatedByUserId", "CreatedAtUtc", "UpdatedAtUtc" },
-                values: new object[,]
-                {
-                    { new Guid("0f747a37-c8b8-4f59-b27b-7f5933fc86b8"), "Submitted", 2, 10, true, null, new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc) },
-                    { new Guid("cb4421b3-0030-4a34-b8e0-a2c7d56844bf"), "Assigned", 3, 20, true, null, new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc) },
-                    { new Guid("db738d94-5064-4d2f-98eb-e4d5661e8f5b"), "In Progress", 4, 30, true, null, new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc) },
-                    { new Guid("584a66db-2332-4590-8b22-0a96134aac56"), "Waiting on Parts", 5, 40, true, null, new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc) },
-                    { new Guid("3ed284cc-a83b-4fdc-b094-3a7466e9d5d1"), "Waiting on Customer", 6, 50, true, null, new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc) }
-                });
+            migrationBuilder.Sql("""
+                DECLARE @SeededAt datetime2 = '2026-06-23T00:00:00';
+
+                IF NOT EXISTS (SELECT 1 FROM [TicketStatusFilterOptions])
+                BEGIN
+                    INSERT INTO [TicketStatusFilterOptions] ([Id], [DisplayLabel], [Status], [DisplayOrder], [IsActive], [UpdatedByUserId], [CreatedAtUtc], [UpdatedAtUtc])
+                    VALUES
+                        ('0f747a37-c8b8-4f59-b27b-7f5933fc86b8', N'Submitted', 2, 10, CAST(1 AS bit), NULL, @SeededAt, @SeededAt),
+                        ('cb4421b3-0030-4a34-b8e0-a2c7d56844bf', N'Assigned', 3, 20, CAST(1 AS bit), NULL, @SeededAt, @SeededAt),
+                        ('db738d94-5064-4d2f-98eb-e4d5661e8f5b', N'In Progress', 4, 30, CAST(1 AS bit), NULL, @SeededAt, @SeededAt),
+                        ('584a66db-2332-4590-8b22-0a96134aac56', N'Waiting on Parts', 5, 40, CAST(1 AS bit), NULL, @SeededAt, @SeededAt),
+                        ('3ed284cc-a83b-4fdc-b094-3a7466e9d5d1', N'Waiting on Customer', 6, 50, CAST(1 AS bit), NULL, @SeededAt, @SeededAt);
+                END
+                """);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TicketStatusFilterOptions_DisplayOrder",
