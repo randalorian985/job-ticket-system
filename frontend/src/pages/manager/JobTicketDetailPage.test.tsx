@@ -165,13 +165,13 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Actions' })).toBeInTheDocument()
-    expect(screen.getByRole('tooltip', { name: 'These checks identify missing information before dispatch review. Completed checks stay available below.' })).toBeInTheDocument()
-    expect(screen.getByLabelText('ticket workflow path')).toHaveTextContent('Dispatch')
+    expect(screen.getByRole('tooltip', { name: 'These checks identify missing assignment or scheduling details before work starts. Completed checks stay available below.' })).toBeInTheDocument()
+    expect(screen.getByLabelText('ticket workflow path')).toHaveTextContent('Assignment & Schedule')
     expect(screen.getByLabelText('ticket workflow path')).toHaveTextContent('Invoice Review')
     expect(screen.getByLabelText('mobile ticket quick actions')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Service Details' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Status & Priority' })).toBeInTheDocument()
-    selectWorkflowTab('Dispatch')
+    selectWorkflowTab('Assignment & Schedule')
     expect(screen.getByRole('heading', { name: 'Technician Assignments' })).toBeInTheDocument()
     selectWorkflowTab('Labor')
     expect(screen.getByRole('heading', { name: 'Labor & Time Entries' })).toBeInTheDocument()
@@ -183,14 +183,14 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByRole('heading', { name: 'Ticket History' })).toBeInTheDocument()
     selectWorkflowTab('Invoice Review')
     expect(screen.getByLabelText('invoice review')).toHaveFocus()
-    expectRenderedText('Ready for dispatch review')
-    expectRenderedText('Next Required UpdateAll dispatch requirements are complete.')
+    expectRenderedText('Ready to work')
+    expectRenderedText('Next Required UpdateAll assignment and schedule requirements are complete.')
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
     expectRenderedText('Alex Rivera Lead Tech')
     expect(screen.getByText('8 of 8 complete')).toBeInTheDocument()
-    expect(screen.getByText('No dispatch blockers are currently visible.')).toBeInTheDocument()
+    expect(screen.getByText('No assignment or schedule blockers are currently visible.')).toBeInTheDocument()
     expect(screen.getByText('Review 8 completed requirements')).toBeInTheDocument()
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
     selectWorkflowTab('Parts')
@@ -454,7 +454,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('Ticket part added.')).toBeInTheDocument()
   })
 
-  it('treats a component-only ticket as dispatch-ready when the other requirements are complete', async () => {
+  it('treats a component-only ticket as ready to work when the other requirements are complete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -476,11 +476,11 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expectRenderedText('Ready for dispatch review')
+    expectRenderedText('Ready to work')
     expectRenderedText('check the job scope for component-only work')
   })
 
-  it('marks completed tickets as outside active dispatch even when detail context is complete', async () => {
+  it('marks completed tickets as outside active work even when detail context is complete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -502,9 +502,9 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expectRenderedText('Not active dispatch')
-    expectRenderedText('Next Required UpdateTicket is outside the active dispatch queue.')
-    expectRenderedText('Dispatch statusTicket is outside the active dispatch queue.')
+    expectRenderedText('Not active work')
+    expectRenderedText('Next Required UpdateTicket is outside the active work queue.')
+    expectRenderedText('Work statusTicket is outside the active work queue.')
   })
 
   it('loads assignable technicians for manager assignment dropdown without calling the admin users endpoint', async () => {
@@ -518,7 +518,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(usersApi.list).not.toHaveBeenCalled()
     expect(usersApi.listAssignableEmployees).toHaveBeenCalled()
-    selectWorkflowTab('Dispatch')
+    selectWorkflowTab('Assignment & Schedule')
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
@@ -543,7 +543,7 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('Alex Rivera Lead Tech')
   })
 
-  it('warns when dispatch coverage is incomplete', async () => {
+  it('warns when assignment and schedule coverage is incomplete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -563,7 +563,7 @@ describe('JobTicketDetailPage', () => {
     await screen.findAllByText('Needs attention')
     expectRenderedText('Next Required UpdateNo employees are assigned.')
     expect(screen.getAllByText('4 open').length).toBeGreaterThan(0)
-    expect(screen.getByRole('list', { name: 'open dispatch readiness checks' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'open assignment and schedule checks' })).toBeInTheDocument()
     expect(screen.getByText('Review 4 completed requirements')).toBeInTheDocument()
     expectRenderedText('No employees are assigned.')
     expectRenderedText('No lead tech is marked.')
@@ -571,18 +571,18 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('No due date is set.')
   })
 
-  it('marks dispatch readiness unavailable and disables assignment edits when assignments fail to load', async () => {
+  it('marks work readiness unavailable and disables assignment edits when assignments fail to load', async () => {
     vi.mocked(jobTicketsApi.listAssignments).mockRejectedValue(new ApiError('Assignments unavailable', 503, undefined))
 
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Assignment data unavailable')
-    expectRenderedText('Next Required UpdateAssignment data could not be loaded. Refresh or retry before dispatch review.')
-    selectWorkflowTab('Dispatch')
-    expect(screen.getByRole('alert')).toHaveTextContent('Assignment data could not be loaded. Refresh before editing assignments or dispatch review.')
+    expectRenderedText('Next Required UpdateAssignment data could not be loaded. Refresh or retry before assignment review.')
+    selectWorkflowTab('Assignment & Schedule')
+    expect(screen.getByRole('alert')).toHaveTextContent('Assignment data could not be loaded. Refresh before editing assignments or assignment review.')
     expect(screen.getByRole('button', { name: 'Assign Employee' })).toBeDisabled()
-    expectRenderedText('Assignment dataAssignment data could not be loaded. Refresh or retry before dispatch review.')
+    expectRenderedText('Assignment dataAssignment data could not be loaded. Refresh or retry before assignment review.')
   })
 
   it('prevents adding a second lead without clearing the current one first', async () => {
@@ -701,7 +701,7 @@ describe('JobTicketDetailPage', () => {
     renderPage('/manage/job-tickets/j1?returnTo=%2Fmanage%2Fjob-tickets%3Fstatus%3Dactive%26readiness%3Dneeds-review&returnLabel=Spoofed+Label&tab=parts')
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Back to Needs Dispatch Review' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Back to Needs Assignment Review' })).toHaveAttribute(
       'href',
       '/manage/job-tickets?status=active&readiness=needs-review'
     )
@@ -713,7 +713,7 @@ describe('JobTicketDetailPage', () => {
     await waitFor(() => expect(screen.getByLabelText('job files and photos panel')).toHaveFocus())
   })
 
-  it('recommends closeout work instead of dispatch for a completed ticket', async () => {
+  it('recommends closeout work instead of assignment work for a completed ticket', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -734,7 +734,7 @@ describe('JobTicketDetailPage', () => {
     expect(recommendation).toHaveTextContent('Finish invoice review')
     expect(recommendation).toHaveTextContent('Target workflow')
     expect(recommendation).toHaveTextContent('Some loaded time entries still need approval review.')
-    expect(recommendation).not.toHaveTextContent('Ticket is outside the active dispatch queue.')
+    expect(recommendation).not.toHaveTextContent('Ticket is outside the active work queue.')
 
     const openWorkflowButton = screen.getByRole('button', { name: 'Open Invoice Review' })
     expect(openWorkflowButton).toHaveAttribute('title', 'Open the Invoice Review workflow screen')

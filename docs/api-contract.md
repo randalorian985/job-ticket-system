@@ -76,7 +76,7 @@ Endpoints:
 - `displayOrder`
 - `isActive`
 
-The feature adds the `TicketStatusFilterOptions` table and seeds the same default active field-work filters. It does not change backend enum numeric values, job-ticket status labels, job-ticket lifecycle rules, reports, dispatch rules, or employee assignments.
+The feature adds the `TicketStatusFilterOptions` table and seeds the same default active field-work filters. It does not change backend enum numeric values, job-ticket status labels, job-ticket lifecycle rules, reports, assignment rules, or employee assignments.
 
 ## Job Ticket Display Fields
 Job-ticket list and detail responses keep relationship IDs for API operations and also include human-readable fields for UI display.
@@ -85,11 +85,11 @@ Job-ticket list and detail responses keep relationship IDs for API operations an
 - `JobTicketDto` includes `customerName`, `serviceLocationName`, `billingPartyCustomerName`, optional `equipmentName`, optional `equipmentNumber`, and optional `assignedManagerEmployeeName`.
 - `equipmentId` identifies the customer's crane/equipment being serviced on the job ticket. It is not a dispatched crane assignment. Employee assignments remain separate job-ticket assignment records.
 - Employee and Manager/Admin screens display readable labels instead of exposing customer, service-location, equipment, or employee GUIDs.
-- Job-ticket display authorization, existing enum values, and write request DTOs are unchanged. The list response still includes the optional service-equipment ID needed to preserve the ticket selection in Dispatch.
+- Job-ticket display authorization, existing enum values, and write request DTOs are unchanged. The list response still includes the optional service-equipment ID needed to preserve the customer's crane/equipment selection on the ticket.
 - For Employee users, `GET /api/job-tickets` returns assigned tickets except fully closed statuses (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`). Manager/Admin list views still return those tickets unless a filter excludes them.
 
-## Dispatch Board
-The Manager/Admin Dispatch Board at `/manage/dispatch` is a frontend workflow over existing APIs.
+## Job Ticket Assignment And Schedule Workflow
+The Manager/Admin Job Tickets screen is the main workflow for creating, assigning, scheduling, and reviewing work. The legacy `/manage/dispatch` route redirects to `/manage/job-tickets`.
 
 Existing APIs used:
 - `GET /api/job-tickets`
@@ -104,18 +104,15 @@ Existing APIs used:
 - `GET /api/users/assignable-employees`
 
 Behavior:
-- Unscheduled Tickets, Today, Tomorrow, and Next 7 Days views are frontend-derived from loaded ticket data and exclude Completed, Cancelled, Reviewed, and Invoiced tickets;
-- the board displays existing job-ticket status labels instead of a separate dispatch lifecycle;
-- Schedule & Assign updates the existing ticket schedule, serviced-equipment, lead-operator, crew, due-date, and notes data;
-- saving a Draft or Submitted ticket with a schedule and lead operator changes its existing status to Assigned;
+- the queue displays existing job-ticket status labels instead of a separate dispatch lifecycle;
+- the Status filter uses Admin-configured labels mapped to existing `JobTicketStatus` values;
+- Quick Views apply frontend filters for active work, waiting work, missing due dates, unassigned tickets, needs-review tickets, and ready-to-work tickets;
+- assignment review uses existing job-ticket assignment records and the existing lead-assignment flag;
+- schedule and due date updates use the existing job-ticket update API;
 - matching service equipment on more than one ticket is not treated as a dispatch resource conflict;
-- operator assignment uses the existing lead-assignment flag;
-- crew assignment uses existing non-lead ticket assignments;
-- En Route and On Site require an Assigned ticket with a schedule and lead operator, then record work-entry notes while preserving the Assigned status;
-- Start Work changes Assigned to In Progress, and Complete Work changes In Progress to Completed;
 - ticket review/finalization and billing-ready review remain in the existing ticket workspace and Reports workflows.
 
-Dispatch does not add a backend dispatch-job record or API, backend dispatch status enum, Dispatch-specific schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
+This workflow does not add a backend dispatch-job record or API, backend dispatch status enum, Dispatch-specific schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
 
 ## Manager/Admin Master Data
 Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the already-documented DTO fields for customer contact/account details, service-location status/address/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.

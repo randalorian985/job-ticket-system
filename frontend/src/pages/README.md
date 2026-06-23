@@ -4,7 +4,7 @@ Route-level page components belong in this folder.
 
 ## Manager/Admin Ticket Editing
 
-`manager/JobTicketDetailPage.tsx` owns the Manager/Admin ticket workbench. Ticket view is review-first: summary, recommended action, workflow tabs, dispatch readiness, labor, parts, files, activity, and invoice review remain visible as coordinated panels.
+`manager/JobTicketDetailPage.tsx` owns the Manager/Admin ticket workbench. Ticket view is review-first: summary, recommended action, workflow tabs, assignment and schedule readiness, labor, parts, files, activity, and invoice review remain visible as coordinated panels.
 
 `manager/JobTicketEditorForm.tsx` owns section-based ticket editing. It keeps one ticket edit draft and submits the existing update payload, but renders the draft through these frontend sections:
 

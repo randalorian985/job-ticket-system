@@ -62,19 +62,19 @@ Manager/Admin Section-Based Ticket Editing and Quick Actions was implemented on 
 - Add Note uses the existing job-ticket work-entry API; Add Photo uses the existing job-ticket file upload API; Add Labor opens the existing Labor workflow tab; Change Status keeps the existing guarded status review panel;
 - no database schema, migration, enum, authorization, route, backend API, DTO, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval behavior was added.
 
-Manager/Admin Dispatch Board was implemented on June 17, 2026 and simplified around one job-ticket workflow on June 22, 2026:
-- affected modules: `frontend/src/pages/manager/DispatchBoardPage.tsx`, `frontend/src/pages/manager/dispatchWorkflow.ts`, Manager/Admin routing/navigation, dispatch board tests, shared styles, README, project scope, API contract, roadmap, and client wiki documentation;
-- `/manage/dispatch` is the shared schedule for active job tickets, with Unscheduled Tickets, Today, Tomorrow, and Next 7 Days views;
-- Dispatch no longer duplicates completed-work review or billing queues and no longer presents a separate request, job, or dispatch lifecycle;
-- dispatch cards show customer, job site, customer-requested/scheduled timing, job scope, the customer's crane/equipment being serviced, operator, crew, priority, actual ticket status, and employee conflict/missing-assignment warnings;
-- one Schedule & Assign panel handles schedule, service equipment, operator/crew, due date, and notes; guarded day-of actions handle En Route, On Site, Start Work, Complete Work, and ticket open through existing APIs;
-- the implementation is ticket-backed and does not add a dispatch-job table, backend enum values, migrations, automatic scheduling, automatic approval, customer-signature API, billing/payment API, purchasing expansion, inventory expansion, recommendation/scoring/AI, or automatic compatibility behavior.
+Manager/Admin Dispatch Board was retired on June 23, 2026 after review of the real operating workflow:
+- affected modules: Manager/Admin routing/navigation, Job Tickets queue, dashboard, ticket workspace, ticket editor, route tests, README, project scope, API contract, roadmap, and client wiki documentation;
+- Job Tickets is now the main operating screen for creating, assigning, scheduling, filtering, and reviewing work;
+- `/manage/dispatch` is retained only as a legacy redirect to `/manage/job-tickets`;
+- the standalone Dispatch Board component, helper, and tests were removed;
+- assignment and schedule checks live on the job ticket and use existing assignment, schedule, status, and ticket update APIs;
+- the implementation remains ticket-backed and does not add a dispatch-job table, backend enum values, migrations, automatic scheduling, automatic approval, customer-signature API, billing/payment API, purchasing expansion, inventory expansion, recommendation/scoring/AI, or automatic compatibility behavior.
 
 Service-equipment meaning was corrected throughout the active system on June 22, 2026:
 - people are assigned to tickets; the crane/equipment field identifies the customer's unit being serviced;
 - component-only work is described in the ticket job scope or service instructions;
-- Dispatch no longer presents the customer's crane as an assigned resource or raises same-equipment resource conflicts;
-- `JobTicketListItemDto` now includes the optional equipment ID so Dispatch preserves the ticket's service-equipment selection without a schema or write-DTO change.
+- the UI no longer presents the customer's crane as an assigned resource or raises same-equipment resource conflicts;
+- `JobTicketListItemDto` now includes the optional equipment ID so the ticket preserves the service-equipment selection without a schema or write-DTO change.
 
 Manager/Admin Service Ticket Workflow Audit and repair was completed on June 18, 2026:
 - affected modules: `frontend/src/pages/manager/JobTicketDetailPage.tsx`, `frontend/src/pages/manager/JobTicketDetailPage.test.tsx`, shared styles, page/route developer notes, client wiki documentation, and ticket workflow screenshots;
@@ -85,8 +85,8 @@ Manager/Admin Service Ticket Workflow Audit and repair was completed on June 18,
 - no backend API behavior, schema, migration, enum, auth, role, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, invoice-generation, payment, or customer portal behavior was added.
 
 Active client-facing workflow tightening was completed on June 18, 2026:
-- Dispatch Board copy now clarifies that En Route and On Site are ticket-history updates while the board remains backed by existing ticket status values;
-- Dispatch cards label the loaded ticket title as Job / Scope instead of presenting it as a separate job-type field;
+- the former Dispatch Board copy clarified that En Route and On Site were ticket-history updates while the board remained backed by existing ticket status values;
+- the former Dispatch cards labeled the loaded ticket title as Job / Scope instead of presenting it as a separate job-type field;
 - Purchasing support now gives visible success/error and in-progress feedback for create, submit, receiving, close, archive, and vendor-invoice save actions;
 - the client wiki was aligned to those active workflow behaviors;
 - no backend API, schema, migration, enum, auth, role, inventory reintroduction, purchasing expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval behavior was added.
@@ -101,17 +101,17 @@ Production readiness hardening was completed on June 18, 2026:
 
 Manager/Admin ticket workflow refinement was completed on June 18, 2026:
 - the ticket overview recommended-action card now names the next step, target workflow, and visible blocker count;
-- a ticket workflow path lets users jump between Dispatch, Field Work, Parts / Files, and Invoice Review without changing the underlying ticket-backed workflow;
+- a ticket workflow path lets users jump between Assignment & Schedule, Field Work, Parts / Files, and Invoice Review without changing the underlying ticket-backed workflow;
 - mobile ticket overview adds compact Add Note, Add Photo, Labor, and Status shortcuts near the top of the page;
 - Invoice Review now surfaces open closeout requirements before invoice-ready totals and keeps direct status/labor/file follow-up actions visible;
 - this is a frontend workflow-clarity refinement only and does not add backend APIs, routes, DTOs, schema migrations, enum changes, auth changes, new dispatch models, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, client portal, payment, or invoice-generation behavior.
 
 Manager/Admin task-navigation and workflow-tab polish is merged and protected on `main`:
-- Manager/Admin job queue filters are URL-backed for status, priority, customer, dispatch readiness, and search text;
+- Manager/Admin job queue filters are URL-backed for status, priority, customer, work readiness, and search text;
 - Manager dashboard summary links open the corresponding filtered queues;
-- Manager/Admin job-ticket queue can export the currently visible filtered ticket rows as client-side CSV for dispatch handoff;
+- Manager/Admin job-ticket queue can export the currently visible filtered ticket rows as client-side CSV;
 - ticket detail links preserve safe queue-aware return context;
-- ticket detail exposes workflow tabs for overview, dispatch, time, parts, files, closeout, and activity, with a visible recommended next action;
+- ticket detail exposes workflow tabs for Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History, with a visible recommended next action;
 - developer setup validation checks Docker Compose configuration even when `.env` is absent by using `.env.example` safely;
 - this polish is a frontend navigation/developer-setup improvement and does not change backend API behavior, business rules, authorization, schema, migrations, enums, purchasing expansion, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior.
 

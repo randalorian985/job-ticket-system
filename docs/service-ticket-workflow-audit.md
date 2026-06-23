@@ -9,12 +9,12 @@ Repository state audited: `main` after fast-forward pull to `3531254`.
 The audit focused on the existing Service Ticket workflow without changing the business process or adding a new navigation model.
 
 Areas reviewed:
-- Manager/Admin dashboard operations summary and dispatch readiness links.
-- Manager/Admin job-ticket queue filters, dispatch readiness summaries, CSV export surface, and safe ticket return links.
-- Manager/Admin Dispatch Board views, schedule panel, assignment controls, status actions, and ticket handoff links.
-- Manager/Admin ticket workspace tabs: Service Details, Dispatch, Labor, Parts, Files, Invoice Review, and History.
+- Manager/Admin dashboard operations summary and assignment/readiness links.
+- Manager/Admin job-ticket queue filters, work-readiness summaries, CSV export surface, and safe ticket return links.
+- Manager/Admin job-ticket assignment and schedule controls, status actions, and ticket handoff links.
+- Manager/Admin ticket workspace tabs: Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History.
 - Ticket actions: Edit Ticket, Change Status, Add Note, Add Photo, Add Labor, Open Add / Request Part Panel, and Archive Review.
-- Ticket workflow cards and panels: dispatch readiness, closeout, parts, labor/time, files/photos, invoice review, and activity.
+- Ticket workflow cards and panels: assignment readiness, closeout, parts, labor/time, files/photos, invoice review, and activity.
 - Employee mobile job detail, clock in/out, work notes, parts, file/photo upload, and field-work gating.
 - Back-office Parts Request Queue filtering and request review.
 - Documentation and screenshot references in the system wiki.
@@ -110,13 +110,13 @@ Implemented fix:
 ## Verified Behavior
 
 Automated tests now cover:
-- Dashboard operations summary, dispatch readiness, and permission/error states.
+- Dashboard operations summary, assignment readiness, and permission/error states.
 - Ticket workspace tab selection, URL-backed tab restoration, and keyboard tab navigation.
 - Ticket actions for status review, notes, photo/file upload, labor tab routing, parts request panel, archive review, assignment handling, and print review.
-- Dispatch readiness and closeout guidance.
+- Assignment readiness and closeout guidance.
 - Employee mobile clock-in gating, work-note recording, parts add/request behavior, file/photo controls, active-ticket conflicts, and post-action refresh feedback.
 - Parts Request Queue filtering, back-office updates, catalog matching, cost/billable snapshots, billable flag, and reload failure feedback.
-- Job-ticket queue and dispatch-board routing, filtering, scheduling, assignment, and day-of status behavior.
+- Job-ticket queue routing, filtering, scheduling, assignment, and status behavior.
 
 Browser smoke check:
 - Frontend dev server rendered successfully at `http://127.0.0.1:5173/`.
@@ -135,7 +135,7 @@ Documentation change:
 - The Validation And Error Behavior section now states that Manager/Admin ticket workspace refreshes, Employee mobile post-action refreshes, and Parts Request Queue filter reloads should clear loading states after failures and show useful feedback.
 
 Screenshot status:
-- The latest pulled repo already includes updated system-wiki screenshots for dashboard, dispatch, job-ticket queue, job-ticket workspace, section editor, employee mobile workflows, parts requests, reports, time approval, master data, purchasing, inventory, and admin users.
+- The latest pulled repo already includes updated system-wiki screenshots for dashboard, job-ticket queue, job-ticket workspace, section editor, employee mobile workflows, parts requests, reports, time approval, master data, purchasing, inventory, and admin users.
 - No screenshot files changed in this repair pass because the implemented fixes affect error/loading behavior rather than stable layout.
 
 ## GitHub And VPS Update Status

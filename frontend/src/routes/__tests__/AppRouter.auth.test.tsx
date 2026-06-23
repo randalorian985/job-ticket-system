@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
+import { ticketStatusFiltersApi } from '../../api/ticketStatusFiltersApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import { AppRouter } from '../AppRouter'
@@ -28,7 +29,15 @@ vi.mock('../../api/jobTicketsApi', () => ({
 
 vi.mock('../../api/masterDataApi', () => ({
   masterDataApi: {
-    listEquipment: vi.fn()
+    listEquipment: vi.fn(),
+    listCustomers: vi.fn(),
+    listServiceLocations: vi.fn()
+  }
+}))
+
+vi.mock('../../api/ticketStatusFiltersApi', () => ({
+  ticketStatusFiltersApi: {
+    list: vi.fn()
   }
 }))
 
@@ -81,6 +90,9 @@ describe('AppRouter authentication rendering', () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([])
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([])
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([])
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([])
+    vi.mocked(ticketStatusFiltersApi.list).mockResolvedValue([])
     vi.mocked(usersApi.list).mockResolvedValue([])
     vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([])
   })
@@ -397,7 +409,7 @@ describe('AppRouter authentication rendering', () => {
     expect(screen.getByRole('link', { name: 'Open markdown' })).toHaveAttribute('href', '/docs/system-wiki.md')
   })
 
-  it('manager users can open the dispatch board', async () => {
+  it('redirects the legacy dispatch route to Job Tickets', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: managerUser,
       isLoading: false,
@@ -411,8 +423,9 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Dispatch Board' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Create Job Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
+    expect(await screen.findByRole('heading', { name: 'Job Tickets' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Create Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
+    expect(screen.queryByRole('heading', { name: 'Dispatch Board' })).not.toBeInTheDocument()
   })
 
   it('redirects the unfinished inventory route back to the Manager/Admin dashboard', async () => {

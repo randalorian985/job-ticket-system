@@ -14,10 +14,10 @@ const allFilterValue = 'all'
 const activeStatusValues = activeDispatchStatusValues
 const waitingStatusValues = new Set([5, 6])
 const dispatchReadinessFilterOptions = [
-  { value: allFilterValue, label: 'All dispatch readiness' },
-  { value: 'ready', label: 'Dispatch-ready' },
-  { value: 'needs-review', label: 'Needs dispatch review' },
-  { value: 'not-active', label: 'Not active dispatch' }
+  { value: allFilterValue, label: 'All work readiness' },
+  { value: 'ready', label: 'Ready to work' },
+  { value: 'needs-review', label: 'Needs assignment review' },
+  { value: 'not-active', label: 'Not active work' }
 ]
 
 type DispatchReadiness = {
@@ -64,8 +64,8 @@ const queueExportColumns: CsvColumn<QueueExportRow>[] = [
   { header: 'Service Location', value: (row) => row.serviceLocation },
   { header: 'Assigned Employees', value: (row) => row.assignedEmployees },
   { header: 'Lead Employees', value: (row) => row.leadEmployees },
-  { header: 'Dispatch Readiness', value: (row) => row.dispatchReadiness },
-  { header: 'Dispatch Detail', value: (row) => row.dispatchDetail },
+  { header: 'Work Readiness', value: (row) => row.dispatchReadiness },
+  { header: 'Work Readiness Detail', value: (row) => row.dispatchDetail },
   { header: 'Next Required Update', value: (row) => row.nextRequiredUpdate },
   { header: 'Requested Date (UTC)', value: (row) => row.requestedAtUtc },
   { header: 'Scheduled Start (UTC)', value: (row) => row.scheduledStartAtUtc },
@@ -91,9 +91,9 @@ const getStoredTicketViewMode = (): TicketViewMode => {
 const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[] | null): DispatchReadiness => {
   if (!activeStatusValues.has(job.status)) {
     return {
-      label: 'Not active dispatch',
-      detail: 'Ticket is outside the active dispatch queue.',
-      nextStep: 'No dispatch validation is needed until the ticket returns to an active status.',
+      label: 'Not active work',
+      detail: 'Ticket is outside the active work queue.',
+      nextStep: 'No assignment or schedule validation is needed until the ticket returns to an active status.',
       openItems: 0,
       isReady: false
     }
@@ -103,7 +103,7 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
     return {
       label: 'Assignment data unavailable',
       detail: 'Assignment data could not be loaded for this ticket.',
-      nextStep: 'Reload technician assignments before making dispatch decisions.',
+      nextStep: 'Reload technician assignments before making assignment or schedule decisions.',
       openItems: 0,
       isReady: false
     }
@@ -114,7 +114,7 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
   if (!assignments.length) {
     openItems.push({
       label: 'assignment',
-      nextStep: 'Assign at least one employee before dispatch.'
+      nextStep: 'Assign at least one employee.'
     })
   }
 
@@ -128,29 +128,29 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
   if (!job.scheduledStartAtUtc) {
     openItems.push({
       label: 'scheduled start',
-      nextStep: 'Set a scheduled start time before dispatch.'
+      nextStep: 'Set a scheduled start time.'
     })
   }
 
   if (!job.dueAtUtc) {
     openItems.push({
       label: 'due date',
-      nextStep: 'Add a due date so dispatch can see timing expectations.'
+      nextStep: 'Add a due date for timing expectations.'
     })
   }
 
   if (!openItems.length) {
     return {
-      label: 'Ready for dispatch',
+      label: 'Ready to work',
       detail: 'Assignment, lead tech, schedule, and due date are present.',
-      nextStep: 'All dispatch requirements are complete.',
+      nextStep: 'All assignment and schedule requirements are complete.',
       openItems: 0,
       isReady: true
     }
   }
 
   return {
-    label: 'Needs dispatch review',
+    label: 'Needs assignment review',
     detail: `Missing ${openItems.map((item) => item.label).join(', ')}.`,
     nextStep: openItems[0].nextStep,
     openItems: openItems.length,
@@ -369,11 +369,6 @@ export function JobTicketListPage() {
     }
   }, [assignmentDataUnavailable, assignmentMap, jobs])
 
-  const configuredStatusSummaries = useMemo(() => configuredStatusFilters.map((filter) => ({
-    ...filter,
-    count: jobs.filter((job) => job.status === filter.status).length
-  })), [configuredStatusFilters, jobs])
-
   const hasActiveFilters = statusFilter !== allFilterValue ||
     priorityFilter !== allFilterValue ||
     customerFilter !== allFilterValue ||
@@ -434,7 +429,7 @@ export function JobTicketListPage() {
       <header className="job-ticket-queue-header">
         <div>
           <h2>Job Tickets</h2>
-          <p className="muted">Search, filter, and isolate dispatch-ready or dispatch-review tickets using existing ticket and assignment data.</p>
+          <p className="muted">Search and filter job tickets by status, technician assignment, schedule, and due dates.</p>
         </div>
         <Link className="button-link" to="/manage/job-tickets/new">Create Ticket</Link>
       </header>
@@ -469,7 +464,7 @@ export function JobTicketListPage() {
           </select>
         </label>
         <label className="sr-label">
-          Dispatch readiness
+          Work readiness
           <select value={dispatchReadinessFilter} onChange={(event) => updateFilter('readiness', event.target.value)} disabled={assignmentDataUnavailable}>
             {dispatchReadinessFilterOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
@@ -485,44 +480,22 @@ export function JobTicketListPage() {
         <section className="queue-shortcuts" aria-label="queue summary">
           <div className="queue-shortcuts-heading">
             <div>
-              <h3>Ticket Filter Shortcuts</h3>
-              <p className="muted">Select a count to filter the ticket list.</p>
+              <h3>Quick Views</h3>
+              <p className="muted">Use a few common views. Full status options stay in the filters above.</p>
             </div>
             {hasActiveFilters ? <span className="status-pill">Filtered view</span> : null}
           </div>
-          {configuredStatusSummaries.length ? (
-            <div className="queue-kpi-grid" aria-label="configured ticket status filters">
-              {configuredStatusSummaries.map((filter) => (
-                <button
-                  aria-pressed={statusFilter === String(filter.status) && priorityFilter === allFilterValue && dispatchReadinessFilter === allFilterValue && attentionFilter === allFilterValue}
-                  className="queue-kpi-card"
-                  key={filter.id}
-                  onClick={() => applyQueuePreset({ status: String(filter.status) })}
-                  title={`Show ${filter.displayLabel} tickets`}
-                  type="button"
-                >
-                  <span>{filter.displayLabel}</span>
-                  <strong>{filter.count}</strong>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="muted">No active status filter boxes are configured.</p>
-          )}
           <div className="queue-kpi-grid">
             <button aria-pressed={statusFilter === 'active' && priorityFilter === allFilterValue && dispatchReadinessFilter === allFilterValue && attentionFilter === allFilterValue} className="queue-kpi-card" onClick={() => applyQueuePreset({ status: 'active' })} title="Show submitted through waiting statuses" type="button"><span>Active tickets</span><strong>{triageSummary.activeCount}</strong></button>
-            <button aria-pressed={statusFilter === 'active' && priorityFilter === '4'} className="queue-kpi-card queue-kpi-card-alert" onClick={() => applyQueuePreset({ status: 'active', priority: '4' })} title="Show urgent active tickets" type="button"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong></button>
             <button aria-pressed={statusFilter === 'waiting'} className="queue-kpi-card" onClick={() => applyQueuePreset({ status: 'waiting' })} title="Show tickets waiting on parts or customers" type="button"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong></button>
-            <button aria-pressed={attentionFilter === 'unscheduled'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'unscheduled' })} title="Show active tickets without a scheduled start" type="button"><span>Unscheduled</span><strong>{triageSummary.unscheduledCount}</strong></button>
             <button aria-pressed={attentionFilter === 'missing-due'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'missing-due' })} title="Show active tickets without a due date" type="button"><span>Missing due</span><strong>{triageSummary.missingDueDateCount}</strong></button>
             {assignmentDataUnavailable ? (
               <div className="queue-kpi-card queue-kpi-card-review queue-kpi-card-static"><span>Technician Assignments</span><strong>Unavailable</strong></div>
             ) : (
               <>
                 <button aria-pressed={attentionFilter === 'unassigned'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'unassigned' })} title="Show active tickets that need an assigned technician" type="button"><span>Unassigned</span><strong>{triageSummary.unassignedCount}</strong></button>
-                <button aria-pressed={attentionFilter === 'needs-lead'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'needs-lead' })} title="Show active tickets without a lead technician" type="button"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong></button>
-                <button aria-pressed={dispatchReadinessFilter === 'ready'} className="queue-kpi-card queue-kpi-card-ready" onClick={() => applyQueuePreset({ status: 'active', readiness: 'ready' })} title="Show dispatch-ready tickets" type="button"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong></button>
-                <button aria-pressed={dispatchReadinessFilter === 'needs-review'} className="queue-kpi-card queue-kpi-card-review" onClick={() => applyQueuePreset({ status: 'active', readiness: 'needs-review' })} title="Show tickets that need dispatch review" type="button"><span>Needs review</span><strong>{triageSummary.needsDispatchReviewCount}</strong></button>
+                <button aria-pressed={dispatchReadinessFilter === 'needs-review'} className="queue-kpi-card queue-kpi-card-review" onClick={() => applyQueuePreset({ status: 'active', readiness: 'needs-review' })} title="Show tickets that need assignment or schedule review" type="button"><span>Needs review</span><strong>{triageSummary.needsDispatchReviewCount}</strong></button>
+                <button aria-pressed={dispatchReadinessFilter === 'ready'} className="queue-kpi-card queue-kpi-card-ready" onClick={() => applyQueuePreset({ status: 'active', readiness: 'ready' })} title="Show tickets ready for work" type="button"><span>Ready to work</span><strong>{triageSummary.dispatchReadyCount}</strong></button>
               </>
             )}
           </div>
@@ -530,7 +503,7 @@ export function JobTicketListPage() {
       ) : null}
 
       {!isLoading && !error && assignmentDataUnavailable ? (
-        <p className="queue-warning warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and dispatch-readiness filters are unavailable until assignments reload.</p>
+        <p className="queue-warning warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and work-readiness filters are unavailable until assignments reload.</p>
       ) : null}
 
       {isLoading ? <p className="muted" role="status">Loading manager job tickets...</p> : null}
@@ -600,7 +573,7 @@ export function JobTicketListPage() {
                     <div><strong>{leadSummary}</strong><span>{assignmentSummary}</span></div>
                     <div><strong>{getJobTicketStatusLabel(job.status)}</strong><span>{getJobTicketPriorityLabel(job.priority)}</span></div>
                     <div><strong>{formatDate(job.scheduledStartAtUtc)}</strong><span>{readiness.label}</span></div>
-                    <div><strong>{formatDate(job.dueAtUtc)}</strong><span>{readiness.openItems ? readiness.nextStep : 'Ready for dispatch review.'}</span></div>
+                    <div><strong>{formatDate(job.dueAtUtc)}</strong><span>{readiness.openItems ? readiness.nextStep : 'Ready for work.'}</span></div>
                     <Link className="button-link secondary-link compact-ticket-open" to={getTicketDetailPath(job.id)}>Open</Link>
                   </article>
                 )
@@ -634,7 +607,7 @@ export function JobTicketListPage() {
                   </div>
                   <div className="readiness-panel">
                     <div>Assigned: {assignmentSummary} · Lead: {leadSummary}</div>
-                    <div>Dispatch status: {readiness.label} · {readiness.detail}</div>
+                    <div>Work status: {readiness.label} · {readiness.detail}</div>
                     <div>Next required update: {readiness.nextStep}</div>
                   </div>
                   <div className="ticket-meta-grid ticket-date-grid">

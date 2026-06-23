@@ -9,9 +9,9 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Manager/Admin Phase 3B master-data polish has started with expanded existing-field create/edit forms and active-only relationship defaults for customers, service locations, equipment, vendors, part categories, and parts, while preserving existing archive/unarchive workflows and APIs.
 - Manager/Admin reports are organized into invoice/closeout, labor/parts, and service-history sections with shared filters, source-ID validation, date/paging validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from the currently loaded rows.
 - Manager/Admin screen cleanup separates report catalog/results, master-data list/editor, and Admin user list/editor states into focused screens without changing backend APIs; Admin user management now filters accounts by search, role, and active/inactive status.
-- Manager/Admin job-ticket queue can switch between rich readiness cards and a persisted compact operating list, renders Admin-configured status filter boxes with seeded default active field-work statuses, and can export the currently visible filtered ticket rows to client-side CSV for dispatch handoff without adding backend export APIs.
+- Manager/Admin job-ticket queue can switch between rich readiness cards and a persisted compact operating list, uses Admin-configured status filter options with seeded default active field-work statuses, and can export the currently visible filtered ticket rows to client-side CSV without adding backend export APIs.
 - Employee assigned-job lists hide fully closed tickets (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`) while Manager/Admin users can still find those tickets in the queue, ticket workspace, reports, and history.
-- Manager/Admin Dispatch at `/manage/dispatch` is the shared schedule for active job tickets. Its focused Unscheduled Tickets, Today, Tomorrow, and Next 7 Days views support one Schedule & Assign action plus guarded En Route, On Site, Start Work, Complete Work, and Open Ticket actions using existing APIs. Completed work, ticket review, and billing stay in the ticket workspace and Reports.
+- Manager/Admin Job Tickets is the main operating screen for creating, assigning, scheduling, and reviewing work. The legacy `/manage/dispatch` URL redirects to Job Tickets because assignment and scheduling now live on the ticket itself.
 - Production deployment configuration and readiness runbooks are source-controlled, with explicit migration startup, disabled normal production seed/bootstrap services, health proxying, backup/restore guidance, rollback steps, and client-UAT gates documented.
 - Controlled production-demo readiness is documented with a source-controlled SQL/uploaded-files backup verification script and clear full go-live gates.
 - Labor report totals are labeled as time-entry labor-rate snapshot values and preserve the existing API fallback behavior for legacy entries without captured snapshots.
@@ -28,16 +28,16 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - A shared presentation system now polishes every existing Employee and Manager/Admin route with consistent typography, compact actions, form controls, tables, cards, navigation, responsive behavior, and loading/empty/error states.
-- Local pilot seed data includes six demo tickets across invoice-ready, assigned, waiting-on-parts, unassigned, needs-lead, and urgent in-progress scenarios for Employee, Dispatch, Manager/Admin queue, parts, and reports walkthroughs.
+- Local pilot seed data includes six demo tickets across invoice-ready, assigned, waiting-on-parts, unassigned, needs-lead, and urgent in-progress scenarios for Employee, Manager/Admin queue, parts, and reports walkthroughs.
 
 ## Current UI Direction
 The Manager/Admin Service Ticket Workspace Redesign is implemented for the job-ticket detail/workspace flow, and the same restrained operational design system is applied across the rest of the existing application.
 
-The service-ticket side now centers on one job-ticket record: the queue creates and finds tickets, Dispatch schedules active tickets, the ticket workspace captures and reviews the work, and Reports supports invoice-ready review. The design direction remains adapted to Crane's job-ticket scope.
+The service-ticket side now centers on one job-ticket record: the queue creates and finds tickets, the ticket workspace handles Assignment & Schedule, technicians capture work, Managers/Admins review the ticket, and Reports supports invoice-ready review. The design direction remains adapted to Crane's job-ticket scope.
 
 This UI direction does not approve external client portals, online payments, quote approval automation, customer notification automation, purchasing expansion, inventory expansion, parts recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
-Dispatch is intentionally ticket-backed, not a second work module. A crane/equipment selection identifies the customer's unit being serviced; it is not a dispatched company resource or employee assignment. Specific components or parts being serviced belong in the ticket's job scope and instructions. Dispatch itself does not add a separate record, table, status enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
+There is intentionally no separate Dispatch module. A crane/equipment selection identifies the customer's unit being serviced; it is not a dispatched company resource or employee assignment. Specific components or parts being serviced belong in the ticket's job scope and instructions. Assignment and scheduling do not add a separate record, table, status enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
 
 ## Scope Boundary
 The project remains centered on the job-ticket workflow:

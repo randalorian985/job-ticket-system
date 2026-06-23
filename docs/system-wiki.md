@@ -39,10 +39,6 @@ The screenshots below appear again in the workflow sections where they are most 
 | Manager/Admin dashboard | [manager-dashboard.png](assets/system-wiki/manager-dashboard.png) |
 | Job-ticket queue rich and compact views | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
 | Job-ticket workspace | [job-ticket-workspace.png](assets/system-wiki/job-ticket-workspace.png) |
-| Dispatch board | [dispatch-board.png](assets/system-wiki/dispatch-board.png) |
-| Dispatch unscheduled-ticket warnings | [dispatch-unscheduled-jobs.png](assets/system-wiki/dispatch-unscheduled-jobs.png) |
-| Dispatch schedule and assign panel | [dispatch-schedule-job.png](assets/system-wiki/dispatch-schedule-job.png) |
-| Mobile Dispatch board | [dispatch-board-mobile.png](assets/system-wiki/dispatch-board-mobile.png) |
 | Section-based ticket editor | [ticket-section-editor.png](assets/system-wiki/ticket-section-editor.png) |
 | Quick note workflow | [ticket-quick-note.png](assets/system-wiki/ticket-quick-note.png) |
 | Status review workflow | [ticket-status-review.png](assets/system-wiki/ticket-status-review.png) |
@@ -109,7 +105,7 @@ Admins have Manager capabilities plus user administration.
 
 Admin users can:
 - manage Company Configuration for the crane company's own logo, profile, and colors;
-- manage which status filter boxes appear in the Manager/Admin job-ticket queue;
+- manage which status filter options appear in the Manager/Admin job-ticket queue;
 - create user accounts;
 - edit user account information;
 - deactivate/archive users;
@@ -130,7 +126,6 @@ Admin users can:
 
 ### Manager/Admin Routes
 - `/manage`: Manager/Admin dashboard.
-- `/manage/dispatch`: shared schedule and day-of coordination board for active job tickets.
 - `/manage/job-tickets`: job-ticket queue.
 - `/manage/job-tickets/new`: create job ticket.
 - `/manage/job-tickets/{jobTicketId}`: job-ticket workspace.
@@ -147,6 +142,7 @@ Admin users can:
 - `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
 - `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
 - `/manage/users`: Admin-only user management.
+- `/manage/dispatch`: legacy bookmark route that redirects to `/manage/job-tickets`.
 
 ## Production Demo Operations
 
@@ -343,12 +339,12 @@ Files must be 50 MB or smaller.
 ## Manager/Admin Workspace
 
 ### Dashboard
-The dashboard summarizes operational work and provides quick entry into common queues.
+The dashboard is a quiet summary screen. It shows the current shape of the work without trying to replace the job-ticket queue.
 
 Typical dashboard actions include:
 - review active job tickets;
 - open filtered job queues;
-- check dispatch/readiness attention areas;
+- check assignment and schedule attention areas;
 - move into time approval, parts requests, reports, or master-data workflows.
 
 Dashboard links use the same Manager/Admin role boundary as the rest of the workspace.
@@ -362,15 +358,15 @@ Managers/Admins can filter by:
 - status;
 - priority;
 - customer;
-- dispatch readiness;
+- work readiness;
 - attention condition;
 - search text.
 
-The status filter boxes in the queue come from Admin configuration. Admins choose the display label, existing ticket status value, display order, and active/inactive flag. If no custom configuration exists, the queue uses the default active field-work filters: Submitted, Assigned, In Progress, Waiting on Parts, and Waiting on Customer.
+The status choices in the queue come from Admin configuration. Admins choose the display label, existing ticket status value, display order, and active/inactive flag. If no custom configuration exists, the queue uses the default active field-work filters: Submitted, Assigned, In Progress, Waiting on Parts, and Waiting on Customer.
 
-Changing these boxes does not create a new workflow. It only changes which status shortcuts appear in the Manager/Admin queue. Existing ticket status names, numeric values, status-change rules, and reports stay the same.
+Changing these options does not create a new workflow. It only changes how the Status filter is labeled and ordered in the Manager/Admin queue. Existing ticket status names, numeric values, status-change rules, and reports stay the same.
 
-Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and dispatch readiness. It does not create a server-side export job.
+Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and work readiness. It does not create a server-side export job.
 
 Queue URLs are shareable. If a Manager/Admin opens a ticket from a filtered queue, the ticket detail can preserve a safe return link back to that queue.
 
@@ -385,8 +381,8 @@ Important queue concepts:
 - waiting tickets;
 - waiting on parts;
 - invoice-ready queue;
-- needs dispatch review;
-- dispatch-ready queue;
+- needs assignment review;
+- ready to work queue;
 - unassigned tickets;
 - tickets needing a lead;
 - unscheduled tickets;
@@ -430,13 +426,13 @@ It includes:
 - workflow tabs.
 
 Workflow tabs include:
-- Overview;
-- Dispatch;
-- Time;
+- Service Details;
+- Assignment & Schedule;
+- Labor;
 - Parts;
 - Files;
-- Closeout;
-- Activity.
+- Invoice Review;
+- History.
 
 The workspace keeps related work on one screen instead of forcing Managers/Admins through scattered pages.
 
@@ -448,128 +444,81 @@ Managers/Admins open a ticket from the job-ticket queue, dashboard links, report
 The ticket view is organized around review first and editing second:
 - the top summary shows ticket number, title, status, priority, customer, location, equipment, and due date;
 - the recommended next action opens the most relevant workflow screen;
-- workflow tabs separate Service Details, Dispatch, Labor, Parts, Files, Invoice Review, and History;
+- workflow tabs separate Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History;
 - the side action rail keeps common Manager/Admin actions visible without taking over the whole screen.
 
 This view is intended to answer "what needs attention?" before asking the user to edit anything.
 
-### Dispatch Flow
-**Plain-language rule:** there is one work record: the job ticket. Dispatch is the shared schedule for active tickets. It does not create another request, job, or ticket record.
+### Assignment And Schedule Workflow
+**Plain-language rule:** there is one work record: the job ticket. The system does not have a separate Dispatch module or a separate dispatcher workflow. Managers/Admins create a job ticket, assign technicians, set schedule and due dates, and review the ticket as work moves forward.
 
 Use each area for one clear purpose:
-- use **Job Tickets** to create, find, and edit all work records;
-- use **Dispatch** to schedule active tickets and coordinate today's field work;
-- use the ticket workspace for scope, labor, parts, files, and closeout review;
+- use **Job Tickets** to create, find, assign, schedule, and edit work records;
+- use the ticket workspace's **Assignment & Schedule** tab for assigned technicians, lead tech, schedule, due date, and assignment warnings;
+- use the ticket workspace for scope, labor, parts, files, notes, status changes, and closeout review;
 - use **Reports** for billing-ready and invoice review.
 
-People are assigned to a job ticket. The customer's crane or other equipment is what the ticket says the team is servicing. It is not assigned by Dispatch. If the work is on a component or part, describe that clearly in **Job / Scope** or **Service Instructions**.
+People are assigned to a job ticket. The customer's crane or other equipment is what the ticket says the team is servicing. It is not assigned as a company resource. If the work is on a component or part, describe that clearly in **Job / Scope** or **Service Instructions**.
 
-#### Dispatch Board
-Open `/manage/dispatch` to work with active job tickets without opening each ticket for routine scheduling actions.
-
-Board views:
-- **Unscheduled Tickets**: active tickets without a scheduled start;
-- **Today**: scheduled active work for the current day;
-- **Tomorrow**: scheduled active work for the next day;
-- **Next 7 Days**: scheduled active work in the next seven days.
-
-Completed, cancelled, reviewed, and invoiced tickets do not appear in Dispatch. They remain available in the Job Tickets queue, ticket workspace, and reports.
-
-![Manager/Admin Dispatch board for active job tickets](assets/system-wiki/dispatch-board.png)
-
-Each card shows:
-- customer;
-- job site/location;
-- customer-requested date/time;
-- scheduled date/time;
-- job type/title;
-- crane/equipment being serviced;
-- assigned operator;
-- assigned crew;
-- priority and current ticket status;
-- conflict or missing-assignment warnings.
-
-![Unscheduled Dispatch ticket with missing schedule and operator warnings](assets/system-wiki/dispatch-unscheduled-jobs.png)
+Old bookmarks to `/manage/dispatch` redirect to `/manage/job-tickets` so users land in the current workflow.
 
 #### One Job-Ticket Workflow
-The job ticket moves through the existing workflow. Dispatch only owns the scheduling and day-of steps in the middle.
+The job ticket moves through the existing workflow from request through review. Assignment and schedule details are part of that ticket.
 
 ```mermaid
 flowchart TD
-  A["Create Job Ticket (Draft)"] --> B["Submit or Schedule"]
-  B --> C["Schedule and Assign (Assigned)"]
-  C --> D["En Route / On Site notes"]
-  D --> E["Start Work (In Progress)"]
-  E --> F["Complete Work (Completed)"]
-  F --> G["Ticket Review (Reviewed)"]
-  G --> H["Reports / Invoiced"]
+  A["Create Job Ticket"] --> B["Review Scope, Customer, Location, Equipment"]
+  B --> C["Assign Technicians And Lead Tech"]
+  C --> D["Set Schedule And Due Date"]
+  D --> E["Technician Works Ticket"]
+  E --> F["Manager/Admin Reviews Labor, Parts, Files, And Status"]
+  F --> G["Invoice Review / Reports"]
 ```
 
 The UI uses the real ticket statuses: Draft, Submitted, Assigned, In Progress, Waiting on Parts, Waiting on Customer, Completed, Cancelled, Invoiced, and Reviewed. It does not invent separate Requested, Scheduled, or Dispatched statuses.
 
-#### Scheduling Workflow
-Use **Schedule & Assign** on a dispatch card. One focused panel handles the information that belongs together:
+#### Quick Views
+The Job Tickets screen has a small set of practical quick views:
+- **Active tickets**;
+- **Waiting**;
+- **Missing due**;
+- **Unassigned**;
+- **Needs review**;
+- **Ready to work**.
 
-- customer-requested date/time for reference;
-- scheduled date/time;
-- due date/time;
-- crane/equipment being serviced;
-- lead operator;
-- crew members;
-- notes;
-- employee conflict warnings.
+These quick views are not a second workflow. They only apply filters to the same job-ticket list. Admin-configured status labels stay in the Status filter so the screen does not become crowded with shortcut boxes.
 
-Saving a Draft or Submitted ticket with a schedule and lead operator moves it to Assigned. A ticket that is already further along keeps its current status.
+#### Assignment And Schedule Checks
+The system checks for the information Managers/Admins need before field work is clear:
+- assigned technician;
+- lead tech;
+- scheduled start;
+- due date;
+- customer;
+- service location;
+- crane/equipment being serviced, when the ticket is for a whole equipment record;
+- service scope or notes for component-only work.
 
-![Schedule and assign ticket panel](assets/system-wiki/dispatch-schedule-job.png)
-
-#### Service Equipment Workflow
-Choose the customer's crane or equipment record that this ticket is servicing. This selection stays on the job ticket. It is not an assignment of a company crane.
-
-If the work is for a component or part instead of a whole equipment record, leave the equipment selection empty when appropriate and describe the component clearly in the ticket's Job / Scope or Service Instructions. The board does not treat two tickets for the same equipment as a dispatch resource conflict.
-
-#### Operator / Crew Assignment Workflow
-The operator is the lead job-ticket assignment. Crew members are non-lead job-ticket assignments.
-
-Validation and warnings include:
-- missing operator;
-- missing crew/assignment;
-- lead/operator not selected;
-- employee already assigned to another active job on the selected day.
-
-The UI allows a dispatcher to save with employee scheduling warnings so real-world exceptions can be handled intentionally. This is a warning workflow, not automatic approval or automatic scheduling.
-
-#### Day-Of-Job Workflow
-Dispatchers can move jobs forward directly from the card:
-- **En Route** and **On Site** are enabled for an Assigned ticket with a schedule and lead operator; they add activity notes while the ticket remains Assigned;
-- **Start Work** moves the ticket to In Progress;
-- **Complete Work** is enabled only for In Progress work and moves the ticket to Completed.
-
-When work is completed, the ticket leaves Dispatch. Use **Open Ticket** for detailed work or closeout review. Use **Create Job Ticket** when the work record does not exist yet.
+Missing items appear as **Needs assignment review** or **Needs attention** depending on the screen. Complete tickets show **Ready to work**.
 
 #### Ticket Review And Finalization
-Review completed work in the ticket workspace, not Dispatch. Managers/Admins review ticket data, labor, parts, files/photos, closeout readiness, and activity there. Moving Completed work to Reviewed remains a ticket action.
+Review completed work in the ticket workspace. Managers/Admins review ticket data, labor, parts, files/photos, closeout readiness, and activity there. Moving Completed work to Reviewed remains a ticket action.
 
 #### Billing Readiness
-Use Reports for billing-ready and invoice review. Dispatch does not contain a billing queue, generate invoices, or collect payments.
+Use Reports for billing-ready and invoice review. Job Tickets do not generate invoices, collect payments, or create a separate billing queue.
 
-#### Mobile Dispatch UX
+#### Mobile Workflow
 On mobile:
-- board tabs wrap into a compact grid;
-- job cards stack vertically;
-- card facts remain readable without narrow table columns;
-- primary actions remain visible on the card;
-- the Schedule & Assign panel fills the viewport with clear Save Dispatch Plan and Cancel controls.
-
-![Mobile Dispatch board](assets/system-wiki/dispatch-board-mobile.png)
+- use the Job Tickets queue or dashboard links to find the ticket;
+- use the compact ticket list for dense scanning;
+- open the ticket workspace for Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History;
+- focused workflow panels keep the selected task near the top of the screen.
 
 #### Permissions And Validation Rules
-Dispatch Board access is Manager/Admin-only through the existing `/manage` route boundary.
+Assignment and schedule work is Manager/Admin-only through the existing `/manage` route boundary.
 
 Validation and warnings preserve existing data integrity:
-- missing scheduled date/time blocks the dispatch plan from being saved;
-- missing lead operator blocks the dispatch plan from being saved;
-- assignment conflicts are shown as warnings;
+- missing assignment, lead tech, schedule, or due date are shown as review items;
 - existing ticket update and employee-assignment APIs remain the persistence boundary;
 - no separate dispatch entity, status enum, database table, or API is introduced;
 - no auth weakening, enum renumbering, Dispatch-specific schema migration, automatic scheduling, or purchasing/inventory expansion is introduced.
@@ -584,15 +533,15 @@ The new workflow keeps editing in the ticket workspace but splits the edit panel
 - **Billing**: purchase order and billing contact fields;
 - **Schedule**: requested, scheduled start, and due dates.
 
-The same dispatch-readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
+The same assignment and schedule readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
 
-![Section-based ticket editor with dispatch readiness](assets/system-wiki/ticket-section-editor.png)
+![Section-based ticket editor with assignment and schedule readiness](assets/system-wiki/ticket-section-editor.png)
 
 Workflow tabs and action buttons now open the selected ticket workflow in a focused view. This means the selected panel appears directly under the workflow heading and tabs instead of requiring mobile users to scroll past the overview rail. The focused view includes a **Back to ticket overview** control, and that control closes any open focused panel before returning to the normal ticket overview.
 
 The ticket overview also includes a workflow-guidance area:
 - **Recommended next action** names the next practical step, explains the blocker or reason, shows the target workflow, and opens that workflow directly.
-- **Ticket workflow path** shows Dispatch, Field Work, Parts / Files, and Invoice Review so office users can jump to the right stage without hunting through the page.
+- **Ticket workflow path** shows Assignment & Schedule, Field Work, Parts / Files, and Invoice Review so office users can jump to the right stage without hunting through the page.
 - The **Invoice Review** workflow shows open closeout requirements before invoice totals so billing handoff work is visible before users review dollars.
 
 ![Invoice review workflow](assets/system-wiki/ticket-invoice-review.png)
@@ -614,7 +563,7 @@ User experience improvements:
 - fewer fields compete for attention at one time;
 - section buttons make the edit model predictable;
 - mobile users can edit one section at a time instead of working through a long stacked form;
-- dispatch-readiness feedback remains visible while editing;
+- assignment and schedule readiness feedback remains visible while editing;
 - quick actions let users add notes, upload photos/files, review labor, or change status without opening the full editor.
 - mobile ticket shortcuts keep Add Note, Add Photo, Labor, and Status close to the top of the ticket overview.
 
@@ -1125,11 +1074,11 @@ Manager/Admin ticket workspace refreshes, Employee mobile post-action refreshes,
 
 ### Daily Manager/Admin Flow
 1. Open the dashboard.
-2. Review urgent queue summaries.
+2. Review the quiet operations summary.
 3. Open Job Tickets and choose **Compact list** for fast scanning or **Rich cards** for deeper readiness review.
-4. Open Dispatch for unscheduled, today, tomorrow, and next-seven-day active tickets.
-5. Use Schedule & Assign to set the schedule, confirm the crane/equipment being serviced, and assign the lead operator and crew.
-6. Record En Route or On Site, then move active tickets through Start Work and Complete Work.
+4. Use Quick Views for Active tickets, Waiting, Missing due, Unassigned, Needs review, and Ready to work.
+5. Open the ticket workspace and use **Assignment & Schedule** to assign technicians, mark the lead tech, and set schedule and due dates.
+6. Confirm the crane/equipment being serviced or describe component-only work in the ticket scope.
 7. Review completed work in the ticket workspace.
 8. Review tickets waiting on parts.
 9. Review pending time entries.
@@ -1212,17 +1161,17 @@ Use this checklist when introducing the system to a client team.
 
 ### Manager Training
 - Use the dashboard.
-- Use Dispatch only for active scheduling and day-of coordination.
-- Use Schedule & Assign without opening ticket detail.
-- Confirm the service equipment, then assign the lead operator and crew.
-- Move day-of work through En Route, On Site, Start Work, and Complete Work.
+- Use Job Tickets as the main operating screen.
+- Use quick views without letting the page become a wall of shortcuts.
+- Confirm the service equipment, then assign technicians and the lead tech in the ticket workspace.
+- Set scheduled start and due dates on the ticket.
 - Review completed tickets in the ticket workspace and billing-ready work in Reports.
 - Filter job-ticket queues.
 - Create a job ticket.
 - Open the ticket workspace.
 - Assign employees.
 - Update ticket status/priority.
-- Review dispatch readiness.
+- Review assignment and schedule readiness.
 - Review time entries.
 - Approve/reject/edit-and-approve time.
 - Review part requests.

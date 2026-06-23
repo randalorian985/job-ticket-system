@@ -54,7 +54,7 @@ const equipment = [
   { id: 'eq1', customerId: 'c1', serviceLocationId: 's1', name: 'Truck 7' }
 ] as any
 
-describe('JobTicketEditorForm dispatch requirements review', () => {
+describe('JobTicketEditorForm assignment and schedule requirements review', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(reportsApi.getEquipmentHistory).mockResolvedValue([])
@@ -66,7 +66,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     fireEvent.click(screen.getByRole('button', { name }))
   }
 
-  it('summarizes completed dispatch requirements', () => {
+  it('summarizes completed assignment and schedule requirements', () => {
     render(
       <JobTicketEditorForm
         initial={baseTicket}
@@ -78,14 +78,14 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    expect(screen.getByLabelText('dispatch requirements review')).toBeInTheDocument()
-    expect(screen.getByText('Ready to dispatch')).toBeInTheDocument()
+    expect(screen.getByLabelText('assignment and schedule requirements review')).toBeInTheDocument()
+    expect(screen.getByText('Ready to work')).toBeInTheDocument()
     expect(screen.getByText('7 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: All dispatch requirements are complete.')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: All assignment and schedule requirements are complete.')).toBeInTheDocument()
+    expect(screen.getByText('Work status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
   })
 
-  it('keeps no-equipment tickets dispatchable when the remaining requirements are present', () => {
+  it('keeps no-equipment tickets ready when the remaining requirements are present', () => {
     render(
       <JobTicketEditorForm
         initial={{ ...baseTicket, equipmentId: null }}
@@ -97,12 +97,12 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    expect(screen.getByText('Ready to dispatch')).toBeInTheDocument()
+    expect(screen.getByText('Ready to work')).toBeInTheDocument()
     expect(screen.getByText('7 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
+    expect(screen.getByText('Work status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
   })
 
-  it('marks tickets outside active dispatch status as needing dispatch review', () => {
+  it('marks tickets outside active work status as needing assignment review', () => {
     render(
       <JobTicketEditorForm
         initial={{ ...baseTicket, status: 7 }}
@@ -114,13 +114,13 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    expect(screen.getByText('Needs dispatch updates')).toBeInTheDocument()
+    expect(screen.getByText('Needs assignment updates')).toBeInTheDocument()
     expect(screen.getByText('6 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: Move the ticket into an active dispatch status before dispatch review.')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status: Move the ticket into an active dispatch status before dispatch review.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Move the ticket into an active work status before assignment review.')).toBeInTheDocument()
+    expect(screen.getByText('Work status: Move the ticket into an active work status before assignment review.')).toBeInTheDocument()
   })
 
-  it('names missing dispatch requirements and updates as fields are filled', () => {
+  it('names missing assignment and schedule requirements and updates as fields are filled', () => {
     const initial = {
       ...baseTicket,
       description: null,
@@ -141,16 +141,16 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    expect(screen.getByText('Needs dispatch updates')).toBeInTheDocument()
+    expect(screen.getByText('Needs assignment updates')).toBeInTheDocument()
     expect(screen.getByText('4 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: Set a scheduled start before dispatch.')).toBeInTheDocument()
-    expect(screen.getByText('Scheduled start: Set a scheduled start before dispatch.')).toBeInTheDocument()
-    expect(screen.getByText('Due date: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Set a scheduled start before work starts.')).toBeInTheDocument()
+    expect(screen.getByText('Scheduled start: Set a scheduled start before work starts.')).toBeInTheDocument()
+    expect(screen.getByText('Due date: Add a due date for timing expectations.')).toBeInTheDocument()
     expect(screen.getByText('Job instructions: Add job instructions or notes for the technician.')).toBeInTheDocument()
 
     openEditSection('Schedule')
     fireEvent.change(screen.getByLabelText('Scheduled Start (UTC)'), { target: { value: '2026-04-02T09:30' } })
-    expect(screen.getByText('Next required update: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Add a due date for timing expectations.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Due (UTC)'), { target: { value: '2026-04-03T17:00' } })
     expect(screen.getByText('Next required update: Add job instructions or notes for the technician.')).toBeInTheDocument()
@@ -158,9 +158,9 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     openEditSection('Scope & Notes')
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Replace seal and test restart.' } })
 
-    expect(screen.getByText('Ready to dispatch')).toBeInTheDocument()
+    expect(screen.getByText('Ready to work')).toBeInTheDocument()
     expect(screen.getByText('7 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: All dispatch requirements are complete.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: All assignment and schedule requirements are complete.')).toBeInTheDocument()
   })
 
   it('keeps the readiness helper explicit and field-based', () => {
@@ -172,7 +172,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     })
 
     expect(checks).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Dispatch status', isReady: true }),
+      expect.objectContaining({ label: 'Work status', isReady: true }),
       expect.objectContaining({ label: 'Service location', isReady: false }),
       expect.objectContaining({ label: 'Service equipment', isReady: true }),
       expect.objectContaining({ label: 'Due date', isReady: false }),
@@ -188,9 +188,9 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
 
     expect(checks).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        label: 'Dispatch status',
+        label: 'Work status',
         isReady: false,
-        detail: 'Move the ticket into an active dispatch status before dispatch review.'
+        detail: 'Move the ticket into an active work status before assignment review.'
       })
     ]))
   })

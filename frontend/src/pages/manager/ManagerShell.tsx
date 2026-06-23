@@ -21,12 +21,8 @@ const navGroups: ManagerNavGroup[] = [
     label: 'Operations',
     items: [
       { label: 'Dashboard', to: '/manage', end: true },
-      { label: 'Dispatch', to: '/manage/dispatch' },
       { label: 'Job Tickets', to: '/manage/job-tickets' },
-      { label: 'Time Approval', to: '/manage/time-approval' },
-      { label: 'Parts Approval', to: '/manage/parts-approval' },
-      { label: 'Reports', to: '/manage/reports' },
-      { label: 'Wiki', to: '/manage/wiki' }
+      { label: 'Reports', to: '/manage/reports' }
     ]
   },
   {
@@ -43,7 +39,15 @@ const navGroups: ManagerNavGroup[] = [
       { label: 'Parts', to: '/manage/parts' },
       { label: 'Part Requests', to: '/manage/part-requests' },
       { label: 'Purchasing', to: '/manage/purchasing' },
+      { label: 'Parts Approval', to: '/manage/parts-approval' },
       { label: 'Parts Usage History', to: '/manage/parts-usage-history' }
+    ]
+  },
+  {
+    label: 'Review & Reference',
+    items: [
+      { label: 'Time Approval', to: '/manage/time-approval' },
+      { label: 'Wiki', to: '/manage/wiki' }
     ]
   },
   {
