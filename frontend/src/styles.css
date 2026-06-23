@@ -2616,6 +2616,193 @@ td {
   white-space: normal;
 }
 
+.time-entry-review-panel {
+  background: #ffffff;
+  border: 1px solid #d6dde8;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.time-entry-review-header {
+  align-items: flex-start;
+  border-bottom: 1px solid #e5ebf3;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding-bottom: 0.85rem;
+}
+
+.time-entry-review-header h3,
+.time-entry-review-header p {
+  margin: 0;
+}
+
+.time-entry-review-header h3 {
+  margin-top: 0.35rem;
+}
+
+.time-entry-review-header button {
+  flex: 0 0 auto;
+}
+
+.time-entry-review-summary {
+  background: #f8fafc;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0.75rem;
+}
+
+.time-entry-review-summary div {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.time-entry-review-summary span,
+.time-entry-detail-grid dt,
+.time-entry-review-panel label {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.time-entry-review-summary strong {
+  color: #0f172a;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.time-entry-review-section {
+  border: 1px solid #e1e8f2;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.time-entry-section-heading h4,
+.time-entry-section-heading p,
+.time-entry-action-panel h4,
+.time-entry-action-panel p {
+  margin: 0;
+}
+
+.time-entry-detail-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.time-entry-detail-grid div {
+  background: #f8fafc;
+  border: 1px solid #e5ebf3;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+  padding: 0.6rem 0.65rem;
+}
+
+.time-entry-detail-grid div:nth-child(2),
+.time-entry-detail-grid div:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+.time-entry-detail-grid dd {
+  color: #0f172a;
+  font-weight: 750;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.time-entry-adjustment-grid,
+.time-entry-notes-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.time-entry-notes-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.time-entry-review-panel label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.time-entry-review-panel textarea {
+  min-height: 6rem;
+}
+
+.time-entry-action-panel {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  display: flex;
+  gap: 0.85rem;
+  justify-content: space-between;
+  padding: 0.85rem;
+}
+
+.time-entry-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.time-entry-action-row button {
+  min-height: 2.45rem;
+  width: auto;
+}
+
+@media (max-width: 980px) {
+  .time-entry-review-summary,
+  .time-entry-adjustment-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .time-entry-notes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .time-entry-action-panel {
+    align-items: stretch;
+    display: grid;
+  }
+}
+
+@media (max-width: 720px) {
+  .time-entry-review-header {
+    display: grid;
+  }
+
+  .time-entry-review-header button,
+  .time-entry-action-row button {
+    width: 100%;
+  }
+
+  .time-entry-review-summary,
+  .time-entry-detail-grid,
+  .time-entry-adjustment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .time-entry-detail-grid div:nth-child(2),
+  .time-entry-detail-grid div:nth-child(5) {
+    grid-column: auto;
+  }
+}
+
 .employee-combobox {
   position: relative;
 }
