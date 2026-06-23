@@ -50,6 +50,7 @@ export function ManagerDashboardPage() {
   ]
 
   if (user?.role === 'Admin') {
+    links.push({ to: '/manage/ticket-status-filters', label: 'Ticket Filters' })
     links.push({ to: '/manage/users', label: 'Users' })
   }
 

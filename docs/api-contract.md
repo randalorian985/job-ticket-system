@@ -12,6 +12,7 @@
 ## Implemented API Groups
 - Authentication (`/api/auth/*`)
 - Company configuration and branding (`/api/company-configuration/*`)
+- Ticket status filter configuration (`/api/ticket-status-filters`)
 - User management (`/api/users/*`)
 - Assignable employee lookup (`/api/users/assignable-employees`)
 - Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)
@@ -54,6 +55,29 @@ Endpoints:
 
 The feature adds the `CompanyConfigurations` table. It does not change `Customers`, customer selection, job-ticket customer/billing-party fields, service-location relationships, or master-data customer APIs.
 
+## Ticket Status Filter Configuration
+Ticket status filter configuration controls which status filter boxes appear in the Manager/Admin job-ticket queue. It maps labels to existing `JobTicketStatus` values only; it is not a custom workflow engine and does not add statuses or transitions.
+
+Endpoints:
+- `GET /api/ticket-status-filters`
+  - Authorization: `ManagerOrAdmin`.
+  - Returns `TicketStatusFilterOptionDto[]` ordered by `displayOrder`.
+  - If no rows exist, returns the default active field-work filters: Submitted, Assigned, In Progress, Waiting on Parts, and Waiting on Customer.
+- `PUT /api/ticket-status-filters`
+  - Authorization: `AdminOnly`.
+  - Request DTO: `SaveTicketStatusFilterConfigurationDto`.
+  - Creates or updates filter rows without hard-deleting omitted or inactive rows.
+  - Rejects invalid ticket statuses and duplicate active status mappings.
+
+`TicketStatusFilterOptionDto` includes:
+- `id`
+- `displayLabel`
+- `status` using existing `JobTicketStatus` numeric values
+- `displayOrder`
+- `isActive`
+
+The feature adds the `TicketStatusFilterOptions` table and seeds the same default active field-work filters. It does not change backend enum numeric values, job-ticket status labels, job-ticket lifecycle rules, reports, dispatch rules, or employee assignments.
+
 ## Job Ticket Display Fields
 Job-ticket list and detail responses keep relationship IDs for API operations and also include human-readable fields for UI display.
 
@@ -61,7 +85,8 @@ Job-ticket list and detail responses keep relationship IDs for API operations an
 - `JobTicketDto` includes `customerName`, `serviceLocationName`, `billingPartyCustomerName`, optional `equipmentName`, optional `equipmentNumber`, and optional `assignedManagerEmployeeName`.
 - `equipmentId` identifies the customer's crane/equipment being serviced on the job ticket. It is not a dispatched crane assignment. Employee assignments remain separate job-ticket assignment records.
 - Employee and Manager/Admin screens display readable labels instead of exposing customer, service-location, equipment, or employee GUIDs.
-- Authorization, schema, migrations, enum values, and write request DTOs are unchanged. The list response adds only the optional service-equipment ID needed to preserve the ticket selection in Dispatch.
+- Job-ticket display authorization, existing enum values, and write request DTOs are unchanged. The list response still includes the optional service-equipment ID needed to preserve the ticket selection in Dispatch.
+- For Employee users, `GET /api/job-tickets` returns assigned tickets except fully closed statuses (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`). Manager/Admin list views still return those tickets unless a filter excludes them.
 
 ## Dispatch Board
 The Manager/Admin Dispatch Board at `/manage/dispatch` is a frontend workflow over existing APIs.
@@ -90,7 +115,7 @@ Behavior:
 - Start Work changes Assigned to In Progress, and Complete Work changes In Progress to Completed;
 - ticket review/finalization and billing-ready review remain in the existing ticket workspace and Reports workflows.
 
-This does not add a backend dispatch-job record or API, backend dispatch status enum, schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
+Dispatch does not add a backend dispatch-job record or API, backend dispatch status enum, Dispatch-specific schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
 
 ## Manager/Admin Master Data
 Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the already-documented DTO fields for customer contact/account details, service-location status/address/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.
@@ -375,6 +400,8 @@ This section documents the existing inventory API foundation only. It does not a
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
 - `/manage/company-configuration` remains Admin-only.
+- `/manage/ticket-status-filters` remains Admin-only.
+- `GET /api/ticket-status-filters` is Manager/Admin-readable; `PUT /api/ticket-status-filters` remains Admin-only.
 - User-management endpoints under `/api/users` remain Admin-only except for the narrow Manager/Admin `GET /api/users/assignable-employees` lookup documented above.
 - Admin user-management list search and role/status filters are frontend-only over the loaded `/api/users` results; they do not add query parameters or new user-management endpoints.
 - No backend enum numeric values are changed.

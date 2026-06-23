@@ -89,6 +89,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<ICompanyConfigurationService, CompanyConfigurationService>();
+builder.Services.AddScoped<ITicketStatusFilterConfigurationService, TicketStatusFilterConfigurationService>();
 builder.Services.AddScoped<ITestEnvironmentBootstrapService, TestEnvironmentBootstrapService>();
 builder.Services.AddScoped<ICustomersService, CustomersService>();
 builder.Services.AddScoped<IServiceLocationsService, ServiceLocationsService>();

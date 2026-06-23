@@ -236,6 +236,35 @@ public sealed class JobTicketServicesTests
     }
 
     [Fact]
+    public async Task Employee_list_excludes_fully_closed_assigned_job_tickets_but_manager_list_keeps_them()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedCoreReferencesAsync(context);
+        var managerService = CreateService(context);
+        var activeTicket = await managerService.CreateAsync(BuildCreateRequest(refs) with { Title = "Active assigned", Status = JobTicketStatus.InProgress });
+        var completedTicket = await managerService.CreateAsync(BuildCreateRequest(refs) with { Title = "Completed assigned", Status = JobTicketStatus.Completed });
+        var cancelledTicket = await managerService.CreateAsync(BuildCreateRequest(refs) with { Title = "Cancelled assigned", Status = JobTicketStatus.Cancelled });
+        var invoicedTicket = await managerService.CreateAsync(BuildCreateRequest(refs) with { Title = "Invoiced assigned", Status = JobTicketStatus.Invoiced });
+        var reviewedTicket = await managerService.CreateAsync(BuildCreateRequest(refs) with { Title = "Reviewed assigned", Status = JobTicketStatus.Reviewed });
+        await managerService.AddAssignmentAsync(activeTicket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
+        await managerService.AddAssignmentAsync(completedTicket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
+        await managerService.AddAssignmentAsync(cancelledTicket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
+        await managerService.AddAssignmentAsync(invoicedTicket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
+        await managerService.AddAssignmentAsync(reviewedTicket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id));
+        var employeeService = CreateService(context, refs.Employee.Id, SystemRoles.Employee);
+
+        var employeeList = await employeeService.ListAsync(new JobTicketListQuery(null, null, null, null, null));
+        var managerList = await managerService.ListAsync(new JobTicketListQuery(null, null, null, null, null));
+
+        var item = Assert.Single(employeeList);
+        Assert.Equal(activeTicket.Id, item.Id);
+        Assert.Contains(managerList, x => x.Id == completedTicket.Id);
+        Assert.Contains(managerList, x => x.Id == cancelledTicket.Id);
+        Assert.Contains(managerList, x => x.Id == invoicedTicket.Id);
+        Assert.Contains(managerList, x => x.Id == reviewedTicket.Id);
+    }
+
+    [Fact]
     public async Task Add_work_entry_to_job_ticket_succeeds()
     {
         await using var context = CreateContext();

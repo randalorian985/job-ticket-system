@@ -14,6 +14,7 @@ const displayRelatedName = (value: string | null | undefined, unavailableLabel: 
   value?.trim() || unavailableLabel
 
 const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
+const fullyClosedStatuses = new Set([7, 8, 9, 10])
 
 function getAssignedJobReadiness(job: JobTicketListItemDto) {
   const isActiveFieldWork = activeFieldWorkStatuses.has(job.status)
@@ -57,7 +58,7 @@ export function MyJobsPage() {
       .listMine()
       .then((items) => {
         if (isMounted) {
-          setJobs(items)
+          setJobs(items.filter((item) => !fullyClosedStatuses.has(item.status)))
         }
       })
       .catch((requestError) => {

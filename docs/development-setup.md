@@ -55,6 +55,8 @@ For test environment credentials, seeded-data choices, and scheduled-runner work
 6. Run database migrations if your database is not already up to date.
 7. Start the API and frontend for manual verification.
 
+The `ConfigurableTicketStatusFilters` migration creates `TicketStatusFilterOptions` and seeds the default Manager/Admin queue status filter boxes: Submitted, Assigned, In Progress, Waiting on Parts, and Waiting on Customer. Empty in-memory tests also fall back to those same defaults, so no manual local seed step is required.
+
 ## SQL Server Docker setup
 
 From the repository root, first confirm daemon access and then start SQL Server:

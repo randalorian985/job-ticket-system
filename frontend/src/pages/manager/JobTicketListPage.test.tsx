@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
+import { ticketStatusFiltersApi } from '../../api/ticketStatusFiltersApi'
 import { routerFuture } from '../../routes/routerFuture'
 import { JobTicketListPage } from './JobTicketListPage'
 
@@ -21,6 +22,12 @@ vi.mock('../../api/masterDataApi', () => ({
   }
 }))
 
+vi.mock('../../api/ticketStatusFiltersApi', () => ({
+  ticketStatusFiltersApi: {
+    list: vi.fn()
+  }
+}))
+
 describe('Manager list pages', () => {
   beforeEach(() => {
     cleanup()
@@ -33,6 +40,13 @@ describe('Manager list pages', () => {
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
       { id: 's-1', locationName: 'HQ' },
       { id: 's-2', locationName: 'Field Shop' }
+    ] as any)
+    vi.mocked(ticketStatusFiltersApi.list).mockResolvedValue([
+      { id: 'status-submitted', displayLabel: 'Submitted', status: 2, displayOrder: 10, isActive: true },
+      { id: 'status-assigned', displayLabel: 'Assigned', status: 3, displayOrder: 20, isActive: true },
+      { id: 'status-progress', displayLabel: 'In Progress', status: 4, displayOrder: 30, isActive: true },
+      { id: 'status-parts', displayLabel: 'Waiting on Parts', status: 5, displayOrder: 40, isActive: true },
+      { id: 'status-customer', displayLabel: 'Waiting on Customer', status: 6, displayOrder: 50, isActive: true }
     ] as any)
     vi.mocked(jobTicketsApi.listAssignments).mockImplementation(async (jobTicketId: string) => {
       if (jobTicketId === 'job-1') {
@@ -151,6 +165,73 @@ describe('Manager list pages', () => {
     expect(screen.getAllByText('Needs lead').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Dispatch-ready').length).toBeGreaterThan(0)
     expect(screen.getByText('Needs review')).toBeInTheDocument()
+  })
+
+  it('renders the default configured status filter boxes when no custom configuration exists', async () => {
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Submitted job', status: 2, priority: 2, customerId: 'c-1', serviceLocationId: 's-1' },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'In progress job', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    const statusFilters = screen.getByLabelText('configured ticket status filters')
+    expect(within(statusFilters).getAllByRole('button')).toHaveLength(5)
+    expect(within(statusFilters).getByRole('button', { name: /Submitted/ })).toBeInTheDocument()
+    expect(within(statusFilters).getByRole('button', { name: /In Progress/ })).toBeInTheDocument()
+  })
+
+  it('renders fewer configured status filter boxes and hides inactive options', async () => {
+    vi.mocked(ticketStatusFiltersApi.list).mockResolvedValueOnce([
+      { id: 'status-progress', displayLabel: 'Field Work', status: 4, displayOrder: 20, isActive: true },
+      { id: 'status-review', displayLabel: 'Review Ready', status: 7, displayOrder: 30, isActive: false },
+      { id: 'status-parts', displayLabel: 'Parts Hold', status: 5, displayOrder: 10, isActive: true }
+    ] as any)
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Wait parts', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2' },
+      { id: 'job-3', ticketNumber: 'JT-3', title: 'Completed ticket', status: 7, priority: 1, customerId: 'c-1', serviceLocationId: 's-1' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    const statusFilters = screen.getByLabelText('configured ticket status filters')
+    const buttons = within(statusFilters).getAllByRole('button')
+    expect(buttons).toHaveLength(2)
+    expect(buttons.map((button) => button.querySelector('span')?.textContent)).toEqual(['Parts Hold', 'Field Work'])
+    expect(within(statusFilters).queryByText('Review Ready')).not.toBeInTheDocument()
+
+    fireEvent.click(within(statusFilters).getByRole('button', { name: /Field Work/ }))
+    expect(screen.getByText('JT-1')).toBeInTheDocument()
+    expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+  })
+
+  it('renders longer configured status filter lists and keeps closed tickets available to Manager/Admin filters', async () => {
+    vi.mocked(ticketStatusFiltersApi.list).mockResolvedValueOnce([
+      { id: 'status-draft', displayLabel: 'Draft', status: 1, displayOrder: 10, isActive: true },
+      { id: 'status-submitted', displayLabel: 'Submitted', status: 2, displayOrder: 20, isActive: true },
+      { id: 'status-assigned', displayLabel: 'Assigned', status: 3, displayOrder: 30, isActive: true },
+      { id: 'status-progress', displayLabel: 'In Progress', status: 4, displayOrder: 40, isActive: true },
+      { id: 'status-parts', displayLabel: 'Waiting on Parts', status: 5, displayOrder: 50, isActive: true },
+      { id: 'status-completed', displayLabel: 'Completed Review', status: 7, displayOrder: 60, isActive: true }
+    ] as any)
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Draft job', status: 1, priority: 2, customerId: 'c-1', serviceLocationId: 's-1' },
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Completed job', status: 7, priority: 2, customerId: 'c-2', serviceLocationId: 's-2' }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    const statusFilters = screen.getByLabelText('configured ticket status filters')
+    expect(within(statusFilters).getAllByRole('button')).toHaveLength(6)
+
+    fireEvent.click(within(statusFilters).getByRole('button', { name: /Completed Review/ }))
+    expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
+    expect(screen.getByText('JT-2')).toBeInTheDocument()
   })
 
   it('shows ready dispatch context when assignment, lead, schedule, and due date are present', async () => {

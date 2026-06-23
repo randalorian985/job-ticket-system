@@ -9,7 +9,8 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Manager/Admin Phase 3B master-data polish has started with expanded existing-field create/edit forms and active-only relationship defaults for customers, service locations, equipment, vendors, part categories, and parts, while preserving existing archive/unarchive workflows and APIs.
 - Manager/Admin reports are organized into invoice/closeout, labor/parts, and service-history sections with shared filters, source-ID validation, date/paging validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from the currently loaded rows.
 - Manager/Admin screen cleanup separates report catalog/results, master-data list/editor, and Admin user list/editor states into focused screens without changing backend APIs; Admin user management now filters accounts by search, role, and active/inactive status.
-- Manager/Admin job-ticket queue can switch between rich readiness cards and a persisted compact operating list, and can export the currently visible filtered ticket rows to client-side CSV for dispatch handoff without adding backend export APIs.
+- Manager/Admin job-ticket queue can switch between rich readiness cards and a persisted compact operating list, renders Admin-configured status filter boxes with seeded default active field-work statuses, and can export the currently visible filtered ticket rows to client-side CSV for dispatch handoff without adding backend export APIs.
+- Employee assigned-job lists hide fully closed tickets (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`) while Manager/Admin users can still find those tickets in the queue, ticket workspace, reports, and history.
 - Manager/Admin Dispatch at `/manage/dispatch` is the shared schedule for active job tickets. Its focused Unscheduled Tickets, Today, Tomorrow, and Next 7 Days views support one Schedule & Assign action plus guarded En Route, On Site, Start Work, Complete Work, and Open Ticket actions using existing APIs. Completed work, ticket review, and billing stay in the ticket workspace and Reports.
 - Production deployment configuration and readiness runbooks are source-controlled, with explicit migration startup, disabled normal production seed/bootstrap services, health proxying, backup/restore guidance, rollback steps, and client-UAT gates documented.
 - Controlled production-demo readiness is documented with a source-controlled SQL/uploaded-files backup verification script and clear full go-live gates.
@@ -36,7 +37,7 @@ The service-ticket side now centers on one job-ticket record: the queue creates 
 
 This UI direction does not approve external client portals, online payments, quote approval automation, customer notification automation, purchasing expansion, inventory expansion, parts recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
-Dispatch is intentionally ticket-backed, not a second work module. A crane/equipment selection identifies the customer's unit being serviced; it is not a dispatched company resource or employee assignment. Specific components or parts being serviced belong in the ticket's job scope and instructions. Dispatch does not add a separate record, table, status enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
+Dispatch is intentionally ticket-backed, not a second work module. A crane/equipment selection identifies the customer's unit being serviced; it is not a dispatched company resource or employee assignment. Specific components or parts being serviced belong in the ticket's job scope and instructions. Dispatch itself does not add a separate record, table, status enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
 
 ## Scope Boundary
 The project remains centered on the job-ticket workflow:
@@ -95,5 +96,6 @@ cd frontend && npm test
 - Preserve soft-delete/archive behavior.
 - Keep Employee and Manager/Admin route boundaries intact.
 - Treat `/manage` as Manager/Admin-only and `/manage/users` as Admin-only.
+- Treat `/manage/ticket-status-filters` and `PUT /api/ticket-status-filters` as Admin-only configuration surfaces; Manager/Admin users may read the configured queue filters.
 - Do not expose cost, price, vendor, purchase, inventory, catalog-admin, or billing controls to technicians.
 - Keep deferred purchasing expansion, inventory expansion, recommendation, AI/scoring, and automatic compatibility domains deferred until explicitly selected.

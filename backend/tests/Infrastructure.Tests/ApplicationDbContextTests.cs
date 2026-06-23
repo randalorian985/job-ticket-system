@@ -21,6 +21,7 @@ public sealed class ApplicationDbContextTests
         Assert.Contains(typeof(Vendor), entityTypes);
         Assert.Contains(typeof(PartCategory), entityTypes);
         Assert.Contains(typeof(Part), entityTypes);
+        Assert.Contains(typeof(TicketStatusFilterOption), entityTypes);
         Assert.Contains(typeof(JobTicket), entityTypes);
         Assert.Contains(typeof(JobTicketEmployee), entityTypes);
         Assert.Contains(typeof(TimeEntry), entityTypes);

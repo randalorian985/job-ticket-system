@@ -34,6 +34,13 @@ public interface IJobTicketsService
 public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : IJobTicketsService
 {
     private static readonly Guid SystemUserId = Guid.Empty;
+    private static readonly JobTicketStatus[] EmployeeClosedStatuses =
+    [
+        JobTicketStatus.Completed,
+        JobTicketStatus.Cancelled,
+        JobTicketStatus.Invoiced,
+        JobTicketStatus.Reviewed
+    ];
 
     public async Task<IReadOnlyList<JobTicketListItemDto>> ListAsync(JobTicketListQuery query, CancellationToken cancellationToken = default)
     {
@@ -41,7 +48,9 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
 
         if (!currentUserContext.IsManager)
         {
-            jobTickets = jobTickets.Where(x => x.AssignedEmployees.Any(a => a.EmployeeId == currentUserContext.EmployeeId));
+            jobTickets = jobTickets.Where(x =>
+                x.AssignedEmployees.Any(a => a.EmployeeId == currentUserContext.EmployeeId) &&
+                !EmployeeClosedStatuses.Contains(x.Status));
         }
 
         if (query.CustomerId.HasValue)
