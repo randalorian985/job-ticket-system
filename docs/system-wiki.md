@@ -952,7 +952,7 @@ The frontend validates required source selections, date ranges, and paging value
 Report inputs are saved per report on the user's browser. For example, changing the selected job ticket on Invoice-ready Summary does not change the selected job ticket on Job Cost Summary. Use **Reset report inputs** to clear saved report defaults and return filters to their standard values.
 
 ### Report Output
-Generated reports continue to open in a separate results screen within the reports workflow. Report groups use unframed sections with repeated report cards, while generated output uses a single bordered preview surface.
+Generated reports continue to open in a separate results screen within the reports workflow. Report groups use compact sections with consistent run cards, while generated output uses a single bordered preview surface.
 
 From generated report results, users can:
 - review report metadata, including visible row count, visible column count, generated time, and applied scope;
@@ -964,7 +964,7 @@ From generated report results, users can:
 Important reporting boundaries:
 - PDF output uses the browser print dialog.
 - CSV export is generated in the browser from currently loaded rows and includes report metadata at the top of the file.
-- Company Configuration details appear in report print/save-PDF headers and CSV metadata when saved.
+- Company Configuration name, logo, address, phone, email, and website appear in report print/save-PDF headers and CSV metadata when saved.
 - Empty reports do not expose CSV or print/save-PDF actions.
 - The system does not generate invoices.
 - The system does not collect payments.

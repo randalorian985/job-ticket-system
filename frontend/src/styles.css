@@ -2646,12 +2646,15 @@ td {
 
 @media print {
   @page {
+    size: letter landscape;
     margin: 0.45in;
   }
 
+  html,
   body {
     background: #ffffff;
     color: #111827;
+    font-size: 10pt;
   }
 
   body * {
@@ -2664,8 +2667,11 @@ td {
   }
 
   .print-report-surface {
+    background: #ffffff;
     border: 0;
     box-shadow: none;
+    color: #111827;
+    font-family: Arial, Helvetica, sans-serif;
     left: 0;
     padding: 0;
     position: absolute;
@@ -2683,11 +2689,66 @@ td {
     display: none;
   }
 
-  .report-print-heading {
+  .report-document-head {
     border-bottom: 2px solid #111827;
-    display: block;
-    margin-bottom: 0.25in;
+    display: grid;
+    gap: 0.12in;
+    margin-bottom: 0.2in;
     padding-bottom: 0.15in;
+  }
+
+  .report-company-branding {
+    align-items: center;
+    background: #ffffff;
+    border: 0;
+    border-radius: 0;
+    display: flex;
+    gap: 0.16in;
+    padding: 0;
+  }
+
+  .report-company-branding img,
+  .report-company-branding .product-mark {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.05in;
+    box-sizing: border-box;
+    flex: 0 0 0.86in;
+    height: 0.86in;
+    object-fit: contain;
+    padding: 0.05in;
+    width: 0.86in;
+  }
+
+  .report-company-branding .product-mark {
+    background: #111827;
+    border-color: #111827;
+    color: #ffffff;
+    font-size: 17pt;
+    font-weight: 900;
+  }
+
+  .report-company-branding div {
+    display: grid;
+    gap: 0.03in;
+  }
+
+  .report-company-branding strong {
+    color: #111827;
+    font-size: 14pt;
+    line-height: 1.15;
+  }
+
+  .report-company-branding span {
+    color: #374151;
+    font-size: 8.5pt;
+    line-height: 1.35;
+  }
+
+  .report-print-heading {
+    display: block;
+    margin: 0;
+    padding: 0;
   }
 
   .report-print-heading h2 {
@@ -2716,22 +2777,61 @@ td {
     overflow: visible;
   }
 
+  .report-results-table {
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
   .print-report-surface table {
     border-collapse: collapse;
     font-size: 8.5pt;
+    min-width: 0;
+    table-layout: auto;
     width: 100%;
+  }
+
+  .print-report-surface caption {
+    caption-side: top;
+    color: #374151;
+    font-size: 8.5pt;
+    font-weight: 700;
+    padding: 0 0 0.08in;
+    text-align: left;
+  }
+
+  .print-report-surface thead {
+    display: table-header-group;
+  }
+
+  .print-report-surface tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .print-report-surface th,
   .print-report-surface td {
     border: 1px solid #d1d5db;
     color: #111827;
-    padding: 0.08in;
+    padding: 0.06in 0.07in;
+    vertical-align: top;
   }
 
-.print-report-surface th {
-    background: #f3f4f6;
+  .print-report-surface th {
+    background: #e5e7eb;
     font-weight: 800;
+    text-align: left;
+  }
+
+  .print-report-surface .numeric-cell {
+    text-align: right;
+  }
+
+  .print-report-surface a {
+    color: #111827;
+    text-decoration: none;
   }
 }
 

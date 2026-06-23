@@ -629,22 +629,26 @@ export function ReportsPage() {
       : ''),
     [customerLabelById, employeeLabelById, filtersByMode, mode, serviceLocationLabelById, sourceLabel]
   )
+  const companyReportDetails = useMemo(
+    () => [
+      ...companyAddressLines,
+      companyConfiguration.phone,
+      companyConfiguration.email,
+      companyConfiguration.website
+    ].filter((line): line is string => Boolean(line)),
+    [companyAddressLines, companyConfiguration.email, companyConfiguration.phone, companyConfiguration.website]
+  )
   const csv = useMemo(
     () => reportCsvWithMetadata(
       title,
       generatedAt,
       filterSummary,
       companyConfiguration.companyName,
-      [
-        ...companyAddressLines,
-        companyConfiguration.phone,
-        companyConfiguration.email,
-        companyConfiguration.website
-      ].filter((line): line is string => Boolean(line)),
+      companyReportDetails,
       rows,
       columns as Array<ReportColumn<ReportRow>>
     ),
-    [columns, companyAddressLines, companyConfiguration.companyName, companyConfiguration.email, companyConfiguration.phone, companyConfiguration.website, filterSummary, generatedAt, rows, title]
+    [columns, companyConfiguration.companyName, companyReportDetails, filterSummary, generatedAt, rows, title]
   )
   const csvHref = useMemo(() => csvDataUri(csv), [csv])
 
@@ -1018,28 +1022,23 @@ export function ReportsPage() {
           </div>
         ) : null}
         {mode ? (
-          <div className="report-company-branding">
-            {companyLogoUrl ? (
-              <img src={companyLogoUrl} alt={`${companyConfiguration.companyName} logo`} />
-            ) : (
-              <span className="product-mark" aria-hidden="true">{companyInitials}</span>
-            )}
-            <div>
-              <strong>{companyConfiguration.companyName}</strong>
-              <span>{[
-                ...companyAddressLines,
-                companyConfiguration.phone,
-                companyConfiguration.email,
-                companyConfiguration.website
-              ].filter(Boolean).join(' | ')}</span>
+          <div className="report-document-head">
+            <div className="report-company-branding" aria-label="report company header">
+              {companyLogoUrl ? (
+                <img src={companyLogoUrl} alt={`${companyConfiguration.companyName} logo`} />
+              ) : (
+                <span className="product-mark" aria-hidden="true">{companyInitials}</span>
+              )}
+              <div>
+                <strong>{companyConfiguration.companyName}</strong>
+                {companyReportDetails.length ? <span>{companyReportDetails.join(' | ')}</span> : null}
+              </div>
             </div>
-          </div>
-        ) : null}
-        {mode ? (
-          <div className="report-print-heading">
-            <p className="eyebrow">Manager/Admin Report</p>
-            <h2>{title}</h2>
-            <p>{generatedAt ? `Generated ${generatedAt}` : 'Generated report preview'}</p>
+            <div className="report-print-heading" aria-label="print report title">
+              <p className="eyebrow">Manager/Admin Report</p>
+              <h2>{title}</h2>
+              <p>{generatedAt ? `Generated ${generatedAt}` : 'Generated report preview'}</p>
+            </div>
           </div>
         ) : null}
         {reportMessage ? <p className="success action-feedback-panel report-result-feedback">{reportMessage}</p> : null}
@@ -1091,12 +1090,11 @@ export function ReportsPage() {
         ) : null}
       </section>
 
-      <div className="stack" hidden={activeScreen !== 'catalog'}>
+      <div className="stack" role="region" aria-label="report catalog" hidden={activeScreen !== 'catalog'}>
         {reportSections.map((section) => (
           <section className="report-section report-section-panel stack" key={section.title} aria-label={section.title}>
             <div className="report-section-heading">
               <div>
-                <p className="eyebrow">Report group</p>
                 <h3>{section.title}</h3>
                 <p className="muted">{section.description}</p>
               </div>
@@ -1109,14 +1107,18 @@ export function ReportsPage() {
                     <h4>{reportTitleMap[reportMode]}</h4>
                     <span>{reportFilterFields[reportMode].length ? 'Filterable' : 'Source required'}</span>
                   </div>
-                  <p className="muted">{reportDescriptions[reportMode]}</p>
-                  <div className="report-card-inputs">
-                    {renderSourceControl(reportMode)}
-                    {renderFilterControls(reportMode)}
+                  <div className="report-card-body">
+                    <p className="muted">{reportDescriptions[reportMode]}</p>
+                    <div className="report-card-inputs">
+                      {renderSourceControl(reportMode)}
+                      {renderFilterControls(reportMode)}
+                    </div>
                   </div>
-                  <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
-                    {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
-                  </button>
+                  <div className="report-card-footer">
+                    <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
+                      {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>

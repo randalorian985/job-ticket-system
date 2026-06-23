@@ -41,6 +41,27 @@ vi.mock('../../../api/usersApi', () => ({
   }
 }))
 
+vi.mock('../../../features/companyBranding/CompanyBrandingContext', () => ({
+  useCompanyBranding: () => ({
+    configuration: {
+      companyName: 'Mudbug Digital',
+      phone: '555-0100',
+      email: 'ops@mudbugdigital.test',
+      website: 'https://mudbugdigital.test'
+    },
+    isLoading: false,
+    logoUrl: '/branding/mudbug-logo.png',
+    initials: 'MD',
+    addressLines: ['100 Bayou Road', 'Lafayette, LA, 70501'],
+    refresh: async () => ({
+      companyName: 'Mudbug Digital',
+      phone: '555-0100',
+      email: 'ops@mudbugdigital.test',
+      website: 'https://mudbugdigital.test'
+    })
+  })
+}))
+
 const readCsvFromExportLink = () => {
   const href = screen.getByRole('link', { name: 'Export loaded rows as CSV' }).getAttribute('href') ?? ''
   return decodeURIComponent(href.replace('data:text/csv;charset=utf-8,', ''))
@@ -127,7 +148,9 @@ describe('ReportsPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Reports' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'report preview' })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'report catalog' })).toBeInTheDocument()
     expect(screen.getByText(/Labor totals are labeled as time-entry labor-rate snapshot values/i)).toBeInTheDocument()
+    expect(screen.queryByText('Report group')).not.toBeInTheDocument()
 
     const invoiceSection = screen.getByLabelText('Invoice and Closeout')
     expect(within(invoiceSection).getByText('Invoice-ready Summary')).toBeInTheDocument()
@@ -179,6 +202,9 @@ describe('ReportsPage', () => {
     expect(screen.getByText('Labor by Job results table with 1 visible row.')).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Labor Billable (time-entry labor-rate snapshot)' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '$300.00' })).toBeInTheDocument()
+    expect(screen.getByLabelText('report company header')).toHaveTextContent('Mudbug Digital')
+    expect(screen.getByAltText('Mudbug Digital logo')).toHaveAttribute('src', '/branding/mudbug-logo.png')
+    expect(screen.getByText('Manager/Admin Report')).toBeInTheDocument()
     expect(screen.getByText('Applied scope')).toBeInTheDocument()
     expect(screen.getAllByText(/Customer: Acme Service \(ACME\)/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Service location: Acme Service - Plant 4/).length).toBeGreaterThan(0)
@@ -196,6 +222,8 @@ describe('ReportsPage', () => {
     expect(window.print).toHaveBeenCalled()
 
     const csv = readCsvFromExportLink()
+    expect(csv).toContain('Company,Mudbug Digital')
+    expect(csv).toContain('Company details,"100 Bayou Road | Lafayette, LA, 70501 | 555-0100 | ops@mudbugdigital.test | https://mudbugdigital.test"')
     expect(csv).toContain('Report,Labor by Job')
     expect(csv).toContain('Applied scope,Customer: Acme Service (ACME) | Service location: Acme Service - Plant 4 | Employee: Taylor Technician | Limit: 75')
     expect(csv).toContain('Visible rows,1')
