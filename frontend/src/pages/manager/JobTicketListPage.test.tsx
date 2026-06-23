@@ -34,12 +34,12 @@ describe('Manager list pages', () => {
     vi.clearAllMocks()
     window.localStorage.clear()
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
-      { id: 'c-1', name: 'Acme' },
-      { id: 'c-2', name: 'Bravo' }
+      { id: 'c-1', name: 'Acme', phone: '555-0100' },
+      { id: 'c-2', name: 'Bravo', phone: '555-0200' }
     ] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
-      { id: 's-1', locationName: 'HQ' },
-      { id: 's-2', locationName: 'Field Shop' }
+      { id: 's-1', locationName: 'HQ', postalCode: '74101' },
+      { id: 's-2', locationName: 'Field Shop', postalCode: '75001' }
     ] as any)
     vi.mocked(ticketStatusFiltersApi.list).mockResolvedValue([
       { id: 'status-submitted', displayLabel: 'Submitted', status: 2, displayOrder: 10, isActive: true },
@@ -166,7 +166,7 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Assigned: Employee unavailable · Lead: Employee unavailable')).toBeInTheDocument()
   })
 
-  it('shows a compact queue summary for active, waiting, missing due date, assignment, and work-readiness views', async () => {
+  it('shows compact saved queue views for common manager queues', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
@@ -175,17 +175,16 @@ describe('Manager list pages', () => {
 
     renderPage()
 
-    expect(await screen.findByText('Active tickets')).toBeInTheDocument()
-    expect(screen.getByLabelText('queue summary')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Quick Views' })).toBeInTheDocument()
-    expect(screen.queryByText('Urgent active')).not.toBeInTheDocument()
-    expect(screen.getByText('Waiting')).toBeInTheDocument()
-    expect(screen.queryByText('Unscheduled')).not.toBeInTheDocument()
-    expect(screen.getByText('Missing due')).toBeInTheDocument()
-    expect(screen.getAllByText('Unassigned').length).toBeGreaterThan(0)
-    expect(screen.queryByRole('button', { name: /Needs lead/ })).not.toBeInTheDocument()
-    expect(screen.getAllByText('Ready to work').length).toBeGreaterThan(0)
-    expect(screen.getByText('Needs review')).toBeInTheDocument()
+    expect(await screen.findByLabelText('saved queue views')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Saved Views' })).toBeInTheDocument()
+    const savedView = screen.getByLabelText('Saved view')
+    expect(within(savedView).getByRole('option', { name: 'Today' })).toBeInTheDocument()
+    expect(within(savedView).getByRole('option', { name: 'Waiting on Parts' })).toBeInTheDocument()
+    expect(within(savedView).getByRole('option', { name: 'Ready to Invoice' })).toBeInTheDocument()
+    expect(within(savedView).getByRole('option', { name: 'Needs Assignment' })).toBeInTheDocument()
+    expect(within(savedView).getByRole('option', { name: 'Completed Review' })).toBeInTheDocument()
+    expect(within(screen.getByLabelText('saved view counts')).getByText(/Waiting on Parts/)).toBeInTheDocument()
+    expect(within(screen.getByLabelText('saved view counts')).getByText(/Needs Assignment/)).toBeInTheDocument()
   })
 
   it('renders default configured statuses in the status filter instead of shortcut boxes', async () => {
@@ -300,7 +299,7 @@ describe('Manager list pages', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText(/Assignment data could not be loaded for one or more tickets/)).toBeInTheDocument()
-    expect(screen.getByText('Technician Assignments')).toBeInTheDocument()
+    expect(screen.getByText(/Assignments unavailable/)).toBeInTheDocument()
     expect(screen.queryByText('Unassigned')).not.toBeInTheDocument()
     expect(screen.queryByText('Needs lead')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Work readiness')).toBeDisabled()
@@ -339,9 +338,9 @@ describe('Manager list pages', () => {
     expect(screen.getByText('JT-3')).toBeInTheDocument()
   })
 
-  it('puts search before queue shortcuts and filters the list when a shortcut is selected', async () => {
+  it('puts search before saved views and filters the list when a saved view is selected', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
-      { id: 'job-1', ticketNumber: 'JT-1', title: 'Urgent compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Waiting compressor parts', status: 5, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Scheduled pump', status: 4, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
     ] as any)
 
@@ -349,18 +348,42 @@ describe('Manager list pages', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     const filters = screen.getByLabelText('job ticket filters')
-    const shortcuts = screen.getByLabelText('queue summary')
-    expect(filters.compareDocumentPosition(shortcuts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const savedViews = screen.getByLabelText('saved queue views')
+    expect(filters.compareDocumentPosition(savedViews) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(screen.getByText('Showing all 2 loaded tickets.')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Missing due/ }))
+    fireEvent.change(screen.getByLabelText('Saved view'), { target: { value: 'waiting-parts' } })
 
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(screen.getByText('Filtered view showing 1 of 2 tickets.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Status')).toHaveValue('all')
+    expect(screen.getByLabelText('Status')).toHaveValue('5')
     expect(screen.getByLabelText('Priority')).toHaveValue('all')
-    expect(screen.getByRole('button', { name: /Missing due/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Saved view')).toHaveValue('waiting-parts')
+  })
+
+  it('shows inline data quality warnings without blocking the queue', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
+      { id: 'c-1', name: 'Acme', phone: '' }
+    ] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
+      { id: 's-1', locationName: 'HQ', postalCode: '' }
+    ] as any)
+    vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([
+      { employeeId: 'e-1', assignedAtUtc: '2026-05-12T08:00:00Z', isLead: false, employeeName: 'Alex Rivera' }
+    ] as any)
+    vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: null }
+    ] as any)
+
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    const warnings = screen.getByLabelText('JT-1 data quality warnings')
+    expect(within(warnings).getByText('This customer has no phone.')).toBeInTheDocument()
+    expect(within(warnings).getByText('This job location has no ZIP.')).toBeInTheDocument()
+    expect(within(warnings).getByText('No lead tech assigned.')).toBeInTheDocument()
+    expect(within(warnings).getByText('No due date set.')).toBeInTheDocument()
   })
 
   it('filters by search text, status, priority, and customer, then resets filters', async () => {

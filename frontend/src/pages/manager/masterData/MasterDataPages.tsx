@@ -41,6 +41,13 @@ const customerBillingAddress = (customer: CustomerDto) => compactAddress(
   customer.billingAddressLine2,
   compactAddress(customer.billingCity, customer.billingState, customer.billingPostalCode)
 )
+const customerHasBillingAddress = (customer?: CustomerDto | null) => Boolean(customer && (
+  customer.billingAddressLine1?.trim() ||
+  customer.billingAddressLine2?.trim() ||
+  customer.billingCity?.trim() ||
+  customer.billingState?.trim() ||
+  customer.billingPostalCode?.trim()
+))
 const serviceLocationAddress = (location: ServiceLocationDto) => compactAddress(
   location.addressLine1,
   location.addressLine2,
@@ -309,6 +316,7 @@ export function ServiceLocationsPage() {
     if (!editId) setDraft((current) => ({ ...current, customerId: activeFilterId(customers, customerFilter) || null }))
   }, [customerFilter, editId])
   const customerOptions = useMemo(() => activeOrSelected(customers, [draft.customerId]), [customers, draft.customerId])
+  const selectedCustomer = useMemo(() => customers.find((customer) => customer.id === draft.customerId), [customers, draft.customerId])
   const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [
     x.locationName,
     x.companyName,
@@ -360,6 +368,34 @@ export function ServiceLocationsPage() {
     setSuccess(null)
     setEditorOpen(true)
   }
+  const useCustomerAddress = () => {
+    if (!selectedCustomer) {
+      setSuccess(null)
+      setError('Select a related customer before using customer address.')
+      return
+    }
+
+    if (!customerHasBillingAddress(selectedCustomer)) {
+      setSuccess(null)
+      setError('Selected customer has no billing address to copy.')
+      return
+    }
+
+    setDraft((current) => ({
+      ...current,
+      companyName: current.companyName || selectedCustomer.name,
+      onSiteContactName: current.onSiteContactName || selectedCustomer.contactName || '',
+      onSiteContactPhone: current.onSiteContactPhone || selectedCustomer.phone || '',
+      onSiteContactEmail: current.onSiteContactEmail || selectedCustomer.email || '',
+      addressLine1: selectedCustomer.billingAddressLine1 || current.addressLine1,
+      addressLine2: selectedCustomer.billingAddressLine2 || current.addressLine2,
+      city: selectedCustomer.billingCity || current.city,
+      state: selectedCustomer.billingState || current.state,
+      postalCode: selectedCustomer.billingPostalCode || current.postalCode
+    }))
+    setError(null)
+    setSuccess('Customer address copied into the service location form.')
+  }
 
   return (
     <section className="card stack">
@@ -374,6 +410,10 @@ export function ServiceLocationsPage() {
       {success ? <p className="success action-feedback-panel">{success}</p> : null}
 
       <form onSubmit={save} className="stack" aria-label="service location form" hidden={!editorOpen}>
+        <label>Related customer<select value={draft.customerId ?? ''} onChange={(e) => setDraft({ ...draft, customerId: e.target.value || null })}><option value="">No customer</option>{customerOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
+        <div className="copy-helper-row">
+          <button type="button" className="secondary-button" onClick={useCustomerAddress} disabled={!selectedCustomer}>Use customer address</button>
+        </div>
         <label>Company<input placeholder="Company" value={draft.companyName} onChange={(e) => setDraft({ ...draft, companyName: e.target.value })} /></label>
         <label>Location name<input placeholder="Location Name" value={draft.locationName} onChange={(e) => setDraft({ ...draft, locationName: e.target.value })} /></label>
         <div className="row">
@@ -400,7 +440,6 @@ export function ServiceLocationsPage() {
         </div>
         <label>Safety requirements<textarea placeholder="Safety requirements" value={draft.safetyRequirements ?? ''} onChange={(e) => setDraft({ ...draft, safetyRequirements: e.target.value })} /></label>
         <label>Site notes<textarea placeholder="Site notes" value={draft.siteNotes ?? ''} onChange={(e) => setDraft({ ...draft, siteNotes: e.target.value })} /></label>
-        <label>Related customer<select value={draft.customerId ?? ''} onChange={(e) => setDraft({ ...draft, customerId: e.target.value || null })}><option value="">No customer</option>{customerOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
         <label><input type="checkbox" checked={draft.isActive ?? true} onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })} /> Active</label>
         {editId ? <p className="muted">Editing service location. Save changes or return to the location list.</p> : null}
         <div className="row">

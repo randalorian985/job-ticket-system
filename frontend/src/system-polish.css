@@ -850,12 +850,14 @@ td button {
   min-width: 0;
 }
 
-.queue-shortcuts {
+.queue-shortcuts,
+.queue-saved-views {
   display: grid;
   gap: 0.55rem;
 }
 
-.queue-shortcuts-heading {
+.queue-shortcuts-heading,
+.queue-saved-views-heading {
   align-items: end;
   display: flex;
   gap: 0.75rem;
@@ -863,16 +865,33 @@ td button {
 }
 
 .queue-shortcuts-heading h3,
-.queue-shortcuts-heading p {
+.queue-shortcuts-heading p,
+.queue-saved-views-heading h3,
+.queue-saved-views-heading p {
   margin: 0;
 }
 
-.queue-shortcuts-heading h3 {
+.queue-shortcuts-heading h3,
+.queue-saved-views-heading h3 {
   font-size: 0.88rem;
 }
 
-.queue-shortcuts-heading p {
+.queue-shortcuts-heading p,
+.queue-saved-views-heading p {
   font-size: 0.78rem;
+}
+
+.queue-saved-views {
+  background: #ffffff;
+  border-color: #dbe3ee;
+  border-radius: 7px;
+  box-shadow: none;
+  padding: 0.75rem;
+}
+
+.queue-saved-view-counts span,
+.data-quality-warning-list li {
+  border-radius: 999px;
 }
 
 .queue-kpi-grid {

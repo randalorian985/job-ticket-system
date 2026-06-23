@@ -88,6 +88,14 @@ export type EquipmentDuplicateWarning = {
 
 type TicketEditorSection = 'identity' | 'relationships' | 'scope' | 'billing' | 'schedule'
 
+type TicketCreateWizardStep = {
+  value: string
+  label: string
+  section: TicketEditorSection
+  isReady: boolean
+  detail: string
+}
+
 const ticketEditorSections: Array<{
   value: TicketEditorSection
   label: string
@@ -182,6 +190,24 @@ function optionalText(value: string) {
 
 function normalizedText(value: string | null | undefined) {
   return value?.trim().toLowerCase() ?? ''
+}
+
+function hasValue(value: string | null | undefined) {
+  return Boolean(value?.trim())
+}
+
+function sourceOrCurrent(source: string | null | undefined, current: string | null | undefined) {
+  return hasValue(source) ? source! : current ?? null
+}
+
+function hasCustomerBillingAddress(customer: CustomerDto | null | undefined) {
+  return Boolean(customer && (
+    hasValue(customer.billingAddressLine1) ||
+    hasValue(customer.billingAddressLine2) ||
+    hasValue(customer.billingCity) ||
+    hasValue(customer.billingState) ||
+    hasValue(customer.billingPostalCode)
+  ))
 }
 
 function jobStatusLabel(value: number) {
@@ -313,6 +339,8 @@ export function JobTicketEditorForm({
   const [serviceLocationQuickAddMessage, setServiceLocationQuickAddMessage] = useState<string | null>(null)
   const [equipmentQuickAddMessage, setEquipmentQuickAddMessage] = useState<string | null>(null)
   const [jobTypeQuickAddMessage, setJobTypeQuickAddMessage] = useState<string | null>(null)
+  const [copyHelperMessage, setCopyHelperMessage] = useState<string | null>(null)
+  const [copyHelperError, setCopyHelperError] = useState<string | null>(null)
   const [activeEditorSection, setActiveEditorSection] = useState<TicketEditorSection>('identity')
   const [jobTypeOptions, setJobTypeOptions] = useState(() => uniqueLabels([...defaultJobTypeOptions, initial.jobType]))
   const [isAddingCustomer, setIsAddingCustomer] = useState(false)
@@ -363,6 +391,7 @@ export function JobTicketEditorForm({
 
   const selectedCustomer = allCustomers.find((item) => item.id === form.customerId)
   const selectedServiceLocation = allServiceLocations.find((item) => item.id === form.serviceLocationId)
+  const selectedBillingParty = allCustomers.find((item) => item.id === form.billingPartyCustomerId)
 
   const displayedJobTypeOptions = useMemo(
     () => uniqueLabels([...jobTypeOptions, form.jobType]),
@@ -395,6 +424,67 @@ export function JobTicketEditorForm({
   const dispatchReadyCount = dispatchEditChecks.filter((check) => check.isReady).length
   const dispatchOpenItems = dispatchEditChecks.filter((check) => !check.isReady)
   const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'All assignment and schedule requirements are complete.'
+  const dataQualityWarnings = useMemo(() => {
+    const warnings: string[] = []
+
+    if (selectedCustomer && !hasValue(selectedCustomer.phone)) {
+      warnings.push('This customer has no phone.')
+    }
+
+    if (selectedServiceLocation && !hasValue(selectedServiceLocation.postalCode)) {
+      warnings.push('This job location has no ZIP.')
+    }
+
+    if (!hasValue(form.dueAtUtc)) {
+      warnings.push('No due date set.')
+    }
+
+    return warnings
+  }, [form.dueAtUtc, selectedCustomer, selectedServiceLocation])
+  const ticketCreateWizardSteps = useMemo<TicketCreateWizardStep[]>(() => [
+    {
+      value: 'customer',
+      label: 'Customer',
+      section: 'relationships',
+      isReady: Boolean(form.customerId),
+      detail: selectedCustomer?.name ?? 'Select customer'
+    },
+    {
+      value: 'billing-party',
+      label: 'Billing party',
+      section: 'relationships',
+      isReady: Boolean(form.billingPartyCustomerId),
+      detail: selectedBillingParty?.name ?? 'Select billing party'
+    },
+    {
+      value: 'job-location',
+      label: 'Job location',
+      section: 'relationships',
+      isReady: Boolean(form.serviceLocationId),
+      detail: selectedServiceLocation?.locationName ?? 'Select job location'
+    },
+    {
+      value: 'equipment',
+      label: 'Equipment',
+      section: 'relationships',
+      isReady: true,
+      detail: form.equipmentId ? 'Equipment selected' : 'Optional'
+    },
+    {
+      value: 'schedule',
+      label: 'Schedule / assign tech',
+      section: 'schedule',
+      isReady: Boolean(form.scheduledStartAtUtc && form.dueAtUtc),
+      detail: form.scheduledStartAtUtc && form.dueAtUtc ? 'Schedule ready' : 'Set schedule and due date'
+    },
+    {
+      value: 'review',
+      label: 'Review and create',
+      section: 'scope',
+      isReady: Boolean(form.title.trim() && form.customerId && form.serviceLocationId && form.billingPartyCustomerId),
+      detail: dataQualityWarnings.length ? `${dataQualityWarnings.length} cleanup item${dataQualityWarnings.length === 1 ? '' : 's'}` : 'Ready for review'
+    }
+  ], [dataQualityWarnings.length, form.billingPartyCustomerId, form.customerId, form.dueAtUtc, form.equipmentId, form.scheduledStartAtUtc, form.serviceLocationId, form.title, selectedBillingParty, selectedCustomer, selectedServiceLocation])
   const equipmentQuickAddDuplicateWarnings = useMemo(() => {
     if (!form.customerId || !form.serviceLocationId) {
       return []
@@ -463,6 +553,80 @@ export function JobTicketEditorForm({
 
   const selectCustomer = (customerId: string) => {
     setForm((prev) => ({ ...prev, customerId, serviceLocationId: '', equipmentId: null }))
+  }
+
+  const copySelectedCustomerToServiceLocation = () => {
+    if (!selectedCustomer) {
+      setServiceLocationQuickAddError('Select a customer before using customer address.')
+      setServiceLocationQuickAddMessage(null)
+      return
+    }
+
+    if (!hasCustomerBillingAddress(selectedCustomer)) {
+      setServiceLocationQuickAddError('Selected customer has no billing address to copy.')
+      setServiceLocationQuickAddMessage(null)
+      return
+    }
+
+    setServiceLocationDraft((prev) => ({
+      ...prev,
+      locationName: prev.locationName || selectedCustomer.name,
+      onSiteContactName: sourceOrCurrent(selectedCustomer.contactName, prev.onSiteContactName) ?? '',
+      onSiteContactPhone: sourceOrCurrent(selectedCustomer.phone, prev.onSiteContactPhone) ?? '',
+      onSiteContactEmail: sourceOrCurrent(selectedCustomer.email, prev.onSiteContactEmail) ?? '',
+      addressLine1: sourceOrCurrent(selectedCustomer.billingAddressLine1, prev.addressLine1) ?? '',
+      addressLine2: sourceOrCurrent(selectedCustomer.billingAddressLine2, prev.addressLine2) ?? '',
+      city: sourceOrCurrent(selectedCustomer.billingCity, prev.city) ?? '',
+      state: sourceOrCurrent(selectedCustomer.billingState, prev.state) ?? '',
+      postalCode: sourceOrCurrent(selectedCustomer.billingPostalCode, prev.postalCode) ?? ''
+    }))
+    setServiceLocationQuickAddError(null)
+    setServiceLocationQuickAddMessage('Customer address copied into the job location.')
+    setCopyHelperError(null)
+    setCopyHelperMessage(null)
+  }
+
+  const copyBillingAddressToBillingContact = () => {
+    const source = selectedBillingParty ?? selectedCustomer
+
+    if (!source) {
+      setCopyHelperError('Select a billing party before using billing address.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      billingPartyCustomerId: source.id,
+      billingContactName: sourceOrCurrent(source.contactName, prev.billingContactName),
+      billingContactPhone: sourceOrCurrent(source.phone, prev.billingContactPhone),
+      billingContactEmail: sourceOrCurrent(source.email, prev.billingContactEmail)
+    }))
+    setCopyHelperError(null)
+    setCopyHelperMessage('Billing party contact copied into billing fields.')
+  }
+
+  const copyJobSiteContactToBillingContact = () => {
+    if (!selectedServiceLocation) {
+      setCopyHelperError('Select a job location before using job-site contact.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    if (!hasValue(selectedServiceLocation.onSiteContactName) && !hasValue(selectedServiceLocation.onSiteContactPhone) && !hasValue(selectedServiceLocation.onSiteContactEmail)) {
+      setCopyHelperError('Selected job location has no job-site contact to copy.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      billingContactName: sourceOrCurrent(selectedServiceLocation.onSiteContactName, prev.billingContactName),
+      billingContactPhone: sourceOrCurrent(selectedServiceLocation.onSiteContactPhone, prev.billingContactPhone),
+      billingContactEmail: sourceOrCurrent(selectedServiceLocation.onSiteContactEmail, prev.billingContactEmail)
+    }))
+    setCopyHelperError(null)
+    setCopyHelperMessage('Job-site contact copied into billing fields.')
   }
 
   const addJobType = () => {
@@ -657,6 +821,28 @@ export function JobTicketEditorForm({
   return (
     <form onSubmit={submit} className="stack job-editor-form section-ticket-editor">
       {error ? <p className="error">{error}</p> : null}
+      {copyHelperMessage ? <p className="success action-feedback-panel" role="status">{copyHelperMessage}</p> : null}
+      {copyHelperError ? <p className="error">{copyHelperError}</p> : null}
+      <section className="ticket-create-guide" aria-label="ticket create wizard">
+        <div className="ticket-create-guide-heading">
+          <h3>Ticket Create Wizard</h3>
+          <span className="muted">{ticketCreateWizardSteps.filter((step) => step.isReady).length} / {ticketCreateWizardSteps.length} ready</span>
+        </div>
+        <div className="ticket-create-step-list">
+          {ticketCreateWizardSteps.map((step, index) => (
+            <button
+              type="button"
+              key={step.value}
+              className={activeEditorSection === step.section ? 'ticket-create-step ticket-create-step-active' : 'ticket-create-step'}
+              aria-pressed={activeEditorSection === step.section}
+              onClick={() => setActiveEditorSection(step.section)}
+            >
+              <span>{index + 1}. {step.label}</span>
+              <small>{step.detail}</small>
+            </button>
+          ))}
+        </div>
+      </section>
       <section className="stack section-edit-readiness" aria-label="assignment and schedule requirements review">
         <h3>Assignment & Schedule Requirements</h3>
         <div className="review-grid">
@@ -683,6 +869,13 @@ export function JobTicketEditorForm({
         ) : (
           <p className="muted">Work status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.</p>
         )}
+        {dataQualityWarnings.length ? (
+          <ul className="data-quality-warning-list" aria-label="ticket data quality warnings">
+            {dataQualityWarnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        ) : null}
       </section>
 
       <nav className="section-editor-nav" aria-label="ticket edit sections">
@@ -795,6 +988,11 @@ export function JobTicketEditorForm({
           {serviceLocationQuickAddError ? <p className="error">{serviceLocationQuickAddError}</p> : null}
           {serviceLocationQuickAddOpen ? (
             <section className="quick-add-panel" aria-label="quick add service location">
+              <div className="copy-helper-row">
+                <button type="button" className="secondary-button" onClick={copySelectedCustomerToServiceLocation} disabled={!selectedCustomer}>
+                  Use customer address
+                </button>
+              </div>
               <div className="quick-add-grid">
                 <label>Location Name<input value={serviceLocationDraft.locationName} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, locationName: e.target.value }))} /></label>
                 <label>On-site Contact<input value={serviceLocationDraft.onSiteContactName} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, onSiteContactName: e.target.value }))} /></label>
@@ -912,6 +1110,14 @@ export function JobTicketEditorForm({
             <p className="muted">Edit purchase order and billing contact details used for closeout review.</p>
           </div>
           <label>Purchase Order Number<input value={form.purchaseOrderNumber ?? ''} onChange={(e) => update('purchaseOrderNumber', e.target.value || null)} placeholder="Customer or internal PO reference" /></label>
+          <div className="copy-helper-row">
+            <button type="button" className="secondary-button" onClick={copyBillingAddressToBillingContact} disabled={!selectedBillingParty && !selectedCustomer}>
+              Use billing address
+            </button>
+            <button type="button" className="secondary-button" onClick={copyJobSiteContactToBillingContact} disabled={!selectedServiceLocation}>
+              Use job-site contact
+            </button>
+          </div>
           <div className="section-editor-grid">
             <label>Billing Contact Name<input value={form.billingContactName ?? ''} onChange={(e) => update('billingContactName', e.target.value || null)} /></label>
             <label>Billing Contact Phone<input value={form.billingContactPhone ?? ''} onChange={(e) => update('billingContactPhone', e.target.value || null)} /></label>

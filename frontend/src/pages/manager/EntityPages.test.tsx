@@ -310,6 +310,38 @@ describe('ServiceLocationsPage', () => {
       isActive: false
     }))
   })
+
+  it('copies related customer billing address into the service-location form', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{
+      id: 'c1',
+      name: 'Acme',
+      contactName: 'Alex Customer',
+      email: 'alex@example.com',
+      phone: '555-0100',
+      billingAddressLine1: '100 Billing Rd',
+      billingAddressLine2: 'Suite 5',
+      billingCity: 'Tulsa',
+      billingState: 'OK',
+      billingPostalCode: '74101'
+    }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
+
+    render(<ServiceLocationsPage />)
+
+    fireEvent.change(await screen.findByLabelText('Related customer'), { target: { value: 'c1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Use customer address' }))
+
+    expect(screen.getByLabelText('Company')).toHaveValue('Acme')
+    expect(screen.getByLabelText('On-site contact')).toHaveValue('Alex Customer')
+    expect(screen.getByLabelText('On-site phone')).toHaveValue('555-0100')
+    expect(screen.getByLabelText('On-site email')).toHaveValue('alex@example.com')
+    expect(screen.getByLabelText('Address')).toHaveValue('100 Billing Rd')
+    expect(screen.getByLabelText('Address line 2')).toHaveValue('Suite 5')
+    expect(screen.getByLabelText('City')).toHaveValue('Tulsa')
+    expect(screen.getByLabelText('State')).toHaveValue('OK')
+    expect(screen.getByLabelText('Postal code')).toHaveValue('74101')
+    expect(screen.getByText('Customer address copied into the service location form.')).toBeInTheDocument()
+  })
 })
 
 it('validates required service-location fields before create', async () => {

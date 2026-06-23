@@ -749,6 +749,64 @@ pre {
   margin: 0;
 }
 
+.queue-saved-views {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem;
+}
+
+.queue-saved-views-heading,
+.queue-saved-view-row,
+.ticket-create-guide-heading,
+.copy-helper-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: space-between;
+}
+
+.queue-saved-views-heading h3,
+.queue-saved-views-heading p,
+.ticket-create-guide-heading h3 {
+  margin: 0;
+}
+
+.queue-saved-view-control {
+  min-width: min(100%, 17rem);
+}
+
+.queue-saved-view-counts {
+  display: flex;
+  flex: 1 1 28rem;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.queue-saved-view-counts span,
+.data-quality-warning-list li {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
+  border-radius: 999px;
+  color: #334155;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 750;
+  gap: 0.3rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.queue-saved-view-counts strong {
+  color: #0f172a;
+}
+
 .queue-filter-panel {
   background: #ffffff;
   border-color: #dbe4ef;
@@ -2830,6 +2888,79 @@ td {
   border: 1px solid #dbe4f0;
   border-radius: 8px;
   padding: 0.85rem;
+}
+
+.ticket-create-guide {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+}
+
+.ticket-create-step-list {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.ticket-create-step {
+  align-items: start;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  display: grid;
+  gap: 0.2rem;
+  min-height: 4rem;
+  padding: 0.6rem;
+  text-align: left;
+}
+
+.ticket-create-step:hover,
+.ticket-create-step:focus-visible {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16);
+}
+
+.ticket-create-step-active {
+  background: #eff6ff;
+  border-color: #1d4ed8;
+}
+
+.ticket-create-step span {
+  font-weight: 850;
+}
+
+.ticket-create-step small {
+  color: #475569;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.copy-helper-row {
+  justify-content: flex-start;
+}
+
+.data-quality-warning-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.data-quality-warning-list li {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #7c2d12;
+  min-height: 1.85rem;
+}
+
+.compact-data-quality {
+  margin-top: 0.3rem;
 }
 
 .section-editor-nav {

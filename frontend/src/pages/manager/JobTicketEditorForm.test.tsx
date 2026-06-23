@@ -357,6 +357,82 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     expect(screen.getByLabelText('Service Location')).toHaveValue('s2')
   })
 
+  it('copies the selected customer address into the quick-add job location form', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, serviceLocationId: '', equipmentId: null }}
+        customers={[{
+          id: 'c1',
+          name: 'Acme',
+          contactName: 'Alex Customer',
+          phone: '555-0100',
+          email: 'alex@example.com',
+          billingAddressLine1: '100 Billing Rd',
+          billingAddressLine2: 'Suite 5',
+          billingCity: 'Tulsa',
+          billingState: 'OK',
+          billingPostalCode: '74101'
+        }] as any}
+        serviceLocations={[]}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    openEditSection('Customer & Service Equipment')
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add location' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Use customer address' }))
+
+    expect(screen.getByLabelText('Location Name')).toHaveValue('Acme')
+    expect(screen.getByLabelText('On-site Contact')).toHaveValue('Alex Customer')
+    expect(screen.getByLabelText('On-site Phone')).toHaveValue('555-0100')
+    expect(screen.getByLabelText('On-site Email')).toHaveValue('alex@example.com')
+    expect(screen.getByLabelText('Street Address')).toHaveValue('100 Billing Rd')
+    expect(screen.getByLabelText('Street Address 2')).toHaveValue('Suite 5')
+    expect(screen.getByLabelText('City')).toHaveValue('Tulsa')
+    expect(screen.getByLabelText('State')).toHaveValue('OK')
+    expect(screen.getByLabelText('Postal Code')).toHaveValue('74101')
+    expect(screen.getByText('Customer address copied into the job location.')).toBeInTheDocument()
+  })
+
+  it('copies billing-party and job-site contact details into billing fields', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, billingPartyCustomerId: 'bill-1', billingContactName: null, billingContactPhone: null, billingContactEmail: null }}
+        customers={[
+          { id: 'c1', name: 'Acme', phone: '555-0100' },
+          { id: 'bill-1', name: 'Acme AP', contactName: 'Bill Contact', phone: '555-0400', email: 'billing@example.com' }
+        ] as any}
+        serviceLocations={[{
+          id: 's1',
+          customerId: 'c1',
+          locationName: 'HQ',
+          onSiteContactName: 'Site Contact',
+          onSiteContactPhone: '555-0300',
+          onSiteContactEmail: 'site@example.com',
+          postalCode: '74101'
+        }] as any}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    openEditSection('Billing')
+    fireEvent.click(screen.getByRole('button', { name: 'Use billing address' }))
+
+    expect(screen.getByLabelText('Billing Contact Name')).toHaveValue('Bill Contact')
+    expect(screen.getByLabelText('Billing Contact Phone')).toHaveValue('555-0400')
+    expect(screen.getByLabelText('Billing Contact Email')).toHaveValue('billing@example.com')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use job-site contact' }))
+
+    expect(screen.getByLabelText('Billing Contact Name')).toHaveValue('Site Contact')
+    expect(screen.getByLabelText('Billing Contact Phone')).toHaveValue('555-0300')
+    expect(screen.getByLabelText('Billing Contact Email')).toHaveValue('site@example.com')
+  })
+
   it('quick-adds equipment in the selected customer and service-location context', async () => {
     vi.mocked(masterDataApi.createEquipment).mockResolvedValue({
       id: 'eq2',

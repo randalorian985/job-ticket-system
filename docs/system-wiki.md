@@ -379,6 +379,15 @@ The queue has two view modes:
 
 The selected view is remembered in the browser for that Manager/Admin user session. It does not change the ticket data, filters, CSV export, routes, or authorization rules.
 
+The queue also includes a compact **Saved Views** dropdown for common operating queues:
+- Today;
+- Waiting on Parts;
+- Ready to Invoice;
+- Needs Assignment;
+- Completed Review.
+
+Saved views apply normal queue filters and show small counts inline. They are intentionally presented as a dropdown and compact count chips instead of dashboard-style cards.
+
 Important queue concepts:
 - active job queue;
 - waiting tickets;
@@ -408,6 +417,23 @@ Job-ticket creation uses existing master data where applicable:
 - internal notes and customer-facing notes.
 
 Validation prevents invalid or incomplete submissions where the UI has enough information to do so.
+
+Ticket creation now has a guided in-form path:
+- Customer;
+- Billing party;
+- Job location;
+- Equipment;
+- Schedule / assign tech;
+- Review and create.
+
+The wizard stays on the same screen and jumps the user to the relevant form section. It does not change the backend ticket workflow or create a separate approval path.
+
+The ticket form includes copy helpers to reduce duplicate typing:
+- **Use customer address** copies customer billing address/contact details into a new job location;
+- **Use billing address** copies the selected billing party contact into ticket billing fields;
+- **Use job-site contact** copies the selected service-location contact into ticket billing fields.
+
+Inline data-quality warnings call out cleanup items without blocking the ticket, including missing customer phone, missing job-location ZIP, missing lead tech, and missing due date.
 
 ### Job Ticket Workspace
 The Manager/Admin ticket detail page is organized as a field-service workbench.
@@ -553,6 +579,8 @@ The new workflow keeps editing in the ticket workspace but splits the edit panel
 - **Schedule**: requested, scheduled start, and due dates.
 
 The same assignment and schedule readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
+
+The editor also shows the same ticket create guide used on new tickets, so managers can quickly jump back to customer, billing, job-location, equipment, schedule, or review sections. Copy helpers are available inside relationship and billing sections, and data-quality warnings stay visible while editing.
 
 ![Section-based ticket editor with assignment and schedule readiness](assets/system-wiki/ticket-section-editor.png)
 
@@ -806,6 +834,8 @@ Customer data can include:
 - account/contact details;
 - billing-related contact fields where supported.
 
+Customer billing address and contact details can be reused by service-location and ticket billing helpers. The helper copies existing values into the active form; it does not create a new customer address model.
+
 ### Service Locations
 Service locations represent where work is performed.
 
@@ -817,6 +847,8 @@ Managers/Admins can:
 - filter and review locations.
 
 Service locations should remain aligned to the correct customer.
+
+The service-location form includes **Use customer address**. After a related customer is selected, this copies the customer's billing address and contact details into the service-location address/contact fields so managers do not have to retype the same information.
 
 ### Equipment
 Equipment records represent assets serviced by the company.
