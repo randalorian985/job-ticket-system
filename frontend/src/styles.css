@@ -3043,6 +3043,35 @@ td {
   justify-content: flex-start;
 }
 
+.billing-party-panel {
+  background: #f8fafc;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+
+.billing-party-panel h4 {
+  margin: 0;
+}
+
+.billing-party-summary {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.billing-party-summary span {
+  color: #475569;
+  font-size: 0.84rem;
+}
+
+.billing-party-summary strong {
+  color: #0f172a;
+}
+
 .data-quality-warning-list {
   display: flex;
   flex-wrap: wrap;

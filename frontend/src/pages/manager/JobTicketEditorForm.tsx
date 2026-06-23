@@ -392,6 +392,22 @@ export function JobTicketEditorForm({
   const selectedCustomer = allCustomers.find((item) => item.id === form.customerId)
   const selectedServiceLocation = allServiceLocations.find((item) => item.id === form.serviceLocationId)
   const selectedBillingParty = allCustomers.find((item) => item.id === form.billingPartyCustomerId)
+  const selectedEquipment = allEquipment.find((item) => item.id === form.equipmentId)
+  const jobSiteCustomer = selectedServiceLocation?.customerId
+    ? allCustomers.find((item) => item.id === selectedServiceLocation.customerId)
+    : undefined
+  const equipmentBillingCustomer = selectedEquipment?.responsibleBillingCustomerId
+    ? allCustomers.find((item) => item.id === selectedEquipment.responsibleBillingCustomerId)
+    : undefined
+  const billingPartyRelationship = !selectedBillingParty
+    ? 'No billing party selected.'
+    : selectedBillingParty.id === selectedCustomer?.id
+      ? 'Billing party is the selected customer.'
+      : selectedBillingParty.id === jobSiteCustomer?.id
+        ? 'Billing party is the job-site customer.'
+        : selectedBillingParty.id === equipmentBillingCustomer?.id
+          ? 'Billing party is the equipment billing customer.'
+          : 'Billing party is separate from the customer and job site.'
 
   const displayedJobTypeOptions = useMemo(
     () => uniqueLabels([...jobTypeOptions, form.jobType]),
@@ -552,7 +568,66 @@ export function JobTicketEditorForm({
   const update = <K extends keyof CreateJobTicketDto>(key: K, value: CreateJobTicketDto[K]) => setForm((prev) => ({ ...prev, [key]: value }))
 
   const selectCustomer = (customerId: string) => {
-    setForm((prev) => ({ ...prev, customerId, serviceLocationId: '', equipmentId: null }))
+    setForm((prev) => ({
+      ...prev,
+      customerId,
+      billingPartyCustomerId: !prev.billingPartyCustomerId || prev.billingPartyCustomerId === prev.customerId
+        ? customerId
+        : prev.billingPartyCustomerId,
+      serviceLocationId: '',
+      equipmentId: null
+    }))
+  }
+
+  const selectServiceLocation = (serviceLocationId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      serviceLocationId,
+      equipmentId: null,
+      billingPartyCustomerId: prev.billingPartyCustomerId || allServiceLocations.find((item) => item.id === serviceLocationId)?.customerId || prev.customerId
+    }))
+  }
+
+  const selectEquipment = (equipmentId: string) => {
+    setForm((prev) => ({ ...prev, equipmentId: equipmentId || null }))
+  }
+
+  const selectBillingParty = (billingPartyCustomerId: string, message?: string) => {
+    setForm((prev) => ({ ...prev, billingPartyCustomerId }))
+    if (message) {
+      setCopyHelperError(null)
+      setCopyHelperMessage(message)
+    }
+  }
+
+  const useCustomerAsBillingParty = () => {
+    if (!selectedCustomer) {
+      setCopyHelperError('Select a customer before using customer as billing party.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    selectBillingParty(selectedCustomer.id, 'Customer selected as the billing party.')
+  }
+
+  const useJobSiteCustomerAsBillingParty = () => {
+    if (!jobSiteCustomer) {
+      setCopyHelperError('Select a job location with a related customer before using job-site customer as billing party.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    selectBillingParty(jobSiteCustomer.id, 'Job-site customer selected as the billing party.')
+  }
+
+  const useEquipmentBillingCustomer = () => {
+    if (!equipmentBillingCustomer) {
+      setCopyHelperError('Selected equipment has no separate billing customer.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    selectBillingParty(equipmentBillingCustomer.id, 'Equipment billing customer selected as the billing party.')
   }
 
   const copySelectedCustomerToServiceLocation = () => {
@@ -975,7 +1050,7 @@ export function JobTicketEditorForm({
           ) : null}
           <div className="field-with-action">
             <label>Service Location
-              <select value={form.serviceLocationId} onChange={(e) => update('serviceLocationId', e.target.value)}>
+              <select value={form.serviceLocationId} onChange={(e) => selectServiceLocation(e.target.value)}>
                 <option value="">Select location</option>
                 {filteredLocations.map((c) => <option key={c.id} value={c.id}>{c.locationName}</option>)}
               </select>
@@ -1018,10 +1093,36 @@ export function JobTicketEditorForm({
               </div>
             </section>
           ) : null}
-          <label>Billing Party<select value={form.billingPartyCustomerId} onChange={(e) => update('billingPartyCustomerId', e.target.value)}><option value="">Select billing party</option>{allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          <section className="billing-party-panel stack" aria-label="billing party selection">
+            <div className="section-editor-heading">
+              <h4>Billing Party</h4>
+              <p className="muted">Choose who should receive the invoice. This can be the customer, the job-site customer, the equipment billing customer, or another customer record.</p>
+            </div>
+            <div className="copy-helper-row">
+              <button type="button" className="secondary-button" onClick={useCustomerAsBillingParty} disabled={!selectedCustomer}>
+                Use selected customer
+              </button>
+              <button type="button" className="secondary-button" onClick={useJobSiteCustomerAsBillingParty} disabled={!jobSiteCustomer}>
+                Use job-site customer
+              </button>
+              <button type="button" className="secondary-button" onClick={useEquipmentBillingCustomer} disabled={!equipmentBillingCustomer}>
+                Use equipment billing customer
+              </button>
+            </div>
+            <label>Billing Party
+              <select value={form.billingPartyCustomerId} onChange={(e) => selectBillingParty(e.target.value)}>
+                <option value="">Select billing party</option>
+                {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <div className="billing-party-summary" aria-label="billing party relationship">
+              <span>{billingPartyRelationship}</span>
+              {selectedBillingParty ? <strong>{selectedBillingParty.name}</strong> : null}
+            </div>
+          </section>
           <div className="field-with-action">
             <label>Crane / Equipment Being Serviced
-              <select value={form.equipmentId ?? ''} onChange={(e) => update('equipmentId', e.target.value || null)}>
+              <select value={form.equipmentId ?? ''} onChange={(e) => selectEquipment(e.target.value)}>
                 <option value="">No equipment record</option>
                 {filteredEquipment.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>

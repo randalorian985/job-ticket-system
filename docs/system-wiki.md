@@ -432,8 +432,13 @@ The wizard stays on the same screen and jumps the user to the relevant form sect
 
 The ticket form includes copy helpers to reduce duplicate typing:
 - **Use customer address** copies customer billing address/contact details into a new job location;
+- **Use selected customer** sets the ticket billing party to the selected customer;
+- **Use job-site customer** sets the billing party from the selected service location's related customer when available;
+- **Use equipment billing customer** sets the billing party from the selected equipment's responsible billing customer when available;
 - **Use billing address** copies the selected billing party contact into ticket billing fields;
 - **Use job-site contact** copies the selected service-location contact into ticket billing fields.
+
+Selecting a customer defaults the billing party to that customer only when no separate billing party has already been chosen. If a manager selects a different billing party, later customer changes preserve that explicit billing override.
 
 Inline data-quality warnings call out cleanup items without blocking the ticket, including missing customer phone, missing job-location ZIP, missing lead tech, and missing due date.
 
@@ -582,7 +587,7 @@ The new workflow keeps editing in the ticket workspace but splits the edit panel
 
 The same assignment and schedule readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
 
-The editor also shows the same ticket create guide used on new tickets, so managers can quickly jump back to customer, billing, job-location, equipment, schedule, or review sections. Copy helpers are available inside relationship and billing sections, and data-quality warnings stay visible while editing.
+The editor also shows the same ticket create guide used on new tickets, so managers can quickly jump back to customer, billing, job-location, equipment, schedule, or review sections. Billing party is treated as its own relationship: it can match the customer, follow the job-site customer, follow the equipment billing customer, or point at any other customer record. Copy helpers are available inside relationship and billing sections, and data-quality warnings stay visible while editing.
 
 ![Section-based ticket editor with assignment and schedule readiness](assets/system-wiki/ticket-section-editor.png)
 

@@ -1091,6 +1091,7 @@ export function JobTicketDetailPage() {
           <TicketWorkbenchHero
             activeDrawer={activeDrawer}
             job={job}
+            selectedBillingParty={billingParty}
             selectedCustomer={selectedCustomer}
             selectedEquipment={selectedEquipment}
             selectedLocation={selectedLocation}

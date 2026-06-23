@@ -263,6 +263,35 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
+  it('defaults billing party from customer without overwriting an explicit billing override', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, customerId: '', serviceLocationId: '', billingPartyCustomerId: '', equipmentId: null }}
+        customers={[
+          { id: 'c1', name: 'Acme' },
+          { id: 'c2', name: 'Separate Billing Co' },
+          { id: 'c3', name: 'Northwind' }
+        ] as any}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    openEditSection('Customer & Service Equipment')
+    fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c1' } })
+
+    expect(screen.getByLabelText('Billing Party')).toHaveValue('c1')
+    expect(screen.getByText('Billing party is the selected customer.')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Billing Party'), { target: { value: 'c2' } })
+    expect(screen.getByText('Billing party is separate from the customer and job site.')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c3' } })
+    expect(screen.getByLabelText('Billing Party')).toHaveValue('c2')
+  })
+
   it('validates customer quick-add before calling the API', () => {
     render(
       <JobTicketEditorForm
@@ -431,6 +460,35 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     expect(screen.getByLabelText('Billing Contact Name')).toHaveValue('Site Contact')
     expect(screen.getByLabelText('Billing Contact Phone')).toHaveValue('555-0300')
     expect(screen.getByLabelText('Billing Contact Email')).toHaveValue('site@example.com')
+  })
+
+  it('uses equipment billing customer as the ticket billing party', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, billingPartyCustomerId: 'c1' }}
+        customers={[
+          { id: 'c1', name: 'Acme' },
+          { id: 'bill-1', name: 'Acme AP' }
+        ] as any}
+        serviceLocations={serviceLocations}
+        equipment={[{
+          id: 'eq1',
+          customerId: 'c1',
+          serviceLocationId: 's1',
+          responsibleBillingCustomerId: 'bill-1',
+          name: 'Truck 7'
+        }] as any}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    openEditSection('Customer & Service Equipment')
+    fireEvent.click(screen.getByRole('button', { name: 'Use equipment billing customer' }))
+
+    expect(screen.getByLabelText('Billing Party')).toHaveValue('bill-1')
+    expect(screen.getByText('Equipment billing customer selected as the billing party.')).toBeInTheDocument()
+    expect(screen.getByText('Billing party is the equipment billing customer.')).toBeInTheDocument()
   })
 
   it('quick-adds equipment in the selected customer and service-location context', async () => {

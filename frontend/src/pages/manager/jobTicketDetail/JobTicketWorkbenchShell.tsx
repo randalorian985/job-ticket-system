@@ -36,6 +36,7 @@ type SelectWorkflowTab = (tab: WorkflowTab, focusWorkflow?: boolean) => void;
 type TicketWorkbenchHeroProps = {
   activeDrawer: WorkbenchDrawer;
   job: JobTicketDto;
+  selectedBillingParty?: CustomerDto;
   selectedCustomer?: CustomerDto;
   selectedEquipment?: EquipmentDto;
   selectedLocation?: ServiceLocationDto;
@@ -47,6 +48,7 @@ export function TicketWorkbenchHero({
   activeDrawer,
   job,
   onOpenDrawer,
+  selectedBillingParty,
   selectedCustomer,
   selectedEquipment,
   selectedLocation,
@@ -107,6 +109,10 @@ export function TicketWorkbenchHero({
         <div>
           <span>Service location</span>
           <strong>{selectedLocation?.locationName ?? job.serviceLocationName ?? "Location unavailable"}</strong>
+        </div>
+        <div>
+          <span>Billing party</span>
+          <strong>{selectedBillingParty?.name ?? job.billingPartyCustomerName ?? "Billing party unavailable"}</strong>
         </div>
         <div>
           <span>Equipment</span>
