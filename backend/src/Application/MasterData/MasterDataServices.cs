@@ -85,7 +85,12 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
             AccountNumber = ValidationHelpers.NullIfWhitespace(request.AccountNumber),
             ContactName = ValidationHelpers.NullIfWhitespace(request.ContactName),
             Email = ValidationHelpers.NullIfWhitespace(request.Email),
-            Phone = ValidationHelpers.NullIfWhitespace(request.Phone)
+            Phone = ValidationHelpers.NullIfWhitespace(request.Phone),
+            BillingAddressLine1 = ValidationHelpers.NullIfWhitespace(request.BillingAddressLine1),
+            BillingAddressLine2 = ValidationHelpers.NullIfWhitespace(request.BillingAddressLine2),
+            BillingCity = ValidationHelpers.NullIfWhitespace(request.BillingCity),
+            BillingState = ValidationHelpers.NullIfWhitespace(request.BillingState),
+            BillingPostalCode = ValidationHelpers.NullIfWhitespace(request.BillingPostalCode)
         };
 
         dbContext.Customers.Add(entity);
@@ -104,6 +109,11 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
         entity.ContactName = ValidationHelpers.NullIfWhitespace(request.ContactName);
         entity.Email = ValidationHelpers.NullIfWhitespace(request.Email);
         entity.Phone = ValidationHelpers.NullIfWhitespace(request.Phone);
+        entity.BillingAddressLine1 = ValidationHelpers.NullIfWhitespace(request.BillingAddressLine1);
+        entity.BillingAddressLine2 = ValidationHelpers.NullIfWhitespace(request.BillingAddressLine2);
+        entity.BillingCity = ValidationHelpers.NullIfWhitespace(request.BillingCity);
+        entity.BillingState = ValidationHelpers.NullIfWhitespace(request.BillingState);
+        entity.BillingPostalCode = ValidationHelpers.NullIfWhitespace(request.BillingPostalCode);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return Map.Compile().Invoke(entity);
@@ -130,7 +140,9 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
         return true;
     }
 
-    private static readonly System.Linq.Expressions.Expression<Func<Customer, CustomerDto>> Map = x => new CustomerDto(x.Id, x.Name, x.AccountNumber, x.ContactName, x.Email, x.Phone, x.IsDeleted);
+    private static readonly System.Linq.Expressions.Expression<Func<Customer, CustomerDto>> Map = x => new CustomerDto(
+        x.Id, x.Name, x.AccountNumber, x.ContactName, x.Email, x.Phone, x.IsDeleted,
+        x.BillingAddressLine1, x.BillingAddressLine2, x.BillingCity, x.BillingState, x.BillingPostalCode);
 }
 
 public sealed class ServiceLocationsService(ApplicationDbContext dbContext) : IServiceLocationsService
@@ -154,11 +166,20 @@ public sealed class ServiceLocationsService(ApplicationDbContext dbContext) : IS
             CustomerId = request.CustomerId,
             CompanyName = request.CompanyName.Trim(),
             LocationName = request.LocationName.Trim(),
+            OnSiteContactName = ValidationHelpers.NullIfWhitespace(request.OnSiteContactName),
+            OnSiteContactPhone = ValidationHelpers.NullIfWhitespace(request.OnSiteContactPhone),
+            OnSiteContactEmail = ValidationHelpers.NullIfWhitespace(request.OnSiteContactEmail),
             AddressLine1 = request.AddressLine1.Trim(),
+            AddressLine2 = ValidationHelpers.NullIfWhitespace(request.AddressLine2),
             City = request.City.Trim(),
             State = request.State.Trim(),
             PostalCode = request.PostalCode.Trim(),
+            ParishCounty = ValidationHelpers.NullIfWhitespace(request.ParishCounty),
             Country = request.Country.Trim(),
+            GateCode = ValidationHelpers.NullIfWhitespace(request.GateCode),
+            AccessInstructions = ValidationHelpers.NullIfWhitespace(request.AccessInstructions),
+            SafetyRequirements = ValidationHelpers.NullIfWhitespace(request.SafetyRequirements),
+            SiteNotes = ValidationHelpers.NullIfWhitespace(request.SiteNotes),
             IsActive = request.IsActive
         };
 
@@ -178,11 +199,20 @@ public sealed class ServiceLocationsService(ApplicationDbContext dbContext) : IS
         entity.CustomerId = request.CustomerId;
         entity.CompanyName = request.CompanyName.Trim();
         entity.LocationName = request.LocationName.Trim();
+        entity.OnSiteContactName = ValidationHelpers.NullIfWhitespace(request.OnSiteContactName);
+        entity.OnSiteContactPhone = ValidationHelpers.NullIfWhitespace(request.OnSiteContactPhone);
+        entity.OnSiteContactEmail = ValidationHelpers.NullIfWhitespace(request.OnSiteContactEmail);
         entity.AddressLine1 = request.AddressLine1.Trim();
+        entity.AddressLine2 = ValidationHelpers.NullIfWhitespace(request.AddressLine2);
         entity.City = request.City.Trim();
         entity.State = request.State.Trim();
         entity.PostalCode = request.PostalCode.Trim();
+        entity.ParishCounty = ValidationHelpers.NullIfWhitespace(request.ParishCounty);
         entity.Country = request.Country.Trim();
+        entity.GateCode = ValidationHelpers.NullIfWhitespace(request.GateCode);
+        entity.AccessInstructions = ValidationHelpers.NullIfWhitespace(request.AccessInstructions);
+        entity.SafetyRequirements = ValidationHelpers.NullIfWhitespace(request.SafetyRequirements);
+        entity.SiteNotes = ValidationHelpers.NullIfWhitespace(request.SiteNotes);
         entity.IsActive = request.IsActive;
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -219,7 +249,9 @@ public sealed class ServiceLocationsService(ApplicationDbContext dbContext) : IS
     }
 
     private static readonly System.Linq.Expressions.Expression<Func<ServiceLocation, ServiceLocationDto>> Map = x => new ServiceLocationDto(
-        x.Id, x.CustomerId, x.CompanyName, x.LocationName, x.AddressLine1, x.City, x.State, x.PostalCode, x.Country, x.IsActive, x.IsDeleted);
+        x.Id, x.CustomerId, x.CompanyName, x.LocationName, x.AddressLine1, x.City, x.State, x.PostalCode, x.Country, x.IsActive, x.IsDeleted,
+        x.OnSiteContactName, x.OnSiteContactPhone, x.OnSiteContactEmail, x.AddressLine2, x.ParishCounty, x.GateCode,
+        x.AccessInstructions, x.SafetyRequirements, x.SiteNotes);
 }
 
 public sealed class EquipmentService(ApplicationDbContext dbContext) : IEquipmentService
@@ -522,13 +554,105 @@ public sealed class PartsService(ApplicationDbContext dbContext) : IPartsService
     }
 }
 
-public sealed record CustomerDto(Guid Id, string Name, string? AccountNumber, string? ContactName, string? Email, string? Phone, bool IsArchived);
-public sealed record CreateCustomerDto(string Name, string? AccountNumber, string? ContactName, string? Email, string? Phone);
-public sealed record UpdateCustomerDto(string Name, string? AccountNumber, string? ContactName, string? Email, string? Phone);
+public sealed record CustomerDto(
+    Guid Id,
+    string Name,
+    string? AccountNumber,
+    string? ContactName,
+    string? Email,
+    string? Phone,
+    bool IsArchived,
+    string? BillingAddressLine1 = null,
+    string? BillingAddressLine2 = null,
+    string? BillingCity = null,
+    string? BillingState = null,
+    string? BillingPostalCode = null);
 
-public sealed record ServiceLocationDto(Guid Id, Guid? CustomerId, string CompanyName, string LocationName, string AddressLine1, string City, string State, string PostalCode, string Country, bool IsActive, bool IsArchived);
-public sealed record CreateServiceLocationDto(Guid? CustomerId, string CompanyName, string LocationName, string AddressLine1, string City, string State, string PostalCode, string Country, bool IsActive = true);
-public sealed record UpdateServiceLocationDto(Guid? CustomerId, string CompanyName, string LocationName, string AddressLine1, string City, string State, string PostalCode, string Country, bool IsActive = true);
+public sealed record CreateCustomerDto(
+    string Name,
+    string? AccountNumber,
+    string? ContactName,
+    string? Email,
+    string? Phone,
+    string? BillingAddressLine1 = null,
+    string? BillingAddressLine2 = null,
+    string? BillingCity = null,
+    string? BillingState = null,
+    string? BillingPostalCode = null);
+
+public sealed record UpdateCustomerDto(
+    string Name,
+    string? AccountNumber,
+    string? ContactName,
+    string? Email,
+    string? Phone,
+    string? BillingAddressLine1 = null,
+    string? BillingAddressLine2 = null,
+    string? BillingCity = null,
+    string? BillingState = null,
+    string? BillingPostalCode = null);
+
+public sealed record ServiceLocationDto(
+    Guid Id,
+    Guid? CustomerId,
+    string CompanyName,
+    string LocationName,
+    string AddressLine1,
+    string City,
+    string State,
+    string PostalCode,
+    string Country,
+    bool IsActive,
+    bool IsArchived,
+    string? OnSiteContactName = null,
+    string? OnSiteContactPhone = null,
+    string? OnSiteContactEmail = null,
+    string? AddressLine2 = null,
+    string? ParishCounty = null,
+    string? GateCode = null,
+    string? AccessInstructions = null,
+    string? SafetyRequirements = null,
+    string? SiteNotes = null);
+
+public sealed record CreateServiceLocationDto(
+    Guid? CustomerId,
+    string CompanyName,
+    string LocationName,
+    string AddressLine1,
+    string City,
+    string State,
+    string PostalCode,
+    string Country,
+    bool IsActive = true,
+    string? OnSiteContactName = null,
+    string? OnSiteContactPhone = null,
+    string? OnSiteContactEmail = null,
+    string? AddressLine2 = null,
+    string? ParishCounty = null,
+    string? GateCode = null,
+    string? AccessInstructions = null,
+    string? SafetyRequirements = null,
+    string? SiteNotes = null);
+
+public sealed record UpdateServiceLocationDto(
+    Guid? CustomerId,
+    string CompanyName,
+    string LocationName,
+    string AddressLine1,
+    string City,
+    string State,
+    string PostalCode,
+    string Country,
+    bool IsActive = true,
+    string? OnSiteContactName = null,
+    string? OnSiteContactPhone = null,
+    string? OnSiteContactEmail = null,
+    string? AddressLine2 = null,
+    string? ParishCounty = null,
+    string? GateCode = null,
+    string? AccessInstructions = null,
+    string? SafetyRequirements = null,
+    string? SiteNotes = null);
 
 public sealed record EquipmentDto(Guid Id, Guid CustomerId, Guid ServiceLocationId, Guid? OwnerCustomerId, Guid? ResponsibleBillingCustomerId, string Name, string? EquipmentNumber, string? UnitNumber, string? Manufacturer, string? ModelNumber, string? SerialNumber, string? EquipmentType, int? Year, bool IsArchived);
 public sealed record CreateEquipmentDto(Guid CustomerId, Guid ServiceLocationId, Guid? OwnerCustomerId, Guid? ResponsibleBillingCustomerId, string Name, string? EquipmentNumber, string? UnitNumber = null, string? Manufacturer = null, string? ModelNumber = null, string? SerialNumber = null, string? EquipmentType = null, int? Year = null);

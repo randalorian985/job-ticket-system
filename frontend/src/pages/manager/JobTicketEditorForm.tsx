@@ -43,15 +43,29 @@ type CustomerQuickAddDraft = {
   contactName: string
   email: string
   phone: string
+  billingAddressLine1: string
+  billingAddressLine2: string
+  billingCity: string
+  billingState: string
+  billingPostalCode: string
 }
 
 type ServiceLocationQuickAddDraft = {
   locationName: string
+  onSiteContactName: string
+  onSiteContactPhone: string
+  onSiteContactEmail: string
   addressLine1: string
+  addressLine2: string
   city: string
   state: string
   postalCode: string
+  parishCounty: string
   country: string
+  gateCode: string
+  accessInstructions: string
+  safetyRequirements: string
+  siteNotes: string
 }
 
 type EquipmentQuickAddDraft = {
@@ -104,16 +118,30 @@ const emptyCustomerDraft: CustomerQuickAddDraft = {
   accountNumber: '',
   contactName: '',
   email: '',
-  phone: ''
+  phone: '',
+  billingAddressLine1: '',
+  billingAddressLine2: '',
+  billingCity: '',
+  billingState: '',
+  billingPostalCode: ''
 }
 
 const emptyServiceLocationDraft: ServiceLocationQuickAddDraft = {
   locationName: '',
+  onSiteContactName: '',
+  onSiteContactPhone: '',
+  onSiteContactEmail: '',
   addressLine1: '',
+  addressLine2: '',
   city: '',
   state: '',
   postalCode: '',
-  country: 'USA'
+  parishCounty: '',
+  country: 'USA',
+  gateCode: '',
+  accessInstructions: '',
+  safetyRequirements: '',
+  siteNotes: ''
 }
 
 const emptyEquipmentDraft: EquipmentQuickAddDraft = {
@@ -459,7 +487,12 @@ export function JobTicketEditorForm({
       accountNumber: optionalText(customerDraft.accountNumber),
       contactName: optionalText(customerDraft.contactName),
       email: optionalText(customerDraft.email),
-      phone: optionalText(customerDraft.phone)
+      phone: optionalText(customerDraft.phone),
+      billingAddressLine1: optionalText(customerDraft.billingAddressLine1),
+      billingAddressLine2: optionalText(customerDraft.billingAddressLine2),
+      billingCity: optionalText(customerDraft.billingCity),
+      billingState: optionalText(customerDraft.billingState),
+      billingPostalCode: optionalText(customerDraft.billingPostalCode)
     }
 
     if (!payload.name) {
@@ -508,11 +541,20 @@ export function JobTicketEditorForm({
       customerId: form.customerId,
       companyName: selectedCustomer?.name ?? serviceLocationDraft.locationName.trim(),
       locationName: serviceLocationDraft.locationName.trim(),
+      onSiteContactName: optionalText(serviceLocationDraft.onSiteContactName),
+      onSiteContactPhone: optionalText(serviceLocationDraft.onSiteContactPhone),
+      onSiteContactEmail: optionalText(serviceLocationDraft.onSiteContactEmail),
       addressLine1: serviceLocationDraft.addressLine1.trim(),
+      addressLine2: optionalText(serviceLocationDraft.addressLine2),
       city: serviceLocationDraft.city.trim(),
       state: serviceLocationDraft.state.trim(),
       postalCode: serviceLocationDraft.postalCode.trim(),
+      parishCounty: optionalText(serviceLocationDraft.parishCounty),
       country: serviceLocationDraft.country.trim(),
+      gateCode: optionalText(serviceLocationDraft.gateCode),
+      accessInstructions: optionalText(serviceLocationDraft.accessInstructions),
+      safetyRequirements: optionalText(serviceLocationDraft.safetyRequirements),
+      siteNotes: optionalText(serviceLocationDraft.siteNotes),
       isActive: true
     }
 
@@ -723,6 +765,11 @@ export function JobTicketEditorForm({
                 <label>Contact Name<input value={customerDraft.contactName} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, contactName: e.target.value }))} /></label>
                 <label>Contact Phone<input value={customerDraft.phone} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, phone: e.target.value }))} /></label>
                 <label>Contact Email<input type="email" value={customerDraft.email} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, email: e.target.value }))} /></label>
+                <label>Billing Address<input value={customerDraft.billingAddressLine1} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingAddressLine1: e.target.value }))} /></label>
+                <label>Address Line 2<input value={customerDraft.billingAddressLine2} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingAddressLine2: e.target.value }))} /></label>
+                <label>Billing City<input value={customerDraft.billingCity} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingCity: e.target.value }))} /></label>
+                <label>Billing State<input value={customerDraft.billingState} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingState: e.target.value }))} /></label>
+                <label>Billing ZIP / Postal<input value={customerDraft.billingPostalCode} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingPostalCode: e.target.value }))} /></label>
               </div>
               <div className="row">
                 <button type="button" onClick={addCustomer} disabled={isAddingCustomer}>
@@ -750,11 +797,20 @@ export function JobTicketEditorForm({
             <section className="quick-add-panel" aria-label="quick add service location">
               <div className="quick-add-grid">
                 <label>Location Name<input value={serviceLocationDraft.locationName} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, locationName: e.target.value }))} /></label>
+                <label>On-site Contact<input value={serviceLocationDraft.onSiteContactName} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, onSiteContactName: e.target.value }))} /></label>
+                <label>On-site Phone<input value={serviceLocationDraft.onSiteContactPhone} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, onSiteContactPhone: e.target.value }))} /></label>
+                <label>On-site Email<input type="email" value={serviceLocationDraft.onSiteContactEmail} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, onSiteContactEmail: e.target.value }))} /></label>
                 <label>Street Address<input value={serviceLocationDraft.addressLine1} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, addressLine1: e.target.value }))} /></label>
+                <label>Street Address 2<input value={serviceLocationDraft.addressLine2} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, addressLine2: e.target.value }))} /></label>
                 <label>City<input value={serviceLocationDraft.city} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, city: e.target.value }))} /></label>
                 <label>State<input value={serviceLocationDraft.state} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, state: e.target.value }))} /></label>
                 <label>Postal Code<input value={serviceLocationDraft.postalCode} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, postalCode: e.target.value }))} /></label>
+                <label>Parish / County<input value={serviceLocationDraft.parishCounty} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, parishCounty: e.target.value }))} /></label>
                 <label>Country<input value={serviceLocationDraft.country} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, country: e.target.value }))} /></label>
+                <label>Gate Code<input value={serviceLocationDraft.gateCode} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, gateCode: e.target.value }))} /></label>
+                <label>Access Instructions<input value={serviceLocationDraft.accessInstructions} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, accessInstructions: e.target.value }))} /></label>
+                <label>Safety Requirements<input value={serviceLocationDraft.safetyRequirements} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, safetyRequirements: e.target.value }))} /></label>
+                <label>Site Notes<input value={serviceLocationDraft.siteNotes} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, siteNotes: e.target.value }))} /></label>
               </div>
               <div className="row">
                 <button type="button" onClick={addServiceLocation} disabled={isAddingServiceLocation}>

@@ -14,13 +14,39 @@ public sealed class MasterDataServicesTests
         await using var context = CreateContext();
         var service = new CustomersService(context);
 
-        var created = await service.CreateAsync(new CreateCustomerDto("Acme", null, null, null, null));
-        var updated = await service.UpdateAsync(created.Id, new UpdateCustomerDto("Acme Updated", "A-123", null, null, null));
+        var created = await service.CreateAsync(new CreateCustomerDto(
+            "Acme",
+            null,
+            null,
+            null,
+            null,
+            BillingAddressLine1: "100 Billing Rd",
+            BillingCity: "Tulsa",
+            BillingState: "OK",
+            BillingPostalCode: "74101"));
+        var updated = await service.UpdateAsync(created.Id, new UpdateCustomerDto(
+            "Acme Updated",
+            "A-123",
+            "Alex Manager",
+            "alex@example.com",
+            "555-0100",
+            "200 Billing Rd",
+            "Suite 2",
+            "Dallas",
+            "TX",
+            "75001"));
         var archived = await service.ArchiveAsync(created.Id);
         var listed = await service.ListAsync(new PagedQuery());
 
         Assert.NotNull(updated);
         Assert.Equal("Acme Updated", updated!.Name);
+        Assert.Equal("Alex Manager", updated.ContactName);
+        Assert.Equal("555-0100", updated.Phone);
+        Assert.Equal("200 Billing Rd", updated.BillingAddressLine1);
+        Assert.Equal("Suite 2", updated.BillingAddressLine2);
+        Assert.Equal("Dallas", updated.BillingCity);
+        Assert.Equal("TX", updated.BillingState);
+        Assert.Equal("75001", updated.BillingPostalCode);
         Assert.True(archived);
         Assert.Empty(listed);
     }
@@ -66,11 +92,37 @@ public sealed class MasterDataServicesTests
         await context.SaveChangesAsync();
 
         var service = new ServiceLocationsService(context);
-        var created = await service.CreateAsync(new CreateServiceLocationDto(customer.Id, "Acme", "HQ", "123 Main", "Austin", "TX", "78701", "USA"));
+        var created = await service.CreateAsync(new CreateServiceLocationDto(
+            customer.Id,
+            "Acme",
+            "HQ",
+            "123 Main",
+            "Austin",
+            "TX",
+            "78701",
+            "USA",
+            OnSiteContactName: "Sam Site",
+            OnSiteContactPhone: "555-0200",
+            OnSiteContactEmail: "sam@example.com",
+            AddressLine2: "Dock 4",
+            ParishCounty: "Travis",
+            GateCode: "4321",
+            AccessInstructions: "Use north gate",
+            SafetyRequirements: "Hard hat required",
+            SiteNotes: "Check in at office"));
 
         var archived = await service.ArchiveAsync(created.Id);
         var listed = await service.ListAsync(new PagedQuery());
 
+        Assert.Equal("Sam Site", created.OnSiteContactName);
+        Assert.Equal("555-0200", created.OnSiteContactPhone);
+        Assert.Equal("sam@example.com", created.OnSiteContactEmail);
+        Assert.Equal("Dock 4", created.AddressLine2);
+        Assert.Equal("Travis", created.ParishCounty);
+        Assert.Equal("4321", created.GateCode);
+        Assert.Equal("Use north gate", created.AccessInstructions);
+        Assert.Equal("Hard hat required", created.SafetyRequirements);
+        Assert.Equal("Check in at office", created.SiteNotes);
         Assert.True(archived);
         Assert.Empty(listed);
     }

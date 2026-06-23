@@ -464,6 +464,11 @@ export type CustomerDto = {
   contactName?: string | null
   email?: string | null
   phone?: string | null
+  billingAddressLine1?: string | null
+  billingAddressLine2?: string | null
+  billingCity?: string | null
+  billingState?: string | null
+  billingPostalCode?: string | null
   isArchived?: boolean
 }
 
@@ -474,6 +479,11 @@ export type CreateCustomerDto = {
   contactName?: string | null
   email?: string | null
   phone?: string | null
+  billingAddressLine1?: string | null
+  billingAddressLine2?: string | null
+  billingCity?: string | null
+  billingState?: string | null
+  billingPostalCode?: string | null
 }
 
 export type UpdateCustomerDto = CreateCustomerDto
@@ -483,11 +493,20 @@ export type ServiceLocationDto = {
   customerId?: string | null
   companyName: string
   locationName: string
+  onSiteContactName?: string | null
+  onSiteContactPhone?: string | null
+  onSiteContactEmail?: string | null
   addressLine1: string
+  addressLine2?: string | null
   city: string
   state: string
   postalCode: string
+  parishCounty?: string | null
   country: string
+  gateCode?: string | null
+  accessInstructions?: string | null
+  safetyRequirements?: string | null
+  siteNotes?: string | null
   isActive: boolean
   isArchived?: boolean
 }
@@ -532,11 +551,20 @@ export type CreateServiceLocationDto = {
   customerId?: string | null
   companyName: string
   locationName: string
+  onSiteContactName?: string | null
+  onSiteContactPhone?: string | null
+  onSiteContactEmail?: string | null
   addressLine1: string
+  addressLine2?: string | null
   city: string
   state: string
   postalCode: string
+  parishCounty?: string | null
   country: string
+  gateCode?: string | null
+  accessInstructions?: string | null
+  safetyRequirements?: string | null
+  siteNotes?: string | null
   isActive?: boolean
 }
 

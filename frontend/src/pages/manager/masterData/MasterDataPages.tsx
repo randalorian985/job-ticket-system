@@ -35,6 +35,18 @@ const hasRequiredText = (value?: string | null) => Boolean(value?.trim())
 const hasRequiredTexts = (...values: Array<string | null | undefined>) => values.every(hasRequiredText)
 const hasNonNegativeNumbers = (...values: number[]) => values.every((value) => Number.isFinite(value) && value >= 0)
 const hasValidEquipmentYear = (value?: number | null) => value === null || value === undefined || (Number.isInteger(value) && value >= 1900 && value <= 2100)
+const compactAddress = (...values: Array<string | null | undefined>) => values.filter((value) => value?.trim()).join(', ')
+const customerBillingAddress = (customer: CustomerDto) => compactAddress(
+  customer.billingAddressLine1,
+  customer.billingAddressLine2,
+  compactAddress(customer.billingCity, customer.billingState, customer.billingPostalCode)
+)
+const serviceLocationAddress = (location: ServiceLocationDto) => compactAddress(
+  location.addressLine1,
+  location.addressLine2,
+  compactAddress(location.city, location.state, location.postalCode),
+  location.country
+)
 const activeOrSelected = <T extends { id: string, isArchived?: boolean }>(items: T[], selectedIds: Array<string | null | undefined>) => {
   const selected = new Set(selectedIds.filter(Boolean))
   return items.filter((item) => !item.isArchived || selected.has(item.id))
@@ -55,8 +67,37 @@ const confirmArchiveAction = (entityLabel: string, entityName: string, isArchive
   return window.confirm(`Are you sure you want to ${action} ${entityLabel} "${entityName}"?`)
 }
 
-const emptyCustomerDraft: CreateCustomerDto = { name: '' }
-const emptyServiceLocationDraft: CreateServiceLocationDto = { companyName: '', locationName: '', addressLine1: '', city: '', state: '', postalCode: '', country: 'US', isActive: true }
+const emptyCustomerDraft: CreateCustomerDto = {
+  name: '',
+  accountNumber: '',
+  contactName: '',
+  email: '',
+  phone: '',
+  billingAddressLine1: '',
+  billingAddressLine2: '',
+  billingCity: '',
+  billingState: '',
+  billingPostalCode: ''
+}
+const emptyServiceLocationDraft: CreateServiceLocationDto = {
+  companyName: '',
+  locationName: '',
+  onSiteContactName: '',
+  onSiteContactPhone: '',
+  onSiteContactEmail: '',
+  addressLine1: '',
+  addressLine2: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  parishCounty: '',
+  country: 'US',
+  gateCode: '',
+  accessInstructions: '',
+  safetyRequirements: '',
+  siteNotes: '',
+  isActive: true
+}
 const emptyEquipmentDraft: CreateEquipmentDto = { customerId: '', serviceLocationId: '', ownerCustomerId: null, responsibleBillingCustomerId: null, name: '', equipmentNumber: '' }
 const emptyPartDraft: CreatePartDto = { partCategoryId: '', partNumber: '', name: '', unitCost: 0, unitPrice: 0, quantityOnHand: 0, reorderThreshold: 0 }
 const emptyVendorDraft: CreateVendorDto = { name: '' }
@@ -102,7 +143,18 @@ export function CustomersPage() {
       .finally(() => setIsLoading(false))
   }
   useEffect(() => { load() }, [])
-  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && matchesTextSearch(search, [x.name, x.accountNumber, x.contactName, x.email, x.phone])), [items, search, archiveFilter])
+  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && matchesTextSearch(search, [
+    x.name,
+    x.accountNumber,
+    x.contactName,
+    x.email,
+    x.phone,
+    x.billingAddressLine1,
+    x.billingAddressLine2,
+    x.billingCity,
+    x.billingState,
+    x.billingPostalCode
+  ])), [items, search, archiveFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!hasRequiredText(draft.name)) { setSuccess(null); return setError('Customer name is required.') }
@@ -134,7 +186,12 @@ export function CustomersPage() {
       accountNumber: customer.accountNumber,
       contactName: customer.contactName,
       email: customer.email,
-      phone: customer.phone
+      phone: customer.phone,
+      billingAddressLine1: customer.billingAddressLine1,
+      billingAddressLine2: customer.billingAddressLine2,
+      billingCity: customer.billingCity,
+      billingState: customer.billingState,
+      billingPostalCode: customer.billingPostalCode
     })
     setEditId(customer.id)
     setError(null)
@@ -164,6 +221,15 @@ export function CustomersPage() {
           <label>Email<input placeholder="Email" value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></label>
           <label>Phone<input placeholder="Phone" value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></label>
         </div>
+        <div className="row">
+          <label>Billing address<input placeholder="Billing address" value={draft.billingAddressLine1 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine1: e.target.value })} /></label>
+          <label>Address line 2<input placeholder="Address line 2" value={draft.billingAddressLine2 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine2: e.target.value })} /></label>
+        </div>
+        <div className="row">
+          <label>City<input placeholder="City" value={draft.billingCity ?? ''} onChange={(e) => setDraft({ ...draft, billingCity: e.target.value })} /></label>
+          <label>State<input placeholder="State" value={draft.billingState ?? ''} onChange={(e) => setDraft({ ...draft, billingState: e.target.value })} /></label>
+          <label>ZIP / postal code<input placeholder="ZIP / postal code" value={draft.billingPostalCode ?? ''} onChange={(e) => setDraft({ ...draft, billingPostalCode: e.target.value })} /></label>
+        </div>
         {editId ? <p className="muted">Editing customer. Save changes or return to the customer list.</p> : null}
         <div className="row">
           <button type="submit">{editId ? 'Save Customer' : 'Create Customer'}</button>
@@ -172,7 +238,7 @@ export function CustomersPage() {
       </form>
 
       <div className="stack" hidden={editorOpen}>
-        <MasterDataFilters label="customers" search={search} searchPlaceholder="Search by name, account, contact, email, or phone" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all') }} />
+        <MasterDataFilters label="customers" search={search} searchPlaceholder="Search by name, account, contact, email, phone, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all') }} />
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="customers" />
         <MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="customers" />
         <ul className="master-data-list">
@@ -185,7 +251,8 @@ export function CustomersPage() {
                 `Account: ${customer.accountNumber ?? 'No account'}`,
                 customer.contactName ? `Contact: ${customer.contactName}` : null,
                 customer.email ? `Email: ${customer.email}` : null,
-                customer.phone ? `Phone: ${customer.phone}` : null
+                customer.phone ? `Phone: ${customer.phone}` : null,
+                customerBillingAddress(customer) ? `Billing address: ${customerBillingAddress(customer)}` : null
               ]}
               actions={<>
                 <button type="button" onClick={() => startEdit(customer)}>Edit</button>
@@ -242,7 +309,25 @@ export function ServiceLocationsPage() {
     if (!editId) setDraft((current) => ({ ...current, customerId: activeFilterId(customers, customerFilter) || null }))
   }, [customerFilter, editId])
   const customerOptions = useMemo(() => activeOrSelected(customers, [draft.customerId]), [customers, draft.customerId])
-  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [x.locationName, x.companyName, customerNameById(customers, x.customerId), x.addressLine1, x.city, x.state, x.postalCode, x.country])), [items, customers, search, archiveFilter, customerFilter])
+  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [
+    x.locationName,
+    x.companyName,
+    customerNameById(customers, x.customerId),
+    x.onSiteContactName,
+    x.onSiteContactPhone,
+    x.onSiteContactEmail,
+    x.addressLine1,
+    x.addressLine2,
+    x.city,
+    x.state,
+    x.postalCode,
+    x.parishCounty,
+    x.country,
+    x.gateCode,
+    x.accessInstructions,
+    x.safetyRequirements,
+    x.siteNotes
+  ])), [items, customers, search, archiveFilter, customerFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!hasRequiredTexts(draft.companyName, draft.locationName, draft.addressLine1, draft.city, draft.state, draft.postalCode, draft.country)) { setSuccess(null); return setError('All address fields are required.') }
@@ -291,15 +376,30 @@ export function ServiceLocationsPage() {
       <form onSubmit={save} className="stack" aria-label="service location form" hidden={!editorOpen}>
         <label>Company<input placeholder="Company" value={draft.companyName} onChange={(e) => setDraft({ ...draft, companyName: e.target.value })} /></label>
         <label>Location name<input placeholder="Location Name" value={draft.locationName} onChange={(e) => setDraft({ ...draft, locationName: e.target.value })} /></label>
-        <label>Address<input placeholder="Address" value={draft.addressLine1} onChange={(e) => setDraft({ ...draft, addressLine1: e.target.value })} /></label>
+        <div className="row">
+          <label>On-site contact<input placeholder="On-site contact" value={draft.onSiteContactName ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactName: e.target.value })} /></label>
+          <label>On-site phone<input placeholder="On-site phone" value={draft.onSiteContactPhone ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactPhone: e.target.value })} /></label>
+          <label>On-site email<input placeholder="On-site email" value={draft.onSiteContactEmail ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactEmail: e.target.value })} /></label>
+        </div>
+        <div className="row">
+          <label>Address<input placeholder="Address" value={draft.addressLine1} onChange={(e) => setDraft({ ...draft, addressLine1: e.target.value })} /></label>
+          <label>Address line 2<input placeholder="Address line 2" value={draft.addressLine2 ?? ''} onChange={(e) => setDraft({ ...draft, addressLine2: e.target.value })} /></label>
+        </div>
         <div className="row">
           <label>City<input placeholder="City" value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} /></label>
           <label>State<input placeholder="State" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })} /></label>
         </div>
         <div className="row">
           <label>Postal code<input placeholder="Postal" value={draft.postalCode} onChange={(e) => setDraft({ ...draft, postalCode: e.target.value })} /></label>
+          <label>Parish / county<input placeholder="Parish / county" value={draft.parishCounty ?? ''} onChange={(e) => setDraft({ ...draft, parishCounty: e.target.value })} /></label>
           <label>Country<input placeholder="Country" value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })} /></label>
         </div>
+        <div className="row">
+          <label>Gate code<input placeholder="Gate code" value={draft.gateCode ?? ''} onChange={(e) => setDraft({ ...draft, gateCode: e.target.value })} /></label>
+          <label>Access instructions<input placeholder="Access instructions" value={draft.accessInstructions ?? ''} onChange={(e) => setDraft({ ...draft, accessInstructions: e.target.value })} /></label>
+        </div>
+        <label>Safety requirements<textarea placeholder="Safety requirements" value={draft.safetyRequirements ?? ''} onChange={(e) => setDraft({ ...draft, safetyRequirements: e.target.value })} /></label>
+        <label>Site notes<textarea placeholder="Site notes" value={draft.siteNotes ?? ''} onChange={(e) => setDraft({ ...draft, siteNotes: e.target.value })} /></label>
         <label>Related customer<select value={draft.customerId ?? ''} onChange={(e) => setDraft({ ...draft, customerId: e.target.value || null })}><option value="">No customer</option>{customerOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
         <label><input type="checkbox" checked={draft.isActive ?? true} onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })} /> Active</label>
         {editId ? <p className="muted">Editing service location. Save changes or return to the location list.</p> : null}
@@ -310,7 +410,7 @@ export function ServiceLocationsPage() {
       </form>
 
       <div className="stack" hidden={editorOpen}>
-        <MasterDataFilters label="service locations" search={search} searchPlaceholder="Search by location, customer, company, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all'); setCustomerFilter('') }}>
+        <MasterDataFilters label="service locations" search={search} searchPlaceholder="Search by location, customer, company, contact, phone, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all'); setCustomerFilter('') }}>
           <label>Customer<select value={customerFilter} onChange={(event) => setCustomerFilter(event.target.value)}><option value="">All customers</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
         </MasterDataFilters>
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="service locations" />
@@ -325,7 +425,12 @@ export function ServiceLocationsPage() {
                 `Company: ${location.companyName}`,
                 `Customer: ${customerNameById(customers, location.customerId) || 'No customer'}`,
                 `Service status: ${location.isActive ? 'Active' : 'Inactive'}`,
-                `${location.addressLine1}, ${location.city}, ${location.state} ${location.postalCode} ${location.country}`
+                location.onSiteContactName ? `On-site contact: ${location.onSiteContactName}` : null,
+                location.onSiteContactPhone ? `Phone: ${location.onSiteContactPhone}` : null,
+                location.onSiteContactEmail ? `Email: ${location.onSiteContactEmail}` : null,
+                serviceLocationAddress(location),
+                location.parishCounty ? `Parish/county: ${location.parishCounty}` : null,
+                location.gateCode ? `Gate code: ${location.gateCode}` : null
               ]}
               actions={<>
                 <button type="button" onClick={() => startEdit(location)}>Edit</button>

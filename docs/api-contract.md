@@ -115,9 +115,13 @@ Behavior:
 This workflow does not add a backend dispatch-job record or API, backend dispatch status enum, Dispatch-specific schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
 
 ## Manager/Admin Master Data
-Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the already-documented DTO fields for customer contact/account details, service-location status/address/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.
+Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the documented DTO fields for customer contact/account details, customer billing or mailing address details, service-location contact/status/address/site context/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.
 
-This UI polish does not add endpoints, change DTO shapes, change authorization, add schema or migrations, alter enum values, or expand purchasing, receiving, landed-cost, inventory, recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
+Customer DTOs include `billingAddressLine1`, `billingAddressLine2`, `billingCity`, `billingState`, and `billingPostalCode` so a requesting customer or billing-party customer can carry complete billing contact context.
+
+Service-location DTOs include `onSiteContactName`, `onSiteContactPhone`, `onSiteContactEmail`, `addressLine2`, `parishCounty`, `gateCode`, `accessInstructions`, `safetyRequirements`, and `siteNotes` in addition to the existing company, location, city, state, postal code, country, active, and customer-link fields.
+
+This UI polish does not add endpoints, change authorization, add schema or migrations, alter enum values, or expand purchasing, receiving, landed-cost, inventory, recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
 
 ## Manager/Admin Time Approval Review
 - `GET /api/time-entries/review`

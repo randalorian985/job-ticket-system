@@ -203,7 +203,11 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
       accountNumber: 'NW-10',
       contactName: 'Nora North',
       email: 'nora@example.com',
-      phone: '555-0200'
+      phone: '555-0200',
+      billingAddressLine1: '500 Billing Ave',
+      billingCity: 'Waco',
+      billingState: 'TX',
+      billingPostalCode: '76701'
     })
 
     render(
@@ -224,6 +228,10 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     fireEvent.change(screen.getByLabelText('Contact Name'), { target: { value: 'Nora North' } })
     fireEvent.change(screen.getByLabelText('Contact Phone'), { target: { value: '555-0200' } })
     fireEvent.change(screen.getByLabelText('Contact Email'), { target: { value: 'nora@example.com' } })
+    fireEvent.change(screen.getByLabelText('Billing Address'), { target: { value: '500 Billing Ave' } })
+    fireEvent.change(screen.getByLabelText('Billing City'), { target: { value: 'Waco' } })
+    fireEvent.change(screen.getByLabelText('Billing State'), { target: { value: 'TX' } })
+    fireEvent.change(screen.getByLabelText('Billing ZIP / Postal'), { target: { value: '76701' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
 
     await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({
@@ -231,7 +239,12 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
       accountNumber: 'NW-10',
       contactName: 'Nora North',
       email: 'nora@example.com',
-      phone: '555-0200'
+      phone: '555-0200',
+      billingAddressLine1: '500 Billing Ave',
+      billingAddressLine2: null,
+      billingCity: 'Waco',
+      billingState: 'TX',
+      billingPostalCode: '76701'
     }))
 
     expect(await screen.findByText('Northwind added and selected.')).toBeInTheDocument()
@@ -276,11 +289,20 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
       customerId: 'c1',
       companyName: 'Acme',
       locationName: 'North Shop',
+      onSiteContactName: 'Nora Site',
+      onSiteContactPhone: '555-0300',
+      onSiteContactEmail: 'site@example.com',
       addressLine1: '55 North St',
+      addressLine2: 'Dock 4',
       city: 'Waco',
       state: 'TX',
       postalCode: '76701',
+      parishCounty: 'McLennan',
       country: 'USA',
+      gateCode: '4321',
+      accessInstructions: 'Use north gate',
+      safetyRequirements: 'Hard hat required',
+      siteNotes: 'Check in at office',
       isActive: true
     })
 
@@ -298,20 +320,38 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     openEditSection('Customer & Service Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add location' }))
     fireEvent.change(screen.getByLabelText('Location Name'), { target: { value: 'North Shop' } })
+    fireEvent.change(screen.getByLabelText('On-site Contact'), { target: { value: 'Nora Site' } })
+    fireEvent.change(screen.getByLabelText('On-site Phone'), { target: { value: '555-0300' } })
+    fireEvent.change(screen.getByLabelText('On-site Email'), { target: { value: 'site@example.com' } })
     fireEvent.change(screen.getByLabelText('Street Address'), { target: { value: '55 North St' } })
+    fireEvent.change(screen.getByLabelText('Street Address 2'), { target: { value: 'Dock 4' } })
     fireEvent.change(screen.getByLabelText('City'), { target: { value: 'Waco' } })
     fireEvent.change(screen.getByLabelText('State'), { target: { value: 'TX' } })
     fireEvent.change(screen.getByLabelText('Postal Code'), { target: { value: '76701' } })
+    fireEvent.change(screen.getByLabelText('Parish / County'), { target: { value: 'McLennan' } })
+    fireEvent.change(screen.getByLabelText('Gate Code'), { target: { value: '4321' } })
+    fireEvent.change(screen.getByLabelText('Access Instructions'), { target: { value: 'Use north gate' } })
+    fireEvent.change(screen.getByLabelText('Safety Requirements'), { target: { value: 'Hard hat required' } })
+    fireEvent.change(screen.getByLabelText('Site Notes'), { target: { value: 'Check in at office' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add Location' }))
 
     await waitFor(() => expect(masterDataApi.createServiceLocation).toHaveBeenCalledWith(expect.objectContaining({
       customerId: 'c1',
       companyName: 'Acme',
       locationName: 'North Shop',
+      onSiteContactName: 'Nora Site',
+      onSiteContactPhone: '555-0300',
+      onSiteContactEmail: 'site@example.com',
       addressLine1: '55 North St',
+      addressLine2: 'Dock 4',
       city: 'Waco',
       state: 'TX',
-      postalCode: '76701'
+      postalCode: '76701',
+      parishCounty: 'McLennan',
+      gateCode: '4321',
+      accessInstructions: 'Use north gate',
+      safetyRequirements: 'Hard hat required',
+      siteNotes: 'Check in at office'
     })))
     expect(await screen.findByText('North Shop added and selected.')).toBeInTheDocument()
     expect(screen.getByLabelText('Service Location')).toHaveValue('s2')
