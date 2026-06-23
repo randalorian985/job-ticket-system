@@ -106,6 +106,29 @@ export function TimeApprovalPage() {
     if (await runAction(() => timeEntriesApi.bulkApprove(selectedIds), 'Selected time entries approved.')) setSelectedIds([])
   }
 
+  if (reviewEntry) {
+    return (
+      <section className="card stack" aria-label="Time approval edit screen">
+        <div>
+          <h2>Edit Time Approval</h2>
+          <p className="muted">Review the selected time entry, save manager edits, approve it, reject it, or delete it without returning to the queue first.</p>
+        </div>
+        <Errorable error={error} />
+        {message ? <p className="muted">{message}</p> : null}
+        <TimeEntryReviewPanel
+          entry={reviewEntry}
+          onClose={() => setReviewEntry(null)}
+          onApprove={approve}
+          onReject={reject}
+          onSaveEdit={saveEdit}
+          onEditAndApprove={editAndApprove}
+          onDelete={deleteEntry}
+          onValidationError={setError}
+        />
+      </section>
+    )
+  }
+
   return (
     <section className="card stack">
       <h2>Time Approval</h2>
@@ -132,18 +155,6 @@ export function TimeApprovalPage() {
         onBulkApprove={() => void bulkApprove()}
         onReview={setReviewEntry}
       />
-      {reviewEntry ? (
-        <TimeEntryReviewPanel
-          entry={reviewEntry}
-          onClose={() => setReviewEntry(null)}
-          onApprove={approve}
-          onReject={reject}
-          onSaveEdit={saveEdit}
-          onEditAndApprove={editAndApprove}
-          onDelete={deleteEntry}
-          onValidationError={setError}
-        />
-      ) : null}
     </section>
   )
 }

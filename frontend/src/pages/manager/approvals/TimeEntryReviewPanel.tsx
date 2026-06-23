@@ -83,7 +83,7 @@ export function TimeEntryReviewPanel({ entry, onClose, onApprove, onReject, onSa
     <article className="card stack" aria-label="Time entry review">
       <div className="report-results-heading">
         <div><h3>Review Time Entry</h3><p className="muted">{entry.employeeName} · {entry.jobTicketNumber}</p></div>
-        <button type="button" onClick={onClose}>Close Review</button>
+        <button type="button" onClick={onClose}>Back to Queue</button>
       </div>
       <dl className="detail-grid">
         <div><dt>Employee</dt><dd>{entry.employeeName}</dd></div>

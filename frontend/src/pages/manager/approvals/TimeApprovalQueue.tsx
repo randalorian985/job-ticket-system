@@ -14,6 +14,7 @@ type Props = {
 export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionChange, onBulkApprove, onReview }: Props) {
   const eligibleEntries = entries.filter(isEligibleForApproval)
   const allEligibleSelected = eligibleEntries.length > 0 && eligibleEntries.every((entry) => selectedIds.includes(entry.id))
+  const selectedEntry = selectedIds.length === 1 ? entries.find((entry) => entry.id === selectedIds[0]) : null
 
   const toggleEntry = (entryId: string, selected: boolean) => {
     onSelectionChange(selected ? [...selectedIds, entryId] : selectedIds.filter((id) => id !== entryId))
@@ -26,7 +27,10 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
           <h3>Time Entry Approval Queue</h3>
           <p className="muted">{entries.length ? `${entries.length} entries match the current filters.` : 'No time entries match the current filters.'}</p>
         </div>
-        <button type="button" disabled={selectedIds.length === 0 || loading} onClick={onBulkApprove}>Approve Selected ({selectedIds.length})</button>
+        <div className="row">
+          <button type="button" disabled={selectedIds.length === 0 || loading} onClick={onBulkApprove}>Approve Selected ({selectedIds.length})</button>
+          {selectedEntry ? <button type="button" disabled={loading} onClick={() => onReview(selectedEntry)}>Edit Selected</button> : null}
+        </div>
       </div>
       {entries.length ? (
         <div className="table-scroll">
@@ -45,7 +49,6 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
                 <th>Billable</th>
                 <th>Status</th>
                 <th>Notes</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>{entries.map((entry) => (
@@ -62,7 +65,6 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
                 <td>{entry.billableHours.toFixed(2)}</td>
                 <td>{getApprovalLabel(entry.approvalStatus)}</td>
                 <td>{entry.workSummary || entry.clockInNote || entry.clockOutNote || entry.managerNotes ? '●' : '—'}</td>
-                <td><button type="button" onClick={() => onReview(entry)}>Review</button></td>
               </tr>
             ))}</tbody>
           </table>

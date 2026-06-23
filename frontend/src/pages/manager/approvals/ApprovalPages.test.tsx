@@ -50,6 +50,8 @@ describe('TimeApprovalPage', () => {
     expect(screen.getByRole('columnheader', { name: 'Location' })).toBeInTheDocument()
     expect(screen.getByText('Pump Room')).toBeInTheDocument()
     expect(screen.queryByText('Acme Utilities · North Plant · Pump Room · 10 Main St, Austin, TX')).not.toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Action' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit Selected' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('Employee filter')).toHaveValue('')
     expect(screen.getByLabelText('Employee filter')).toHaveAttribute('placeholder', 'All employees')
     expect(screen.queryByLabelText(/employee id/i)).not.toBeInTheDocument()
@@ -100,14 +102,16 @@ describe('TimeApprovalPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Approve Selected (1)' }))
     await waitFor(() => expect(timeEntriesApi.bulkApprove).toHaveBeenCalledWith(['te-1']))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }))
+    fireEvent.click(screen.getByLabelText('Select Alex Rivera'))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Selected' }))
+    expect(screen.getByRole('heading', { name: 'Edit Time Approval' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Review Time Entry' })).toBeInTheDocument()
     expect(screen.getByText('Repaired hydraulic line')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Rejection reason'), { target: { value: 'Missing travel detail' } })
     fireEvent.click(screen.getByRole('button', { name: 'Reject' }))
     await waitFor(() => expect(timeEntriesApi.reject).toHaveBeenCalledWith('te-1', { reason: 'Missing travel detail' }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Selected' }))
     fireEvent.change(screen.getByLabelText('Approved total hours'), { target: { value: '1.75' } })
     fireEvent.change(screen.getByLabelText('Approved billable hours'), { target: { value: '1.5' } })
     fireEvent.change(screen.getByLabelText('Manager edit note'), { target: { value: 'Corrected break' } })
@@ -121,7 +125,7 @@ describe('TimeApprovalPage', () => {
       notes: 'Corrected break'
     }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Selected' }))
     fireEvent.change(screen.getByLabelText('Approved total hours'), { target: { value: '1.75' } })
     fireEvent.change(screen.getByLabelText('Approved billable hours'), { target: { value: '1.5' } })
     fireEvent.change(screen.getByLabelText('Manager edit note'), { target: { value: 'Removed personal break' } })
@@ -135,12 +139,12 @@ describe('TimeApprovalPage', () => {
       notes: 'Removed personal break'
     }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Selected' }))
     fireEvent.change(screen.getByLabelText('Delete reason'), { target: { value: 'Duplicate time entry' } })
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
     await waitFor(() => expect(timeEntriesApi.deleteEntry).toHaveBeenCalledWith('te-1', { reason: 'Duplicate time entry' }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Selected' }))
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }))
     await waitFor(() => expect(timeEntriesApi.approve).toHaveBeenCalledWith('te-1'))
   })
