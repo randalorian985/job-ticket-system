@@ -1,6 +1,6 @@
 import type { TimeApprovalQueueItemDto } from '../../../types'
 import { getApprovalLabel } from '../managerDisplay'
-import { isEligibleForApproval, managerLocationText } from './timeApprovalShared'
+import { isEligibleForApproval } from './timeApprovalShared'
 
 type Props = {
   entries: TimeApprovalQueueItemDto[]
@@ -37,7 +37,7 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
                 <th>Employee</th>
                 <th>Work date</th>
                 <th>Job ticket</th>
-                <th>Customer / site / location</th>
+                <th>Location</th>
                 <th>Labor type</th>
                 <th>Start</th>
                 <th>End</th>
@@ -54,7 +54,7 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
                 <td>{entry.employeeName}</td>
                 <td>{new Date(entry.startedAtUtc).toLocaleDateString()}</td>
                 <td><strong>{entry.jobTicketNumber}</strong><br /><span className="muted">{entry.jobName}</span></td>
-                <td>{managerLocationText(entry)}</td>
+                <td>{entry.locationName || '—'}</td>
                 <td>{entry.laborType ?? '—'}</td>
                 <td>{new Date(entry.startedAtUtc).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</td>
                 <td>{entry.endedAtUtc ? new Date(entry.endedAtUtc).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Open'}</td>
