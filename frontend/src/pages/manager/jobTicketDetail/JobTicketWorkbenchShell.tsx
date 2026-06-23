@@ -308,7 +308,7 @@ export function TicketWorkbenchKpis({
   return (
     <section className="ticket-workbench-kpis" aria-label="ticket workspace summary" hidden={workflowFocusMode}>
       <div className={dispatchWarnings.length ? "metric-tile metric-tile-review" : "metric-tile metric-tile-ready"}>
-        <span>Dispatch</span>
+        <span>Assignment & Schedule</span>
         <strong>{dispatchReadiness.statusLabel}</strong>
         <small>{dispatchReadiness.readyCount} / {dispatchReadiness.checks.length} checks</small>
       </div>
@@ -367,7 +367,7 @@ export function TicketWorkbenchRail({
   workflowFocusMode,
 }: TicketWorkbenchRailProps) {
   return (
-    <aside className="ticket-workbench-rail no-print" aria-label="ticket actions and dispatch requirements" hidden={workflowFocusMode}>
+    <aside className="ticket-workbench-rail no-print" aria-label="ticket actions and assignment requirements" hidden={workflowFocusMode}>
       <section className="workbench-panel workbench-panel-compact">
         <h3>Ticket Actions</h3>
         <div className="ticket-action-grid">
@@ -449,18 +449,18 @@ export function TicketWorkbenchRail({
 
       <section className="workbench-panel workbench-panel-compact dispatch-requirements-panel">
         <div className="dispatch-requirements-heading">
-          <h3>Dispatch Requirements</h3>
+          <h3>Assignment Requirements</h3>
           <span className="tooltip-anchor">
             <button
               type="button"
               className="help-tooltip-trigger"
-              aria-label="About dispatch requirements"
+              aria-label="About assignment requirements"
               aria-describedby="dispatch-requirements-tooltip"
             >
               i
             </button>
             <span id="dispatch-requirements-tooltip" className="control-tooltip" role="tooltip">
-              These checks identify missing information before dispatch review. Completed checks stay available below.
+              These checks identify missing assignment or scheduling details before work starts. Completed checks stay available below.
             </span>
           </span>
         </div>
@@ -469,7 +469,7 @@ export function TicketWorkbenchRail({
           <span>{dispatchReadiness.readyCount} of {dispatchReadiness.checks.length} complete</span>
         </div>
         {openDispatchChecks.length ? (
-          <ul className="check-list dispatch-open-checks" aria-label="open dispatch readiness checks">
+          <ul className="check-list dispatch-open-checks" aria-label="open assignment and schedule checks">
             {openDispatchChecks.map((check) => (
               <li className="check-item-open" key={check.label}>
                 <strong>{check.label}</strong>
@@ -478,13 +478,13 @@ export function TicketWorkbenchRail({
             ))}
           </ul>
         ) : (
-          <p className="dispatch-ready-message">No dispatch blockers are currently visible.</p>
+          <p className="dispatch-ready-message">No assignment or schedule blockers are currently visible.</p>
         )}
         <details className="dispatch-completed-details">
           <summary>
             Review {completedDispatchChecks.length} completed requirement{completedDispatchChecks.length === 1 ? "" : "s"}
           </summary>
-          <ul className="check-list" aria-label="completed dispatch readiness checks">
+          <ul className="check-list" aria-label="completed assignment and schedule checks">
             {completedDispatchChecks.map((check) => (
               <li className="check-item-ready" key={check.label}>
                 <strong>{check.label}</strong>

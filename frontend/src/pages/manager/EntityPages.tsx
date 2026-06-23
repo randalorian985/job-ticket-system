@@ -8,7 +8,6 @@ export { SystemWikiPage } from './wiki/SystemWikiPage'
 export { CompanyConfigurationPage } from './companyConfiguration/CompanyConfigurationPage'
 export { TicketStatusFiltersPage } from './ticketStatusFilters/TicketStatusFiltersPage'
 
-export { DispatchBoardPage } from './DispatchBoardPage'
 export { InventoryPage } from './InventoryPage'
 export { PartRequestsPage } from './PartRequestsPage'
 export { PartsUsageHistoryPage } from './PartsUsageHistoryPage'

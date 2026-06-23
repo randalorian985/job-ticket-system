@@ -69,7 +69,7 @@ describe('Manager list pages', () => {
     )
   }
 
-  it('renders manager job ticket list with loading state, readable labels, timing details, and dispatch ownership cues', async () => {
+  it('renders manager job ticket list with loading state, readable labels, timing details, and assignment cues', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix unit', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' }
     ] as any)
@@ -83,8 +83,8 @@ describe('Manager list pages', () => {
     expect(screen.getByText(/In Progress · High/)).toBeInTheDocument()
     expect(screen.getAllByText(/Acme/).length).toBeGreaterThan(0)
     expect(screen.getByText('Assigned: Alex Rivera · Lead: Alex Rivera')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status: Needs dispatch review · Missing scheduled start, due date.')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: Set a scheduled start time before dispatch.')).toBeInTheDocument()
+    expect(screen.getByText('Work status: Needs assignment review · Missing scheduled start, due date.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Set a scheduled start time.')).toBeInTheDocument()
     expect(screen.getByText('Due')).toBeInTheDocument()
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
@@ -146,7 +146,7 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Assigned: Employee unavailable · Lead: Employee unavailable')).toBeInTheDocument()
   })
 
-  it('shows queue summary counts for active, urgent, waiting, unscheduled, missing due date, unassigned, needs-lead, and dispatch readiness work', async () => {
+  it('shows a compact queue summary for active, waiting, missing due date, assignment, and work-readiness views', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
@@ -157,17 +157,18 @@ describe('Manager list pages', () => {
 
     expect(await screen.findByText('Active tickets')).toBeInTheDocument()
     expect(screen.getByLabelText('queue summary')).toBeInTheDocument()
-    expect(screen.getByText('Urgent active')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Quick Views' })).toBeInTheDocument()
+    expect(screen.queryByText('Urgent active')).not.toBeInTheDocument()
     expect(screen.getByText('Waiting')).toBeInTheDocument()
-    expect(screen.getByText('Unscheduled')).toBeInTheDocument()
+    expect(screen.queryByText('Unscheduled')).not.toBeInTheDocument()
     expect(screen.getByText('Missing due')).toBeInTheDocument()
     expect(screen.getAllByText('Unassigned').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Needs lead').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Dispatch-ready').length).toBeGreaterThan(0)
+    expect(screen.queryByRole('button', { name: /Needs lead/ })).not.toBeInTheDocument()
+    expect(screen.getAllByText('Ready to work').length).toBeGreaterThan(0)
     expect(screen.getByText('Needs review')).toBeInTheDocument()
   })
 
-  it('renders the default configured status filter boxes when no custom configuration exists', async () => {
+  it('renders default configured statuses in the status filter instead of shortcut boxes', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Submitted job', status: 2, priority: 2, customerId: 'c-1', serviceLocationId: 's-1' },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'In progress job', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1' }
@@ -176,13 +177,13 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    const statusFilters = screen.getByLabelText('configured ticket status filters')
-    expect(within(statusFilters).getAllByRole('button')).toHaveLength(5)
-    expect(within(statusFilters).getByRole('button', { name: /Submitted/ })).toBeInTheDocument()
-    expect(within(statusFilters).getByRole('button', { name: /In Progress/ })).toBeInTheDocument()
+    const statusFilter = screen.getByLabelText('Status')
+    expect(screen.queryByLabelText('configured ticket status filters')).not.toBeInTheDocument()
+    expect(within(statusFilter).getByRole('option', { name: 'Submitted' })).toBeInTheDocument()
+    expect(within(statusFilter).getByRole('option', { name: 'In Progress' })).toBeInTheDocument()
   })
 
-  it('renders fewer configured status filter boxes and hides inactive options', async () => {
+  it('renders fewer configured status filter options and hides inactive options', async () => {
     vi.mocked(ticketStatusFiltersApi.list).mockResolvedValueOnce([
       { id: 'status-progress', displayLabel: 'Field Work', status: 4, displayOrder: 20, isActive: true },
       { id: 'status-review', displayLabel: 'Review Ready', status: 7, displayOrder: 30, isActive: false },
@@ -197,13 +198,12 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    const statusFilters = screen.getByLabelText('configured ticket status filters')
-    const buttons = within(statusFilters).getAllByRole('button')
-    expect(buttons).toHaveLength(2)
-    expect(buttons.map((button) => button.querySelector('span')?.textContent)).toEqual(['Parts Hold', 'Field Work'])
-    expect(within(statusFilters).queryByText('Review Ready')).not.toBeInTheDocument()
+    const statusFilter = screen.getByLabelText('Status')
+    expect(within(statusFilter).getByRole('option', { name: 'Parts Hold' })).toBeInTheDocument()
+    expect(within(statusFilter).getByRole('option', { name: 'Field Work' })).toBeInTheDocument()
+    expect(within(statusFilter).queryByRole('option', { name: 'Review Ready' })).not.toBeInTheDocument()
 
-    fireEvent.click(within(statusFilters).getByRole('button', { name: /Field Work/ }))
+    fireEvent.change(statusFilter, { target: { value: '4' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
@@ -226,15 +226,15 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    const statusFilters = screen.getByLabelText('configured ticket status filters')
-    expect(within(statusFilters).getAllByRole('button')).toHaveLength(6)
+    const statusFilter = screen.getByLabelText('Status')
+    expect(within(statusFilter).getByRole('option', { name: 'Completed Review' })).toBeInTheDocument()
 
-    fireEvent.click(within(statusFilters).getByRole('button', { name: /Completed Review/ }))
+    fireEvent.change(statusFilter, { target: { value: '7' } })
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
     expect(screen.getByText('JT-2')).toBeInTheDocument()
   })
 
-  it('shows ready dispatch context when assignment, lead, schedule, and due date are present', async () => {
+  it('shows ready work context when assignment, lead, schedule, and due date are present', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
     ] as any)
@@ -242,11 +242,11 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status: Ready for dispatch · Assignment, lead tech, schedule, and due date are present.')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: All dispatch requirements are complete.')).toBeInTheDocument()
+    expect(screen.getByText('Work status: Ready to work · Assignment, lead tech, schedule, and due date are present.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: All assignment and schedule requirements are complete.')).toBeInTheDocument()
   })
 
-  it('shows due-date-missing dispatch review when assignment, lead, and schedule are present', async () => {
+  it('shows due-date-missing assignment review when assignment, lead, and schedule are present', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: null }
     ] as any)
@@ -254,11 +254,11 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status: Needs dispatch review · Missing due date.')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
+    expect(screen.getByText('Work status: Needs assignment review · Missing due date.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Add a due date for timing expectations.')).toBeInTheDocument()
   })
 
-  it('shows assignment-first dispatch guidance when no employees are assigned', async () => {
+  it('shows assignment-first guidance when no employees are assigned', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-3', ticketNumber: 'JT-3', title: 'Assign field work', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
     ] as any)
@@ -266,11 +266,11 @@ describe('Manager list pages', () => {
     renderPage()
 
     expect(await screen.findByText('JT-3')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status: Needs dispatch review · Missing assignment, lead tech.')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: Assign at least one employee before dispatch.')).toBeInTheDocument()
+    expect(screen.getByText('Work status: Needs assignment review · Missing assignment, lead tech.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Assign at least one employee.')).toBeInTheDocument()
   })
 
-  it('does not treat assignment load failures as unassigned tickets or ready dispatch data', async () => {
+  it('does not treat assignment load failures as unassigned tickets or ready work data', async () => {
     vi.mocked(jobTicketsApi.listAssignments).mockRejectedValue(new Error('assignments unavailable'))
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
@@ -283,13 +283,13 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Technician Assignments')).toBeInTheDocument()
     expect(screen.queryByText('Unassigned')).not.toBeInTheDocument()
     expect(screen.queryByText('Needs lead')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Dispatch readiness')).toBeDisabled()
+    expect(screen.getByLabelText('Work readiness')).toBeDisabled()
     expect(screen.getByText('Assigned: Assignment data unavailable · Lead: Assignment data unavailable')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status: Assignment data unavailable · Assignment data could not be loaded for this ticket.')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: Reload technician assignments before making dispatch decisions.')).toBeInTheDocument()
+    expect(screen.getByText('Work status: Assignment data unavailable · Assignment data could not be loaded for this ticket.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Reload technician assignments before making assignment or schedule decisions.')).toBeInTheDocument()
   })
 
-  it('filters by dispatch readiness from the loaded ticket and assignment data', async () => {
+  it('filters by work readiness from the loaded ticket and assignment data', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Ready compressor', status: 4, priority: 3, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Needs lead', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
@@ -302,18 +302,18 @@ describe('Manager list pages', () => {
     expect(screen.getByText('JT-2')).toBeInTheDocument()
     expect(screen.getByText('JT-3')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'ready' } })
+    fireEvent.change(screen.getByLabelText('Work readiness'), { target: { value: 'ready' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'needs-review' } })
+    fireEvent.change(screen.getByLabelText('Work readiness'), { target: { value: 'needs-review' } })
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
     expect(screen.getByText('JT-2')).toBeInTheDocument()
     expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
     expect(screen.getByText('Next required update: Mark one assigned employee as the lead tech.')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'not-active' } })
+    fireEvent.change(screen.getByLabelText('Work readiness'), { target: { value: 'not-active' } })
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(screen.getByText('JT-3')).toBeInTheDocument()
@@ -333,20 +333,14 @@ describe('Manager list pages', () => {
     expect(filters.compareDocumentPosition(shortcuts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(screen.getByText('Showing all 2 loaded tickets.')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Urgent active/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Missing due/ }))
 
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(screen.getByText('Filtered view showing 1 of 2 tickets.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Status')).toHaveValue('active')
-    expect(screen.getByLabelText('Priority')).toHaveValue('4')
-    expect(screen.getByRole('button', { name: /Urgent active/ })).toHaveAttribute('aria-pressed', 'true')
-
-    fireEvent.click(screen.getByRole('button', { name: /Unscheduled/ }))
-
-    expect(screen.getByText('JT-1')).toBeInTheDocument()
-    expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Status')).toHaveValue('all')
     expect(screen.getByLabelText('Priority')).toHaveValue('all')
+    expect(screen.getByRole('button', { name: /Missing due/ })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('filters by search text, status, priority, and customer, then resets filters', async () => {
@@ -380,7 +374,7 @@ describe('Manager list pages', () => {
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: '4' } })
     fireEvent.change(screen.getByLabelText('Priority'), { target: { value: '3' } })
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c-1' } })
-    fireEvent.change(screen.getByLabelText('Dispatch readiness'), { target: { value: 'ready' } })
+    fireEvent.change(screen.getByLabelText('Work readiness'), { target: { value: 'ready' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
 
     fireEvent.click(resetFiltersButton)
@@ -401,9 +395,9 @@ describe('Manager list pages', () => {
     const exportLink = screen.getByRole('link', { name: 'Export visible queue as CSV' })
     expect(exportLink).toHaveAttribute('download', 'job-ticket-queue.csv')
     const csv = decodeURIComponent(exportLink.getAttribute('href')!.replace('data:text/csv;charset=utf-8,', ''))
-    expect(csv).toContain('Ticket Number,Title,Status,Priority,Customer,Service Location,Assigned Employees,Lead Employees,Dispatch Readiness')
-    expect(csv).toContain('JT-1,Fix compressor,In Progress,High,Acme,HQ,Alex Rivera,Alex Rivera,Ready for dispatch')
-    expect(csv).toContain('JT-2,Inspect pump,Waiting on Parts,Normal,Bravo,Field Shop,Jamie Chen,Needs lead,Needs dispatch review')
+    expect(csv).toContain('Ticket Number,Title,Status,Priority,Customer,Service Location,Assigned Employees,Lead Employees,Work Readiness')
+    expect(csv).toContain('JT-1,Fix compressor,In Progress,High,Acme,HQ,Alex Rivera,Alex Rivera,Ready to work')
+    expect(csv).toContain('JT-2,Inspect pump,Waiting on Parts,Normal,Bravo,Field Shop,Jamie Chen,Needs lead,Needs assignment review')
 
     fireEvent.change(screen.getByLabelText(/Search tickets/i), { target: { value: 'compressor' } })
 
@@ -450,7 +444,7 @@ describe('Manager list pages', () => {
     expect(await screen.findByText('JT-2')).toBeInTheDocument()
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Status')).toHaveValue('active')
-    expect(screen.getByLabelText('Dispatch readiness')).toHaveValue('needs-review')
+    expect(screen.getByLabelText('Work readiness')).toHaveValue('needs-review')
     expect(screen.getByRole('link', { name: 'JT-2' })).toHaveAttribute(
       'href',
       expect.stringContaining('returnTo=%2Fmanage%2Fjob-tickets%3Fstatus%3Dactive%26readiness%3Dneeds-review')

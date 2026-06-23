@@ -74,7 +74,7 @@ export type WorkflowPathStep = {
 
 export const workflowTabs: WorkflowTabDefinition[] = [
   { value: "overview", label: "Service Details", description: "Review the customer, location, equipment, scope, and billing details." },
-  { value: "dispatch", label: "Dispatch", description: "Manage technician assignments and dispatch readiness." },
+  { value: "dispatch", label: "Assignment & Schedule", description: "Manage assigned technicians, lead tech, schedule, and due date." },
   { value: "time", label: "Labor", description: "Review work entries, time entries, and approval status." },
   { value: "parts", label: "Parts", description: "Review parts used, requested, ordered, and awaiting approval." },
   { value: "files", label: "Files", description: "Review job files, photos, and invoice attachments." },

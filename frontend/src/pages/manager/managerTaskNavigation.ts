@@ -6,8 +6,8 @@ const validPriorityFilters = new Set(['1', '2', '3', '4'])
 const validReadinessFilters = new Set(['ready', 'needs-review', 'not-active'])
 const validAttentionFilters = new Set(['unscheduled', 'missing-due', 'unassigned', 'needs-lead'])
 const queueLabelsByReadiness: Record<string, string> = {
-  'needs-review': 'Needs Dispatch Review',
-  ready: 'Dispatch-ready Queue'
+  'needs-review': 'Needs Assignment Review',
+  ready: 'Ready to Work Queue'
 }
 const queueLabelsByAttention: Record<string, string> = {
   unassigned: 'Unassigned Tickets',

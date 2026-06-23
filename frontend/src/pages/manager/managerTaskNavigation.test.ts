@@ -35,8 +35,8 @@ describe('manager task navigation', () => {
   })
 
   it('derives queue labels from validated filters using readiness, attention, then status precedence', () => {
-    expect(getJobTicketQueueLabel(new URLSearchParams('status=active&readiness=needs-review'))).toBe('Needs Dispatch Review')
-    expect(getJobTicketQueueLabel(new URLSearchParams('status=active&attention=unassigned&readiness=ready'))).toBe('Dispatch-ready Queue')
+    expect(getJobTicketQueueLabel(new URLSearchParams('status=active&readiness=needs-review'))).toBe('Needs Assignment Review')
+    expect(getJobTicketQueueLabel(new URLSearchParams('status=active&attention=unassigned&readiness=ready'))).toBe('Ready to Work Queue')
     expect(getJobTicketQueueLabel(new URLSearchParams('status=active&attention=needs-lead'))).toBe('Tickets Needing a Lead')
     expect(getJobTicketQueueLabel(new URLSearchParams('attention=unscheduled'))).toBe('Unscheduled Tickets')
     expect(getJobTicketQueueLabel(new URLSearchParams('attention=missing-due'))).toBe('Tickets Missing a Due Date')
@@ -58,7 +58,7 @@ describe('manager task navigation', () => {
       'returnTo=%2Fmanage%2Fjob-tickets%3Fstatus%3Dactive%26readiness%3Dneeds-review&returnLabel=Spoofed'
     ))).toEqual({
       returnTo: '/manage/job-tickets?status=active&readiness=needs-review',
-      returnLabel: 'Needs Dispatch Review'
+      returnLabel: 'Needs Assignment Review'
     })
 
     expect(getSafeManagerReturnContext(new URLSearchParams('returnTo=%2Fmanage%2Fjob-tickets-evil'))).toEqual({

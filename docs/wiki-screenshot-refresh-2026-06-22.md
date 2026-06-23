@@ -21,6 +21,13 @@ Refresh these wiki assets from the approved preview environment or from the VPS 
 - Manager/Admin job-ticket queue should show the **Rich cards** and **Compact list** toggle.
 - Compact list should prioritize ticket, customer/location, assigned tech, status, priority, scheduled date, due date, and Open action.
 
+## June 23, 2026 Workflow Simplification Note
+
+- The wiki screenshot index no longer references Dispatch board screenshots because Dispatch is no longer a standalone Manager/Admin module.
+- Refresh `manager-dashboard.png` so it shows the quiet summary dashboard without the workspace shortcut wall.
+- Refresh `job-ticket-queue.png` so it shows the compact **Quick Views** row and the Status dropdown for Admin-configured status labels.
+- Keep the older `dispatch-board*.png` assets out of the wiki unless a future approved workflow reintroduces a separate board.
+
 ## Guardrails
 
 - Capture screenshots with demo or pilot data only.

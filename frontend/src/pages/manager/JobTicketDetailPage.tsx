@@ -249,7 +249,7 @@ export function JobTicketDetailPage() {
           {
             label: "Assignment data",
             isReady: false,
-            detail: "Assignment data could not be loaded. Refresh or retry before dispatch review.",
+            detail: "Assignment data could not be loaded. Refresh or retry before assignment review.",
           },
         ]
       : [
@@ -270,11 +270,11 @@ export function JobTicketDetailPage() {
         ];
     const checks = [
       {
-        label: "Dispatch status",
+        label: "Work status",
         isReady: isActiveDispatchStatus,
         detail: isActiveDispatchStatus
-          ? "Ticket is in the active dispatch queue."
-          : "Ticket is outside the active dispatch queue.",
+          ? "Ticket is in the active work queue."
+          : "Ticket is outside the active work queue.",
       },
       ...assignmentChecks,
       {
@@ -321,12 +321,12 @@ export function JobTicketDetailPage() {
       checks,
       readyCount: checks.filter((check) => check.isReady).length,
       statusLabel: !isActiveDispatchStatus
-        ? "Not active dispatch"
+        ? "Not active work"
         : assignmentLoadFailed
           ? "Assignment data unavailable"
           : warnings.length
             ? "Needs attention"
-            : "Ready for dispatch review",
+            : "Ready to work",
       warnings,
     };
   }, [assignmentLoadFailed, assignments, employeesById, job, leadAssignment]);
@@ -334,7 +334,7 @@ export function JobTicketDetailPage() {
   const dispatchWarnings = dispatchReadiness.warnings;
   const openDispatchChecks = dispatchReadiness.checks.filter((check) => !check.isReady);
   const completedDispatchChecks = dispatchReadiness.checks.filter((check) => check.isReady);
-  const nextDispatchFix = dispatchWarnings[0] ?? "All dispatch requirements are complete.";
+  const nextDispatchFix = dispatchWarnings[0] ?? "All assignment and schedule requirements are complete.";
 
   const closeoutReview = useMemo(() => {
     const warnings: string[] = [];
@@ -460,7 +460,7 @@ export function JobTicketDetailPage() {
         case 4:
           if (dispatchWarnings.length) {
             warnings.push(
-              ...dispatchWarnings.map((warning) => `Dispatch readiness: ${warning}`),
+              ...dispatchWarnings.map((warning) => `Assignment readiness: ${warning}`),
             );
           }
           break;
@@ -489,7 +489,7 @@ export function JobTicketDetailPage() {
     }
 
     if (hasChange && !warnings.length) {
-      summary = `${summary} Current dispatch and history cues do not show any obvious blockers.`;
+      summary = `${summary} Current assignment, schedule, and history cues do not show any obvious blockers.`;
     }
 
     return {
@@ -1014,14 +1014,14 @@ export function JobTicketDetailPage() {
   const recommendedWorkflowLabel = workflowTabs.find((tab) => tab.value === recommendedWorkflow)?.label ?? "Overview";
   const activeWorkflowLabel = workflowTabs.find((tab) => tab.value === activeTab)?.label ?? "Overview";
   const recommendedActionTitle = hasActiveDispatchBlocker
-    ? "Resolve dispatch blocker"
+    ? "Resolve assignment blocker"
     : partsReview.blockerCount
       ? "Review parts blocker"
       : closeoutReview.warnings.length
         ? "Finish invoice review"
         : "Review service details";
   const recommendedActionStatus = hasActiveDispatchBlocker
-    ? `${dispatchWarnings.length} dispatch item${dispatchWarnings.length === 1 ? "" : "s"} open`
+    ? `${dispatchWarnings.length} assignment item${dispatchWarnings.length === 1 ? "" : "s"} open`
     : partsReview.blockerCount
       ? `${partsReview.blockerCount} parts blocker${partsReview.blockerCount === 1 ? "" : "s"}`
       : closeoutReview.warnings.length
@@ -1029,7 +1029,7 @@ export function JobTicketDetailPage() {
         : "No immediate blockers visible";
   const workflowPathSteps: WorkflowPathStep[] = [
     {
-      label: "Dispatch",
+      label: "Assignment & Schedule",
       value: "dispatch",
       summary: dispatchWarnings.length ? `${dispatchWarnings.length} open` : "Ready",
       state: dispatchWarnings.length ? "open" : "ready",
@@ -1214,7 +1214,7 @@ export function JobTicketDetailPage() {
                         aria-label="Ticket note"
                         value={quickNote}
                         onChange={(event) => setQuickNote(event.target.value)}
-                        placeholder="Add a clear note for dispatch, closeout, or customer follow-up."
+                        placeholder="Add a clear note for assignments, closeout, or customer follow-up."
                       />
                     </label>
                     <div className="row">
@@ -1286,7 +1286,7 @@ export function JobTicketDetailPage() {
                       <strong>{statusReview.nextLabel}</strong>
                     </div>
                     <div>
-                      <span>Dispatch Status</span>
+                      <span>Work Readiness</span>
                       <strong>{dispatchReadiness.statusLabel}</strong>
                     </div>
                   </div>
@@ -1426,7 +1426,7 @@ export function JobTicketDetailPage() {
                   </section>
                 </div>
 
-                <div className="fact-grid" aria-label="job dispatch details">
+                <div className="fact-grid" aria-label="job assignment and schedule details">
                   <div>
                     <span>Job Type</span>
                     <strong>{displayValue(job.jobType)}</strong>
@@ -1483,7 +1483,7 @@ export function JobTicketDetailPage() {
                   <span className={assignmentLoadFailed ? "status-chip status-chip-alert" : "status-chip"}>{assignments.length} assigned</span>
                 </div>
                 {assignmentLoadFailed ? (
-                  <p className="error" role="alert">Assignment data could not be loaded. Refresh before editing assignments or dispatch review.</p>
+                  <p className="error" role="alert">Assignment data could not be loaded. Refresh before editing assignments or assignment review.</p>
                 ) : null}
                 {assignments.length ? (
                   <ul className="record-list">
@@ -1559,7 +1559,7 @@ export function JobTicketDetailPage() {
                     <strong>{getJobTicketPriorityLabel(job.priority)}</strong>
                   </div>
                   <div>
-                    <span>Dispatch Status</span>
+                    <span>Work Readiness</span>
                     <strong>{dispatchReadiness.statusLabel}</strong>
                   </div>
                   <div>
@@ -1568,7 +1568,7 @@ export function JobTicketDetailPage() {
                   </div>
                 </div>
                 {dispatchWarnings.length ? (
-                  <ul className="muted" aria-label="dispatch warnings">
+                  <ul className="muted" aria-label="assignment warnings">
                     {dispatchWarnings.map((warning) => (
                       <li key={warning}>{warning}</li>
                     ))}

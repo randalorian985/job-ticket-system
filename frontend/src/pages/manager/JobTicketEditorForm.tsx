@@ -212,21 +212,21 @@ export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditC
 
   return [
     {
-      label: 'Dispatch status',
+      label: 'Work status',
       isReady: isActiveDispatchStatus,
       detail: isActiveDispatchStatus
-        ? 'Ticket is in the active dispatch queue.'
-        : 'Move the ticket into an active dispatch status before dispatch review.'
+        ? 'Ticket is in the active work queue.'
+        : 'Move the ticket into an active work status before assignment review.'
     },
     {
       label: 'Customer',
       isReady: Boolean(form.customerId),
-      detail: form.customerId ? 'Customer is selected.' : 'Select the customer before dispatch review.'
+      detail: form.customerId ? 'Customer is selected.' : 'Select the customer before assignment review.'
     },
     {
       label: 'Service location',
       isReady: Boolean(form.serviceLocationId),
-      detail: form.serviceLocationId ? 'Service location is selected.' : 'Select the service location before dispatch review.'
+      detail: form.serviceLocationId ? 'Service location is selected.' : 'Select the service location before assignment review.'
     },
     {
       label: 'Service equipment',
@@ -236,12 +236,12 @@ export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditC
     {
       label: 'Scheduled start',
       isReady: Boolean(form.scheduledStartAtUtc),
-      detail: form.scheduledStartAtUtc ? 'Scheduled start is set.' : 'Set a scheduled start before dispatch.'
+      detail: form.scheduledStartAtUtc ? 'Scheduled start is set.' : 'Set a scheduled start before work starts.'
     },
     {
       label: 'Due date',
       isReady: Boolean(form.dueAtUtc),
-      detail: form.dueAtUtc ? 'Due date is set.' : 'Add a due date so dispatch can see timing expectations.'
+      detail: form.dueAtUtc ? 'Due date is set.' : 'Add a due date for timing expectations.'
     },
     {
       label: 'Job instructions',
@@ -366,7 +366,7 @@ export function JobTicketEditorForm({
   const dispatchEditChecks = useMemo(() => buildDispatchEditChecks(form), [form])
   const dispatchReadyCount = dispatchEditChecks.filter((check) => check.isReady).length
   const dispatchOpenItems = dispatchEditChecks.filter((check) => !check.isReady)
-  const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'All dispatch requirements are complete.'
+  const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'All assignment and schedule requirements are complete.'
   const equipmentQuickAddDuplicateWarnings = useMemo(() => {
     if (!form.customerId || !form.serviceLocationId) {
       return []
@@ -615,12 +615,12 @@ export function JobTicketEditorForm({
   return (
     <form onSubmit={submit} className="stack job-editor-form section-ticket-editor">
       {error ? <p className="error">{error}</p> : null}
-      <section className="stack section-edit-readiness" aria-label="dispatch requirements review">
-        <h3>Dispatch Requirements</h3>
+      <section className="stack section-edit-readiness" aria-label="assignment and schedule requirements review">
+        <h3>Assignment & Schedule Requirements</h3>
         <div className="review-grid">
           <div>
-            <span className="muted">Dispatch Status</span>
-            <strong>{dispatchOpenItems.length ? 'Needs dispatch updates' : 'Ready to dispatch'}</strong>
+            <span className="muted">Work Readiness</span>
+            <strong>{dispatchOpenItems.length ? 'Needs assignment updates' : 'Ready to work'}</strong>
           </div>
           <div>
             <span className="muted">Requirements Ready</span>
@@ -633,13 +633,13 @@ export function JobTicketEditorForm({
         </div>
         <p className="muted">Next required update: {nextDispatchFix}</p>
         {dispatchOpenItems.length ? (
-          <ul className="muted" aria-label="dispatch requirement warnings">
+          <ul className="muted" aria-label="assignment and schedule requirement warnings">
             {dispatchOpenItems.map((check) => (
               <li key={check.label}>{check.label}: {check.detail}</li>
             ))}
           </ul>
         ) : (
-          <p className="muted">Dispatch status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.</p>
+          <p className="muted">Work status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.</p>
         )}
       </section>
 
@@ -868,7 +868,7 @@ export function JobTicketEditorForm({
         <section className="section-editor-panel stack" aria-label="Schedule edit section">
           <div className="section-editor-heading">
             <h3>Schedule</h3>
-            <p className="muted">Edit requested, scheduled start, and due dates for dispatch planning.</p>
+            <p className="muted">Edit requested, scheduled start, and due dates for work planning.</p>
           </div>
           <div className="section-editor-grid">
             <label>Requested (UTC)<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
