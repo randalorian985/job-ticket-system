@@ -235,7 +235,10 @@ describe('ServiceLocationsPage', () => {
 
     render(<ServiceLocationsPage />)
     expect(await screen.findByText(/HQ/)).toBeInTheDocument()
-    expect(screen.getByText('Phone: 555-0100')).toBeInTheDocument()
+    const hqRow = screen.getByText(/HQ/).closest('.master-data-item')
+    expect(hqRow).not.toBeNull()
+    expect(within(hqRow as HTMLElement).getByText('Contact')).toBeInTheDocument()
+    expect(within(hqRow as HTMLElement).getByText('555-0100')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c2' } })
     expect(screen.queryByText(/HQ/)).not.toBeInTheDocument()
     expect(screen.getByText(/Depot/)).toBeInTheDocument()

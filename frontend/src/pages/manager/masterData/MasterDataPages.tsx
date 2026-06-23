@@ -42,12 +42,24 @@ const customerBillingAddress = (customer: CustomerDto) => compactAddress(
   compactAddress(customer.billingCity, customer.billingState, customer.billingPostalCode)
 )
 const fallbackText = (value: string | null | undefined, fallback: string) => value?.trim() || fallback
-const customerListField = (label: string, value: string | null | undefined, fallback = 'Not provided', className = '') => (
-  <div className={`customer-list-field${value?.trim() ? '' : ' customer-list-field-empty'}${className ? ` ${className}` : ''}`}>
-    <span className="customer-list-label">{label}</span>
-    <span className="customer-list-value">{fallbackText(value, fallback)}</span>
+const compactListField = (label: string, value: string | null | undefined, fallback = 'Not provided', className = '') => (
+  <div className={`compact-list-field${value?.trim() ? '' : ' compact-list-field-empty'}${className ? ` ${className}` : ''}`}>
+    <span className="compact-list-label">{label}</span>
+    <span className="compact-list-value">{fallbackText(value, fallback)}</span>
   </div>
 )
+const compactListStackedField = (label: string, values: Array<string | null | undefined>, fallback = 'Not provided', className = '') => {
+  const visibleValues = values.filter((value): value is string => Boolean(value?.trim()))
+
+  return (
+    <div className={`compact-list-field compact-list-field-stacked${visibleValues.length ? '' : ' compact-list-field-empty'}${className ? ` ${className}` : ''}`}>
+      <span className="compact-list-label">{label}</span>
+      {visibleValues.length
+        ? visibleValues.map((value, index) => <span className="compact-list-value" key={`${label}-${index}`}>{value}</span>)
+        : <span className="compact-list-value compact-list-muted">{fallback}</span>}
+    </div>
+  )
+}
 const customerHasBillingAddress = (customer?: CustomerDto | null) => Boolean(customer && (
   customer.billingAddressLine1?.trim() ||
   customer.billingAddressLine2?.trim() ||
@@ -255,27 +267,26 @@ export function CustomersPage() {
         <MasterDataFilters label="customers" search={search} searchPlaceholder="Search by name, account, contact, email, phone, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all') }} />
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="customers" />
         <MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="customers" />
-        <ul className="master-data-list customer-list">
+        <ul className="master-data-list compact-master-list customer-list">
           {filteredItems.map((customer) => {
             const billingAddress = customerBillingAddress(customer)
 
             return (
-              <li className="master-data-item customer-list-item" key={customer.id}>
-                <div className="customer-list-primary">
+              <li className="master-data-item compact-master-list-item customer-list-item" key={customer.id}>
+                <div className="compact-list-primary">
                   <div className="master-data-title-row">
                     <strong className="master-data-title">{customer.name}</strong>
                     <span className={`status-pill ${customer.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(customer.isArchived)}</span>
                   </div>
                   <span className="customer-list-account">Account: {fallbackText(customer.accountNumber, 'No account')}</span>
                 </div>
-                {customerListField('Contact', customer.contactName)}
-                <div className="customer-list-field customer-list-field-stacked">
-                  <span className="customer-list-label">Email / phone</span>
-                  <span className={`customer-list-value${customer.email?.trim() ? '' : ' customer-list-muted'}`}>{fallbackText(customer.email, 'No email')}</span>
-                  <span className={`customer-list-value${customer.phone?.trim() ? '' : ' customer-list-muted'}`}>{fallbackText(customer.phone, 'No phone')}</span>
-                </div>
-                {customerListField('Billing', billingAddress, 'No billing address', 'customer-list-billing')}
-                <div className="master-data-actions customer-list-actions">
+                {compactListField('Contact', customer.contactName)}
+                {compactListStackedField('Email / phone', [
+                  customer.email || 'No email',
+                  customer.phone || 'No phone'
+                ])}
+                {compactListField('Billing', billingAddress, 'No billing address', 'customer-list-billing compact-list-address')}
+                <div className="master-data-actions compact-list-actions">
                   <button type="button" onClick={() => startEdit(customer)}>Edit</button>
                   <button type="button" onClick={async () => {
                     if (!confirmArchiveAction('customer', customer.name, customer.isArchived)) return
@@ -469,43 +480,52 @@ export function ServiceLocationsPage() {
         </MasterDataFilters>
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="service locations" />
         <MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="service locations" />
-        <ul className="master-data-list">
-          {filteredItems.map((location) => (
-            <MasterDataItem
-              key={location.id}
-              title={location.locationName}
-              statusArchived={location.isArchived}
-              meta={[
-                `Company: ${location.companyName}`,
-                `Customer: ${customerNameById(customers, location.customerId) || 'No customer'}`,
-                `Service status: ${location.isActive ? 'Active' : 'Inactive'}`,
-                location.onSiteContactName ? `On-site contact: ${location.onSiteContactName}` : null,
-                location.onSiteContactPhone ? `Phone: ${location.onSiteContactPhone}` : null,
-                location.onSiteContactEmail ? `Email: ${location.onSiteContactEmail}` : null,
-                serviceLocationAddress(location),
-                location.parishCounty ? `Parish/county: ${location.parishCounty}` : null,
-                location.gateCode ? `Gate code: ${location.gateCode}` : null
-              ]}
-              actions={<>
-                <button type="button" onClick={() => startEdit(location)}>Edit</button>
-                <button type="button" onClick={async () => {
-                  if (!confirmArchiveAction('service location', location.locationName, location.isArchived)) return
-                  const action = location.isArchived ? 'unarchived' : 'archived'
-                  try {
-                    setError(null)
-                    setSuccess(null)
-                    if (location.isArchived) await masterDataApi.unarchiveServiceLocation(location.id)
-                    else await masterDataApi.archiveServiceLocation(location.id)
-                    await load()
-                    setSuccess(`Service location "${location.locationName}" was ${action}.`)
-                  } catch {
-                    setSuccess(null)
-                    setError('Unable to update service location archive state.')
-                  }
-                }}>{location.isArchived ? 'Unarchive' : 'Archive'}</button>
-              </>}
-            />
-          ))}
+        <ul className="master-data-list compact-master-list service-location-list">
+          {filteredItems.map((location) => {
+            const accessNotes = [
+              location.gateCode ? `Gate: ${location.gateCode}` : null,
+              location.parishCounty ? `County: ${location.parishCounty}` : null
+            ]
+
+            return (
+              <li className="master-data-item compact-master-list-item service-location-list-item" key={location.id}>
+                <div className="compact-list-primary">
+                  <div className="master-data-title-row">
+                    <strong className="master-data-title">{location.locationName}</strong>
+                    <span className={`status-pill ${location.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(location.isArchived)}</span>
+                    <span className={`status-pill ${location.isActive ? 'active' : 'inactive'}`}>{location.isActive ? 'Service active' : 'Service inactive'}</span>
+                  </div>
+                  <span className="compact-list-subtext">{fallbackText(location.companyName, 'No company')}</span>
+                </div>
+                {compactListField('Customer', customerNameById(customers, location.customerId), 'No customer')}
+                {compactListStackedField('Contact', [
+                  location.onSiteContactName,
+                  location.onSiteContactPhone,
+                  location.onSiteContactEmail
+                ], 'No site contact')}
+                {compactListField('Address', serviceLocationAddress(location), 'No address', 'service-location-address compact-list-address')}
+                {compactListStackedField('Access', accessNotes, 'No access notes', 'service-location-access')}
+                <div className="master-data-actions compact-list-actions">
+                  <button type="button" onClick={() => startEdit(location)}>Edit</button>
+                  <button type="button" onClick={async () => {
+                    if (!confirmArchiveAction('service location', location.locationName, location.isArchived)) return
+                    const action = location.isArchived ? 'unarchived' : 'archived'
+                    try {
+                      setError(null)
+                      setSuccess(null)
+                      if (location.isArchived) await masterDataApi.unarchiveServiceLocation(location.id)
+                      else await masterDataApi.archiveServiceLocation(location.id)
+                      await load()
+                      setSuccess(`Service location "${location.locationName}" was ${action}.`)
+                    } catch {
+                      setSuccess(null)
+                      setError('Unable to update service location archive state.')
+                    }
+                  }}>{location.isArchived ? 'Unarchive' : 'Archive'}</button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>
@@ -637,43 +657,55 @@ export function EquipmentPage() {
         </MasterDataFilters>
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="equipment records" />
         <MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="equipment records" />
-        <ul className="master-data-list">
-          {filteredItems.map((equipment) => (
-            <MasterDataItem
-              key={equipment.id}
-              title={equipment.name}
-              statusArchived={equipment.isArchived}
-              meta={[
-                `Owner: ${customerNameById(customers, equipment.ownerCustomerId ?? equipment.customerId) || 'Customer unavailable'}`,
-                `Billing: ${equipment.responsibleBillingCustomerId ? customerNameById(customers, equipment.responsibleBillingCustomerId) || 'Customer unavailable' : 'No separate billing customer'}`,
-                `Location: ${locationNameById(locations, equipment.serviceLocationId) || 'Service location unavailable'}`,
-                equipment.equipmentNumber ? `Equipment #: ${equipment.equipmentNumber}` : null,
-                equipment.unitNumber ? `Unit: ${equipment.unitNumber}` : null,
-                equipment.manufacturer || equipment.modelNumber ? `Model: ${[equipment.manufacturer, equipment.modelNumber].filter(Boolean).join(' ')}` : null,
-                equipment.serialNumber ? `Serial: ${equipment.serialNumber}` : null,
-                equipment.equipmentType ? `Type: ${equipment.equipmentType}` : null,
-                equipment.year ? `Year: ${equipment.year}` : null
-              ]}
-              actions={<>
-                <button type="button" onClick={() => startEdit(equipment)}>Edit</button>
-                <button type="button" onClick={async () => {
-                  if (!confirmArchiveAction('equipment', equipment.name, equipment.isArchived)) return
-                  const action = equipment.isArchived ? 'unarchived' : 'archived'
-                  try {
-                    setError(null)
-                    setSuccess(null)
-                    if (equipment.isArchived) await masterDataApi.unarchiveEquipment(equipment.id)
-                    else await masterDataApi.archiveEquipment(equipment.id)
-                    await load()
-                    setSuccess(`Equipment "${equipment.name}" was ${action}.`)
-                  } catch {
-                    setSuccess(null)
-                    setError('Unable to update equipment archive state.')
-                  }
-                }}>{equipment.isArchived ? 'Unarchive' : 'Archive'}</button>
-              </>}
-            />
-          ))}
+        <ul className="master-data-list compact-master-list equipment-list">
+          {filteredItems.map((equipment) => {
+            const equipmentIdentity = [
+              equipment.equipmentNumber ? `Equipment #: ${equipment.equipmentNumber}` : null,
+              equipment.unitNumber ? `Unit: ${equipment.unitNumber}` : null
+            ].filter(Boolean).join(' | ')
+            const modelName = [equipment.manufacturer, equipment.modelNumber].filter(Boolean).join(' ')
+
+            return (
+              <li className="master-data-item compact-master-list-item equipment-list-item" key={equipment.id}>
+                <div className="compact-list-primary">
+                  <div className="master-data-title-row">
+                    <strong className="master-data-title">{equipment.name}</strong>
+                    <span className={`status-pill ${equipment.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(equipment.isArchived)}</span>
+                  </div>
+                  <span className="compact-list-subtext">{equipmentIdentity || 'No equipment number'}</span>
+                </div>
+                {compactListField('Location', locationNameById(locations, equipment.serviceLocationId), 'Service location unavailable')}
+                {compactListStackedField('Customers', [
+                  `Owner: ${customerNameById(customers, equipment.ownerCustomerId ?? equipment.customerId) || 'Customer unavailable'}`,
+                  `Billing: ${equipment.responsibleBillingCustomerId ? customerNameById(customers, equipment.responsibleBillingCustomerId) || 'Customer unavailable' : 'No separate billing customer'}`
+                ], 'No customer relationships')}
+                {compactListStackedField('Model / serial', [
+                  modelName ? `Model: ${modelName}` : null,
+                  equipment.serialNumber ? `Serial: ${equipment.serialNumber}` : null,
+                  equipment.equipmentType ? `Type: ${equipment.equipmentType}` : null,
+                  equipment.year ? `Year: ${equipment.year}` : null
+                ], 'No model details', 'equipment-model')}
+                <div className="master-data-actions compact-list-actions">
+                  <button type="button" onClick={() => startEdit(equipment)}>Edit</button>
+                  <button type="button" onClick={async () => {
+                    if (!confirmArchiveAction('equipment', equipment.name, equipment.isArchived)) return
+                    const action = equipment.isArchived ? 'unarchived' : 'archived'
+                    try {
+                      setError(null)
+                      setSuccess(null)
+                      if (equipment.isArchived) await masterDataApi.unarchiveEquipment(equipment.id)
+                      else await masterDataApi.archiveEquipment(equipment.id)
+                      await load()
+                      setSuccess(`Equipment "${equipment.name}" was ${action}.`)
+                    } catch {
+                      setSuccess(null)
+                      setError('Unable to update equipment archive state.')
+                    }
+                  }}>{equipment.isArchived ? 'Unarchive' : 'Archive'}</button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>
