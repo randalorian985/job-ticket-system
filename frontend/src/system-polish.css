@@ -486,17 +486,25 @@ td button {
   font-size: 0.84rem;
 }
 
+.report-catalog {
+  gap: 2rem;
+}
+
 .report-section-panel {
   background: transparent;
   border: 0;
   border-radius: 0;
-  gap: 0.65rem;
+  gap: 0.85rem;
   padding: 0;
+}
+
+.report-section-panel + .report-section-panel {
+  margin-top: 0.25rem;
 }
 
 .report-section-panel .report-section-heading {
   border-bottom: 1px solid #e5eaf1;
-  padding-bottom: 0.65rem;
+  padding-bottom: 0.75rem;
 }
 
 .report-section-panel .report-section-heading {

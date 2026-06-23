@@ -1108,7 +1108,7 @@ export function ReportsPage() {
         ) : null}
       </section>
 
-      <div className="stack" role="region" aria-label="report catalog" hidden={activeScreen !== 'catalog'}>
+      <div className="report-catalog stack" role="region" aria-label="report catalog" hidden={activeScreen !== 'catalog'}>
         {reportSections.map((section) => (
           <section className="report-section report-section-panel stack" key={section.title} aria-label={section.title}>
             <div className="report-section-heading">
