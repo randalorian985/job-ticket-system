@@ -8,10 +8,11 @@ import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, Service
 import { csvDataUri, toCsv, type CsvColumn } from '../../utils/csv'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from '../employee/jobDisplay'
 import { defaultTicketStatusFilterOptions, formatDate, priorityOptions } from './managerDisplay'
-import { activeDispatchStatusValues, buildJobTicketDetailPath, normalizeJobTicketQueueSearchParams, readJobTicketQueueFilters } from './managerTaskNavigation'
+import { activeDispatchStatusValues, buildJobTicketDetailPath, closedJobTicketStatusValues, normalizeJobTicketQueueSearchParams, readJobTicketQueueFilters } from './managerTaskNavigation'
 
 const allFilterValue = 'all'
 const activeStatusValues = activeDispatchStatusValues
+const closedStatusValues = closedJobTicketStatusValues
 const waitingStatusValues = new Set([5, 6])
 const dispatchReadinessFilterOptions = [
   { value: allFilterValue, label: 'All work readiness' },
@@ -35,7 +36,7 @@ type QueuePreset = {
   attention?: string
 }
 
-type SavedQueueViewKey = 'custom' | 'today' | 'waiting-parts' | 'ready-invoice' | 'needs-assignment' | 'completed-review'
+type SavedQueueViewKey = 'custom' | 'open-tickets' | 'closed-tickets' | 'today' | 'waiting-parts' | 'ready-invoice' | 'needs-assignment' | 'completed-review'
 
 type SavedQueueView = {
   value: SavedQueueViewKey
@@ -85,6 +86,8 @@ const ticketViewModeStorageKey = 'job-ticket-manager-queue-view-mode'
 const dateForExport = (value?: string | null) => value ? value.slice(0, 10) : ''
 const savedQueueViews: SavedQueueView[] = [
   { value: 'custom', label: 'Custom filters' },
+  { value: 'open-tickets', label: 'Open Tickets', preset: { status: 'active' } },
+  { value: 'closed-tickets', label: 'Closed Tickets', preset: { status: 'closed' } },
   { value: 'today', label: 'Today', preset: { status: 'active' } },
   { value: 'waiting-parts', label: 'Waiting on Parts', preset: { status: '5' } },
   { value: 'ready-invoice', label: 'Ready to Invoice', preset: { status: '10' } },
@@ -401,6 +404,7 @@ export function JobTicketListPage() {
       const readiness = getDispatchReadiness(job, assignments)
       const matchesStatus = statusFilter === allFilterValue
         || (statusFilter === 'active' && activeStatusValues.has(job.status))
+        || (statusFilter === 'closed' && closedStatusValues.has(job.status))
         || (statusFilter === 'waiting' && waitingStatusValues.has(job.status))
         || String(job.status) === statusFilter
       const matchesPriority = priorityFilter === allFilterValue || String(job.priority) === priorityFilter
@@ -417,6 +421,8 @@ export function JobTicketListPage() {
       const matchesSearch = !normalizedSearch || [job.ticketNumber, job.title, customerName, locationName, ...assignmentNames]
         .some((value) => value.toLocaleLowerCase().includes(normalizedSearch))
       const matchesSavedQueueView = savedQueueView === 'custom' ||
+        (savedQueueView === 'open-tickets' && activeStatusValues.has(job.status)) ||
+        (savedQueueView === 'closed-tickets' && closedStatusValues.has(job.status)) ||
         (savedQueueView === 'today' && activeStatusValues.has(job.status) && isSameLocalDate(job.scheduledStartAtUtc, today)) ||
         (savedQueueView === 'waiting-parts' && job.status === 5) ||
         (savedQueueView === 'ready-invoice' && job.status === 10) ||
@@ -429,6 +435,7 @@ export function JobTicketListPage() {
 
   const triageSummary = useMemo(() => {
     const activeJobs = jobs.filter((job) => activeStatusValues.has(job.status))
+    const closedJobs = jobs.filter((job) => closedStatusValues.has(job.status))
     const urgentJobs = jobs.filter((job) => job.priority === 4 && activeStatusValues.has(job.status))
     const waitingJobs = jobs.filter((job) => waitingStatusValues.has(job.status))
     const todayJobs = activeJobs.filter((job) => isSameLocalDate(job.scheduledStartAtUtc, new Date()))
@@ -445,6 +452,7 @@ export function JobTicketListPage() {
 
     return {
       activeCount: activeJobs.length,
+      closedCount: closedJobs.length,
       urgentCount: urgentJobs.length,
       waitingCount: waitingJobs.length,
       todayCount: todayJobs.length,
@@ -539,6 +547,7 @@ export function JobTicketListPage() {
           <select value={statusFilter} onChange={(event) => updateFilter('status', event.target.value)}>
             <option value={allFilterValue}>All statuses</option>
             <option value="active">Active statuses</option>
+            <option value="closed">Closed statuses</option>
             <option value="waiting">Waiting on parts or customer</option>
             {configuredStatusFilters.map((item) => <option key={item.id} value={item.status}>{item.displayLabel}</option>)}
             {selectedStatusFallback ? <option value={selectedStatusFallback.value}>{selectedStatusFallback.label}</option> : null}
@@ -588,6 +597,8 @@ export function JobTicketListPage() {
               </select>
             </label>
             <div className="queue-saved-view-counts" aria-label="saved view counts">
+              <span><strong>{triageSummary.activeCount}</strong> Open Tickets</span>
+              <span><strong>{triageSummary.closedCount}</strong> Closed Tickets</span>
               <span><strong>{triageSummary.todayCount}</strong> Today</span>
               <span><strong>{triageSummary.waitingOnPartsCount}</strong> Waiting on Parts</span>
               <span><strong>{triageSummary.readyToInvoiceCount}</strong> Ready to Invoice</span>

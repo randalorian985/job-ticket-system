@@ -178,11 +178,15 @@ describe('Manager list pages', () => {
     expect(await screen.findByLabelText('saved queue views')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Saved Views' })).toBeInTheDocument()
     const savedView = screen.getByLabelText('Saved view')
+    expect(within(savedView).getByRole('option', { name: 'Open Tickets' })).toBeInTheDocument()
+    expect(within(savedView).getByRole('option', { name: 'Closed Tickets' })).toBeInTheDocument()
     expect(within(savedView).getByRole('option', { name: 'Today' })).toBeInTheDocument()
     expect(within(savedView).getByRole('option', { name: 'Waiting on Parts' })).toBeInTheDocument()
     expect(within(savedView).getByRole('option', { name: 'Ready to Invoice' })).toBeInTheDocument()
     expect(within(savedView).getByRole('option', { name: 'Needs Assignment' })).toBeInTheDocument()
     expect(within(savedView).getByRole('option', { name: 'Completed Review' })).toBeInTheDocument()
+    expect(within(screen.getByLabelText('saved view counts')).getByText(/Open Tickets/)).toBeInTheDocument()
+    expect(within(screen.getByLabelText('saved view counts')).getByText(/Closed Tickets/)).toBeInTheDocument()
     expect(within(screen.getByLabelText('saved view counts')).getByText(/Waiting on Parts/)).toBeInTheDocument()
     expect(within(screen.getByLabelText('saved view counts')).getByText(/Needs Assignment/)).toBeInTheDocument()
   })
@@ -341,7 +345,8 @@ describe('Manager list pages', () => {
   it('puts search before saved views and filters the list when a saved view is selected', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Waiting compressor parts', status: 5, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
-      { id: 'job-2', ticketNumber: 'JT-2', title: 'Scheduled pump', status: 4, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' }
+      { id: 'job-2', ticketNumber: 'JT-2', title: 'Scheduled pump', status: 4, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
+      { id: 'job-3', ticketNumber: 'JT-3', title: 'Closed billing archive', status: 9, priority: 1, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null }
     ] as any)
 
     renderPage()
@@ -350,16 +355,26 @@ describe('Manager list pages', () => {
     const filters = screen.getByLabelText('job ticket filters')
     const savedViews = screen.getByLabelText('saved queue views')
     expect(filters.compareDocumentPosition(savedViews) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(screen.getByText('Showing all 2 loaded tickets.')).toBeInTheDocument()
+    expect(screen.getByText('Showing all 3 loaded tickets.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Saved view'), { target: { value: 'waiting-parts' } })
 
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
-    expect(screen.getByText('Filtered view showing 1 of 2 tickets.')).toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+    expect(screen.getByText('Filtered view showing 1 of 3 tickets.')).toBeInTheDocument()
     expect(screen.getByLabelText('Status')).toHaveValue('5')
     expect(screen.getByLabelText('Priority')).toHaveValue('all')
     expect(screen.getByLabelText('Saved view')).toHaveValue('waiting-parts')
+
+    fireEvent.change(screen.getByLabelText('Saved view'), { target: { value: 'closed-tickets' } })
+
+    expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
+    expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.getByText('JT-3')).toBeInTheDocument()
+    expect(screen.getByText('Filtered view showing 1 of 3 tickets.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Status')).toHaveValue('closed')
+    expect(screen.getByLabelText('Saved view')).toHaveValue('closed-tickets')
   })
 
   it('shows inline data quality warnings without blocking the queue', async () => {

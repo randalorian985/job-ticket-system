@@ -1,7 +1,8 @@
 export const activeDispatchStatusValues = new Set([2, 3, 4, 5, 6])
+export const closedJobTicketStatusValues = new Set([7, 8, 9, 10])
 
 const allFilterValue = 'all'
-const validStatusFilters = new Set(['active', 'waiting', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
+const validStatusFilters = new Set(['active', 'closed', 'waiting', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
 const validPriorityFilters = new Set(['1', '2', '3', '4'])
 const validReadinessFilters = new Set(['ready', 'needs-review', 'not-active'])
 const validAttentionFilters = new Set(['unscheduled', 'missing-due', 'unassigned', 'needs-lead'])
@@ -19,6 +20,7 @@ const queueLabelsByStatus: Record<string, string> = {
   waiting: 'Waiting Tickets',
   '5': 'Waiting on Parts',
   '10': 'Invoice-ready Queue',
+  closed: 'Closed Tickets',
   active: 'Active Job Queue'
 }
 

@@ -28,9 +28,9 @@ describe('manager task navigation', () => {
 
   it('preserves supported queue filters in their existing normalized order', () => {
     expect(normalizeJobTicketQueueSearchParams(new URLSearchParams(
-      'q=pump&attention=needs-lead&readiness=ready&customer=customer-1&priority=4&status=active'
+      'q=pump&attention=needs-lead&readiness=ready&customer=customer-1&priority=4&status=closed'
     )).toString()).toBe(
-      'status=active&priority=4&customer=customer-1&readiness=ready&attention=needs-lead&q=pump'
+      'status=closed&priority=4&customer=customer-1&readiness=ready&attention=needs-lead&q=pump'
     )
   })
 
@@ -43,6 +43,7 @@ describe('manager task navigation', () => {
     expect(getJobTicketQueueLabel(new URLSearchParams('status=waiting'))).toBe('Waiting Tickets')
     expect(getJobTicketQueueLabel(new URLSearchParams('status=5'))).toBe('Waiting on Parts')
     expect(getJobTicketQueueLabel(new URLSearchParams('status=10'))).toBe('Invoice-ready Queue')
+    expect(getJobTicketQueueLabel(new URLSearchParams('status=closed'))).toBe('Closed Tickets')
     expect(getJobTicketQueueLabel(new URLSearchParams('status=active'))).toBe('Active Job Queue')
     expect(getJobTicketQueueLabel(new URLSearchParams())).toBe('Job Tickets')
   })

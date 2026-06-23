@@ -380,6 +380,8 @@ The queue has two view modes:
 The selected view is remembered in the browser for that Manager/Admin user session. It does not change the ticket data, filters, CSV export, routes, or authorization rules.
 
 The queue also includes a compact **Saved Views** dropdown for common operating queues:
+- Open Tickets;
+- Closed Tickets;
 - Today;
 - Waiting on Parts;
 - Ready to Invoice;
