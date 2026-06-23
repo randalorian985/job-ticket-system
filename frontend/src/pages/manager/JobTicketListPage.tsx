@@ -547,11 +547,10 @@ export function JobTicketListPage() {
               <div className="compact-ticket-list-header" aria-hidden="true">
                 <span>Ticket</span>
                 <span>Customer / Location</span>
-                <span>Assigned Tech</span>
-                <span>Status / Priority</span>
-                <span>Schedule</span>
-                <span>Due</span>
-                <span>Action</span>
+                <span>Lead / Team</span>
+                <span>Readiness</span>
+                <span>Timing</span>
+                <span>Open</span>
               </div>
               {filteredJobs.map((job) => {
                 const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
@@ -568,13 +567,16 @@ export function JobTicketListPage() {
                     <div className="compact-ticket-primary">
                       <Link className="ticket-number-link" to={getTicketDetailPath(job.id)}>{job.ticketNumber}</Link>
                       <span>{job.title}</span>
+                      <div className="compact-ticket-badges" aria-label={`${job.ticketNumber} status and priority`}>
+                        <span className="compact-ticket-chip">{getJobTicketStatusLabel(job.status)}</span>
+                        <span className="compact-ticket-chip compact-ticket-chip-priority">{getJobTicketPriorityLabel(job.priority)}</span>
+                      </div>
                     </div>
                     <div><strong>{customerName}</strong><span>{locationName}</span></div>
-                    <div><strong>{leadSummary}</strong><span>{assignmentSummary}</span></div>
-                    <div><strong>{getJobTicketStatusLabel(job.status)}</strong><span>{getJobTicketPriorityLabel(job.priority)}</span></div>
-                    <div><strong>{formatDate(job.scheduledStartAtUtc)}</strong><span>{readiness.label}</span></div>
-                    <div><strong>{formatDate(job.dueAtUtc)}</strong><span>{readiness.openItems ? readiness.nextStep : 'Ready for work.'}</span></div>
-                    <Link className="button-link secondary-link compact-ticket-open" to={getTicketDetailPath(job.id)}>Open</Link>
+                    <div><strong>Lead: {leadSummary}</strong><span>{assignmentSummary}</span></div>
+                    <div className="compact-ticket-readiness"><strong>{readiness.label}</strong><span>{readiness.openItems ? readiness.nextStep : 'Ready for work.'}</span></div>
+                    <div className="compact-ticket-timing"><strong>Scheduled: {formatDate(job.scheduledStartAtUtc)}</strong><span>Due: {formatDate(job.dueAtUtc)}</span></div>
+                    <Link className="button-link secondary-link compact-ticket-open" to={getTicketDetailPath(job.id)}>Open Ticket</Link>
                   </article>
                 )
               })}

@@ -178,6 +178,20 @@ export function JobDetailPage() {
     ? 'You are clocked into another job. Open that ticket or clock out before recording field work here.'
     : 'Clock in to this ticket before adding work notes, parts, or photos.'
   const canUseActiveJobTools = isClockedIntoThisJob
+  const nextActionTitle = isClockedIntoAnotherJob
+    ? 'Finish the active ticket first'
+    : isClockedIntoThisJob
+      ? 'Capture one field update at a time'
+      : employeeJobReadiness.warnings.length
+        ? 'Review setup before clock-in'
+        : 'Clock in when you are ready to work'
+  const nextActionBody = isClockedIntoAnotherJob
+    ? 'This ticket stays locked so notes, parts, and photos do not land on the wrong time entry.'
+    : isClockedIntoThisJob
+      ? 'Use one shortcut, save the update, then return here for the next step. These tools are tied to this ticket and time entry.'
+      : employeeJobReadiness.warnings.length
+        ? 'The ticket can still be opened, but the missing setup items should be reviewed with a Manager/Admin before starting work.'
+        : 'Clock in first. Notes, parts, and photos appear after this ticket is the active time entry.'
 
   const refreshDetails = async () => {
     if (!jobTicketId || !user) {
@@ -530,7 +544,27 @@ export function JobDetailPage() {
         )}
       </section>
 
-      <section className="card stack employee-clock-card">
+      <section className={`card stack employee-next-action-card ${isClockedIntoThisJob ? 'is-active' : 'is-locked'}`} aria-label="next job action">
+        <div>
+          <p className="employee-eyebrow">Next action</p>
+          <h2>{nextActionTitle}</h2>
+          <p className="muted">{nextActionBody}</p>
+        </div>
+        {isClockedIntoThisJob ? (
+          <div className="employee-action-strip" aria-label="active job shortcuts">
+            <a className="button-link" href="#work-note-panel">Add Note</a>
+            <a className="button-link" href="#part-request-panel">Add Part</a>
+            <a className="button-link" href="#photo-upload-panel">Upload Photo</a>
+            <a className="button-link secondary-link" href="#clock-card">Clock Out</a>
+          </div>
+        ) : isClockedIntoAnotherJob ? (
+          <Link className="button-link" to={`/jobs/${openEntry?.jobTicketId}`}>Go to Active Ticket</Link>
+        ) : (
+          <a className="button-link" href="#clock-card">Clock In</a>
+        )}
+      </section>
+
+      <section id="clock-card" className="card stack employee-clock-card">
         <h2>{isClockedIntoThisJob ? 'Active Job Time' : 'Clock In to Start Job'}</h2>
         <p className="muted">
           Open entry: {openEntry
@@ -592,184 +626,184 @@ export function JobDetailPage() {
 
       {canUseActiveJobTools ? (
         <section className="employee-active-job-tools stack" aria-label="active job tools">
-      <section className="card stack">
-        <h2>Add Work Note</h2>
-        {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
-        <form onSubmit={onAddWorkNote} className="stack">
-          <label>
-            Work note
-            <textarea
-              aria-describedby="work-note-help"
-              value={workNote}
-              onChange={(event) => setWorkNote(event.target.value)}
-              required
-              placeholder="Describe work performed"
-              disabled={!isClockedIntoThisJob}
-            />
-          </label>
-          <p id="work-note-help" className="field-help">Use this for progress notes, site conditions, or details the office should review.</p>
-          <button type="submit" disabled={isSavingWork || !isClockedIntoThisJob}>
-            {isSavingWork ? 'Saving note...' : 'Save Work Note'}
-          </button>
-        </form>
-      </section>
-
-      <section className="card stack">
-        <h2>Add / Request Part</h2>
-        {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
-        <form onSubmit={onSubmitPartRequest} className="stack">
-          <label>
-            Find existing part or enter new part
-            <input
-              aria-describedby="part-description-help"
-              value={partRequestDescription}
-              onChange={(event) => onPartRequestDescriptionChange(event.target.value)}
-              placeholder="Search part number, name, or type a new part"
-              disabled={!isClockedIntoThisJob}
-            />
-          </label>
-          <p id="part-description-help" className="field-help">Select a matching stocked part when available, or submit the typed value as an unlisted part.</p>
-          <label>
-            Existing parts match
-            <select
-              aria-describedby="part-match-help"
-              value={selectedPartId}
-              onChange={(event) => setSelectedPartId(event.target.value)}
-              disabled={!isClockedIntoThisJob}
-            >
-              <option value="">Use typed new/unlisted part</option>
-              {partLookupMatches.map((part) => (
-                <option key={part.id} value={part.id}>
-                  {part.partNumber} - {part.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p id="part-match-help" className="field-help">Changing the typed search clears the selected match so the submitted part stays intentional.</p>
-          {selectedPart ? (
-            <p className="muted">Selected existing part: {selectedPart.partNumber} - {selectedPart.name}</p>
-          ) : (
-            <p className="muted">No match selected; the typed value will be submitted as a new/unlisted part.</p>
-          )}
-          <label>
-            Quantity
-            <input
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={partRequestQuantity}
-              onChange={(event) => setPartRequestQuantity(event.target.value)}
-              required
-              disabled={!isClockedIntoThisJob}
-            />
-          </label>
-          <label>
-            Notes
-            <input
-              value={partRequestNotes}
-              onChange={(event) => setPartRequestNotes(event.target.value)}
-              disabled={!isClockedIntoThisJob}
-            />
-          </label>
-          <label className="row">
-            <input type="checkbox" checked={partNeedsOrdered} onChange={(event) => setPartNeedsOrdered(event.target.checked)} disabled={!isClockedIntoThisJob} />
-            Needs ordered
-          </label>
-          {partNeedsOrdered ? (
-            <>
+          <section id="work-note-panel" className="card stack">
+            <h2>Add Work Note</h2>
+            {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
+            <form onSubmit={onAddWorkNote} className="stack">
               <label>
-                Urgency
-                <select
-                  value={partRequestUrgency}
-                  onChange={(event) => setPartRequestUrgency(event.target.value)}
-                  disabled={!isClockedIntoThisJob}
-                >
-                  <option value="">Routine</option>
-                  <option value="Soon">Soon</option>
-                  <option value="Urgent">Urgent</option>
-                </select>
-              </label>
-              <label>
-                Needed by
-                <input
-                  type="date"
-                  value={partRequestNeededBy}
-                  onChange={(event) => setPartRequestNeededBy(event.target.value)}
+                Work note
+                <textarea
+                  aria-describedby="work-note-help"
+                  value={workNote}
+                  onChange={(event) => setWorkNote(event.target.value)}
+                  required
+                  placeholder="Describe work performed"
                   disabled={!isClockedIntoThisJob}
                 />
               </label>
-            </>
-          ) : null}
-          <button type="submit" disabled={isSubmittingPartRequest || !isClockedIntoThisJob}>
-            {isSubmittingPartRequest ? 'Adding part...' : 'Add / Request Part'}
-          </button>
-        </form>
-      </section>
+              <p id="work-note-help" className="field-help">Use this for progress notes, site conditions, or details the office should review.</p>
+              <button type="submit" disabled={isSavingWork || !isClockedIntoThisJob}>
+                {isSavingWork ? 'Saving note...' : 'Save Work Note'}
+              </button>
+            </form>
+          </section>
 
-      <section className="card stack">
-        <h2>Upload Photo / File</h2>
-        {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
-        <form onSubmit={onUpload} className="stack">
-          <label>
-            Photo or file
-            <input
-              aria-describedby="upload-file-help"
-              type="file"
-              accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
-              onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
-              required
-              disabled={!isClockedIntoThisJob}
-            />
-          </label>
-          <p id="upload-file-help" className="field-help">Allowed file types: JPG, PNG, WebP, or PDF.</p>
-          <label>
-            Caption
-            <input
-              value={uploadCaption}
-              onChange={(event) => setUploadCaption(event.target.value)}
-              disabled={!isClockedIntoThisJob}
-            />
-          </label>
-          <button type="submit" disabled={isUploading || !isClockedIntoThisJob}>
-            {isUploading ? 'Uploading...' : 'Upload'}
-          </button>
-        </form>
-      </section>
+          <section id="part-request-panel" className="card stack">
+            <h2>Add / Request Part</h2>
+            {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
+            <form onSubmit={onSubmitPartRequest} className="stack">
+              <label>
+                Find existing part or enter new part
+                <input
+                  aria-describedby="part-description-help"
+                  value={partRequestDescription}
+                  onChange={(event) => onPartRequestDescriptionChange(event.target.value)}
+                  placeholder="Search part number, name, or type a new part"
+                  disabled={!isClockedIntoThisJob}
+                />
+              </label>
+              <p id="part-description-help" className="field-help">Select a matching stocked part when available, or submit the typed value as an unlisted part.</p>
+              <label>
+                Existing parts match
+                <select
+                  aria-describedby="part-match-help"
+                  value={selectedPartId}
+                  onChange={(event) => setSelectedPartId(event.target.value)}
+                  disabled={!isClockedIntoThisJob}
+                >
+                  <option value="">Use typed new/unlisted part</option>
+                  {partLookupMatches.map((part) => (
+                    <option key={part.id} value={part.id}>
+                      {part.partNumber} - {part.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p id="part-match-help" className="field-help">Changing the typed search clears the selected match so the submitted part stays intentional.</p>
+              {selectedPart ? (
+                <p className="muted">Selected existing part: {selectedPart.partNumber} - {selectedPart.name}</p>
+              ) : (
+                <p className="muted">No match selected; the typed value will be submitted as a new/unlisted part.</p>
+              )}
+              <label>
+                Quantity
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={partRequestQuantity}
+                  onChange={(event) => setPartRequestQuantity(event.target.value)}
+                  required
+                  disabled={!isClockedIntoThisJob}
+                />
+              </label>
+              <label>
+                Notes
+                <input
+                  value={partRequestNotes}
+                  onChange={(event) => setPartRequestNotes(event.target.value)}
+                  disabled={!isClockedIntoThisJob}
+                />
+              </label>
+              <label className="row">
+                <input type="checkbox" checked={partNeedsOrdered} onChange={(event) => setPartNeedsOrdered(event.target.checked)} disabled={!isClockedIntoThisJob} />
+                Needs ordered
+              </label>
+              {partNeedsOrdered ? (
+                <>
+                  <label>
+                    Urgency
+                    <select
+                      value={partRequestUrgency}
+                      onChange={(event) => setPartRequestUrgency(event.target.value)}
+                      disabled={!isClockedIntoThisJob}
+                    >
+                      <option value="">Routine</option>
+                      <option value="Soon">Soon</option>
+                      <option value="Urgent">Urgent</option>
+                    </select>
+                  </label>
+                  <label>
+                    Needed by
+                    <input
+                      type="date"
+                      value={partRequestNeededBy}
+                      onChange={(event) => setPartRequestNeededBy(event.target.value)}
+                      disabled={!isClockedIntoThisJob}
+                    />
+                  </label>
+                </>
+              ) : null}
+              <button type="submit" disabled={isSubmittingPartRequest || !isClockedIntoThisJob}>
+                {isSubmittingPartRequest ? 'Adding part...' : 'Add / Request Part'}
+              </button>
+            </form>
+          </section>
 
-      <section className="card">
-        <h2>Work Entries</h2>
-        <ul>
-          {workEntries.map((entry) => (
-            <li key={entry.id}>
-              {new Date(entry.performedAtUtc).toLocaleString()} - {entry.notes}
-            </li>
-          ))}
-        </ul>
-      </section>
+          <section id="photo-upload-panel" className="card stack">
+            <h2>Upload Photo / File</h2>
+            {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
+            <form onSubmit={onUpload} className="stack">
+              <label>
+                Photo or file
+                <input
+                  aria-describedby="upload-file-help"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                  onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
+                  required
+                  disabled={!isClockedIntoThisJob}
+                />
+              </label>
+              <p id="upload-file-help" className="field-help">Allowed file types: JPG, PNG, WebP, or PDF.</p>
+              <label>
+                Caption
+                <input
+                  value={uploadCaption}
+                  onChange={(event) => setUploadCaption(event.target.value)}
+                  disabled={!isClockedIntoThisJob}
+                />
+              </label>
+              <button type="submit" disabled={isUploading || !isClockedIntoThisJob}>
+                {isUploading ? 'Uploading...' : 'Upload'}
+              </button>
+            </form>
+          </section>
 
-      <section className="card">
-        <h2>Parts Requests & Usage</h2>
-        <ul>
-          {partsUsed.map((part) => (
-            <li key={part.id}>
-              {getPartUsedDisplay(part)}
-              {part.isUnlistedPart ? ' (unlisted)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'} - {getPartRequestContext(part)}
-              {part.officeOrderRequested && part.officeOrderNotes ? `: ${part.officeOrderNotes}` : ''}
-            </li>
-          ))}
-        </ul>
-      </section>
+          <section className="card">
+            <h2>Work Entries</h2>
+            <ul>
+              {workEntries.map((entry) => (
+                <li key={entry.id}>
+                  {new Date(entry.performedAtUtc).toLocaleString()} - {entry.notes}
+                </li>
+              ))}
+            </ul>
+          </section>
 
-      <section className="card">
-        <h2>Files / Photos</h2>
-        <ul>
-          {files.map((file) => (
-            <li key={file.id}>
-              {file.originalFileName} ({Math.round(file.fileSizeBytes / 1024)} KB) - {new Date(file.uploadedAtUtc).toLocaleString()}
-            </li>
-          ))}
-        </ul>
-      </section>
+          <section className="card">
+            <h2>Parts Requests & Usage</h2>
+            <ul>
+              {partsUsed.map((part) => (
+                <li key={part.id}>
+                  {getPartUsedDisplay(part)}
+                  {part.isUnlistedPart ? ' (unlisted)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'} - {getPartRequestContext(part)}
+                  {part.officeOrderRequested && part.officeOrderNotes ? `: ${part.officeOrderNotes}` : ''}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="card">
+            <h2>Files / Photos</h2>
+            <ul>
+              {files.map((file) => (
+                <li key={file.id}>
+                  {file.originalFileName} ({Math.round(file.fileSizeBytes / 1024)} KB) - {new Date(file.uploadedAtUtc).toLocaleString()}
+                </li>
+              ))}
+            </ul>
+          </section>
         </section>
       ) : null}
     </main>

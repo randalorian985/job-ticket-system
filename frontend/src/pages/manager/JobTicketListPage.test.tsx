@@ -118,9 +118,15 @@ describe('Manager list pages', () => {
     expect(within(compactList).getByText('Acme')).toBeInTheDocument()
     expect(within(compactList).getByText('HQ')).toBeInTheDocument()
     expect(within(compactList).getAllByText('Alex Rivera').length).toBeGreaterThan(0)
+    expect(within(compactList).getByText('Lead: Alex Rivera')).toBeInTheDocument()
+    expect(within(compactList).getByLabelText('JT-1 status and priority')).toBeInTheDocument()
     expect(within(compactList).getByText('In Progress')).toBeInTheDocument()
     expect(within(compactList).getByText('High')).toBeInTheDocument()
-    expect(within(compactList).getByRole('link', { name: 'Open' })).toHaveAttribute(
+    expect(within(compactList).getByText('Ready to work')).toBeInTheDocument()
+    expect(within(compactList).getByText('Ready for work.')).toBeInTheDocument()
+    expect(within(compactList).getByText(/Scheduled:/)).toBeInTheDocument()
+    expect(within(compactList).getByText(/Due:/)).toBeInTheDocument()
+    expect(within(compactList).getByRole('link', { name: 'Open Ticket' })).toHaveAttribute(
       'href',
       expect.stringContaining('/manage/job-tickets/job-1')
     )
