@@ -200,6 +200,15 @@ describe('JobDetailPage', () => {
     expect(within(jobReadiness).getByText('Ready for field work.')).toBeInTheDocument()
     expect(within(jobReadiness).queryByLabelText('open job requirements')).not.toBeInTheDocument()
     expect(screen.getByText('Job setup is ready for active work.')).toBeInTheDocument()
+
+    const nextAction = screen.getByLabelText('next job action')
+    expect(within(nextAction).getByText('Capture one field update at a time')).toBeInTheDocument()
+    expect(within(nextAction).getByText(/These tools are tied to this ticket and time entry/)).toBeInTheDocument()
+    const shortcuts = within(nextAction).getByLabelText('active job shortcuts')
+    expect(within(shortcuts).getByRole('link', { name: 'Add Note' })).toHaveAttribute('href', '#work-note-panel')
+    expect(within(shortcuts).getByRole('link', { name: 'Add Part' })).toHaveAttribute('href', '#part-request-panel')
+    expect(within(shortcuts).getByRole('link', { name: 'Upload Photo' })).toHaveAttribute('href', '#photo-upload-panel')
+    expect(within(shortcuts).getByRole('link', { name: 'Clock Out' })).toHaveAttribute('href', '#clock-card')
   })
 
   it('hides field recording tools until the technician clocks into this ticket', async () => {
@@ -215,6 +224,9 @@ describe('JobDetailPage', () => {
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeEnabled()
     expect(screen.getByLabelText('Clock note (optional)')).toBeEnabled()
+    const nextAction = screen.getByLabelText('next job action')
+    expect(within(nextAction).getByText('Clock in when you are ready to work')).toBeInTheDocument()
+    expect(within(nextAction).getByRole('link', { name: 'Clock In' })).toHaveAttribute('href', '#clock-card')
     expect(screen.getByLabelText('field tools locked')).toBeInTheDocument()
     expect(screen.getByText('Clock in to add notes, parts, and photos')).toBeInTheDocument()
     expect(screen.queryByLabelText('Work note')).not.toBeInTheDocument()
@@ -273,6 +285,9 @@ describe('JobDetailPage', () => {
     renderJobDetail()
 
     expect(await screen.findByText(/Open entry: Started/)).toHaveTextContent('on another ticket')
+    const nextAction = screen.getByLabelText('next job action')
+    expect(within(nextAction).getByText('Finish the active ticket first')).toBeInTheDocument()
+    expect(within(nextAction).getByRole('link', { name: 'Go to Active Ticket' })).toHaveAttribute('href', '/jobs/job-2')
     expect(screen.getByRole('link', { name: 'Open active ticket' })).toHaveAttribute('href', '/jobs/job-2')
     expect(screen.queryByRole('button', { name: 'Clock Out with GPS' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeDisabled()

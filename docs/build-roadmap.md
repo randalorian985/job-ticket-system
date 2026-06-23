@@ -14,10 +14,10 @@ Use this roadmap together with:
 ## Current Roadmap Checkpoint
 The project remains explicitly centered on the original job-ticket system scope.
 
-Employee/Manager workflow stabilization is implemented in the current draft PR:
+Employee/Manager workflow stabilization is implemented:
 - Employee `/jobs` is a concise assigned-work list without extra dashboard panels;
-- Employee job detail is clock-in-first, showing ticket context, readiness, and time controls before clock-in, then revealing notes, parts, photos, work entries, parts, and files only while clocked into that ticket;
-- Manager/Admin `/manage/job-tickets` keeps the existing rich readiness card view and adds a persisted compact list view for dense operating review;
+- Employee job detail is clock-in-first, showing ticket context, readiness, a plain-language Next action card, and time controls before clock-in, then revealing notes, parts, photos, work entries, parts, and files only while clocked into that ticket;
+- Manager/Admin `/manage/job-tickets` keeps the existing rich readiness card view and adds a persisted compact list view that reduces row clutter around ticket, lead/team, readiness, timing, and Open Ticket;
 - Admin `/manage/ticket-status-filters` configures the Manager/Admin queue status filter boxes using display labels, existing ticket status values, display order, and active/inactive flags;
 - Employee assigned-job lists hide fully closed `Completed`, `Cancelled`, `Invoiced`, and `Reviewed` tickets while Manager/Admin users keep queue, workspace, report, and history access;
 - pilot seed data now creates six demo job tickets across ready-for-invoice, assigned, waiting-on-parts, unassigned, needs-lead, and urgent in-progress scenarios;

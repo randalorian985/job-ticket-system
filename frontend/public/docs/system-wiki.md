@@ -211,7 +211,10 @@ When an employee opens a job, the detail screen shows:
 - customer, service location, and equipment labels;
 - job description;
 - a short "Before You Start" readiness review;
+- a plain-language "Next action" card;
 - clock-in/clock-out controls.
+
+The "Next action" card is the technician's main guide. Before clock-in, it points the employee to clock in or to finish the already-active ticket. After clock-in, it shows short links for Add Note, Add Part, Upload Photo, and Clock Out so the employee can do one field update at a time.
 
 Before clock-in, the deeper field tools are hidden behind a clear message. After the technician clocks into that exact ticket, the active-job tools appear:
 - work note form;
@@ -487,6 +490,22 @@ The Job Tickets screen has a small set of practical quick views:
 - **Ready to work**.
 
 These quick views are not a second workflow. They only apply filters to the same job-ticket list. Admin-configured status labels stay in the Status filter so the screen does not become crowded with shortcut boxes.
+
+#### Compact List
+The Job Tickets screen has two views:
+- **Rich cards** for deeper review;
+- **Compact list** for day-to-day scanning.
+
+The compact list keeps each row focused on:
+- ticket number and title;
+- status and priority badges;
+- customer and service location;
+- lead tech and assigned team;
+- work readiness;
+- schedule and due timing;
+- one **Open Ticket** action.
+
+Use the compact list when the queue feels busy. It is designed to keep the important operating signals visible without bringing back a separate Dispatch screen.
 
 #### Assignment And Schedule Checks
 The system checks for the information Managers/Admins need before field work is clear:
