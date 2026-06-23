@@ -100,7 +100,7 @@ export function MasterDataItem({
         <span className={`status-pill ${statusArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(statusArchived)}</span>
       </div>
       <div className="master-data-meta">
-        {visibleMeta.map((value, index) => <span key={index}>{value}</span>)}
+        {visibleMeta.map((value, index) => <div className="master-data-meta-item" key={index}>{value}</div>)}
       </div>
     </div>
     <div className="master-data-actions">{actions}</div>

@@ -535,6 +535,98 @@ pre {
   padding: 0;
 }
 
+.master-data-summary {
+  align-items: center;
+  color: #475569;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  line-height: 1.45;
+}
+
+.master-data-summary strong {
+  color: var(--ink);
+}
+
+.master-data-item {
+  align-items: start;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 0.95rem;
+}
+
+.master-data-item-main {
+  min-width: 0;
+}
+
+.master-data-title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.master-data-title {
+  color: var(--ink);
+  font-size: 1.02rem;
+  font-weight: 900;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.master-data-meta {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 0.75rem;
+}
+
+.master-data-meta-item {
+  background: #f8fafc;
+  border: 1px solid #e5ebf3;
+  border-radius: 8px;
+  color: #475569;
+  line-height: 1.35;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 0.55rem 0.65rem;
+}
+
+.customer-info-field {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.customer-info-label {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.customer-info-value {
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.customer-info-field-empty .customer-info-value {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.master-data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
 .ticket-list-item {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -929,9 +1021,23 @@ pre {
   .ticket-list-main,
   .job-ticket-queue-header,
   .queue-results-heading,
+  .master-data-item,
   .row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .master-data-item {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .master-data-actions {
+    justify-content: stretch;
+  }
+
+  .master-data-actions button {
+    flex: 1 1 9rem;
   }
 
   .logout-button,

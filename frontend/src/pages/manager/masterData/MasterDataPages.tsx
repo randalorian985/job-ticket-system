@@ -41,6 +41,13 @@ const customerBillingAddress = (customer: CustomerDto) => compactAddress(
   customer.billingAddressLine2,
   compactAddress(customer.billingCity, customer.billingState, customer.billingPostalCode)
 )
+const fallbackText = (value: string | null | undefined, fallback: string) => value?.trim() || fallback
+const customerInfoField = (label: string, value: string | null | undefined, fallback = 'Not provided') => (
+  <span className={`customer-info-field${value?.trim() ? '' : ' customer-info-field-empty'}`}>
+    <span className="customer-info-label">{label}</span>
+    <strong className="customer-info-value">{fallbackText(value, fallback)}</strong>
+  </span>
+)
 const customerHasBillingAddress = (customer?: CustomerDto | null) => Boolean(customer && (
   customer.billingAddressLine1?.trim() ||
   customer.billingAddressLine2?.trim() ||
@@ -255,11 +262,11 @@ export function CustomersPage() {
               title={customer.name}
               statusArchived={customer.isArchived}
               meta={[
-                `Account: ${customer.accountNumber ?? 'No account'}`,
-                customer.contactName ? `Contact: ${customer.contactName}` : null,
-                customer.email ? `Email: ${customer.email}` : null,
-                customer.phone ? `Phone: ${customer.phone}` : null,
-                customerBillingAddress(customer) ? `Billing address: ${customerBillingAddress(customer)}` : null
+                customerInfoField('Account', customer.accountNumber, 'No account'),
+                customerInfoField('Contact', customer.contactName),
+                customerInfoField('Email', customer.email),
+                customerInfoField('Phone', customer.phone),
+                customerInfoField('Billing address', customerBillingAddress(customer), 'No billing address')
               ]}
               actions={<>
                 <button type="button" onClick={() => startEdit(customer)}>Edit</button>
