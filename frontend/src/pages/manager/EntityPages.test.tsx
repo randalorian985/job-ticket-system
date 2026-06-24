@@ -511,6 +511,34 @@ describe('PartsPage', () => {
     expect(within(categoriesCard).getByText(/Belts/)).toBeInTheDocument()
   })
 
+  it('applies intelligent parts workflow filters and resets them', async () => {
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([
+      { id: 'p1', partCategoryId: 'pc1', vendorId: 'v1', partNumber: 'FLT-1', name: 'Filter', unitCost: 1, unitPrice: 2, quantityOnHand: 10, reorderThreshold: 2, isArchived: false },
+      { id: 'p2', partCategoryId: 'pc1', vendorId: 'v1', partNumber: 'BLT-2', name: 'Belt', unitCost: 3, unitPrice: 4, quantityOnHand: 2, reorderThreshold: 4, isArchived: false },
+      { id: 'p3', partCategoryId: 'pc2', vendorId: null, partNumber: 'KIT-3', name: 'Kit', unitCost: 5, unitPrice: 6, quantityOnHand: 0, reorderThreshold: 0, isArchived: false }
+    ] as any)
+    vi.mocked(masterDataApi.listVendors).mockResolvedValue([{ id: 'v1', name: 'Vendor A', isArchived: false }] as any)
+    vi.mocked(masterDataApi.listPartCategories).mockResolvedValue([{ id: 'pc1', name: 'Filters', isArchived: false }, { id: 'pc2', name: 'Kits', isArchived: false }] as any)
+
+    render(<PartsPage />)
+    expect(await screen.findByText(/FLT-1/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Needs attention \(2\)/ }))
+    expect(screen.queryByText(/FLT-1/)).not.toBeInTheDocument()
+    expect(screen.getByText(/BLT-2/)).toBeInTheDocument()
+    expect(screen.getByText(/KIT-3/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Unassigned vendor \(1\)/ }))
+    expect(screen.queryByText(/BLT-2/)).not.toBeInTheDocument()
+    expect(screen.getByText(/KIT-3/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }))
+    expect(screen.getByRole('button', { name: /All visible \(3\)/ })).toBeInTheDocument()
+    expect(screen.getByText(/FLT-1/)).toBeInTheDocument()
+    expect(screen.getByText(/BLT-2/)).toBeInTheDocument()
+    expect(screen.getByText(/KIT-3/)).toBeInTheDocument()
+  })
+
   it('surfaces part save validation errors from the API', async () => {
     vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listVendors).mockResolvedValue([] as any)

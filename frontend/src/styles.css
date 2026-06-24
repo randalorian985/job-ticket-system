@@ -779,6 +779,44 @@ pre {
   justify-content: flex-end;
 }
 
+.parts-workflow-panel {
+  align-items: center;
+  background: linear-gradient(140deg, #f8fbff, #f4f8ff);
+  border: 1px solid #dbe8ff;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: space-between;
+  padding: 0.7rem;
+}
+
+.parts-workflow-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.parts-workflow-chip-active {
+  background: linear-gradient(145deg, #4f5ee8, #4250d6);
+  border: 1px solid #3441b7;
+  color: #ffffff;
+}
+
+.parts-workflow-sort {
+  align-items: center;
+  color: #334155;
+  display: flex;
+  font-size: 0.88rem;
+  font-weight: 700;
+  gap: 0.45rem;
+  margin-left: auto;
+}
+
+.parts-workflow-sort select {
+  min-width: 14.5rem;
+}
+
 .compact-master-list {
   gap: 0.45rem;
 }
@@ -1312,6 +1350,21 @@ pre {
 
   .master-data-actions button {
     flex: 1 1 9rem;
+  }
+
+  .parts-workflow-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .parts-workflow-sort {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .parts-workflow-sort select {
+    min-width: 0;
+    width: 100%;
   }
 
   .logout-button,
