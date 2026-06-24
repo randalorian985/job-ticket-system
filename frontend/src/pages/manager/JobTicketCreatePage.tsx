@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
@@ -33,6 +33,15 @@ export function JobTicketCreatePage() {
   const [leadEmployeeId, setLeadEmployeeId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const selectedEmployeeSummaries = useMemo(
+    () => selectedEmployeeIds
+      .map((id) => {
+        const employee = assignableEmployees.find((item) => item.id === id)
+        return employee ? `${employee.firstName} ${employee.lastName}`.trim() : null
+      })
+      .filter((name): name is string => Boolean(name)),
+    [assignableEmployees, selectedEmployeeIds]
+  )
 
   useEffect(() => {
     Promise.all([
@@ -113,8 +122,9 @@ export function JobTicketCreatePage() {
           <section className="quick-add-panel stack" aria-label="optional technician assignment during ticket creation">
             <h4>Assign Technicians (Optional)</h4>
             <p className="muted">Set lead and additional technicians now, or leave blank and assign later on the ticket detail page.</p>
-            {selectedEmployeeIds.length ? (
-              <p className="muted">Selected technicians: {selectedEmployeeIds.length}</p>
+            <p className="muted">You can select multiple technicians and choose one lead.</p>
+            {selectedEmployeeSummaries.length ? (
+              <p className="muted">Selected technicians: {selectedEmployeeSummaries.join(', ')}</p>
             ) : (
               <p className="muted">No technicians selected yet.</p>
             )}
@@ -134,6 +144,9 @@ export function JobTicketCreatePage() {
                           onChange={() => toggleEmployee(id)}
                         />
                         <span>{displayName}</span>
+                        {selectedEmployeeIds.includes(id) && leadEmployeeId === id ? (
+                          <span className="status-chip">Lead</span>
+                        ) : null}
                       </label>
                     )
                   })}
