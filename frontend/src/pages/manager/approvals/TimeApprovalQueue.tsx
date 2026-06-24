@@ -9,9 +9,10 @@ type Props = {
   onSelectionChange: (ids: string[]) => void
   onBulkApprove: () => void
   onReview: (entry: TimeApprovalQueueItemDto) => void
+  exportHref?: string
 }
 
-export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionChange, onBulkApprove, onReview }: Props) {
+export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionChange, onBulkApprove, onReview, exportHref }: Props) {
   const eligibleEntries = entries.filter(isEligibleForApproval)
   const allEligibleSelected = eligibleEntries.length > 0 && eligibleEntries.every((entry) => selectedIds.includes(entry.id))
   const selectedEntry = selectedIds.length === 1 ? entries.find((entry) => entry.id === selectedIds[0]) : null
@@ -28,6 +29,7 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
           <p className="muted">{entries.length ? `${entries.length} entries match the current filters.` : 'No time entries match the current filters.'}</p>
         </div>
         <div className="row">
+          {exportHref ? <a className="button-link" href={exportHref} download="time-approval-review.csv">Export</a> : null}
           <button type="button" disabled={selectedIds.length === 0 || loading} onClick={onBulkApprove}>Approve Selected ({selectedIds.length})</button>
           {selectedEntry ? <button type="button" disabled={loading} onClick={() => onReview(selectedEntry)}>Edit Selected</button> : null}
         </div>

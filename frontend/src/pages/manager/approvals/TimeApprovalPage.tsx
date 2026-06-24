@@ -132,20 +132,16 @@ export function TimeApprovalPage() {
   return (
     <section className="card stack">
       <h2>Time Approval</h2>
-      <div className="report-results-heading">
-        <p className="muted">Pending work loads automatically so managers can understand, review, and approve the queue without knowing internal IDs.</p>
-        {entries.length ? <a className="button-link" href={exportHref} download="time-approval-review.csv">Export visible rows as CSV</a> : null}
-      </div>
+      <p className="muted">Pending work loads automatically so managers can understand, review, and approve the queue without knowing internal IDs.</p>
       <TimeApprovalFilters employees={employees} jobTickets={jobTickets} filters={filters} loading={loading} onChange={setFilters} onApply={() => void load()} />
       <Errorable error={error} />
       {message ? <p className="muted">{message}</p> : null}
-      <div className="report-grid" aria-label="Time review summary">
-        <article className="report-card"><h3>{summary.entries}</h3><p className="muted">Queue entries</p></article>
-        <article className="report-card"><h3>{summary.pending}</h3><p className="muted">Pending approvals</p></article>
-        <article className="report-card"><h3>{summary.approved}</h3><p className="muted">Approved entries</p></article>
-        <article className="report-card"><h3>{summary.rejected}</h3><p className="muted">Rejected entries</p></article>
-        <article className="report-card"><h3>{summary.laborHours.toFixed(2)}</h3><p className="muted">Queue labor hours</p></article>
-        <article className="report-card"><h3>{summary.billableHours.toFixed(2)}</h3><p className="muted">Queue billable hours</p></article>
+      <div className="time-approval-summary" aria-label="Time review summary">
+        <div><strong>{summary.pending}</strong><span>Pending</span></div>
+        <div><strong>{summary.approved}</strong><span>Approved</span></div>
+        <div><strong>{summary.rejected}</strong><span>Rejected</span></div>
+        <div><strong>{summary.laborHours.toFixed(2)}</strong><span>Labor hrs</span></div>
+        <div><strong>{summary.billableHours.toFixed(2)}</strong><span>Billable hrs</span></div>
       </div>
       <TimeApprovalQueue
         entries={entries}
@@ -154,6 +150,7 @@ export function TimeApprovalPage() {
         onSelectionChange={setSelectedIds}
         onBulkApprove={() => void bulkApprove()}
         onReview={setReviewEntry}
+        exportHref={exportHref}
       />
     </section>
   )

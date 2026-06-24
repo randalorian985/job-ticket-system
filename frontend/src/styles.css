@@ -3547,6 +3547,45 @@ td {
   white-space: normal;
 }
 
+/* Compact time approval summary shows key metrics in a tight inline row */
+.time-approval-summary {
+  align-items: center;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  padding: 0.75rem 0;
+}
+
+.time-approval-summary > div {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: center;
+}
+
+.time-approval-summary strong {
+  color: var(--ink);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.time-approval-summary span {
+  color: var(--muted-ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+}
+
+.time-approval-table th:nth-child(5),
+.time-approval-table td:nth-child(5) {
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .time-entry-review-panel {
   background: #ffffff;
   border: 1px solid #d6dde8;
