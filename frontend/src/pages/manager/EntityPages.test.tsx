@@ -95,7 +95,7 @@ describe('CustomersPage', () => {
   it('renders master-data create/edit workflow shell', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
     render(<CustomersPage />)
-    expect(await screen.findByText(/Acme/)).toBeInTheDocument()
+    expect(await screen.findByText('Acme', { selector: '.master-data-title' })).toBeInTheDocument()
     expect(screen.getByText(/No account/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create Customer' })).toBeInTheDocument()
   })
@@ -122,6 +122,7 @@ describe('CustomersPage', () => {
     fireEvent.change(screen.getByLabelText('Contact name'), { target: { value: 'Alex Manager' } })
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'alex@example.com' } })
     fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '555-0100' } })
+    expect(screen.getByLabelText('Default billing party')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Billing address'), { target: { value: '100 Billing Rd' } })
     fireEvent.change(screen.getByLabelText('Address line 2'), { target: { value: 'Suite 2' } })
     fireEvent.change(screen.getByLabelText('City'), { target: { value: 'Tulsa' } })
@@ -135,6 +136,7 @@ describe('CustomersPage', () => {
       contactName: 'Alex Manager',
       email: 'alex@example.com',
       phone: '555-0100',
+      billingPartyCustomerId: null,
       billingAddressLine1: '100 Billing Rd',
       billingAddressLine2: 'Suite 2',
       billingCity: 'Tulsa',
@@ -179,8 +181,8 @@ describe('CustomersPage', () => {
     ] as any)
 
     render(<CustomersPage />)
-    expect(await screen.findByText(/Acme/)).toBeInTheDocument()
-    const acmeCard = screen.getByText(/Acme/).closest('.master-data-item')
+    expect(await screen.findByText('Acme', { selector: '.master-data-title' })).toBeInTheDocument()
+    const acmeCard = screen.getByText('Acme', { selector: '.master-data-title' }).closest('.master-data-item')
     expect(acmeCard).not.toBeNull()
     expect(within(acmeCard as HTMLElement).getByText('Billing')).toBeInTheDocument()
     expect(within(acmeCard as HTMLElement).getByText('100 Main, Tulsa, OK, 74101')).toBeInTheDocument()
@@ -188,16 +190,16 @@ describe('CustomersPage', () => {
     expect(screen.getByText('1 active / 1 archived visible.')).toBeInTheDocument()
     expect(screen.getByText('Counts reflect currently loaded records only.')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Search customers'), { target: { value: 'bea' } })
-    expect(screen.queryByText(/Acme/)).not.toBeInTheDocument()
-    expect(screen.getByText(/Beta/)).toBeInTheDocument()
+    expect(screen.queryAllByText('Acme', { selector: '.master-data-title' })).toHaveLength(0)
+    expect(screen.getByText('Beta', { selector: '.master-data-title' })).toBeInTheDocument()
     expect(screen.getByText('Showing 1 of 2 loaded customers.')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'active' } })
     expect(screen.getByText('No customers match the current filters.')).toBeInTheDocument()
     expect(screen.getByText('Showing 0 of 2 loaded customers.')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }))
     expect(screen.getByText('Showing 2 of 2 loaded customers.')).toBeInTheDocument()
-    expect(screen.getByText(/Acme/)).toBeInTheDocument()
-    expect(screen.getByText(/Beta/)).toBeInTheDocument()
+    expect(screen.getByText('Acme', { selector: '.master-data-title' })).toBeInTheDocument()
+    expect(screen.getByText('Beta', { selector: '.master-data-title' })).toBeInTheDocument()
   })
 
   it('archives and unarchives customers and surfaces archive failure', async () => {
@@ -720,7 +722,7 @@ describe('ReportsPage', () => {
     expect(screen.getByText('Parts by Job')).toBeInTheDocument()
     expect(screen.getByText('Customer Service History')).toBeInTheDocument()
     expect(screen.getByText('Equipment Service History')).toBeInTheDocument()
-    expect(screen.getByText(/Labor totals are labeled as time-entry labor-rate snapshot values/i)).toBeInTheDocument()
+    expect(screen.getByText(/Labor totals use rate snapshots first/i)).toBeInTheDocument()
   })
 
   it('applies supported filters, renders jobs ready to invoice rows, and exports escaped CSV', async () => {
@@ -775,7 +777,7 @@ describe('ReportsPage', () => {
     expect(within(table).getByRole('cell', { name: 'Casey Tech' })).toBeInTheDocument()
     expect(screen.getByText('4 h')).toBeInTheDocument()
     expect(screen.getByText('$160.00')).toBeInTheDocument()
-    expect(screen.getByText(/then falls back only for legacy entries without snapshots/i)).toBeInTheDocument()
+    expect(screen.getByText((_, element) => element?.classList.contains('report-print-subtitle') ?? false)).toHaveTextContent('Approved labor totals grouped by employee with time-entry labor-rate snapshot values.')
   })
 
   it('renders parts by job rows with job detail drill-in', async () => {

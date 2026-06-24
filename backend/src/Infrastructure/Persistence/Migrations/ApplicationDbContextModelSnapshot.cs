@@ -116,6 +116,9 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("BillingPartyCustomerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -127,6 +130,8 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasIndex("AccountNumber")
                         .IsUnique()
                         .HasFilter("[AccountNumber] IS NOT NULL");
+
+                    b.HasIndex("BillingPartyCustomerId");
 
                     b.HasIndex("Name");
 
@@ -2132,7 +2137,14 @@ namespace Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("JobTicketSystem.Domain.Entities.Customer", b =>
                 {
+                    b.HasOne("JobTicketSystem.Domain.Entities.Customer", "BillingPartyCustomer")
+                        .WithMany()
+                        .HasForeignKey("BillingPartyCustomerId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Equipment");
+
+                    b.Navigation("BillingPartyCustomer");
 
                     b.Navigation("InvoiceSummaries");
 

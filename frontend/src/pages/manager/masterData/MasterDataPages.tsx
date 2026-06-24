@@ -99,6 +99,7 @@ const emptyCustomerDraft: CreateCustomerDto = {
   contactName: '',
   email: '',
   phone: '',
+  billingPartyCustomerId: null,
   billingAddressLine1: '',
   billingAddressLine2: '',
   billingCity: '',
@@ -158,6 +159,10 @@ export function CustomersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('all')
+  const billingPartyOptions = useMemo(() => activeOrSelected(items, [draft.billingPartyCustomerId]), [items, draft.billingPartyCustomerId])
+  const billingPartySummary = draft.billingPartyCustomerId
+    ? customerNameById(items, draft.billingPartyCustomerId) || 'Billing party unavailable'
+    : 'Bills directly to this customer'
   const load = () => {
     setIsLoading(true)
     return masterDataApi.listCustomers()
@@ -175,6 +180,7 @@ export function CustomersPage() {
     x.contactName,
     x.email,
     x.phone,
+    customerNameById(items, x.billingPartyCustomerId),
     x.billingAddressLine1,
     x.billingAddressLine2,
     x.billingCity,
@@ -213,6 +219,7 @@ export function CustomersPage() {
       contactName: customer.contactName,
       email: customer.email,
       phone: customer.phone,
+      billingPartyCustomerId: customer.billingPartyCustomerId ?? null,
       billingAddressLine1: customer.billingAddressLine1,
       billingAddressLine2: customer.billingAddressLine2,
       billingCity: customer.billingCity,
@@ -247,6 +254,14 @@ export function CustomersPage() {
           <label>Email<input placeholder="Email" value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></label>
           <label>Phone<input placeholder="Phone" value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></label>
         </div>
+        <label>Default billing party
+          <select value={draft.billingPartyCustomerId ?? ''} onChange={(e) => setDraft({ ...draft, billingPartyCustomerId: e.target.value || null })}>
+            <option value="">Bill directly to this customer</option>
+            {billingPartyOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
+          </select>
+        </label>
+        <p className="muted">Use this when tickets should default to another customer for billing. Leave it blank to bill this customer directly.</p>
+        <p className="muted">Current billing setup: {billingPartySummary}</p>
         <div className="row">
           <label>Billing address<input placeholder="Billing address" value={draft.billingAddressLine1 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine1: e.target.value })} /></label>
           <label>Address line 2<input placeholder="Address line 2" value={draft.billingAddressLine2 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine2: e.target.value })} /></label>
@@ -280,6 +295,7 @@ export function CustomersPage() {
                   </div>
                   <span className="customer-list-account">Account: {fallbackText(customer.accountNumber, 'No account')}</span>
                 </div>
+                {compactListField('Billing party', customer.billingPartyCustomerId ? customerNameById(items, customer.billingPartyCustomerId) : null, 'Bills directly')}
                 {compactListField('Contact', customer.contactName)}
                 {compactListStackedField('Email / phone', [
                   customer.email || 'No email',

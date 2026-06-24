@@ -393,6 +393,16 @@ export function JobTicketEditorForm({
   const selectedServiceLocation = allServiceLocations.find((item) => item.id === form.serviceLocationId)
   const selectedBillingParty = allCustomers.find((item) => item.id === form.billingPartyCustomerId)
   const selectedEquipment = allEquipment.find((item) => item.id === form.equipmentId)
+  const resolveDefaultBillingPartyId = (customer?: CustomerDto | null) => {
+    if (!customer) return null
+
+    if (!customer.billingPartyCustomerId) {
+      return customer.id
+    }
+
+    const billingParty = allCustomers.find((item) => item.id === customer.billingPartyCustomerId)
+    return billingParty && !billingParty.isArchived ? billingParty.id : customer.id
+  }
   const jobSiteCustomer = selectedServiceLocation?.customerId
     ? allCustomers.find((item) => item.id === selectedServiceLocation.customerId)
     : undefined
@@ -568,11 +578,12 @@ export function JobTicketEditorForm({
   const update = <K extends keyof CreateJobTicketDto>(key: K, value: CreateJobTicketDto[K]) => setForm((prev) => ({ ...prev, [key]: value }))
 
   const selectCustomer = (customerId: string) => {
+    const customer = allCustomers.find((item) => item.id === customerId)
     setForm((prev) => ({
       ...prev,
       customerId,
       billingPartyCustomerId: !prev.billingPartyCustomerId || prev.billingPartyCustomerId === prev.customerId
-        ? customerId
+        ? resolveDefaultBillingPartyId(customer) ?? customerId
         : prev.billingPartyCustomerId,
       serviceLocationId: '',
       equipmentId: null
@@ -580,12 +591,17 @@ export function JobTicketEditorForm({
   }
 
   const selectServiceLocation = (serviceLocationId: string) => {
-    setForm((prev) => ({
-      ...prev,
-      serviceLocationId,
-      equipmentId: null,
-      billingPartyCustomerId: prev.billingPartyCustomerId || allServiceLocations.find((item) => item.id === serviceLocationId)?.customerId || prev.customerId
-    }))
+    setForm((prev) => {
+      const serviceLocationCustomerId = allServiceLocations.find((item) => item.id === serviceLocationId)?.customerId ?? null
+      const serviceLocationCustomer = serviceLocationCustomerId ? allCustomers.find((item) => item.id === serviceLocationCustomerId) : null
+
+      return {
+        ...prev,
+        serviceLocationId,
+        equipmentId: null,
+        billingPartyCustomerId: prev.billingPartyCustomerId || resolveDefaultBillingPartyId(serviceLocationCustomer) || prev.customerId
+      }
+    })
   }
 
   const selectEquipment = (equipmentId: string) => {
@@ -749,7 +765,7 @@ export function JobTicketEditorForm({
       setForm((prev) => ({
         ...prev,
         customerId: created.id,
-        billingPartyCustomerId: created.id,
+        billingPartyCustomerId: resolveDefaultBillingPartyId(created) || created.id,
         serviceLocationId: '',
         equipmentId: null,
         billingContactName: created.contactName ?? prev.billingContactName ?? null,

@@ -15,26 +15,28 @@ public sealed class MasterDataServicesTests
         var service = new CustomersService(context);
 
         var created = await service.CreateAsync(new CreateCustomerDto(
-            "Acme",
-            null,
-            null,
-            null,
-            null,
+            Name: "Acme",
+            AccountNumber: null,
+            ContactName: null,
+            Email: null,
+            Phone: null,
+            BillingPartyCustomerId: null,
             BillingAddressLine1: "100 Billing Rd",
             BillingCity: "Tulsa",
             BillingState: "OK",
             BillingPostalCode: "74101"));
         var updated = await service.UpdateAsync(created.Id, new UpdateCustomerDto(
-            "Acme Updated",
-            "A-123",
-            "Alex Manager",
-            "alex@example.com",
-            "555-0100",
-            "200 Billing Rd",
-            "Suite 2",
-            "Dallas",
-            "TX",
-            "75001"));
+            Name: "Acme Updated",
+            AccountNumber: "A-123",
+            ContactName: "Alex Manager",
+            Email: "alex@example.com",
+            Phone: "555-0100",
+            BillingPartyCustomerId: null,
+            BillingAddressLine1: "200 Billing Rd",
+            BillingAddressLine2: "Suite 2",
+            BillingCity: "Dallas",
+            BillingState: "TX",
+            BillingPostalCode: "75001"));
         var archived = await service.ArchiveAsync(created.Id);
         var listed = await service.ListAsync(new PagedQuery());
 
@@ -56,7 +58,7 @@ public sealed class MasterDataServicesTests
     {
         await using var context = CreateContext();
         var service = new CustomersService(context);
-        var created = await service.CreateAsync(new CreateCustomerDto("Reopen", null, null, null, null));
+        var created = await service.CreateAsync(new CreateCustomerDto("Reopen", null, null, null, null, null));
         await service.ArchiveAsync(created.Id);
 
         var unarchived = await service.UnarchiveAsync(created.Id);

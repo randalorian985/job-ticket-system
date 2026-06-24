@@ -55,7 +55,9 @@ public sealed class CustomerEntityConfiguration : IEntityTypeConfiguration<Custo
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
         builder.Property(x => x.AccountNumber).HasMaxLength(50);
         builder.Property(x => x.Email).HasMaxLength(320);
+        builder.HasOne(x => x.BillingPartyCustomer).WithMany().HasForeignKey(x => x.BillingPartyCustomerId).OnDelete(DeleteBehavior.NoAction);
         builder.HasIndex(x => x.AccountNumber).IsUnique().HasFilter("[AccountNumber] IS NOT NULL");
+        builder.HasIndex(x => x.BillingPartyCustomerId);
         builder.HasIndex(x => x.Name);
         builder.HasIndex(x => x.Status);
     }

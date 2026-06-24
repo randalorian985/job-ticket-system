@@ -468,6 +468,7 @@ export type CustomerDto = {
   contactName?: string | null
   email?: string | null
   phone?: string | null
+  billingPartyCustomerId?: string | null
   billingAddressLine1?: string | null
   billingAddressLine2?: string | null
   billingCity?: string | null
@@ -483,6 +484,7 @@ export type CreateCustomerDto = {
   contactName?: string | null
   email?: string | null
   phone?: string | null
+  billingPartyCustomerId?: string | null
   billingAddressLine1?: string | null
   billingAddressLine2?: string | null
   billingCity?: string | null

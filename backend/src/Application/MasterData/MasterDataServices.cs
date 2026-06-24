@@ -79,6 +79,7 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
     public async Task<CustomerDto> CreateAsync(CreateCustomerDto request, CancellationToken cancellationToken = default)
     {
         ValidationHelpers.ValidateRequired(request.Name, nameof(request.Name));
+        await EnsureCustomerExists(request.BillingPartyCustomerId, cancellationToken);
         var entity = new Customer
         {
             Name = request.Name.Trim(),
@@ -86,6 +87,7 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
             ContactName = ValidationHelpers.NullIfWhitespace(request.ContactName),
             Email = ValidationHelpers.NullIfWhitespace(request.Email),
             Phone = ValidationHelpers.NullIfWhitespace(request.Phone),
+            BillingPartyCustomerId = request.BillingPartyCustomerId,
             BillingAddressLine1 = ValidationHelpers.NullIfWhitespace(request.BillingAddressLine1),
             BillingAddressLine2 = ValidationHelpers.NullIfWhitespace(request.BillingAddressLine2),
             BillingCity = ValidationHelpers.NullIfWhitespace(request.BillingCity),
@@ -101,6 +103,7 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
     public async Task<CustomerDto?> UpdateAsync(Guid id, UpdateCustomerDto request, CancellationToken cancellationToken = default)
     {
         ValidationHelpers.ValidateRequired(request.Name, nameof(request.Name));
+        await EnsureCustomerExists(request.BillingPartyCustomerId, cancellationToken);
         var entity = await dbContext.Customers.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
 
@@ -109,6 +112,7 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
         entity.ContactName = ValidationHelpers.NullIfWhitespace(request.ContactName);
         entity.Email = ValidationHelpers.NullIfWhitespace(request.Email);
         entity.Phone = ValidationHelpers.NullIfWhitespace(request.Phone);
+        entity.BillingPartyCustomerId = request.BillingPartyCustomerId;
         entity.BillingAddressLine1 = ValidationHelpers.NullIfWhitespace(request.BillingAddressLine1);
         entity.BillingAddressLine2 = ValidationHelpers.NullIfWhitespace(request.BillingAddressLine2);
         entity.BillingCity = ValidationHelpers.NullIfWhitespace(request.BillingCity);
@@ -140,8 +144,15 @@ public sealed class CustomersService(ApplicationDbContext dbContext) : ICustomer
         return true;
     }
 
+    private async Task EnsureCustomerExists(Guid? customerId, CancellationToken cancellationToken)
+    {
+        if (!customerId.HasValue) return;
+        var exists = await dbContext.Customers.IgnoreQueryFilters().AnyAsync(x => x.Id == customerId.Value, cancellationToken);
+        if (!exists) throw new ValidationException("BillingPartyCustomerId does not reference a customer.");
+    }
+
     private static readonly System.Linq.Expressions.Expression<Func<Customer, CustomerDto>> Map = x => new CustomerDto(
-        x.Id, x.Name, x.AccountNumber, x.ContactName, x.Email, x.Phone, x.IsDeleted,
+        x.Id, x.Name, x.AccountNumber, x.ContactName, x.Email, x.Phone, x.IsDeleted, x.BillingPartyCustomerId,
         x.BillingAddressLine1, x.BillingAddressLine2, x.BillingCity, x.BillingState, x.BillingPostalCode);
 }
 
@@ -562,6 +573,7 @@ public sealed record CustomerDto(
     string? Email,
     string? Phone,
     bool IsArchived,
+    Guid? BillingPartyCustomerId = null,
     string? BillingAddressLine1 = null,
     string? BillingAddressLine2 = null,
     string? BillingCity = null,
@@ -574,6 +586,7 @@ public sealed record CreateCustomerDto(
     string? ContactName,
     string? Email,
     string? Phone,
+    Guid? BillingPartyCustomerId = null,
     string? BillingAddressLine1 = null,
     string? BillingAddressLine2 = null,
     string? BillingCity = null,
@@ -586,6 +599,7 @@ public sealed record UpdateCustomerDto(
     string? ContactName,
     string? Email,
     string? Phone,
+    Guid? BillingPartyCustomerId = null,
     string? BillingAddressLine1 = null,
     string? BillingAddressLine2 = null,
     string? BillingCity = null,

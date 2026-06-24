@@ -319,10 +319,10 @@ public sealed class AuthIntegrationTests
         var managerList = await managerClient.GetAsync("/api/customers?includeArchived=true");
         Assert.Equal(HttpStatusCode.OK, managerList.StatusCode);
 
-        var invalidCreate = await managerClient.PostAsJsonAsync("/api/customers", new CreateCustomerDto("", null, null, null, null));
+        var invalidCreate = await managerClient.PostAsJsonAsync("/api/customers", new CreateCustomerDto("", null, null, null, null, null));
         Assert.Equal(HttpStatusCode.BadRequest, invalidCreate.StatusCode);
 
-        var created = await managerClient.PostAsJsonAsync("/api/customers", new CreateCustomerDto("Master Data Customer", "M-1", null, null, null));
+        var created = await managerClient.PostAsJsonAsync("/api/customers", new CreateCustomerDto("Master Data Customer", "M-1", null, null, null, null));
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         var customer = await created.Content.ReadFromJsonAsync<CustomerDto>();
         Assert.NotNull(customer);

@@ -268,7 +268,7 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
       <JobTicketEditorForm
         initial={{ ...baseTicket, customerId: '', serviceLocationId: '', billingPartyCustomerId: '', equipmentId: null }}
         customers={[
-          { id: 'c1', name: 'Acme' },
+          { id: 'c1', name: 'Acme', billingPartyCustomerId: 'c2' },
           { id: 'c2', name: 'Separate Billing Co' },
           { id: 'c3', name: 'Northwind' }
         ] as any}
@@ -282,8 +282,8 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     openEditSection('Customer & Service Equipment')
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c1' } })
 
-    expect(screen.getByLabelText('Billing Party')).toHaveValue('c1')
-    expect(screen.getByText('Billing party is the selected customer.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Billing Party')).toHaveValue('c2')
+    expect(screen.getByText('Billing party is separate from the customer and job site.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Billing Party'), { target: { value: 'c2' } })
     expect(screen.getByText('Billing party is separate from the customer and job site.')).toBeInTheDocument()

@@ -58,6 +58,8 @@ public sealed class Customer : SoftDeletableEntity
     public string? ContactName { get; set; }
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public Guid? BillingPartyCustomerId { get; set; }
+    public Customer? BillingPartyCustomer { get; set; }
     public string? BillingAddressLine1 { get; set; }
     public string? BillingAddressLine2 { get; set; }
     public string? BillingCity { get; set; }
