@@ -45,6 +45,14 @@ Refresh these wiki assets from the approved preview environment or from the VPS 
 	- `frontend/public/docs/assets/system-wiki/*.png`
 - Capture credentials used pilot/demo accounts only.
 
+## June 24, 2026 Create-Ticket Assignment Screenshot Note
+
+- Refreshed the Create Job Ticket Schedule-step screenshot with a full-width Chrome capture (1920px).
+- New asset added in both wiki paths:
+	- `docs/assets/system-wiki/create-job-ticket-schedule-assignment.png`
+	- `frontend/public/docs/assets/system-wiki/create-job-ticket-schedule-assignment.png`
+- The image shows optional technician assignment in Schedule, including selected technician summary and lead indicator.
+
 ## Guardrails
 
 - Capture screenshots with demo or pilot data only.

@@ -436,6 +436,9 @@ Ticket creation now has a guided in-form path:
 - Review and create.
 
 The wizard stays on the same screen and jumps the user to the relevant form section. It does not change the backend ticket workflow or create a separate approval path.
+The **Schedule** section now includes optional technician assignment so Managers/Admins can choose lead and additional techs during ticket creation, then adjust later in the ticket workspace if needed.
+
+![Create ticket schedule with optional technician assignment](assets/system-wiki/create-job-ticket-schedule-assignment.png)
 
 The ticket form includes copy helpers to reduce duplicate typing:
 - **Use customer address** copies customer billing address/contact details into a new job location;
@@ -497,7 +500,8 @@ This view is intended to answer "what needs attention?" before asking the user t
 
 Use each area for one clear purpose:
 - use **Job Tickets** to create, find, assign, schedule, and edit work records;
-- use the ticket workspace's **Assignment & Schedule** tab for assigned technicians, lead tech, schedule, due date, and assignment warnings;
+- use the create-ticket **Schedule / assign tech** step for optional initial assignment when opening new work;
+- use the ticket workspace's **Assignment & Schedule** tab for ongoing assignment, lead tech, schedule, due date, and assignment warnings;
 - use the ticket workspace for scope, labor, parts, files, notes, status changes, and closeout review;
 - use **Reports** for billing-ready and invoice review.
 
@@ -1208,7 +1212,7 @@ Manager/Admin ticket workspace refreshes, Employee mobile post-action refreshes,
 2. Review the quiet operations summary.
 3. Open Job Tickets and choose **Compact list** for fast scanning or **Rich cards** for deeper readiness review.
 4. Use Quick Views for Active tickets, Waiting, Missing due, Unassigned, Needs review, and Ready to work.
-5. Open the ticket workspace and use **Assignment & Schedule** to assign technicians, mark the lead tech, and set schedule and due dates.
+5. During create, use **Schedule / assign tech** for optional initial assignment, then use ticket-workspace **Assignment & Schedule** for updates.
 6. Confirm the crane/equipment being serviced or describe component-only work in the ticket scope.
 7. Review completed work in the ticket workspace.
 8. Review tickets waiting on parts.
@@ -1294,8 +1298,8 @@ Use this checklist when introducing the system to a client team.
 - Use the dashboard.
 - Use Job Tickets as the main operating screen.
 - Use quick views without letting the page become a wall of shortcuts.
-- Confirm the service equipment, then assign technicians and the lead tech in the ticket workspace.
-- Set scheduled start and due dates on the ticket.
+- Confirm the service equipment, then set schedule and optional lead/additional technicians during ticket creation.
+- Use ticket-workspace **Assignment & Schedule** when assignment or dates need updates after create.
 - Review completed tickets in the ticket workspace and billing-ready work in Reports.
 - Filter job-ticket queues.
 - Create a job ticket.
