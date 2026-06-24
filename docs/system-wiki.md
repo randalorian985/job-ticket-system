@@ -37,7 +37,7 @@ For live training, use the [Client Training Checklist](#client-training-checklis
 The screenshots below appear again in the workflow sections where they are most relevant:
 
 Last refresh: June 24, 2026 using full-size Chrome captures from the live VPS
-demo environment with pilot/demo accounts.
+demo environment with pilot/demo accounts (including a refreshed Time Approval capture after queue clarity updates).
 | Screen | Screenshot |
 | --- | --- |
 | Login | [login.png](assets/system-wiki/login.png) |
@@ -774,18 +774,31 @@ The Time Approval screen is queue-first.
 
 It loads pending entries by default.
 
+The screen order is intentional:
+- filter first;
+- review the compact queue summary;
+- select pending rows;
+- then use queue actions.
+
 Managers/Admins can filter by:
 - date range;
 - employee name;
 - approval status;
 - broad job/customer/site/location search.
 
+Queue summary highlights:
+- pending entries;
+- labor and billable hours;
+- currently selected row count.
+
 Managers/Admins can:
 - review entry context;
+- review a selected entry in detail;
 - approve eligible completed pending entries;
 - reject entries with a reason;
 - edit and approve with an audit reason;
-- bulk approve eligible completed pending entries.
+- bulk approve eligible completed pending entries;
+- export the currently visible filtered rows to CSV.
 
 Manager edits reuse audit-safe adjustment behavior.
 
