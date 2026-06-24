@@ -652,7 +652,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    fireEvent.click(screen.getByText('Print Job Review'))
+    fireEvent.click(screen.getByText('Print Review'))
 
     expect(window.print).toHaveBeenCalled()
   })

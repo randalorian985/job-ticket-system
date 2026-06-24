@@ -154,7 +154,7 @@ describe('ReportsPage', () => {
     expect(screen.getByRole('heading', { name: 'Reports' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'report preview' })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'report catalog' })).toBeInTheDocument()
-    expect(screen.getByText(/Labor totals are labeled as time-entry labor-rate snapshot values/i)).toBeInTheDocument()
+    expect(screen.getByText(/Run reports from this panel, then export CSV or PDF after rows load/i)).toBeInTheDocument()
     expect(screen.queryByText('Report group')).not.toBeInTheDocument()
     expect(screen.queryByText(/3 reports/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/2 reports/i)).not.toBeInTheDocument()
@@ -195,7 +195,7 @@ describe('ReportsPage', () => {
 
     const laborByJobCard = screen.getByLabelText('Labor by Job report')
     expect(await within(laborByJobCard).findByRole('option', { name: 'Taylor Technician' })).toBeInTheDocument()
-    fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+    fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job customer filter'), { target: { value: 'customer-1' } })
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job service location filter'), { target: { value: 'location-1' } })
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job employee filter'), { target: { value: 'emp-7' } })
@@ -205,9 +205,10 @@ describe('ReportsPage', () => {
     expect(await screen.findByRole('link', { name: 'JT-2026-000123' })).toHaveAttribute('href', '/manage/job-tickets/job-1')
     expect(screen.getByRole('button', { name: 'Back to report catalog' })).toBeInTheDocument()
     expect(screen.getByText('Labor by Job loaded with 1 visible row.')).toBeInTheDocument()
-    expect(screen.getByLabelText('generated report metadata')).toHaveTextContent(/Rows\s*1\s*Columns\s*7\s*Generated/)
+    expect(screen.getByLabelText('generated report metadata')).toHaveTextContent(/Generated\s*.*Rows\s*1/)
+    expect(screen.queryByText('Columns')).not.toBeInTheDocument()
     expect(screen.getByText('Labor by Job results table with 1 visible row.')).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Labor Billable (time-entry labor-rate snapshot)' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Labor Billable' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '$300.00' })).toBeInTheDocument()
     expect(screen.getByLabelText('report company header')).toHaveTextContent('Mudbug Digital')
     expect(screen.getByAltText('Mudbug Digital logo')).toHaveAttribute('src', '/branding/mudbug-logo.png')
@@ -236,7 +237,7 @@ describe('ReportsPage', () => {
     expect(csv).toContain('Report,Labor by Job')
     expect(csv).toContain('Applied scope,Customer: Acme Service (ACME) | Service location: Acme Service - Plant 4 | Employee: Taylor Technician | Limit: 75')
     expect(csv).toContain('Visible rows,1')
-    expect(csv).toContain('Labor Billable (time-entry labor-rate snapshot)')
+    expect(csv).toContain('Labor Billable')
     expect(csv).toContain('JT-2026-000123,Acme Service,2.5,125,300,2026-05-01,2026-05-02')
     expect(csv).not.toContain('$300.00')
     await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledWith({
@@ -340,8 +341,8 @@ describe('ReportsPage', () => {
     const jobsReadyCard = screen.getByLabelText('Jobs Ready to Invoice report')
     const laborByJobCard = screen.getByLabelText('Labor by Job report')
 
-    fireEvent.click(within(jobsReadyCard).getByText('Optional filters'))
-    fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+    fireEvent.click(within(jobsReadyCard).getByText('Show optional filters'))
+    fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
 
     const jobsReadyCustomer = within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice customer filter')
     const laborByJobCustomer = within(laborByJobCard).getByLabelText('Labor by Job customer filter')
@@ -368,7 +369,7 @@ describe('ReportsPage', () => {
     expect(await within(costCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
 
     fireEvent.change(within(costCard).getByLabelText('Job Cost Summary job ticket'), { target: { value: 'job-invoice-1' } })
-    fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+    fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job limit filter'), { target: { value: '75' } })
     await waitFor(() => expect(localStorage.length).toBeGreaterThan(0))
 
@@ -379,7 +380,7 @@ describe('ReportsPage', () => {
     const restoredLaborByJobCard = screen.getByLabelText('Labor by Job report')
     expect(await within(restoredCostCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
     expect(within(restoredCostCard).getByLabelText('Job Cost Summary job ticket')).toHaveValue('job-invoice-1')
-    fireEvent.click(within(restoredLaborByJobCard).getByText('Optional filters'))
+    fireEvent.click(within(restoredLaborByJobCard).getByText('Show optional filters'))
     expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(75)
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
@@ -392,7 +393,7 @@ describe('ReportsPage', () => {
     renderWithRouter(<ReportsPage />)
 
     const laborByJobCard = screen.getByLabelText('Labor by Job report')
-    fireEvent.click(within(laborByJobCard).getByText('Optional filters'))
+    fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job from date filter'), { target: { value: '2026-05-10' } })
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job to date filter'), { target: { value: '2026-05-01' } })
     fireEvent.click(within(laborByJobCard).getByRole('button', { name: 'Run Labor by Job' }))
@@ -439,7 +440,7 @@ describe('ReportsPage', () => {
 
     expect(await screen.findByRole('table', { name: 'Invoice-ready Summary results' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'JT-READY' })).toHaveAttribute('href', '/manage/job-tickets/job-invoice-1')
-    expect(screen.getByRole('columnheader', { name: 'Labor Billable (time-entry labor-rate snapshot)' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Labor Billable' })).toBeInTheDocument()
     expect(screen.getByText('$372.00')).toBeInTheDocument()
     expect(reportsApi.getInvoiceReadySummary).toHaveBeenCalledWith('job-invoice-1')
 

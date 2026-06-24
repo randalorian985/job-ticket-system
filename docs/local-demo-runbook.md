@@ -208,7 +208,7 @@ Use this path after backend, frontend preview, and seed data are running:
 15. Select a request, match it to a catalog part if appropriate, update status/internal notes/cost/billable price/billable state, and save.
 16. Open Purchasing from the Manager/Admin navigation and confirm the existing baseline page renders; Inventory is intentionally hidden until that workflow is completed. Do not use this walkthrough to validate new purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory, replenishment, recommendations, or AI/scoring.
 17. Open reports and confirm `PILOT-READY-001` appears in invoice-ready or cost summary reporting.
-14. Optional Admin check: sign in as `pilot.admin` and confirm `/manage/users` is available.
+18. Optional Admin check: sign in as `pilot.admin` and confirm `/manage/users` is available.
 
 Automated backend validation for the representative seed path is covered by `PilotDemoSeedTests`:
 

@@ -208,7 +208,9 @@ export function SystemWikiPage() {
         </div>
         <div className="row system-wiki-actions">
           <a className="button-link secondary-link" href={wikiPath} target="_blank" rel="noreferrer">Open markdown</a>
-          <button className="secondary-button" type="button" onClick={() => window.print()}>Print / Save PDF</button>
+          <button className="secondary-button" type="button" onClick={() => window.print()} title="Open the browser print dialog for the wiki.">
+            Print Wiki Page
+          </button>
         </div>
       </header>
 

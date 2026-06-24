@@ -64,6 +64,9 @@ export function downloadReportPdf<T>({
   doc.setTextColor(11, 18, 32)
   doc.setFontSize(20)
   const companyBlockHeight = 14 + (companyDetailLines.length * 11)
+    const isWideTable = columns.length > 8
+    const tableFontSize = isWideTable ? 7 : 8
+    const cellPadding = isWideTable ? 3 : 4
   doc.text(titleLines, margin, 52 + companyBlockHeight)
 
   const titleHeight = titleLines.length * 18
@@ -115,15 +118,17 @@ export function downloadReportPdf<T>({
   autoTable(doc, {
     startY: tableStartY,
     margin: { left: margin, right: margin },
+    tableWidth: 'auto',
     head: [columns.map((column) => column.header)],
     body: rows.map((row) => columns.map((column) => formatCellValue(column.value(row)))),
     styles: {
       font: 'helvetica',
-      fontSize: 8,
-      cellPadding: 4,
+      fontSize: tableFontSize,
+      cellPadding,
       lineColor: [209, 213, 219],
       lineWidth: 0.5,
       textColor: [17, 24, 39],
+      overflow: 'linebreak',
       valign: 'top'
     },
     headStyles: {
@@ -134,8 +139,9 @@ export function downloadReportPdf<T>({
     alternateRowStyles: {
       fillColor: [248, 250, 252]
     },
-    columnStyles: columns.reduce<Record<number, { halign?: 'left' | 'right' }>>((styles, column, index) => {
-      if (column.align === 'number') styles[index] = { halign: 'right' }
+    columnStyles: columns.reduce<Record<number, { halign?: 'left' | 'right', cellWidth?: number }>>((styles, column, index) => {
+      if (column.align === 'number') styles[index] = { halign: 'right', cellWidth: isWideTable ? 70 : 80 }
+      else if (index === 0) styles[index] = { cellWidth: isWideTable ? 96 : 120 }
       return styles
     }, {}),
     didDrawPage: (data) => {

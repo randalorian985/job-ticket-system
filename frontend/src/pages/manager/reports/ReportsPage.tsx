@@ -229,7 +229,7 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Job Status', value: (row: InvoiceReadySummaryDto) => getJobStatusLabel(row.jobStatus) },
     { header: 'Invoice Status', value: (row: InvoiceReadySummaryDto) => getInvoiceStatusLabel(row.invoiceStatus) },
     { header: 'Approved Labor Hours', value: (row: InvoiceReadySummaryDto) => row.laborHours, render: (row) => hours(row.laborHours), align: 'number' },
-    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: InvoiceReadySummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Billable', value: (row: InvoiceReadySummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Parts Billable', value: (row: InvoiceReadySummaryDto) => row.partsBillableTotal, render: (row) => money(row.partsBillableTotal), align: 'number' },
     { header: 'Tax', value: (row: InvoiceReadySummaryDto) => row.tax, render: (row) => money(row.tax), align: 'number' },
     { header: 'Grand Total', value: (row: InvoiceReadySummaryDto) => row.grandTotal, render: (row) => money(row.grandTotal), align: 'number' }
@@ -237,8 +237,8 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
   jobCost: [
     { header: 'Job Ticket', value: (row: JobCostSummaryDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
     { header: 'Approved Labor Hours', value: (row: JobCostSummaryDto) => row.laborHours, render: (row) => hours(row.laborHours), align: 'number' },
-    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: JobCostSummaryDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: JobCostSummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost', value: (row: JobCostSummaryDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable', value: (row: JobCostSummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Parts Cost', value: (row: JobCostSummaryDto) => row.partsCostTotal, render: (row) => money(row.partsCostTotal), align: 'number' },
     { header: 'Parts Billable', value: (row: JobCostSummaryDto) => row.partsBillableTotal, render: (row) => money(row.partsBillableTotal), align: 'number' },
     { header: 'Grand Total', value: (row: JobCostSummaryDto) => row.grandTotal, render: (row) => money(row.grandTotal), align: 'number' }
@@ -259,16 +259,16 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Job Ticket', value: (row: LaborByJobDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
     { header: 'Customer', value: (row: LaborByJobDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
     { header: 'Approved Labor Hours', value: (row: LaborByJobDto) => row.approvedLaborHours, render: (row) => hours(row.approvedLaborHours), align: 'number' },
-    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: LaborByJobDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: LaborByJobDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost', value: (row: LaborByJobDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable', value: (row: LaborByJobDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Created (UTC)', value: (row: LaborByJobDto) => dateForExport(row.createdAtUtc), render: (row) => dateUtc(row.createdAtUtc) },
     { header: 'Completed (UTC)', value: (row: LaborByJobDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ],
   laborEmployee: [
     { header: 'Employee', value: (row: LaborByEmployeeDto) => row.employeeName },
     { header: 'Approved Labor Hours', value: (row: LaborByEmployeeDto) => row.approvedLaborHours, render: (row) => hours(row.approvedLaborHours), align: 'number' },
-    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: LaborByEmployeeDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: LaborByEmployeeDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost', value: (row: LaborByEmployeeDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable', value: (row: LaborByEmployeeDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Job Count', value: (row: LaborByEmployeeDto) => row.jobCount, align: 'number' }
   ],
   partsJob: [
@@ -365,7 +365,7 @@ const buildFilterSummary = (
   return summary.length
     ? summary.join(' | ')
     : reportFilterFields[mode].length
-      ? 'No optional filters are active. Results reflect the default visible window of loaded rows.'
+      ? 'No filters are active. Showing the default 50-row window.'
       : 'This report is scoped to the selected source record.'
 }
 
@@ -392,8 +392,7 @@ const reportCsvWithMetadata = (
     ['Report', title],
     ['Generated', generatedAt ?? ''],
     ['Applied scope', filterSummary],
-    ['Visible rows', rows.length],
-    ['Columns', columns.length]
+    ['Visible rows', rows.length]
   ].map((row) => row.map((value) => escapeCsvValue(value)).join(','))
 
   return [...metadataRows, '', toCsv(rows, columns)].join('\n')
@@ -861,14 +860,14 @@ export function ReportsPage() {
     if (fields.includes('employee')) {
       controls.push(
         <label key="employee">
-          Technician
+          Employee
           <select
             aria-label={`${titleForMode} employee filter`}
             value={filters.employeeId ?? ''}
             onChange={(event) => updateFilters(reportMode, { employeeId: event.target.value || undefined })}
             disabled={referenceLoading}
           >
-            <option value="">Any technician</option>
+            <option value="">Any employee</option>
             {employees.map((employee) => (
               <option key={employee.id} value={employee.id}>{employee.firstName} {employee.lastName}</option>
             ))}
@@ -943,7 +942,7 @@ export function ReportsPage() {
 
     return (
       <details className="report-filter-details">
-        <summary>Optional filters</summary>
+        <summary>Show optional filters</summary>
         <div className="report-inline-filters">
           {controls}
         </div>
@@ -967,14 +966,9 @@ export function ReportsPage() {
             <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
           </div>
         </div>
-        <div className="report-hero-metrics" aria-label="report hub summary">
-          <div><span>Report types</span><strong>{Object.keys(reportTitleMap).length}</strong></div>
-          <div><span>Groups</span><strong>{reportSections.length}</strong></div>
-          <div><span>Output</span><strong>CSV / PDF</strong></div>
-        </div>
         <div className="report-note-panel">
           <strong>Labor totals</strong>
-          <span>Labor totals are labeled as time-entry labor-rate snapshot values. The implemented API uses captured time-entry cost and bill rates first, then falls back only for legacy entries without snapshots.</span>
+          <span>Run reports from this panel, then export CSV or PDF after rows load. Labor totals use rate snapshots first, with captured costs and bill rates used before legacy fallbacks.</span>
         </div>
         {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
@@ -1021,45 +1015,6 @@ export function ReportsPage() {
           </div>
         </div>
         {mode ? (
-          <div className="report-print-heading">
-            <div className="report-print-heading-main">
-              <p className="report-print-brand">{reportBrandName}</p>
-              <h2>{title}</h2>
-              <p className="report-print-subtitle">{reportDescriptions[mode]}</p>
-            </div>
-            <div className="report-print-summary" aria-label="report print summary">
-              <div>
-                <span>Generated</span>
-                <strong>{generatedAt ?? 'Pending'}</strong>
-              </div>
-              <div>
-                <span>Rows</span>
-                <strong>{rows.length}</strong>
-              </div>
-              <div>
-                <span>Columns</span>
-                <strong>{columns.length}</strong>
-              </div>
-            </div>
-          </div>
-        ) : null}
-        {mode ? (
-          <div className="report-result-meta" aria-label="generated report metadata">
-            <div>
-              <span>Rows</span>
-              <strong>{rows.length}</strong>
-            </div>
-            <div>
-              <span>Columns</span>
-              <strong>{columns.length}</strong>
-            </div>
-            <div>
-              <span>Generated</span>
-              <strong>{generatedAt ?? 'Pending'}</strong>
-            </div>
-          </div>
-        ) : null}
-        {mode ? (
           <div className="report-document-head">
             <div className="report-company-branding" aria-label="report company header">
               {companyLogoUrl ? (
@@ -1072,10 +1027,22 @@ export function ReportsPage() {
                 {companyReportDetails.length ? <span>{companyReportDetails.join(' | ')}</span> : null}
               </div>
             </div>
-            <div className="report-print-heading" aria-label="print report title">
+            <div className="report-report-heading" aria-label="report summary">
               <p className="eyebrow">Manager/Admin Report</p>
               <h2>{title}</h2>
-              <p>{generatedAt ? `Generated ${generatedAt}` : 'Generated report preview'}</p>
+              <p className="report-print-subtitle">{reportDescriptions[mode]}</p>
+              <div className="report-report-metrics" aria-label="generated report metadata">
+                <div>
+                  <span>Generated</span>
+                  <strong>{generatedAt ?? 'Pending'}</strong>
+                </div>
+                <div>
+                  <span>Rows</span>
+                  <strong>{rows.length}</strong>
+                </div>
+                <div>
+                </div>
+              </div>
             </div>
           </div>
         ) : null}
@@ -1156,7 +1123,7 @@ export function ReportsPage() {
                 <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
                   <div className="report-card-top">
                     <h4>{reportTitleMap[reportMode]}</h4>
-                    <span>{reportFilterFields[reportMode].length ? 'Filterable' : 'Source required'}</span>
+                    <span>{reportFilterFields[reportMode].length ? 'Optional filters' : 'Choose source'}</span>
                   </div>
                   <div className="report-card-body">
                     <p className="muted">{reportDescriptions[reportMode]}</p>
