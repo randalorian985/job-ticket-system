@@ -1323,6 +1323,40 @@ tbody tr:hover td {
   -webkit-text-fill-color: #ffffff;
 }
 
+.ticket-create-step.ticket-create-step-active,
+.section-editor-nav button.section-editor-nav-active {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: var(--brand-contrast) !important;
+  -webkit-text-fill-color: var(--brand-contrast) !important;
+}
+
+.ticket-create-step.ticket-create-step-active:hover,
+.ticket-create-step.ticket-create-step-active:focus-visible,
+.section-editor-nav button.section-editor-nav-active:hover,
+.section-editor-nav button.section-editor-nav-active:focus-visible {
+  background: var(--brand-strong) !important;
+  border-color: var(--brand-strong) !important;
+  color: var(--brand-contrast) !important;
+  -webkit-text-fill-color: var(--brand-contrast) !important;
+}
+
+.ticket-create-step.ticket-create-step-active span,
+.ticket-create-step.ticket-create-step-active small,
+.ticket-create-step.ticket-create-step-active:hover span,
+.ticket-create-step.ticket-create-step-active:hover small,
+.ticket-create-step.ticket-create-step-active:focus-visible span,
+.ticket-create-step.ticket-create-step-active:focus-visible small,
+.section-editor-nav button.section-editor-nav-active span,
+.section-editor-nav button.section-editor-nav-active small,
+.section-editor-nav button.section-editor-nav-active:hover span,
+.section-editor-nav button.section-editor-nav-active:hover small,
+.section-editor-nav button.section-editor-nav-active:focus-visible span,
+.section-editor-nav button.section-editor-nav-active:focus-visible small {
+  color: var(--brand-contrast) !important;
+  -webkit-text-fill-color: var(--brand-contrast) !important;
+}
+
 .ticket-recommended-action {
   border-radius: 7px;
 }
