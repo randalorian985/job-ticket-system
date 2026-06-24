@@ -22,7 +22,7 @@ function Write-Step {
 
 function Invoke-Git {
 	param([string[]]$Arguments)
-	$output = & git @Arguments 2>&1
+	$output = & git @Arguments
 	if ($LASTEXITCODE -ne 0) {
 	throw "git $($Arguments -join ' ') failed.`n$output"
 	}
