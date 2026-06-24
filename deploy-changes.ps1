@@ -61,7 +61,7 @@ if ($localHead -ne $remoteHead) {
 
 Write-Step "Deploying on VPS"
 $remoteScript = @'
-set -euo pipefail
+set -eu
 
 cd /opt/job-ticket-system
 
