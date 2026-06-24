@@ -49,6 +49,13 @@ export function PartRequestsPage() {
     [visibleRequests, selectedId]
   )
 
+  const focusSummaryLabel =
+    focusFilter === 'pending'
+      ? 'Reviewing pending requests only.'
+      : focusFilter === 'unlisted'
+        ? 'Reviewing requests without catalog matches.'
+        : 'Reviewing all visible part requests.'
+
   const load = async () => {
     setIsLoading(true)
     try {
@@ -143,23 +150,28 @@ export function PartRequestsPage() {
   }
 
   return (
-    <section className="stack">
+    <section className="stack parts-request-page">
       <article className="card stack">
         <div className="review-heading">
           <div>
             <h2>Parts Request Queue</h2>
             <p className="muted">Optional back-office review workflow for ticket parts marked Needs ordered.</p>
           </div>
-          <p className="muted">{openRequests.length} pending · {unlistedRequests.length} unlisted · {requests.length} visible</p>
+          <div className="parts-request-summary-badges" aria-label="queue summary">
+            <span>{openRequests.length} pending</span>
+            <span>{unlistedRequests.length} unlisted</span>
+            <span>{requests.length} visible</span>
+          </div>
         </div>
-        <div className="parts-workflow-panel" aria-label="parts queue focus">
+        <div className="parts-workflow-panel parts-request-focus-panel" aria-label="parts queue focus">
           <div className="parts-workflow-chips" role="group" aria-label="parts request focus filters">
             <button type="button" className={focusFilter === 'all' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setFocusFilter('all')}>All requests ({requests.length})</button>
             <button type="button" className={focusFilter === 'pending' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setFocusFilter('pending')}>Pending only ({openRequests.length})</button>
             <button type="button" className={focusFilter === 'unlisted' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setFocusFilter('unlisted')}>Unlisted only ({unlistedRequests.length})</button>
           </div>
+          <p className="muted parts-request-focus-note">{focusSummaryLabel}</p>
         </div>
-        <form onSubmit={onFilterSubmit} className="review-grid" aria-label="parts request queue filters">
+        <form onSubmit={onFilterSubmit} className="review-grid parts-request-filter-grid" aria-label="parts request queue filters">
           <label>
             Job ticket
             <JobTicketCombobox
@@ -183,26 +195,32 @@ export function PartRequestsPage() {
               ))}
             </select>
           </label>
-          <button type="submit" disabled={isLoading}>Apply Filters</button>
+          <div className="parts-request-filter-actions">
+            <button type="submit" disabled={isLoading}>Apply Filters</button>
+            <p className="muted">Tip: Start with pending requests, then switch to unlisted to finish catalog matching.</p>
+          </div>
         </form>
         {isLoading ? <p className="muted" role="status">Loading part requests...</p> : null}
         {error ? <p className="error">{error}</p> : null}
         {message ? <p>{message}</p> : null}
       </article>
 
-      <div className="manager-workspace-grid">
-        <article className="card stack">
+      <div className="manager-workspace-grid parts-request-workspace">
+        <article className="card stack parts-request-queue-card">
           <h3>Requests Awaiting Review</h3>
           {visibleRequests.length ? (
             <ul className="supply-queue-list">
               {visibleRequests.map((request) => (
-                <li key={request.id} className="supply-queue-list-item">
+                <li
+                  key={request.id}
+                  className={selectedRequest?.id === request.id ? 'supply-queue-list-item supply-queue-list-item-selected' : 'supply-queue-list-item'}
+                >
                   <button
                     type="button"
-                    className={selectedRequest?.id === request.id ? 'secondary-button active-nav-link supply-queue-button' : 'secondary-button supply-queue-button'}
+                    className="secondary-button supply-queue-button"
                     onClick={() => setSelectedId(request.id)}
                   >
-                    <span>{request.jobTicketNumber} · {request.partName}</span>
+                    <span className="supply-queue-title">{request.jobTicketNumber} · {request.partName}</span>
                     <span className="supply-queue-status">{getApprovalLabel(request.status)}</span>
                   </button>
                   <div className="muted supply-queue-meta">Qty {request.quantity} · Needs ordered · Requested {formatDate(request.requestedAtUtc)}</div>
@@ -214,11 +232,11 @@ export function PartRequestsPage() {
           )}
         </article>
 
-        <article className="card stack">
+        <article className="card stack parts-request-detail-card">
           <h3>Selected Part Request</h3>
           {selectedRequest ? (
             <>
-              <div className="review-grid">
+              <div className="review-grid parts-request-context-grid">
                 <div>
                   <span className="muted">Ticket</span>
                   <strong>{selectedRequest.jobTicketNumber}</strong>
@@ -284,7 +302,10 @@ export function PartRequestsPage() {
                   <input type="checkbox" checked={isBillable} onChange={(event) => setIsBillable(event.target.checked)} />
                   Billable after back-office review
                 </label>
-                <button type="submit" disabled={isSaving}>{isSaving ? 'Saving request...' : 'Save Request Review'}</button>
+                <div className="parts-request-actions">
+                  <p className="muted">Save once details and status are aligned for purchasing or ticket-only handling.</p>
+                  <button type="submit" disabled={isSaving}>{isSaving ? 'Saving request...' : 'Save Request Review'}</button>
+                </div>
               </form>
             </>
           ) : (

@@ -1965,6 +1965,145 @@ td {
   vertical-align: top;
 }
 
+.parts-request-page .review-heading {
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.parts-request-summary-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.parts-request-summary-badges span {
+  background: #eef4ff;
+  border: 1px solid #d2def7;
+  border-radius: 999px;
+  color: #243f85;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.3rem 0.6rem;
+}
+
+.parts-request-focus-panel {
+  align-items: stretch;
+  display: grid;
+  gap: 0.55rem;
+  justify-content: stretch;
+}
+
+.parts-request-focus-note {
+  margin: 0;
+}
+
+.parts-request-filter-grid {
+  align-items: end;
+}
+
+.parts-request-filter-actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.parts-request-filter-actions p {
+  margin: 0;
+}
+
+.parts-request-workspace {
+  align-items: start;
+}
+
+.parts-request-queue-card,
+.parts-request-detail-card {
+  min-width: 0;
+}
+
+.parts-request-queue-card .supply-queue-list {
+  max-height: 60vh;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.supply-queue-list-item {
+  background: #ffffff;
+  border: 1px solid #d7e1ef;
+  border-radius: 10px;
+  padding: 0.5rem;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.supply-queue-list-item:hover {
+  border-color: #b8c9e8;
+  box-shadow: 0 8px 18px rgba(30, 48, 96, 0.08);
+  transform: translateY(-1px);
+}
+
+.supply-queue-list-item-selected {
+  border-color: #5a79da;
+  box-shadow: 0 0 0 2px rgba(90, 121, 218, 0.2);
+}
+
+.supply-queue-button.secondary-button {
+  align-items: center;
+  background: #f8faff;
+  border: 1px solid #d7e3f7;
+  color: #1f2b45;
+  display: flex;
+  gap: 0.55rem;
+  justify-content: space-between;
+  text-align: left;
+  width: 100%;
+}
+
+.supply-queue-button.secondary-button:hover:not(:disabled) {
+  background: #eef4ff;
+  border-color: #bdcdee;
+}
+
+.supply-queue-title {
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.supply-queue-status {
+  background: #eaf0ff;
+  border: 1px solid #ccd9f8;
+  border-radius: 999px;
+  color: #24418a;
+  font-size: 0.74rem;
+  font-weight: 900;
+  padding: 0.22rem 0.55rem;
+  white-space: nowrap;
+}
+
+.supply-queue-meta {
+  margin-top: 0.35rem;
+  padding: 0 0.2rem;
+}
+
+.parts-request-context-grid > div {
+  background: #fbfdff;
+  border-color: #d8e4f8;
+}
+
+.parts-request-actions {
+  align-items: center;
+  background: #f7faff;
+  border: 1px solid #dbe6f6;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: space-between;
+  padding: 0.75rem;
+}
+
+.parts-request-actions p {
+  margin: 0;
+}
+
 @media (max-width: 720px) {
   .desktop-shell,
   .mobile-shell {
@@ -2036,6 +2175,23 @@ td {
   button,
   .button-link {
     min-height: 2.75rem;
+  }
+
+  .parts-request-summary-badges {
+    justify-content: flex-start;
+  }
+
+  .parts-request-queue-card .supply-queue-list {
+    max-height: none;
+  }
+
+  .parts-request-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .parts-request-actions button {
+    width: 100%;
   }
 }
 
