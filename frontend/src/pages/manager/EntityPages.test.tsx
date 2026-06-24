@@ -484,11 +484,11 @@ describe('PartsPage', () => {
     expect(await screen.findByText(/FLT-1/)).toBeInTheDocument()
     expect(screen.getByText('Showing 2 of 2 loaded parts.')).toBeInTheDocument()
     const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
-    fireEvent.change(within(partsCard).getByLabelText('Category'), { target: { value: 'pc2' } })
+    fireEvent.change(within(partsCard).getByLabelText('Part category filter'), { target: { value: 'pc2' } })
     expect(screen.queryByText(/FLT-1/)).not.toBeInTheDocument()
     expect(screen.getByText(/BLT-2/)).toBeInTheDocument()
     expect(screen.getByText('Showing 1 of 2 loaded parts.')).toBeInTheDocument()
-    fireEvent.change(within(partsCard).getByLabelText('Vendor'), { target: { value: 'v1' } })
+    fireEvent.change(within(partsCard).getByLabelText('Part vendor filter'), { target: { value: 'v1' } })
     expect(screen.getByText('No parts match the current filters.')).toBeInTheDocument()
     fireEvent.click(within(partsCard).getByRole('button', { name: 'Reset filters' }))
     expect(screen.getByText('Showing 2 of 2 loaded parts.')).toBeInTheDocument()

@@ -250,33 +250,20 @@ export function PartRequestsPage() {
                 <div>
                   <p className="parts-request-detail-eyebrow">Now reviewing</p>
                   <strong>{selectedRequest.partName}</strong>
-                  <span>{selectedRequest.jobTicketTitle}</span>
+                  <span>{selectedRequest.jobTicketNumber} · {selectedRequest.jobTicketTitle}</span>
                 </div>
                 <span className="parts-request-live-status">{selectedStatusLabel}</span>
               </div>
-              <p className="muted parts-request-guidance">{reviewGuidance}</p>
-              <div className="review-grid parts-request-context-grid">
-                <div>
-                  <span className="muted">Ticket</span>
-                  <strong>{selectedRequest.jobTicketNumber}</strong>
-                </div>
-                <div>
-                  <span className="muted">Job</span>
-                  <strong>{selectedRequest.jobTicketTitle}</strong>
-                </div>
-                <div>
-                  <span className="muted">Current Status</span>
-                  <strong>{getApprovalLabel(selectedRequest.status)}</strong>
-                </div>
-                <div>
-                  <span className="muted">Request Type</span>
-                  <strong>{selectedRequest.needsOrdered ? 'Needs ordered' : 'Ticket part only'}</strong>
-                </div>
-                <div>
-                  <span className="muted">Technician Notes</span>
-                  <strong>{selectedRequest.requestNotes ?? selectedRequest.notes ?? 'None'}</strong>
-                </div>
+              <div className="parts-request-review-strip" aria-label="selected request details">
+                <span><strong>Status</strong>{getApprovalLabel(selectedRequest.status)}</span>
+                <span><strong>Type</strong>{selectedRequest.needsOrdered ? 'Needs ordered' : 'Ticket part only'}</span>
+                <span><strong>Qty</strong>{selectedRequest.quantity}</span>
               </div>
+              <div className="parts-request-technician-note">
+                <span>Technician notes</span>
+                <p>{selectedRequest.requestNotes ?? selectedRequest.notes ?? 'None'}</p>
+              </div>
+              <p className="muted parts-request-guidance">{reviewGuidance}</p>
               <form onSubmit={onSubmit} className="stack" aria-label="parts request review form">
                 <section className="parts-request-form-section" aria-label="part matching section">
                   <h4>Part Matching</h4>

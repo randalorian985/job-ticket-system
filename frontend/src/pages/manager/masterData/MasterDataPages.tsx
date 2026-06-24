@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { masterDataApi } from '../../../api/masterDataApi'
 import type {
   CreateCustomerDto,
@@ -761,6 +761,7 @@ const partMatchesWorkflowFilter = (part: PartDto, workflowFilter: PartWorkflowFi
 export function PartsPage() {
   const [activeScreen, setActiveScreen] = useState<PartsWorkspaceScreen>('parts')
   const [editorOpen, setEditorOpen] = useState(true)
+  const activePartEditId = useRef<string | null>(null)
   const [parts, setParts] = useState<PartDto[]>([])
   const [vendors, setVendors] = useState<VendorDto[]>([])
   const [categories, setCategories] = useState<PartCategoryDto[]>([])
@@ -865,7 +866,7 @@ export function PartsPage() {
   const partVendorOptions = useMemo(() => activeOrSelected(vendors, [draft.vendorId]), [vendors, draft.vendorId])
 
   useEffect(() => {
-    if (!editId) {
+    if (!activePartEditId.current) {
       setDraft((current) => ({
         ...current,
         partCategoryId: activeFilterId(categories, partCategoryFilter),
@@ -875,14 +876,17 @@ export function PartsPage() {
   }, [partCategoryFilter, partVendorFilter, editId])
 
   const switchScreen = (screen: PartsWorkspaceScreen) => {
+    activePartEditId.current = null
     setActiveScreen(screen)
     setEditorOpen(false)
+    setEditId(null)
     setError(null)
     setSuccess(null)
   }
 
   const closeEditor = () => {
     setDraft(partDraftFromFilters(categories, partCategoryFilter, vendors, partVendorFilter))
+    activePartEditId.current = null
     setVendorDraft(emptyVendorDraft)
     setCategoryDraft(emptyPartCategoryDraft)
     setEditId(null)
@@ -912,6 +916,7 @@ export function PartsPage() {
       if (editId) await masterDataApi.updatePart(editId, draft)
       else await masterDataApi.createPart(draft)
       setDraft(partDraftFromFilters(categories, partCategoryFilter, vendors, partVendorFilter))
+      activePartEditId.current = null
       setEditId(null)
       await load()
       setEditorOpen(false)
@@ -1009,6 +1014,7 @@ export function PartsPage() {
               setSuccess(null)
               if (activeScreen === 'parts') {
                 setDraft(partDraftFromFilters(categories, partCategoryFilter, vendors, partVendorFilter))
+                activePartEditId.current = null
                 setEditId(null)
               } else if (activeScreen === 'vendors') {
                 setVendorDraft(emptyVendorDraft)
@@ -1069,8 +1075,8 @@ export function PartsPage() {
                 </label>
               </div>
               <MasterDataFilters label="parts" search={partSearch} searchPlaceholder="Search by part number, name, category, vendor, or description" archiveFilter={partArchiveFilter} onSearchChange={setPartSearch} onArchiveFilterChange={setPartArchiveFilter} onReset={() => { setPartSearch(''); setPartArchiveFilter('all'); setPartCategoryFilter(''); setPartVendorFilter(''); setPartWorkflowFilter('all'); setPartSortMode('workflow') }}>
-                <label>Category<select value={partCategoryFilter} onChange={(event) => setPartCategoryFilter(event.target.value)}><option value="">All categories</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
-                <label>Vendor<select value={partVendorFilter} onChange={(event) => setPartVendorFilter(event.target.value)}><option value="">All vendors</option>{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select></label>
+                <label>Category<select aria-label="Part category filter" value={partCategoryFilter} onChange={(event) => setPartCategoryFilter(event.target.value)}><option value="">All categories</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+                <label>Vendor<select aria-label="Part vendor filter" value={partVendorFilter} onChange={(event) => setPartVendorFilter(event.target.value)}><option value="">All vendors</option>{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select></label>
               </MasterDataFilters>
               <MasterDataListSummary loading={isLoading} totalCount={parts.length} filteredItems={filteredParts} noun="parts" />
               <MasterDataListState loading={isLoading} totalCount={parts.length} filteredCount={filteredParts.length} noun="parts" />
@@ -1089,7 +1095,7 @@ export function PartsPage() {
                     {compactListField('Cost / price', `$${part.unitCost} / $${part.unitPrice}`, 'Not priced')}
                     {compactListField('Stock', `On hand ${part.quantityOnHand ?? 0} · Reorder ${part.reorderThreshold ?? 0}`, 'No stock data', 'part-list-stock')}
                     <div className="master-data-actions compact-list-actions">
-                      <button type="button" onClick={() => { setDraft(part); setEditId(part.id); setError(null); setSuccess(null); setEditorOpen(true) }}>Edit</button>
+                      <button type="button" onClick={() => { activePartEditId.current = part.id; setDraft(part); setEditId(part.id); setError(null); setSuccess(null); setEditorOpen(true) }}>Edit</button>
                       <button type="button" onClick={async () => {
                         if (!confirmArchiveAction('part', `${part.partNumber} - ${part.name}`, part.isArchived)) return
                         try {

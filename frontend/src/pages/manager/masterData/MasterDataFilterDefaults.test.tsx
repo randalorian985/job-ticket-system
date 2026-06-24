@@ -231,8 +231,8 @@ describe('Manager/Admin master-data filter defaults', () => {
 
     render(<PartsPage />)
     const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
-    fireEvent.change(await within(partsCard).findByLabelText('Category'), { target: { value: 'pc2' } })
-    fireEvent.change(within(partsCard).getByLabelText('Vendor'), { target: { value: 'v2' } })
+    fireEvent.change(await within(partsCard).findByLabelText('Part category filter'), { target: { value: 'pc2' } })
+    fireEvent.change(within(partsCard).getByLabelText('Part vendor filter'), { target: { value: 'v2' } })
 
     await waitFor(() => expect(within(partsCard).getByLabelText('Part category')).toHaveValue('pc2'))
     expect(within(partsCard).getByLabelText('Preferred vendor')).toHaveValue('v2')
@@ -258,9 +258,12 @@ describe('Manager/Admin master-data filter defaults', () => {
 
     render(<PartsPage />)
     const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
-    fireEvent.click(await within(partsCard).findAllByRole('button', { name: 'Edit' }).then((buttons) => buttons[0]))
-    fireEvent.change(within(partsCard).getByLabelText('Category'), { target: { value: 'pc2' } })
-    fireEvent.change(within(partsCard).getByLabelText('Vendor'), { target: { value: 'v2' } })
+    const filterPartRow = (await within(partsCard).findByText('FLT-1 - Filter')).closest('li')!
+    fireEvent.click(within(filterPartRow).getByRole('button', { name: 'Edit' }))
+    await waitFor(() => expect(within(partsCard).getByLabelText('Part category')).toHaveValue('pc1'))
+
+    fireEvent.change(within(partsCard).getByLabelText('Part category filter'), { target: { value: 'pc2' } })
+    fireEvent.change(within(partsCard).getByLabelText('Part vendor filter'), { target: { value: 'v2' } })
 
     expect(within(partsCard).getByLabelText('Part category')).toHaveValue('pc1')
     expect(within(partsCard).getByLabelText('Preferred vendor')).toHaveValue('v1')
@@ -309,8 +312,8 @@ describe('Manager/Admin master-data filter defaults', () => {
 
     render(<PartsPage />)
     const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
-    fireEvent.change(await within(partsCard).findByLabelText('Category'), { target: { value: 'pc-archived' } })
-    fireEvent.change(within(partsCard).getByLabelText('Vendor'), { target: { value: 'v-archived' } })
+    fireEvent.change(await within(partsCard).findByLabelText('Part category filter'), { target: { value: 'pc-archived' } })
+    fireEvent.change(within(partsCard).getByLabelText('Part vendor filter'), { target: { value: 'v-archived' } })
 
     await waitFor(() => expect(within(partsCard).getByLabelText('Part category')).toHaveValue(''))
     expect(within(partsCard).getByLabelText('Preferred vendor')).toHaveValue('')
@@ -331,8 +334,8 @@ describe('Manager/Admin master-data filter defaults', () => {
 
     render(<PartsPage />)
     const partsCard = screen.getByRole('heading', { name: 'Parts' }).closest('article')!
-    fireEvent.change(await within(partsCard).findByLabelText('Category'), { target: { value: 'pc-archived' } })
-    fireEvent.change(within(partsCard).getByLabelText('Vendor'), { target: { value: 'v-archived' } })
+    fireEvent.change(await within(partsCard).findByLabelText('Part category filter'), { target: { value: 'pc-archived' } })
+    fireEvent.change(within(partsCard).getByLabelText('Part vendor filter'), { target: { value: 'v-archived' } })
     fireEvent.click(within(partsCard).getByRole('button', { name: 'Create Part' }))
 
     const categorySelect = within(partsCard).getByLabelText('Part category')

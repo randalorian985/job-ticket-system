@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../api/masterDataApi'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
@@ -100,7 +100,9 @@ describe('PartRequestsPage', () => {
     expect(await screen.findByRole('heading', { name: 'Parts Request Queue' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Requests Awaiting Review' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Selected Part Request' })).toBeInTheDocument()
-    expect(screen.getByText('Request Type')).toBeInTheDocument()
+    const selectedRequestDetails = screen.getByLabelText('selected request details')
+    expect(within(selectedRequestDetails).getByText('Type')).toBeInTheDocument()
+    expect(within(selectedRequestDetails).getByText('Needs ordered')).toBeInTheDocument()
     expect(screen.getAllByText(/JT-2026-000101/)).toHaveLength(2)
     expect(screen.getByText('Urgency: Urgent')).toBeInTheDocument()
     expect(screen.getByText(/Qty 2 · Needs ordered/)).toBeInTheDocument()
