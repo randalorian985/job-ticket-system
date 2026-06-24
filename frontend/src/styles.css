@@ -779,57 +779,6 @@ pre {
   justify-content: flex-end;
 }
 
-.supply-v2-screen {
-  gap: 0.95rem;
-}
-
-.supply-v2-card {
-  border-color: #d5e1f2;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
-}
-
-.supply-v2-kpi-grid {
-  display: grid;
-  gap: 0.6rem;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-}
-
-.supply-v2-kpi-card {
-  background: linear-gradient(160deg, #f8fbff 0%, #f1f6ff 100%);
-  border: 1px solid #d8e4f8;
-  border-radius: 10px;
-  display: grid;
-  gap: 0.2rem;
-  min-height: 4.8rem;
-  padding: 0.65rem 0.75rem;
-}
-
-.supply-v2-kpi-card strong {
-  color: #0f172a;
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
-.supply-v2-kpi-card-ready {
-  background: linear-gradient(160deg, #eefcf3 0%, #e7f9ee 100%);
-  border-color: #bde8cc;
-}
-
-.supply-v2-kpi-card-review {
-  background: linear-gradient(160deg, #fff8e9 0%, #fff3da 100%);
-  border-color: #f2d39a;
-}
-
-.supply-v2-kpi-card-alert {
-  background: linear-gradient(160deg, #fff0f0 0%, #ffe4e4 100%);
-  border-color: #efb6b6;
-}
-
-.supply-v2-kpi-card-muted {
-  background: linear-gradient(160deg, #f7f8fa 0%, #eff2f7 100%);
-  border-color: #d8deea;
-}
-
 .parts-workflow-panel {
   align-items: center;
   background: #f8fafc;
@@ -922,15 +871,10 @@ pre {
   color: #992525;
 }
 
-.supply-v2-workspace-grid {
-  align-items: start;
-  gap: 0.9rem;
-  grid-template-columns: minmax(20rem, 0.95fr) minmax(24rem, 1.45fr);
-}
-
 .manager-workspace-grid {
   display: grid;
   gap: 0.9rem;
+  grid-template-columns: minmax(20rem, 0.95fr) minmax(24rem, 1.45fr);
 }
 
 .supply-queue-list {
@@ -964,10 +908,6 @@ pre {
   margin-top: 0.35rem;
 }
 
-.supply-review-grid > div {
-  border-color: #d7e0ef;
-}
-
 .supply-inline-checkbox {
   align-items: center;
 }
@@ -980,8 +920,10 @@ pre {
 }
 
 .supply-history-item {
-  border-color: #d4dfef;
-  box-shadow: none;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.85rem;
 }
 
 .supply-history-item-heading {
@@ -1566,7 +1508,7 @@ pre {
     width: 100%;
   }
 
-  .supply-v2-workspace-grid {
+  .manager-workspace-grid {
     grid-template-columns: 1fr;
   }
 

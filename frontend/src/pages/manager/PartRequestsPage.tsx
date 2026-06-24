@@ -143,27 +143,14 @@ export function PartRequestsPage() {
   }
 
   return (
-    <section className="stack supply-v2-screen">
-      <article className="card stack supply-v2-card">
+    <section className="stack">
+      <article className="card stack">
         <div className="review-heading">
           <div>
             <h2>Parts Request Queue</h2>
             <p className="muted">Optional back-office review workflow for ticket parts marked Needs ordered.</p>
           </div>
-          <div className="supply-v2-kpi-grid" aria-label="parts request summary">
-            <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
-              <span className="muted">Open Requests</span>
-              <strong>{openRequests.length}</strong>
-            </div>
-            <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
-              <span className="muted">Unlisted Requests</span>
-              <strong>{unlistedRequests.length}</strong>
-            </div>
-            <div className="supply-v2-kpi-card">
-              <span className="muted">Visible Requests</span>
-              <strong>{requests.length}</strong>
-            </div>
-          </div>
+          <p className="muted">{openRequests.length} pending · {unlistedRequests.length} unlisted · {requests.length} visible</p>
         </div>
         <div className="parts-workflow-panel" aria-label="parts queue focus">
           <div className="parts-workflow-chips" role="group" aria-label="parts request focus filters">
@@ -203,8 +190,8 @@ export function PartRequestsPage() {
         {message ? <p>{message}</p> : null}
       </article>
 
-      <div className="manager-workspace-grid supply-v2-workspace-grid">
-        <article className="card stack supply-v2-card">
+      <div className="manager-workspace-grid">
+        <article className="card stack">
           <h3>Requests Awaiting Review</h3>
           {visibleRequests.length ? (
             <ul className="supply-queue-list">
@@ -227,11 +214,11 @@ export function PartRequestsPage() {
           )}
         </article>
 
-        <article className="card stack supply-v2-card">
+        <article className="card stack">
           <h3>Selected Part Request</h3>
           {selectedRequest ? (
             <>
-              <div className="review-grid supply-review-grid">
+              <div className="review-grid">
                 <div>
                   <span className="muted">Ticket</span>
                   <strong>{selectedRequest.jobTicketNumber}</strong>

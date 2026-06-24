@@ -278,33 +278,16 @@ export function PurchasingWorkbenchPage() {
   if (isLoading) return <section className="card"><p>Loading purchasing workflow…</p></section>
 
   return (
-    <section className="stack supply-v2-screen">
-      <article className="card supply-v2-card">
+    <section className="stack">
+      <article className="card">
         <h2>Purchasing Workbench</h2>
         <p className="muted">Manager/Admin workflow for purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording. Techs can add parts directly to tickets; order requests remain optional.</p>
-        <div className="supply-v2-kpi-grid" aria-label="purchasing summary">
-          <div className="supply-v2-kpi-card">
-            <span className="muted">Visible POs</span>
-            <strong>{purchaseOrders.length}</strong>
-          </div>
-          <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
-            <span className="muted">Needs receiving</span>
-            <strong>{submittedOrReceivingCount}</strong>
-          </div>
-          <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
-            <span className="muted">Draft POs</span>
-            <strong>{draftCount}</strong>
-          </div>
-          <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
-            <span className="muted">Archived POs</span>
-            <strong>{archivedCount}</strong>
-          </div>
-        </div>
+        <p className="muted">{purchaseOrders.length} visible POs · {submittedOrReceivingCount} need receiving · {draftCount} drafts · {archivedCount} archived</p>
         {message ? <p role="status" className="success">{message}</p> : null}
         {error ? <p role="alert" className="error">{error}</p> : null}
       </article>
 
-      <article className="card supply-v2-card">
+      <article className="card">
         <h3>Create purchase order</h3>
         <form className="form-grid" onSubmit={submitCreate}>
           <label>Vendor
@@ -342,7 +325,7 @@ export function PurchasingWorkbenchPage() {
         {selectedPart ? <p className="muted">Selected part status: {getCatalogStatus(selectedPart)} · vendor {selectedPart.vendorId ? 'linked' : 'not linked'} · order requests optional</p> : null}
       </article>
 
-      <article className="card supply-v2-card">
+      <article className="card">
         <h3>Purchase orders</h3>
         <div className="table-wrapper">
           <table>
@@ -365,7 +348,7 @@ export function PurchasingWorkbenchPage() {
       </article>
 
       {selectedOrder ? (
-        <article className="card supply-v2-card">
+        <article className="card">
           <h3>Review {selectedOrder.purchaseOrderNumber}</h3>
           <p><strong>{selectedOrder.vendorName}</strong> · {purchaseOrderStatusLabels[selectedOrder.status]} · Invoice {invoiceStatusLabels[selectedOrder.invoiceStatus]}</p>
           <div className="table-wrapper">
@@ -420,7 +403,7 @@ export function PurchasingWorkbenchPage() {
         </article>
       ) : null}
 
-      <article className="card supply-v2-card">
+      <article className="card">
         <h3>Parts Needing Catalog Cleanup</h3>
         <p className="muted">Reference list only for optional order-request workflow support; no replenishment automation or recommendation scoring is performed.</p>
         <ul className="supply-reorder-list">
