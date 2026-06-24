@@ -1052,24 +1052,6 @@ export function PartsPage() {
             </form>
 
             <div className="stack" hidden={editorOpen}>
-              <div className="supply-v2-kpi-grid" aria-label="parts catalog readiness summary">
-                <div className="supply-v2-kpi-card">
-                  <span className="muted">Ready for ticket use</span>
-                  <strong>{partWorkflowCounts.ready}</strong>
-                </div>
-                <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
-                  <span className="muted">Needs details</span>
-                  <strong>{partWorkflowCounts.needsDetails}</strong>
-                </div>
-                <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
-                  <span className="muted">Missing vendor</span>
-                  <strong>{partWorkflowCounts.noVendor}</strong>
-                </div>
-                <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
-                  <span className="muted">Optional order requests</span>
-                  <strong>Enabled</strong>
-                </div>
-              </div>
               <div className="parts-workflow-panel" aria-label="parts workflow">
                 <div className="parts-workflow-chips" role="group" aria-label="parts focus filters">
                   <button type="button" className={partWorkflowFilter === 'all' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setPartWorkflowFilter('all')}>All visible ({partWorkflowCounts.total})</button>
@@ -1092,24 +1074,21 @@ export function PartsPage() {
               </MasterDataFilters>
               <MasterDataListSummary loading={isLoading} totalCount={parts.length} filteredItems={filteredParts} noun="parts" />
               <MasterDataListState loading={isLoading} totalCount={parts.length} filteredCount={filteredParts.length} noun="parts" />
-              <ul className="master-data-list">
+              <ul className="master-data-list compact-master-list part-list">
                 {filteredParts.map((part) => (
-                  <MasterDataItem
-                    key={part.id}
-                    title={`${part.partNumber} - ${part.name}`}
-                    statusArchived={part.isArchived}
-                    meta={[
-                      <span className={`parts-stock-status-pill parts-stock-status-${partCatalogReadiness(part)}`} key="stock-status">Catalog status: {partCatalogReadinessLabel(part)}</span>,
-                      `Category: ${categoryNameById(categories, part.partCategoryId) || 'No category'}`,
-                      `Vendor: ${vendorNameById(vendors, part.vendorId) || 'No vendor'}`,
-                      part.description ? `Description: ${part.description}` : null,
-                      'Order requests: Optional workflow',
-                      `Cost: ${part.unitCost}`,
-                      `Price: ${part.unitPrice}`,
-                      `On hand: ${part.quantityOnHand ?? 0}`,
-                      `Reorder: ${part.reorderThreshold ?? 0}`
-                    ]}
-                    actions={<>
+                  <li className="master-data-item compact-master-list-item part-list-item" key={part.id}>
+                    <div className="compact-list-primary">
+                      <div className="master-data-title-row">
+                        <strong className="master-data-title">{part.partNumber} - {part.name}</strong>
+                        <span className={`status-pill ${part.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(part.isArchived)}</span>
+                      </div>
+                      <span className="compact-list-subtext">{partCatalogReadinessLabel(part)}{part.description?.trim() ? ` · ${part.description}` : ''}</span>
+                    </div>
+                    {compactListField('Category', categoryNameById(categories, part.partCategoryId), 'No category')}
+                    {compactListField('Vendor', vendorNameById(vendors, part.vendorId), 'No vendor')}
+                    {compactListField('Cost / price', `$${part.unitCost} / $${part.unitPrice}`, 'Not priced')}
+                    {compactListField('Stock', `On hand ${part.quantityOnHand ?? 0} · Reorder ${part.reorderThreshold ?? 0}`, 'No stock data', 'part-list-stock')}
+                    <div className="master-data-actions compact-list-actions">
                       <button type="button" onClick={() => { setDraft(part); setEditId(part.id); setError(null); setSuccess(null); setEditorOpen(true) }}>Edit</button>
                       <button type="button" onClick={async () => {
                         if (!confirmArchiveAction('part', `${part.partNumber} - ${part.name}`, part.isArchived)) return
@@ -1125,8 +1104,8 @@ export function PartsPage() {
                           setError('Unable to update archive state.')
                         }
                       }}>{part.isArchived ? 'Unarchive' : 'Archive'}</button>
-                    </>}
-                  />
+                    </div>
+                  </li>
                 ))}
               </ul>
             </div>
