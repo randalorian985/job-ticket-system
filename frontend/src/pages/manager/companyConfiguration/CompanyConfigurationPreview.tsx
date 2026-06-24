@@ -21,6 +21,8 @@ export function CompanyConfigurationPreview({
     configuration.website
   ].filter((line): line is string => Boolean(line))
 
+  const c = computeBrandColors(configuration)
+
   return (
     <aside className="company-config-preview stack" aria-label="company branding preview">
       <section className="company-config-panel stack">
@@ -47,15 +49,30 @@ export function CompanyConfigurationPreview({
         <div className="company-config-section-heading">
           <div>
             <p className="eyebrow">Color scheme</p>
-            <h3>Brand swatches</h3>
+            <h3>Live palette</h3>
           </div>
         </div>
-        <div className="company-swatch-grid">
-          <Swatch label="Primary" value={configuration.primaryColor} usage="Buttons, headers, nav" />
-          <Swatch label="Secondary" value={configuration.secondaryColor} usage="Active nav text, secondary hover" />
-          <Swatch label="Accent" value={configuration.accentColor} usage="Success, ready, approve" />
+
+        <div>
+          <p className="company-palette-group-label">Configurable</p>
+          <div className="company-swatch-grid company-swatch-grid-3col">
+            <Swatch label="Primary" value={c.primary} usage="Buttons, headers" />
+            <Swatch label="Secondary" value={c.secondary} usage="Active nav text" />
+            <Swatch label="Accent" value={c.accent} usage="Success, approve" />
+          </div>
         </div>
-        <DerivedSwatches configuration={configuration} />
+
+        <div>
+          <p className="company-palette-group-label">Derived automatically</p>
+          <div className="company-swatch-grid company-swatch-grid-3col">
+            <Swatch label="Brand hover" value={c.brandStrong} usage="Button hover" />
+            <Swatch label="Brand soft" value={c.brandSoft} usage="Nav hover bg" />
+            <Swatch label="Text on primary" value={c.brandContrast} usage="On brand buttons" />
+            <Swatch label="Nav active" value={c.accentNavy} usage="Active nav link" />
+            <Swatch label="Nav active bg" value={c.accentSoft} usage="Active nav bg" />
+            <Swatch label="Accent hover" value={c.accentDark} usage="Approve hover" />
+          </div>
+        </div>
       </section>
 
       <section className="company-config-panel company-export-preview">
@@ -83,29 +100,12 @@ export function CompanyConfigurationPreview({
 function Swatch({ label, value, usage }: { label: string, value: string, usage?: string }) {
   return (
     <div className="company-swatch">
-      <span style={{ backgroundColor: value }} aria-hidden="true" />
+      <span style={{ backgroundColor: value }} className="company-swatch-chip" aria-hidden="true" />
       <div>
         <strong>{label}</strong>
         <code>{value}</code>
         {usage ? <span className="company-swatch-usage">{usage}</span> : null}
       </div>
     </div>
-  )
-}
-
-function DerivedSwatches({ configuration }: { configuration: CompanyConfigurationDto }) {
-  const c = computeBrandColors(configuration)
-  return (
-    <details className="company-derived-swatches">
-      <summary>Derived colors</summary>
-      <div className="company-swatch-grid company-swatch-grid-derived">
-        <Swatch label="Brand hover" value={c.brandStrong} usage="Button / link hover states" />
-        <Swatch label="Brand soft" value={c.brandSoft} usage="Nav item hover background" />
-        <Swatch label="Text on primary" value={c.brandContrast} usage="Text on branded buttons" />
-        <Swatch label="Nav active" value={c.accentNavy} usage="Active navigation link" />
-        <Swatch label="Nav active bg" value={c.accentSoft} usage="Active navigation background" />
-        <Swatch label="Accent hover" value={c.accentDark} usage="Approve / success button hover" />
-      </div>
-    </details>
   )
 }
