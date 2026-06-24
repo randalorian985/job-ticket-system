@@ -132,16 +132,18 @@ export function TimeApprovalPage() {
   return (
     <section className="card stack">
       <h2>Time Approval</h2>
-      <p className="muted">Pending work loads automatically so managers can understand, review, and approve the queue without knowing internal IDs.</p>
+      <p className="muted">Use this order: filter the queue, select pending rows, then approve or edit selected entries.</p>
       <TimeApprovalFilters employees={employees} jobTickets={jobTickets} filters={filters} loading={loading} onChange={setFilters} onApply={() => void load()} />
       <Errorable error={error} />
       {message ? <p className="muted">{message}</p> : null}
       <div className="time-approval-summary" aria-label="Time review summary">
+        <div><strong>{summary.entries}</strong><span>Total rows</span></div>
         <div><strong>{summary.pending}</strong><span>Pending</span></div>
         <div><strong>{summary.approved}</strong><span>Approved</span></div>
         <div><strong>{summary.rejected}</strong><span>Rejected</span></div>
         <div><strong>{summary.laborHours.toFixed(2)}</strong><span>Labor hrs</span></div>
         <div><strong>{summary.billableHours.toFixed(2)}</strong><span>Billable hrs</span></div>
+        <div><strong>{selectedIds.length}</strong><span>Selected</span></div>
       </div>
       <TimeApprovalQueue
         entries={entries}

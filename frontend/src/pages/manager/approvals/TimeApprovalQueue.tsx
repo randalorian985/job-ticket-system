@@ -28,10 +28,10 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
           <h3>Time Entry Approval Queue</h3>
           <p className="muted">{entries.length ? `${entries.length} entries match the current filters.` : 'No time entries match the current filters.'}</p>
         </div>
-        <div className="row">
-          {exportHref ? <a className="button-link" href={exportHref} download="time-approval-review.csv">Export</a> : null}
+        <div className="row time-approval-actions">
+          {exportHref ? <a className="button-link" href={exportHref} download="time-approval-review.csv">Export visible rows</a> : null}
           <button type="button" disabled={selectedIds.length === 0 || loading} onClick={onBulkApprove}>Approve Selected ({selectedIds.length})</button>
-          {selectedEntry ? <button type="button" disabled={loading} onClick={() => onReview(selectedEntry)}>Edit Selected</button> : null}
+          {selectedEntry ? <button type="button" disabled={loading} onClick={() => onReview(selectedEntry)}>Review Selected</button> : null}
         </div>
       </div>
       {entries.length ? (
@@ -47,8 +47,8 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
                 <th>Labor type</th>
                 <th>Start</th>
                 <th>End</th>
-                <th>Total</th>
-                <th>Billable</th>
+                <th>Total hrs</th>
+                <th>Billable hrs</th>
                 <th>Status</th>
                 <th>Notes</th>
               </tr>
