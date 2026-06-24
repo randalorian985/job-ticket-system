@@ -1018,42 +1018,53 @@ export function ReportsPage() {
           </div>
         </div>
         {mode ? (
-          <div className="report-document-head">
+          <div className="report-document-head" aria-label="report header">
             <div className="report-letterhead" aria-label="report company header">
               {companyLogoUrl ? (
                 <img src={companyLogoUrl} alt={`${companyConfiguration.companyName} logo`} />
               ) : (
                 <span className="product-mark" aria-hidden="true">{companyInitials}</span>
               )}
-              <div>
-                <strong>{companyConfiguration.companyName}</strong>
-                {companyReportDetails.length ? <span>{companyReportDetails.join(' | ')}</span> : null}
-              </div>
+              <strong>{companyConfiguration.companyName}</strong>
             </div>
             <div className="report-report-heading" aria-label="report summary">
               <h2>{title}</h2>
               <p className="report-print-subtitle">{reportDescriptions[mode]}</p>
-              <div className="report-report-metrics" aria-label="generated report metadata">
-                <div>
-                  <span>Generated</span>
-                  <strong>{generatedAt ?? 'Pending'}</strong>
-                </div>
-                <div>
-                  <span>Rows</span>
-                  <strong>{rows.length}</strong>
-                </div>
+              <p className="report-head-meta">
+                {[
+                  generatedAt ? `Generated ${generatedAt}` : null,
+                  `${rows.length} row${rows.length === 1 ? '' : 's'}`,
+                  filterSummary || null
+                ].filter(Boolean).join(' · ')}
+              </p>
+            </div>
+            <div className="report-print-full-header no-screen" aria-hidden="true">
+              <p className="report-print-brand-eyebrow">{reportBrandName.toUpperCase()}</p>
+              <div className="report-print-co-block">
+                <strong>{companyConfiguration.companyName}</strong>
+                {companyReportDetails.length ? <span>{companyReportDetails.join(' | ')}</span> : null}
+              </div>
+              <h2 className="report-print-title-block">{title}</h2>
+              <p className="report-print-desc-block">{reportDescriptions[mode]}</p>
+              <div className="report-print-metrics-row">
+                <div><span>Generated</span><strong>{generatedAt ?? 'Pending'}</strong></div>
+                <div><span>Rows</span><strong>{rows.length}</strong></div>
+                <div><span>Columns</span><strong>{columns.length}</strong></div>
+              </div>
+              <hr className="report-print-rule" />
+              <div className="report-print-scope-block">
+                <span>Applied scope</span>
+                <strong>{filterSummary}</strong>
               </div>
             </div>
           </div>
         ) : null}
-        {reportMessage ? <p className="success action-feedback-panel report-result-feedback">{reportMessage}</p> : null}
-        {activeScreen === 'results' ? <Errorable error={error} /> : null}
-        {mode ? (
-          <div className="report-state-panel report-result-summary">
-            <span>Applied scope</span>
-            <strong>{filterSummary}</strong>
+        {mode && hasRows ? (
+          <div className="report-print-page-footer no-screen" aria-hidden="true">
+            <span>{reportBrandName} · {title}</span>
           </div>
         ) : null}
+        {activeScreen === 'results' ? <Errorable error={error} /> : null}
         {loadingMode ? (
           <div className="report-result-state" role="status">
             <strong>Loading {reportTitleMap[loadingMode]}</strong>

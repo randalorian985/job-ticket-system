@@ -380,14 +380,10 @@ pre {
 }
 
 .report-document-head {
-  align-items: flex-start;
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(255, 255, 255, 0.98));
-  border: 1px solid rgba(203, 213, 225, 0.9);
-  border-radius: 14px;
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
-  padding: 1rem 1.1rem;
+  align-items: stretch;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
 }
 
 .report-company-branding {
