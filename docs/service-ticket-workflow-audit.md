@@ -19,6 +19,10 @@ Areas reviewed:
 - Back-office Parts Request Queue filtering and request review.
 - Documentation and screenshot references in the system wiki.
 
+## Consistency Standard
+- Keep the service-ticket workspace, parts workflow, and employee field workflow described with the same labels and section order used in the live UI.
+- When the workflow changes, update the wiki, roadmap, and scope docs together so the audit trail stays aligned.
+
 ## Issues Found And Fixed
 
 ### 1. Parts Request Queue could stay loading after filtered reload failure

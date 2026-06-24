@@ -3,6 +3,11 @@
 ## Purpose
 This wiki explains how the Job Ticket System is used by Employees, Managers, and Admins. It is written for client handoff and operations training, not for software development.
 
+## Consistency Standard
+- Use the same terms, screen names, and workflow order that appear in the live UI and the steering docs.
+- Prefer one label per concept across the wiki so trainers and users see the same model everywhere.
+- If the UI changes a workflow name or section order, update the wiki in the same pass.
+
 The system is centered on field-service job tickets:
 - create and manage service tickets;
 - assign employees to work;

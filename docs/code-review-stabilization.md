@@ -9,6 +9,10 @@
 - Documentation alignment (`README`, `docs/api-contract.md`, `docs/project-scope.md`).
 - Build/test execution status for backend and frontend.
 
+## Consistency Standard
+- Use the same workflow vocabulary, screen grouping, and action labels in code, tests, and docs.
+- Keep any terminology fixes synchronized across the corresponding steering docs so stabilization notes and scope docs tell the same story.
+
 ## Critical (must fix before next phase)
 1. **Employee could change part approval state through generic part update endpoint.**
    - Risk: bypass of intended Manager/Admin approval workflow.

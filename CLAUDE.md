@@ -13,6 +13,7 @@ This repository is in scaffold phase. Keep changes focused, explicit, and easy t
 3. Avoid implementing full business workflows until scope docs are approved.
 4. Update docs when changing architecture or workflow contracts.
 5. Keep naming explicit and beginner-friendly.
+6. Keep the same workflow vocabulary, screen structure, and action hierarchy consistent across implementation and documentation.
 
 ## Validation Rules
 1. Backend must build successfully.
@@ -59,6 +60,7 @@ curl -fsS https://dev.mudbugdigital.com/health
 1. Preserve existing route structure under manager pages.
 2. Keep mobile layout working when changing manager/admin screens.
 3. Prefer focused, workflow-oriented UI polish over broad rewrites.
+4. Use the same labels and section order for the same concept across related screens unless the workflow truly differs.
 
 ## Safety Notes
 1. Do not introduce demo/bootstrap behavior into production paths.

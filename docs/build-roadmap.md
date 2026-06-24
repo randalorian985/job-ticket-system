@@ -3,6 +3,11 @@
 ## Source Of Truth
 This document controls delivery sequencing, merge readiness, and scope discipline for the Crane / Job Ticket System.
 
+## Consistency Standard
+- Keep terminology, workflow order, and UI sectioning consistent across the app and the steering docs.
+- If a lane changes labels or flow order, update the scope, wiki, and audit docs in the same PR so they continue to describe the same system.
+- Prefer shared patterns over screen-specific variations unless the workflow genuinely differs.
+
 Use this roadmap together with:
 - [README.md](../README.md)
 - [docs/project-scope.md](./project-scope.md)

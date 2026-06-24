@@ -18,6 +18,10 @@
 - Regression verification against known historical issues (uploads, time entries, job parts, auth/token revalidation, health contract, reporting snapshots, archive/unarchive dependency validation).
 - Documentation synchronization pass across README and docs control-center files.
 
+## Consistency Standard
+- Keep workflow names, screen order, and label choices aligned with the other steering docs and the live UI.
+- If a review uncovers a renamed workflow or changed section hierarchy, update the matching docs in the same pass so the control center stays coherent.
+
 ## Critical Findings
 - None found in this pass.
 

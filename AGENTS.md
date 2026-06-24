@@ -13,6 +13,7 @@ This repository is currently in scaffold phase. Keep contributions focused on fo
 3. Avoid implementing full business workflows until scope docs are approved.
 4. Update `/docs` when changing architecture contracts.
 5. Keep naming explicit and beginner-friendly.
+6. Keep terminology, workflow states, screen hierarchy, and action labels consistent across the app and the steering docs.
 
 ## Validation
 - Backend should build successfully.

@@ -3,6 +3,11 @@
 ## Goal
 Build a Job Ticket Management System that allows teams to submit, assign, track, and resolve job tickets while preserving clean API boundaries, role-based authorization, and reviewable workflow slices.
 
+## Consistency Standard
+- Keep the same workflow vocabulary, screen hierarchy, and action labels across the app, docs, and audit notes.
+- When a workflow is renamed or re-sequenced, update the related steering docs in the same change so the story stays aligned.
+- Prefer one consistent concept per screen or step rather than multiple labels for the same behavior.
+
 ## Product Center Of Gravity
 This product is first and foremost a job ticket system.
 

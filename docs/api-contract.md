@@ -1,5 +1,10 @@
 # API Contract (Current Main State Plus Parts Request Workflow Phase 2)
 
+## Consistency Standard
+- Keep the same workflow names, status labels, and section order used by the live UI and the other steering docs.
+- If a workflow or label changes, update the contract, scope, and wiki in the same change so the docs describe one system.
+- Prefer one term per concept instead of alternating labels for the same behavior.
+
 ## Base URL
 `/api`
 

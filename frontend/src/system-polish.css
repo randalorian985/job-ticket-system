@@ -1259,6 +1259,14 @@ tbody tr:hover td {
 .assigned-job-card {
   border-left: 4px solid var(--brand);
 }
+.assigned-job-card {
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+.assigned-job-card:hover {
+  border-color: #b7c8ea;
+  box-shadow: 0 8px 22px rgba(37, 48, 86, 0.08);
+  transform: translateY(-1px);
+}
 
 .assigned-job-meta div,
 .assigned-job-context div,
