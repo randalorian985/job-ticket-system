@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
+import { useCompanyBranding } from '../../features/companyBranding/CompanyBrandingContext'
 import './ManagerShell.css'
 
 type ManagerNavItem = {
@@ -20,12 +21,8 @@ const navGroups: ManagerNavGroup[] = [
     label: 'Operations',
     items: [
       { label: 'Dashboard', to: '/manage', end: true },
-      { label: 'Dispatch', to: '/manage/dispatch' },
       { label: 'Job Tickets', to: '/manage/job-tickets' },
-      { label: 'Time Approval', to: '/manage/time-approval' },
-      { label: 'Parts Approval', to: '/manage/parts-approval' },
-      { label: 'Reports', to: '/manage/reports' },
-      { label: 'Wiki', to: '/manage/wiki' }
+      { label: 'Reports', to: '/manage/reports' }
     ]
   },
   {
@@ -41,14 +38,25 @@ const navGroups: ManagerNavGroup[] = [
     items: [
       { label: 'Parts', to: '/manage/parts' },
       { label: 'Part Requests', to: '/manage/part-requests' },
-      { label: 'Inventory', to: '/manage/inventory' },
       { label: 'Purchasing', to: '/manage/purchasing' },
+      { label: 'Parts Approval', to: '/manage/parts-approval' },
       { label: 'Parts Usage History', to: '/manage/parts-usage-history' }
     ]
   },
   {
+    label: 'Review & Reference',
+    items: [
+      { label: 'Time Approval', to: '/manage/time-approval' },
+      { label: 'Wiki', to: '/manage/wiki' }
+    ]
+  },
+  {
     label: 'Admin',
-    items: [{ label: 'Users', to: '/manage/users', adminOnly: true }]
+    items: [
+      { label: 'Company Configuration', to: '/manage/company-configuration', adminOnly: true },
+      { label: 'Ticket Filters', to: '/manage/ticket-status-filters', adminOnly: true },
+      { label: 'Users', to: '/manage/users', adminOnly: true }
+    ]
   }
 ]
 
@@ -64,6 +72,7 @@ const isRouteActive = (pathname: string, item: ManagerNavItem) => {
 
 export function ManagerShell() {
   const { user, logout } = useAuth()
+  const { configuration, logoUrl, initials } = useCompanyBranding()
   const isAdmin = user?.role === 'Admin'
   const location = useLocation()
   const navigate = useNavigate()
@@ -101,10 +110,17 @@ export function ManagerShell() {
     <main className="desktop-shell manager-shell">
       <header className="manager-header">
         <div className="manager-header-main">
-          <div>
-            <p className="eyebrow">Job Ticket System</p>
-            <h1>Service Operations</h1>
-            <p className="muted">{user?.firstName} {user?.lastName} · {user?.role}</p>
+          <div className="company-brand-lockup manager-shell-brand">
+            {logoUrl ? (
+              <img src={logoUrl} alt={`${configuration.companyName} logo`} />
+            ) : (
+              <span className="product-mark" aria-hidden="true">{initials}</span>
+            )}
+            <div>
+              <p className="eyebrow">{configuration.companyName}</p>
+              <h1>Service Operations</h1>
+              <p className="muted">{user?.firstName} {user?.lastName} - {user?.role}</p>
+            </div>
           </div>
           <button className="secondary-button logout-button" onClick={logout}>Logout</button>
         </div>

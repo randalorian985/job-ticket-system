@@ -6,32 +6,90 @@
 ## Public Endpoints
 - `GET /health` is public and unauthenticated.
 - `GET /api/system/info` is public and unauthenticated.
+- `GET /api/company-configuration` is public and unauthenticated so the UI can apply company branding before sign-in.
+- `GET /api/company-configuration/logo` is public and unauthenticated when a logo has been uploaded.
 
 ## Implemented API Groups
 - Authentication (`/api/auth/*`)
+- Company configuration and branding (`/api/company-configuration/*`)
+- Ticket status filter configuration (`/api/ticket-status-filters`)
 - User management (`/api/users/*`)
 - Assignable employee lookup (`/api/users/assignable-employees`)
 - Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)
 - Technician-safe part lookup (`/api/parts/lookup`)
 - Job tickets (`/api/job-tickets/*`)
-- Job-ticket files/photos (`/api/job-ticket-files/*`)
+- Job-ticket files/photos (`/api/job-tickets/{jobTicketId}/files/*`)
 - Time entries (`/api/time-entries/*`)
 - Reporting (`/api/reports/*`)
 - Parts usage history visibility (`/api/parts/usage-history`)
 - Parts request workflow Phase 2 (`/api/part-requests/*`)
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
-- Inventory foundation (`/api/inventory/*`)
+- Inventory API foundation (`/api/inventory/*`, currently hidden from Manager/Admin navigation and client wiki)
+
+## Company Configuration And Branding
+Company Configuration stores the crane company's own profile, logo, and color scheme. It is separate from customer/account master data used to identify who the work is for.
+
+Endpoints:
+- `GET /api/company-configuration`
+  - Authorization: public.
+  - Returns `CompanyConfigurationDto`.
+  - Used by the UI shell, login screen, report preview, and client-side exports.
+- `PUT /api/company-configuration`
+  - Authorization: `AdminOnly`.
+  - Request DTO: `UpdateCompanyConfigurationDto`.
+  - Creates or updates the singleton company profile row.
+- `POST /api/company-configuration/logo`
+  - Authorization: `AdminOnly`.
+  - Request: multipart form file field named `file`.
+  - Accepts JPG/JPEG, PNG, or WebP images up to 2 MB.
+  - Validates extension, content type, file size, and file signature before storage.
+- `GET /api/company-configuration/logo`
+  - Authorization: public.
+  - Streams the uploaded logo or returns `404 Not Found` when no logo is available.
+
+`CompanyConfigurationDto` includes:
+- company profile fields: `companyName`, `legalName`, `contactName`, `email`, `phone`, `website`, address fields;
+- brand fields: `primaryColor`, `secondaryColor`, `accentColor`;
+- logo metadata: `hasLogo`, original file name, content type, file size, upload time;
+- audit timestamps.
+
+The feature adds the `CompanyConfigurations` table. It does not change `Customers`, customer selection, job-ticket customer/billing-party fields, service-location relationships, or master-data customer APIs.
+
+## Ticket Status Filter Configuration
+Ticket status filter configuration controls which status filter boxes appear in the Manager/Admin job-ticket queue. It maps labels to existing `JobTicketStatus` values only; it is not a custom workflow engine and does not add statuses or transitions.
+
+Endpoints:
+- `GET /api/ticket-status-filters`
+  - Authorization: `ManagerOrAdmin`.
+  - Returns `TicketStatusFilterOptionDto[]` ordered by `displayOrder`.
+  - If no rows exist, returns the default active field-work filters: Submitted, Assigned, In Progress, Waiting on Parts, and Waiting on Customer.
+- `PUT /api/ticket-status-filters`
+  - Authorization: `AdminOnly`.
+  - Request DTO: `SaveTicketStatusFilterConfigurationDto`.
+  - Creates or updates filter rows without hard-deleting omitted or inactive rows.
+  - Rejects invalid ticket statuses and duplicate active status mappings.
+
+`TicketStatusFilterOptionDto` includes:
+- `id`
+- `displayLabel`
+- `status` using existing `JobTicketStatus` numeric values
+- `displayOrder`
+- `isActive`
+
+The feature adds the `TicketStatusFilterOptions` table and seeds the same default active field-work filters. It does not change backend enum numeric values, job-ticket status labels, job-ticket lifecycle rules, reports, assignment rules, or employee assignments.
 
 ## Job Ticket Display Fields
 Job-ticket list and detail responses keep relationship IDs for API operations and also include human-readable fields for UI display.
 
-- `JobTicketListItemDto` includes `customerName`, `serviceLocationName`, and optional `equipmentName`.
+- `JobTicketListItemDto` includes `customerName`, `serviceLocationName`, optional `equipmentId`, and optional `equipmentName`.
 - `JobTicketDto` includes `customerName`, `serviceLocationName`, `billingPartyCustomerName`, optional `equipmentName`, optional `equipmentNumber`, and optional `assignedManagerEmployeeName`.
-- Employee and Manager/Admin screens display these labels instead of exposing customer, service-location, equipment, or employee GUIDs.
-- Authorization, schema, migrations, enum values, and write request DTOs are unchanged.
+- `equipmentId` identifies the customer's crane/equipment being serviced on the job ticket. It is not a dispatched crane assignment. Employee assignments remain separate job-ticket assignment records.
+- Employee and Manager/Admin screens display readable labels instead of exposing customer, service-location, equipment, or employee GUIDs.
+- Job-ticket display authorization, existing enum values, and write request DTOs are unchanged. The list response still includes the optional service-equipment ID needed to preserve the customer's crane/equipment selection on the ticket.
+- For Employee users, `GET /api/job-tickets` returns assigned tickets except fully closed statuses (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`). Manager/Admin list views still return those tickets unless a filter excludes them.
 
-## Dispatch Board
-The Manager/Admin Dispatch Board at `/manage/dispatch` is a frontend workflow over existing APIs.
+## Job Ticket Assignment And Schedule Workflow
+The Manager/Admin Job Tickets screen is the main workflow for creating, assigning, scheduling, and reviewing work. The legacy `/manage/dispatch` route redirects to `/manage/job-tickets`.
 
 Existing APIs used:
 - `GET /api/job-tickets`
@@ -46,19 +104,24 @@ Existing APIs used:
 - `GET /api/users/assignable-employees`
 
 Behavior:
-- board views, lifecycle labels, missing-assignment warnings, and same-day crane/operator/crew conflict warnings are frontend-derived from loaded ticket, equipment, and assignment data;
-- scheduling updates the existing ticket schedule/equipment fields;
-- operator assignment uses the existing lead-assignment flag;
-- crew assignment uses existing non-lead ticket assignments;
-- En Route and On Site actions currently record dispatch work-entry notes while preserving existing job-ticket enum values;
-- Start Work, Complete Work, Finalize Ticket, and Invoiced/Ready-for-Billing handoff use existing job-ticket status values.
+- the queue displays existing job-ticket status labels instead of a separate dispatch lifecycle;
+- the Status filter uses Admin-configured labels mapped to existing `JobTicketStatus` values;
+- Quick Views apply frontend filters for active work, waiting work, missing due dates, unassigned tickets, needs-review tickets, and ready-to-work tickets;
+- assignment review uses existing job-ticket assignment records and the existing lead-assignment flag;
+- schedule and due date updates use the existing job-ticket update API;
+- matching service equipment on more than one ticket is not treated as a dispatch resource conflict;
+- ticket review/finalization and billing-ready review remain in the existing ticket workspace and Reports workflows.
 
-This does not add a backend dispatch-job API, backend dispatch status enum, schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
+This workflow does not add a backend dispatch-job record or API, backend dispatch status enum, Dispatch-specific schema migration, automatic scheduling, automatic approval, invoice generation, customer signature API, or billing/payment API.
 
 ## Manager/Admin Master Data
-Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the already-documented DTO fields for customer contact/account details, service-location status/address/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.
+Manager/Admin master-data UI polish uses the existing master-data endpoints listed above. Expanded create/edit forms send the documented DTO fields for customer contact/account details, customer billing or mailing address details, service-location contact/status/address/site context/customer association, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values.
 
-This UI polish does not add endpoints, change DTO shapes, change authorization, add schema or migrations, alter enum values, or expand purchasing, receiving, landed-cost, inventory, recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
+Customer DTOs include `billingAddressLine1`, `billingAddressLine2`, `billingCity`, `billingState`, and `billingPostalCode` so a requesting customer or billing-party customer can carry complete billing contact context.
+
+Service-location DTOs include `onSiteContactName`, `onSiteContactPhone`, `onSiteContactEmail`, `addressLine2`, `parishCounty`, `gateCode`, `accessInstructions`, `safetyRequirements`, and `siteNotes` in addition to the existing company, location, city, state, postal code, country, active, and customer-link fields.
+
+This UI polish does not add endpoints, change authorization, add schema or migrations, alter enum values, or expand purchasing, receiving, landed-cost, inventory, recommendation, AI/scoring, automatic compatibility, or automatic approval scope.
 
 ## Manager/Admin Time Approval Review
 - `GET /api/time-entries/review`
@@ -72,7 +135,9 @@ This UI polish does not add endpoints, change DTO shapes, change authorization, 
   - `dateToUtc`
   - `search` (ticket ID/number, job fields, customer, site, and location)
 - The Manager/Admin screen requests `approvalStatus=1` on initial load, so its pending work queue appears without requiring filter input. Omitting `approvalStatus` from the endpoint returns all statuses.
-- Results include manager-facing employee/job/customer/location labels and are ordered by newest `startedAtUtc` first. Approval and rejection continue to use Manager/Admin-only action endpoints.
+- Results include manager-facing employee/job/customer/location labels and are ordered by newest `startedAtUtc` first. Approval, rejection, edit, and delete actions continue to use Manager/Admin-only action endpoints.
+- `POST /api/time-entries/{id}/adjust` accepts editable time values plus a manager/admin reason and saves the edit without changing the current approval status.
+- `DELETE /api/time-entries/{id}` accepts `{ reason }`, requires `ManagerOrAdmin`, and soft-deletes the time entry so it no longer appears in review or reporting queries. It does not hard-delete the row.
 - Existing enum numeric values are unchanged.
 
 ## Assignable Employee Lookup
@@ -116,6 +181,24 @@ Behavior:
 - missing matching clock-in returns a controlled validation error: `Clock in to this job ticket before recording field work.`;
 - Manager/Admin users can continue back-office coordination and review actions without this employee clock-in gate;
 - this guard does not change DTO shapes, role policies, backend enum values, schema, migrations, purchasing behavior, inventory behavior, recommendations, AI/scoring, automatic compatibility, or automatic approval.
+
+## Job-Ticket Files And Photos
+
+Job-ticket file/photo upload continues to use:
+
+- `POST /api/job-tickets/{jobTicketId}/files`
+- Authorization: `AssignedEmployeeOrManager`
+
+Accepted file types:
+
+- JPG/JPEG;
+- PNG;
+- WebP;
+- PDF.
+
+The maximum upload size is 50 MB. The same limit is enforced by the HTTP controller and the application service.
+
+Employee uploads, file caption/visibility updates, and file archives remain subject to the employee field-recording guard above. Manager/Admin users can continue ticket file/photo review and invoice-attachment coordination without an employee clock-in gate.
 
 ## Reporting
 Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports UI groups the existing endpoints into invoice/closeout, labor/parts, and service-history sections, then performs browser print/save-PDF output and client-side CSV export from the currently loaded table rows. There is no server-side PDF renderer, server-side export job, invoice generation, payment workflow, customer portal workflow, recommendation engine, AI/scoring, automatic compatibility decision, or automatic approval behavior in this reporting slice.
@@ -163,6 +246,7 @@ Endpoints:
 Client export behavior:
 - Print/save-PDF uses the browser print dialog from the generated report results screen.
 - CSV is produced in the Manager/Admin frontend from the rows currently loaded in the browser.
+- Company Configuration profile details are included in generated report headers and CSV metadata when available.
 - CSV values use raw DTO values and report labels, not localized display formatting.
 - Empty reports do not expose CSV or print/save-PDF export actions.
 - The frontend validates required source IDs, date ranges, and paging values before calling these existing report endpoints. This does not add a server-side export, reporting job, or new reporting API.
@@ -284,8 +368,8 @@ Behavior:
 
 This section documents the existing baseline only. It does not approve new purchasing expansion, new receiving expansion, vendor invoice workflow expansion, accounting integration, invoice generation, payment tracking, replenishment, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior.
 
-## Existing Inventory Foundation
-The inventory API is an implemented Manager/Admin baseline workflow for stock locations, current stock visibility, transaction review, purchase-order receipt transactions, and manual adjustments.
+## Existing Inventory API Foundation
+The inventory API foundation exists for stock locations, current stock visibility, transaction review, purchase-order receipt transactions, and manual adjustments. The Manager/Admin Inventory screen is currently hidden from navigation and omitted from the client wiki because the workflow is not complete enough for client use.
 
 Authorization: `ManagerOrAdmin`.
 
@@ -313,11 +397,14 @@ Behavior:
 - transaction review is filterable by stock location and part;
 - manual adjustments require stock location, part, non-zero quantity delta, and reason.
 
-This section documents the existing inventory foundation only. It does not approve warehouse/truck inventory expansion, transfer workflows, low-stock alerts, replenishment, average-cost or landed-cost inventory accounting expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval behavior.
+This section documents the existing inventory API foundation only. It does not approve reintroducing the Inventory UI, warehouse/truck inventory expansion, transfer workflows, low-stock alerts, replenishment, average-cost or landed-cost inventory accounting expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval behavior.
 
 ## Protected Boundaries
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
+- `/manage/company-configuration` remains Admin-only.
+- `/manage/ticket-status-filters` remains Admin-only.
+- `GET /api/ticket-status-filters` is Manager/Admin-readable; `PUT /api/ticket-status-filters` remains Admin-only.
 - User-management endpoints under `/api/users` remain Admin-only except for the narrow Manager/Admin `GET /api/users/assignable-employees` lookup documented above.
 - Admin user-management list search and role/status filters are frontend-only over the loaded `/api/users` results; they do not add query parameters or new user-management endpoints.
 - No backend enum numeric values are changed.
@@ -329,4 +416,4 @@ This section documents the existing inventory foundation only. It does not appro
 - Review results use the dedicated `TimeApprovalQueueItemDto`, retaining internal command IDs while exposing manager-facing employee, ticket, customer, site, location, job name, labor type, and note context.
 - `POST /api/time-entries/bulk-approve` accepts only `{ timeEntryIds }` and approves completed entries that are still pending. The authenticated Manager/Admin identity is the approver.
 - `POST /api/time-entries/{id}/edit-and-approve` accepts editable values plus a reason, then records the adjustment and approval atomically in one save. Actor identity and manager override authority are server-owned.
-- Single approve has no request body, reject accepts only `{ reason }`, and adjustment requests contain only editable values plus the reason. All actions retain the `ManagerOrAdmin` authorization policy, and single/bulk approval share the same completed-pending eligibility rule.
+- Single approve has no request body, reject accepts only `{ reason }`, delete accepts only `{ reason }`, and adjustment requests contain only editable values plus the reason. All actions retain the `ManagerOrAdmin` authorization policy, and single/bulk approval share the same completed-pending eligibility rule.

@@ -43,15 +43,29 @@ type CustomerQuickAddDraft = {
   contactName: string
   email: string
   phone: string
+  billingAddressLine1: string
+  billingAddressLine2: string
+  billingCity: string
+  billingState: string
+  billingPostalCode: string
 }
 
 type ServiceLocationQuickAddDraft = {
   locationName: string
+  onSiteContactName: string
+  onSiteContactPhone: string
+  onSiteContactEmail: string
   addressLine1: string
+  addressLine2: string
   city: string
   state: string
   postalCode: string
+  parishCounty: string
   country: string
+  gateCode: string
+  accessInstructions: string
+  safetyRequirements: string
+  siteNotes: string
 }
 
 type EquipmentQuickAddDraft = {
@@ -74,13 +88,21 @@ export type EquipmentDuplicateWarning = {
 
 type TicketEditorSection = 'identity' | 'relationships' | 'scope' | 'billing' | 'schedule'
 
+type TicketCreateWizardStep = {
+  value: string
+  label: string
+  section: TicketEditorSection
+  isReady: boolean
+  detail: string
+}
+
 const ticketEditorSections: Array<{
   value: TicketEditorSection
   label: string
   description: string
 }> = [
   { value: 'identity', label: 'Basics', description: 'Title, type, priority, and status.' },
-  { value: 'relationships', label: 'Customer & Equipment', description: 'Customer, location, billing party, and equipment.' },
+  { value: 'relationships', label: 'Customer & Service Equipment', description: 'Customer, location, billing party, and the crane/equipment being serviced.' },
   { value: 'scope', label: 'Scope & Notes', description: 'Job description, internal notes, and customer notes.' },
   { value: 'billing', label: 'Billing', description: 'Purchase order and billing contact details.' },
   { value: 'schedule', label: 'Schedule', description: 'Requested, scheduled, and due dates.' }
@@ -104,16 +126,30 @@ const emptyCustomerDraft: CustomerQuickAddDraft = {
   accountNumber: '',
   contactName: '',
   email: '',
-  phone: ''
+  phone: '',
+  billingAddressLine1: '',
+  billingAddressLine2: '',
+  billingCity: '',
+  billingState: '',
+  billingPostalCode: ''
 }
 
 const emptyServiceLocationDraft: ServiceLocationQuickAddDraft = {
   locationName: '',
+  onSiteContactName: '',
+  onSiteContactPhone: '',
+  onSiteContactEmail: '',
   addressLine1: '',
+  addressLine2: '',
   city: '',
   state: '',
   postalCode: '',
-  country: 'USA'
+  parishCounty: '',
+  country: 'USA',
+  gateCode: '',
+  accessInstructions: '',
+  safetyRequirements: '',
+  siteNotes: ''
 }
 
 const emptyEquipmentDraft: EquipmentQuickAddDraft = {
@@ -154,6 +190,24 @@ function optionalText(value: string) {
 
 function normalizedText(value: string | null | undefined) {
   return value?.trim().toLowerCase() ?? ''
+}
+
+function hasValue(value: string | null | undefined) {
+  return Boolean(value?.trim())
+}
+
+function sourceOrCurrent(source: string | null | undefined, current: string | null | undefined) {
+  return hasValue(source) ? source! : current ?? null
+}
+
+function hasCustomerBillingAddress(customer: CustomerDto | null | undefined) {
+  return Boolean(customer && (
+    hasValue(customer.billingAddressLine1) ||
+    hasValue(customer.billingAddressLine2) ||
+    hasValue(customer.billingCity) ||
+    hasValue(customer.billingState) ||
+    hasValue(customer.billingPostalCode)
+  ))
 }
 
 function jobStatusLabel(value: number) {
@@ -207,41 +261,41 @@ function quickAddErrorMessage(error: unknown, fallback: string) {
 }
 
 export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditCheck[] {
-  const hasEquipmentAssignment = Boolean(form.equipmentId)
+  const hasServiceEquipment = Boolean(form.equipmentId)
   const isActiveDispatchStatus = activeDispatchStatuses.has(form.status)
 
   return [
     {
-      label: 'Dispatch status',
+      label: 'Work status',
       isReady: isActiveDispatchStatus,
       detail: isActiveDispatchStatus
-        ? 'Ticket is in the active dispatch queue.'
-        : 'Move the ticket into an active dispatch status before dispatch review.'
+        ? 'Ticket is in the active work queue.'
+        : 'Move the ticket into an active work status before assignment review.'
     },
     {
       label: 'Customer',
       isReady: Boolean(form.customerId),
-      detail: form.customerId ? 'Customer is selected.' : 'Select the customer before dispatch review.'
+      detail: form.customerId ? 'Customer is selected.' : 'Select the customer before assignment review.'
     },
     {
       label: 'Service location',
       isReady: Boolean(form.serviceLocationId),
-      detail: form.serviceLocationId ? 'Service location is selected.' : 'Select the service location before dispatch review.'
+      detail: form.serviceLocationId ? 'Service location is selected.' : 'Select the service location before assignment review.'
     },
     {
-      label: 'Equipment decision',
+      label: 'Service equipment',
       isReady: true,
-      detail: hasEquipmentAssignment ? 'Equipment is selected.' : 'This ticket can be dispatched without equipment.'
+      detail: hasServiceEquipment ? 'Crane/equipment being serviced is selected.' : 'No service equipment is selected; use the job scope for component-only work.'
     },
     {
       label: 'Scheduled start',
       isReady: Boolean(form.scheduledStartAtUtc),
-      detail: form.scheduledStartAtUtc ? 'Scheduled start is set.' : 'Set a scheduled start before dispatch.'
+      detail: form.scheduledStartAtUtc ? 'Scheduled start is set.' : 'Set a scheduled start before work starts.'
     },
     {
       label: 'Due date',
       isReady: Boolean(form.dueAtUtc),
-      detail: form.dueAtUtc ? 'Due date is set.' : 'Add a due date so dispatch can see timing expectations.'
+      detail: form.dueAtUtc ? 'Due date is set.' : 'Add a due date for timing expectations.'
     },
     {
       label: 'Job instructions',
@@ -285,6 +339,8 @@ export function JobTicketEditorForm({
   const [serviceLocationQuickAddMessage, setServiceLocationQuickAddMessage] = useState<string | null>(null)
   const [equipmentQuickAddMessage, setEquipmentQuickAddMessage] = useState<string | null>(null)
   const [jobTypeQuickAddMessage, setJobTypeQuickAddMessage] = useState<string | null>(null)
+  const [copyHelperMessage, setCopyHelperMessage] = useState<string | null>(null)
+  const [copyHelperError, setCopyHelperError] = useState<string | null>(null)
   const [activeEditorSection, setActiveEditorSection] = useState<TicketEditorSection>('identity')
   const [jobTypeOptions, setJobTypeOptions] = useState(() => uniqueLabels([...defaultJobTypeOptions, initial.jobType]))
   const [isAddingCustomer, setIsAddingCustomer] = useState(false)
@@ -335,6 +391,23 @@ export function JobTicketEditorForm({
 
   const selectedCustomer = allCustomers.find((item) => item.id === form.customerId)
   const selectedServiceLocation = allServiceLocations.find((item) => item.id === form.serviceLocationId)
+  const selectedBillingParty = allCustomers.find((item) => item.id === form.billingPartyCustomerId)
+  const selectedEquipment = allEquipment.find((item) => item.id === form.equipmentId)
+  const jobSiteCustomer = selectedServiceLocation?.customerId
+    ? allCustomers.find((item) => item.id === selectedServiceLocation.customerId)
+    : undefined
+  const equipmentBillingCustomer = selectedEquipment?.responsibleBillingCustomerId
+    ? allCustomers.find((item) => item.id === selectedEquipment.responsibleBillingCustomerId)
+    : undefined
+  const billingPartyRelationship = !selectedBillingParty
+    ? 'No billing party selected.'
+    : selectedBillingParty.id === selectedCustomer?.id
+      ? 'Billing party is the selected customer.'
+      : selectedBillingParty.id === jobSiteCustomer?.id
+        ? 'Billing party is the job-site customer.'
+        : selectedBillingParty.id === equipmentBillingCustomer?.id
+          ? 'Billing party is the equipment billing customer.'
+          : 'Billing party is separate from the customer and job site.'
 
   const displayedJobTypeOptions = useMemo(
     () => uniqueLabels([...jobTypeOptions, form.jobType]),
@@ -366,7 +439,68 @@ export function JobTicketEditorForm({
   const dispatchEditChecks = useMemo(() => buildDispatchEditChecks(form), [form])
   const dispatchReadyCount = dispatchEditChecks.filter((check) => check.isReady).length
   const dispatchOpenItems = dispatchEditChecks.filter((check) => !check.isReady)
-  const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'All dispatch requirements are complete.'
+  const nextDispatchFix = dispatchOpenItems[0]?.detail ?? 'All assignment and schedule requirements are complete.'
+  const dataQualityWarnings = useMemo(() => {
+    const warnings: string[] = []
+
+    if (selectedCustomer && !hasValue(selectedCustomer.phone)) {
+      warnings.push('This customer has no phone.')
+    }
+
+    if (selectedServiceLocation && !hasValue(selectedServiceLocation.postalCode)) {
+      warnings.push('This job location has no ZIP.')
+    }
+
+    if (!hasValue(form.dueAtUtc)) {
+      warnings.push('No due date set.')
+    }
+
+    return warnings
+  }, [form.dueAtUtc, selectedCustomer, selectedServiceLocation])
+  const ticketCreateWizardSteps = useMemo<TicketCreateWizardStep[]>(() => [
+    {
+      value: 'customer',
+      label: 'Customer',
+      section: 'relationships',
+      isReady: Boolean(form.customerId),
+      detail: selectedCustomer?.name ?? 'Select customer'
+    },
+    {
+      value: 'billing-party',
+      label: 'Billing party',
+      section: 'relationships',
+      isReady: Boolean(form.billingPartyCustomerId),
+      detail: selectedBillingParty?.name ?? 'Select billing party'
+    },
+    {
+      value: 'job-location',
+      label: 'Job location',
+      section: 'relationships',
+      isReady: Boolean(form.serviceLocationId),
+      detail: selectedServiceLocation?.locationName ?? 'Select job location'
+    },
+    {
+      value: 'equipment',
+      label: 'Equipment',
+      section: 'relationships',
+      isReady: true,
+      detail: form.equipmentId ? 'Equipment selected' : 'Optional'
+    },
+    {
+      value: 'schedule',
+      label: 'Schedule / assign tech',
+      section: 'schedule',
+      isReady: Boolean(form.scheduledStartAtUtc && form.dueAtUtc),
+      detail: form.scheduledStartAtUtc && form.dueAtUtc ? 'Schedule ready' : 'Set schedule and due date'
+    },
+    {
+      value: 'review',
+      label: 'Review and create',
+      section: 'scope',
+      isReady: Boolean(form.title.trim() && form.customerId && form.serviceLocationId && form.billingPartyCustomerId),
+      detail: dataQualityWarnings.length ? `${dataQualityWarnings.length} cleanup item${dataQualityWarnings.length === 1 ? '' : 's'}` : 'Ready for review'
+    }
+  ], [dataQualityWarnings.length, form.billingPartyCustomerId, form.customerId, form.dueAtUtc, form.equipmentId, form.scheduledStartAtUtc, form.serviceLocationId, form.title, selectedBillingParty, selectedCustomer, selectedServiceLocation])
   const equipmentQuickAddDuplicateWarnings = useMemo(() => {
     if (!form.customerId || !form.serviceLocationId) {
       return []
@@ -434,7 +568,140 @@ export function JobTicketEditorForm({
   const update = <K extends keyof CreateJobTicketDto>(key: K, value: CreateJobTicketDto[K]) => setForm((prev) => ({ ...prev, [key]: value }))
 
   const selectCustomer = (customerId: string) => {
-    setForm((prev) => ({ ...prev, customerId, serviceLocationId: '', equipmentId: null }))
+    setForm((prev) => ({
+      ...prev,
+      customerId,
+      billingPartyCustomerId: !prev.billingPartyCustomerId || prev.billingPartyCustomerId === prev.customerId
+        ? customerId
+        : prev.billingPartyCustomerId,
+      serviceLocationId: '',
+      equipmentId: null
+    }))
+  }
+
+  const selectServiceLocation = (serviceLocationId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      serviceLocationId,
+      equipmentId: null,
+      billingPartyCustomerId: prev.billingPartyCustomerId || allServiceLocations.find((item) => item.id === serviceLocationId)?.customerId || prev.customerId
+    }))
+  }
+
+  const selectEquipment = (equipmentId: string) => {
+    setForm((prev) => ({ ...prev, equipmentId: equipmentId || null }))
+  }
+
+  const selectBillingParty = (billingPartyCustomerId: string, message?: string) => {
+    setForm((prev) => ({ ...prev, billingPartyCustomerId }))
+    if (message) {
+      setCopyHelperError(null)
+      setCopyHelperMessage(message)
+    }
+  }
+
+  const useCustomerAsBillingParty = () => {
+    if (!selectedCustomer) {
+      setCopyHelperError('Select a customer before using customer as billing party.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    selectBillingParty(selectedCustomer.id, 'Customer selected as the billing party.')
+  }
+
+  const useJobSiteCustomerAsBillingParty = () => {
+    if (!jobSiteCustomer) {
+      setCopyHelperError('Select a job location with a related customer before using job-site customer as billing party.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    selectBillingParty(jobSiteCustomer.id, 'Job-site customer selected as the billing party.')
+  }
+
+  const useEquipmentBillingCustomer = () => {
+    if (!equipmentBillingCustomer) {
+      setCopyHelperError('Selected equipment has no separate billing customer.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    selectBillingParty(equipmentBillingCustomer.id, 'Equipment billing customer selected as the billing party.')
+  }
+
+  const copySelectedCustomerToServiceLocation = () => {
+    if (!selectedCustomer) {
+      setServiceLocationQuickAddError('Select a customer before using customer address.')
+      setServiceLocationQuickAddMessage(null)
+      return
+    }
+
+    if (!hasCustomerBillingAddress(selectedCustomer)) {
+      setServiceLocationQuickAddError('Selected customer has no billing address to copy.')
+      setServiceLocationQuickAddMessage(null)
+      return
+    }
+
+    setServiceLocationDraft((prev) => ({
+      ...prev,
+      locationName: prev.locationName || selectedCustomer.name,
+      onSiteContactName: sourceOrCurrent(selectedCustomer.contactName, prev.onSiteContactName) ?? '',
+      onSiteContactPhone: sourceOrCurrent(selectedCustomer.phone, prev.onSiteContactPhone) ?? '',
+      onSiteContactEmail: sourceOrCurrent(selectedCustomer.email, prev.onSiteContactEmail) ?? '',
+      addressLine1: sourceOrCurrent(selectedCustomer.billingAddressLine1, prev.addressLine1) ?? '',
+      addressLine2: sourceOrCurrent(selectedCustomer.billingAddressLine2, prev.addressLine2) ?? '',
+      city: sourceOrCurrent(selectedCustomer.billingCity, prev.city) ?? '',
+      state: sourceOrCurrent(selectedCustomer.billingState, prev.state) ?? '',
+      postalCode: sourceOrCurrent(selectedCustomer.billingPostalCode, prev.postalCode) ?? ''
+    }))
+    setServiceLocationQuickAddError(null)
+    setServiceLocationQuickAddMessage('Customer address copied into the job location.')
+    setCopyHelperError(null)
+    setCopyHelperMessage(null)
+  }
+
+  const copyBillingAddressToBillingContact = () => {
+    const source = selectedBillingParty ?? selectedCustomer
+
+    if (!source) {
+      setCopyHelperError('Select a billing party before using billing address.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      billingPartyCustomerId: source.id,
+      billingContactName: sourceOrCurrent(source.contactName, prev.billingContactName),
+      billingContactPhone: sourceOrCurrent(source.phone, prev.billingContactPhone),
+      billingContactEmail: sourceOrCurrent(source.email, prev.billingContactEmail)
+    }))
+    setCopyHelperError(null)
+    setCopyHelperMessage('Billing party contact copied into billing fields.')
+  }
+
+  const copyJobSiteContactToBillingContact = () => {
+    if (!selectedServiceLocation) {
+      setCopyHelperError('Select a job location before using job-site contact.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    if (!hasValue(selectedServiceLocation.onSiteContactName) && !hasValue(selectedServiceLocation.onSiteContactPhone) && !hasValue(selectedServiceLocation.onSiteContactEmail)) {
+      setCopyHelperError('Selected job location has no job-site contact to copy.')
+      setCopyHelperMessage(null)
+      return
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      billingContactName: sourceOrCurrent(selectedServiceLocation.onSiteContactName, prev.billingContactName),
+      billingContactPhone: sourceOrCurrent(selectedServiceLocation.onSiteContactPhone, prev.billingContactPhone),
+      billingContactEmail: sourceOrCurrent(selectedServiceLocation.onSiteContactEmail, prev.billingContactEmail)
+    }))
+    setCopyHelperError(null)
+    setCopyHelperMessage('Job-site contact copied into billing fields.')
   }
 
   const addJobType = () => {
@@ -459,7 +726,12 @@ export function JobTicketEditorForm({
       accountNumber: optionalText(customerDraft.accountNumber),
       contactName: optionalText(customerDraft.contactName),
       email: optionalText(customerDraft.email),
-      phone: optionalText(customerDraft.phone)
+      phone: optionalText(customerDraft.phone),
+      billingAddressLine1: optionalText(customerDraft.billingAddressLine1),
+      billingAddressLine2: optionalText(customerDraft.billingAddressLine2),
+      billingCity: optionalText(customerDraft.billingCity),
+      billingState: optionalText(customerDraft.billingState),
+      billingPostalCode: optionalText(customerDraft.billingPostalCode)
     }
 
     if (!payload.name) {
@@ -508,11 +780,20 @@ export function JobTicketEditorForm({
       customerId: form.customerId,
       companyName: selectedCustomer?.name ?? serviceLocationDraft.locationName.trim(),
       locationName: serviceLocationDraft.locationName.trim(),
+      onSiteContactName: optionalText(serviceLocationDraft.onSiteContactName),
+      onSiteContactPhone: optionalText(serviceLocationDraft.onSiteContactPhone),
+      onSiteContactEmail: optionalText(serviceLocationDraft.onSiteContactEmail),
       addressLine1: serviceLocationDraft.addressLine1.trim(),
+      addressLine2: optionalText(serviceLocationDraft.addressLine2),
       city: serviceLocationDraft.city.trim(),
       state: serviceLocationDraft.state.trim(),
       postalCode: serviceLocationDraft.postalCode.trim(),
+      parishCounty: optionalText(serviceLocationDraft.parishCounty),
       country: serviceLocationDraft.country.trim(),
+      gateCode: optionalText(serviceLocationDraft.gateCode),
+      accessInstructions: optionalText(serviceLocationDraft.accessInstructions),
+      safetyRequirements: optionalText(serviceLocationDraft.safetyRequirements),
+      siteNotes: optionalText(serviceLocationDraft.siteNotes),
       isActive: true
     }
 
@@ -615,12 +896,34 @@ export function JobTicketEditorForm({
   return (
     <form onSubmit={submit} className="stack job-editor-form section-ticket-editor">
       {error ? <p className="error">{error}</p> : null}
-      <section className="stack section-edit-readiness" aria-label="dispatch requirements review">
-        <h3>Dispatch Requirements</h3>
+      {copyHelperMessage ? <p className="success action-feedback-panel" role="status">{copyHelperMessage}</p> : null}
+      {copyHelperError ? <p className="error">{copyHelperError}</p> : null}
+      <section className="ticket-create-guide" aria-label="ticket create wizard">
+        <div className="ticket-create-guide-heading">
+          <h3>Ticket Create Wizard</h3>
+          <span className="muted">{ticketCreateWizardSteps.filter((step) => step.isReady).length} / {ticketCreateWizardSteps.length} ready</span>
+        </div>
+        <div className="ticket-create-step-list">
+          {ticketCreateWizardSteps.map((step, index) => (
+            <button
+              type="button"
+              key={step.value}
+              className={activeEditorSection === step.section ? 'ticket-create-step ticket-create-step-active' : 'ticket-create-step'}
+              aria-pressed={activeEditorSection === step.section}
+              onClick={() => setActiveEditorSection(step.section)}
+            >
+              <span>{index + 1}. {step.label}</span>
+              <small>{step.detail}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+      <section className="stack section-edit-readiness" aria-label="assignment and schedule requirements review">
+        <h3>Assignment & Schedule Requirements</h3>
         <div className="review-grid">
           <div>
-            <span className="muted">Dispatch Status</span>
-            <strong>{dispatchOpenItems.length ? 'Needs dispatch updates' : 'Ready to dispatch'}</strong>
+            <span className="muted">Work Readiness</span>
+            <strong>{dispatchOpenItems.length ? 'Needs assignment updates' : 'Ready to work'}</strong>
           </div>
           <div>
             <span className="muted">Requirements Ready</span>
@@ -633,14 +936,21 @@ export function JobTicketEditorForm({
         </div>
         <p className="muted">Next required update: {nextDispatchFix}</p>
         {dispatchOpenItems.length ? (
-          <ul className="muted" aria-label="dispatch requirement warnings">
+          <ul className="muted" aria-label="assignment and schedule requirement warnings">
             {dispatchOpenItems.map((check) => (
               <li key={check.label}>{check.label}: {check.detail}</li>
             ))}
           </ul>
         ) : (
-          <p className="muted">Dispatch status, customer, service location, equipment decision, schedule, due date, and job instructions are ready.</p>
+          <p className="muted">Work status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.</p>
         )}
+        {dataQualityWarnings.length ? (
+          <ul className="data-quality-warning-list" aria-label="ticket data quality warnings">
+            {dataQualityWarnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        ) : null}
       </section>
 
       <nav className="section-editor-nav" aria-label="ticket edit sections">
@@ -699,8 +1009,8 @@ export function JobTicketEditorForm({
       {activeEditorSection === 'relationships' ? (
         <section className="section-editor-panel stack" aria-label="Customer and equipment edit section">
           <div className="section-editor-heading">
-            <h3>Customer & Equipment</h3>
-            <p className="muted">Edit the customer, service location, billing party, and equipment relationships.</p>
+            <h3>Customer & Service Equipment</h3>
+            <p className="muted">Choose the customer, work location, billing party, and crane/equipment being serviced.</p>
           </div>
           <div className="field-with-action">
             <label>Customer
@@ -723,6 +1033,11 @@ export function JobTicketEditorForm({
                 <label>Contact Name<input value={customerDraft.contactName} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, contactName: e.target.value }))} /></label>
                 <label>Contact Phone<input value={customerDraft.phone} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, phone: e.target.value }))} /></label>
                 <label>Contact Email<input type="email" value={customerDraft.email} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, email: e.target.value }))} /></label>
+                <label>Billing Address<input value={customerDraft.billingAddressLine1} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingAddressLine1: e.target.value }))} /></label>
+                <label>Address Line 2<input value={customerDraft.billingAddressLine2} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingAddressLine2: e.target.value }))} /></label>
+                <label>Billing City<input value={customerDraft.billingCity} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingCity: e.target.value }))} /></label>
+                <label>Billing State<input value={customerDraft.billingState} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingState: e.target.value }))} /></label>
+                <label>Billing ZIP / Postal<input value={customerDraft.billingPostalCode} onChange={(e) => setCustomerDraft((prev) => ({ ...prev, billingPostalCode: e.target.value }))} /></label>
               </div>
               <div className="row">
                 <button type="button" onClick={addCustomer} disabled={isAddingCustomer}>
@@ -735,7 +1050,7 @@ export function JobTicketEditorForm({
           ) : null}
           <div className="field-with-action">
             <label>Service Location
-              <select value={form.serviceLocationId} onChange={(e) => update('serviceLocationId', e.target.value)}>
+              <select value={form.serviceLocationId} onChange={(e) => selectServiceLocation(e.target.value)}>
                 <option value="">Select location</option>
                 {filteredLocations.map((c) => <option key={c.id} value={c.id}>{c.locationName}</option>)}
               </select>
@@ -748,13 +1063,27 @@ export function JobTicketEditorForm({
           {serviceLocationQuickAddError ? <p className="error">{serviceLocationQuickAddError}</p> : null}
           {serviceLocationQuickAddOpen ? (
             <section className="quick-add-panel" aria-label="quick add service location">
+              <div className="copy-helper-row">
+                <button type="button" className="secondary-button" onClick={copySelectedCustomerToServiceLocation} disabled={!selectedCustomer}>
+                  Use customer address
+                </button>
+              </div>
               <div className="quick-add-grid">
                 <label>Location Name<input value={serviceLocationDraft.locationName} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, locationName: e.target.value }))} /></label>
+                <label>On-site Contact<input value={serviceLocationDraft.onSiteContactName} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, onSiteContactName: e.target.value }))} /></label>
+                <label>On-site Phone<input value={serviceLocationDraft.onSiteContactPhone} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, onSiteContactPhone: e.target.value }))} /></label>
+                <label>On-site Email<input type="email" value={serviceLocationDraft.onSiteContactEmail} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, onSiteContactEmail: e.target.value }))} /></label>
                 <label>Street Address<input value={serviceLocationDraft.addressLine1} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, addressLine1: e.target.value }))} /></label>
+                <label>Street Address 2<input value={serviceLocationDraft.addressLine2} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, addressLine2: e.target.value }))} /></label>
                 <label>City<input value={serviceLocationDraft.city} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, city: e.target.value }))} /></label>
                 <label>State<input value={serviceLocationDraft.state} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, state: e.target.value }))} /></label>
                 <label>Postal Code<input value={serviceLocationDraft.postalCode} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, postalCode: e.target.value }))} /></label>
+                <label>Parish / County<input value={serviceLocationDraft.parishCounty} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, parishCounty: e.target.value }))} /></label>
                 <label>Country<input value={serviceLocationDraft.country} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, country: e.target.value }))} /></label>
+                <label>Gate Code<input value={serviceLocationDraft.gateCode} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, gateCode: e.target.value }))} /></label>
+                <label>Access Instructions<input value={serviceLocationDraft.accessInstructions} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, accessInstructions: e.target.value }))} /></label>
+                <label>Safety Requirements<input value={serviceLocationDraft.safetyRequirements} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, safetyRequirements: e.target.value }))} /></label>
+                <label>Site Notes<input value={serviceLocationDraft.siteNotes} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, siteNotes: e.target.value }))} /></label>
               </div>
               <div className="row">
                 <button type="button" onClick={addServiceLocation} disabled={isAddingServiceLocation}>
@@ -764,11 +1093,37 @@ export function JobTicketEditorForm({
               </div>
             </section>
           ) : null}
-          <label>Billing Party<select value={form.billingPartyCustomerId} onChange={(e) => update('billingPartyCustomerId', e.target.value)}><option value="">Select billing party</option>{allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          <section className="billing-party-panel stack" aria-label="billing party selection">
+            <div className="section-editor-heading">
+              <h4>Billing Party</h4>
+              <p className="muted">Choose who should receive the invoice. This can be the customer, the job-site customer, the equipment billing customer, or another customer record.</p>
+            </div>
+            <div className="copy-helper-row">
+              <button type="button" className="secondary-button" onClick={useCustomerAsBillingParty} disabled={!selectedCustomer}>
+                Use selected customer
+              </button>
+              <button type="button" className="secondary-button" onClick={useJobSiteCustomerAsBillingParty} disabled={!jobSiteCustomer}>
+                Use job-site customer
+              </button>
+              <button type="button" className="secondary-button" onClick={useEquipmentBillingCustomer} disabled={!equipmentBillingCustomer}>
+                Use equipment billing customer
+              </button>
+            </div>
+            <label>Billing Party
+              <select value={form.billingPartyCustomerId} onChange={(e) => selectBillingParty(e.target.value)}>
+                <option value="">Select billing party</option>
+                {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <div className="billing-party-summary" aria-label="billing party relationship">
+              <span>{billingPartyRelationship}</span>
+              {selectedBillingParty ? <strong>{selectedBillingParty.name}</strong> : null}
+            </div>
+          </section>
           <div className="field-with-action">
-            <label>Equipment
-              <select value={form.equipmentId ?? ''} onChange={(e) => update('equipmentId', e.target.value || null)}>
-                <option value="">None</option>
+            <label>Crane / Equipment Being Serviced
+              <select value={form.equipmentId ?? ''} onChange={(e) => selectEquipment(e.target.value)}>
+                <option value="">No equipment record</option>
                 {filteredEquipment.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </label>
@@ -776,6 +1131,7 @@ export function JobTicketEditorForm({
               Quick add equipment
             </button>
           </div>
+          <p className="muted">Choose the customer's crane or equipment this ticket is for. For component-only work, describe the part in Job Title and Service Instructions.</p>
           {equipmentQuickAddMessage ? <p className="success" role="status">{equipmentQuickAddMessage}</p> : null}
           {equipmentQuickAddError ? <p className="error">{equipmentQuickAddError}</p> : null}
           {equipmentQuickAddOpen ? (
@@ -814,7 +1170,7 @@ export function JobTicketEditorForm({
           <section className="quick-add-panel" aria-label="equipment service history">
             <h3>Recent Equipment Service History</h3>
             {!form.equipmentId ? (
-              <p className="muted">Select equipment to review recent service history before saving this ticket.</p>
+              <p className="muted">Select the crane/equipment being serviced to review its recent service history before saving this ticket.</p>
             ) : isLoadingEquipmentHistory ? (
               <p className="muted" role="status">Loading recent equipment service history...</p>
             ) : equipmentHistoryError ? (
@@ -855,6 +1211,14 @@ export function JobTicketEditorForm({
             <p className="muted">Edit purchase order and billing contact details used for closeout review.</p>
           </div>
           <label>Purchase Order Number<input value={form.purchaseOrderNumber ?? ''} onChange={(e) => update('purchaseOrderNumber', e.target.value || null)} placeholder="Customer or internal PO reference" /></label>
+          <div className="copy-helper-row">
+            <button type="button" className="secondary-button" onClick={copyBillingAddressToBillingContact} disabled={!selectedBillingParty && !selectedCustomer}>
+              Use billing address
+            </button>
+            <button type="button" className="secondary-button" onClick={copyJobSiteContactToBillingContact} disabled={!selectedServiceLocation}>
+              Use job-site contact
+            </button>
+          </div>
           <div className="section-editor-grid">
             <label>Billing Contact Name<input value={form.billingContactName ?? ''} onChange={(e) => update('billingContactName', e.target.value || null)} /></label>
             <label>Billing Contact Phone<input value={form.billingContactPhone ?? ''} onChange={(e) => update('billingContactPhone', e.target.value || null)} /></label>
@@ -867,7 +1231,7 @@ export function JobTicketEditorForm({
         <section className="section-editor-panel stack" aria-label="Schedule edit section">
           <div className="section-editor-heading">
             <h3>Schedule</h3>
-            <p className="muted">Edit requested, scheduled start, and due dates for dispatch planning.</p>
+            <p className="muted">Edit requested, scheduled start, and due dates for work planning.</p>
           </div>
           <div className="section-editor-grid">
             <label>Requested (UTC)<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>

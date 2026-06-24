@@ -5,10 +5,9 @@ import { JobDetailPage } from '../pages/employee/JobDetailPage'
 import { LoginPage } from '../pages/employee/LoginPage'
 import { MyJobsPage } from '../pages/employee/MyJobsPage'
 import {
+  CompanyConfigurationPage,
   CustomersPage,
-  DispatchBoardPage,
   EquipmentPage,
-  InventoryPage,
   PartRequestsPage,
   PartsApprovalPage,
   PartsPage,
@@ -17,6 +16,7 @@ import {
   ReportsPage,
   ServiceLocationsPage,
   SystemWikiPage,
+  TicketStatusFiltersPage,
   TimeApprovalPage,
   UnauthorizedPage,
   UsersPage
@@ -56,7 +56,7 @@ export function AppRouter() {
       <Route element={<ProtectedRoute allowedRoles={['Manager', 'Admin']} />}>
         <Route path="/manage" element={<ManagerShell />}>
           <Route index element={<ManagerDashboardPage />} />
-          <Route path="dispatch" element={<DispatchBoardPage />} />
+          <Route path="dispatch" element={<Navigate to="/manage/job-tickets" replace />} />
           <Route path="job-tickets" element={<JobTicketListPage />} />
           <Route path="job-tickets/new" element={<JobTicketCreatePage />} />
           <Route path="job-tickets/:jobTicketId" element={<JobTicketDetailPage />} />
@@ -65,7 +65,7 @@ export function AppRouter() {
           <Route path="equipment" element={<EquipmentPage />} />
           <Route path="parts" element={<PartsPage />} />
           <Route path="part-requests" element={<PartRequestsPage />} />
-          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="inventory" element={<Navigate to="/manage" replace />} />
           <Route path="purchasing" element={<PurchasingWorkbenchPage />} />
           <Route path="parts-usage-history" element={<PartsUsageHistoryPage />} />
           <Route path="time-approval" element={<TimeApprovalPage />} />
@@ -73,6 +73,8 @@ export function AppRouter() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="wiki" element={<SystemWikiPage />} />
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+            <Route path="company-configuration" element={<CompanyConfigurationPage />} />
+            <Route path="ticket-status-filters" element={<TicketStatusFiltersPage />} />
             <Route path="users" element={<UsersPage />} />
           </Route>
         </Route>

@@ -46,24 +46,26 @@ export function PartRequestsPage() {
 
   const load = async () => {
     setIsLoading(true)
-    const [requestResponse, partResponse, jobTicketResponse] = await Promise.all([
-      partRequestsApi.listQueue({ status: statusFilter, search, jobTicketId }),
-      masterDataApi.listParts(),
-      jobTicketsApi.listAll()
-    ])
-    setRequests(requestResponse)
-    setParts(partResponse)
-    setJobTickets(jobTicketResponse)
-    setSelectedId((current) => requestResponse.some((request) => request.id === current) ? current : requestResponse[0]?.id ?? null)
-    setError(null)
-    setIsLoading(false)
+    try {
+      const [requestResponse, partResponse, jobTicketResponse] = await Promise.all([
+        partRequestsApi.listQueue({ status: statusFilter, search, jobTicketId }),
+        masterDataApi.listParts(),
+        jobTicketsApi.listAll()
+      ])
+      setRequests(requestResponse)
+      setParts(partResponse)
+      setJobTickets(jobTicketResponse)
+      setSelectedId((current) => requestResponse.some((request) => request.id === current) ? current : requestResponse[0]?.id ?? null)
+      setError(null)
+    } catch (requestError) {
+      setError(requestError instanceof ApiError ? requestError.message : 'Unable to load part requests.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
-    load().catch((requestError) => {
-      setError(requestError instanceof ApiError ? requestError.message : 'Unable to load part requests.')
-      setIsLoading(false)
-    })
+    load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

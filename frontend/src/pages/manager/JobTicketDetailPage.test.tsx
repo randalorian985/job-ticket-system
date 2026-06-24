@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../api/filesApi'
@@ -165,9 +165,13 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Actions' })).toBeInTheDocument()
+    expect(screen.getByRole('tooltip', { name: 'These checks identify missing assignment or scheduling details before work starts. Completed checks stay available below.' })).toBeInTheDocument()
+    expect(screen.getByLabelText('ticket workflow path')).toHaveTextContent('Assignment & Schedule')
+    expect(screen.getByLabelText('ticket workflow path')).toHaveTextContent('Invoice Review')
+    expect(screen.getByLabelText('mobile ticket quick actions')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Service Details' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Status & Priority' })).toBeInTheDocument()
-    selectWorkflowTab('Dispatch')
+    selectWorkflowTab('Assignment & Schedule')
     expect(screen.getByRole('heading', { name: 'Technician Assignments' })).toBeInTheDocument()
     selectWorkflowTab('Labor')
     expect(screen.getByRole('heading', { name: 'Labor & Time Entries' })).toBeInTheDocument()
@@ -178,27 +182,30 @@ describe('JobTicketDetailPage', () => {
     selectWorkflowTab('History')
     expect(screen.getByRole('heading', { name: 'Ticket History' })).toBeInTheDocument()
     selectWorkflowTab('Invoice Review')
-    expect(screen.getByRole('heading', { name: 'Invoice Review' })).toBeInTheDocument()
-    expectRenderedText('Ready for dispatch review')
-    expectRenderedText('Next Required UpdateAll dispatch requirements are complete.')
+    expect(screen.getByLabelText('invoice review')).toHaveFocus()
+    expectRenderedText('Ready to work')
+    expectRenderedText('Next Required UpdateAll assignment and schedule requirements are complete.')
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
     expectRenderedText('Alex Rivera Lead Tech')
     expect(screen.getByText('8 of 8 complete')).toBeInTheDocument()
-    expect(screen.getByText('No dispatch blockers are currently visible.')).toBeInTheDocument()
+    expect(screen.getByText('No assignment or schedule blockers are currently visible.')).toBeInTheDocument()
     expect(screen.getByText('Review 8 completed requirements')).toBeInTheDocument()
-    expect(screen.getByRole('tooltip', { name: 'These checks identify missing information before dispatch review. Completed checks stay available below.' })).toBeInTheDocument()
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
     selectWorkflowTab('Parts')
     expect(screen.getByRole('tabpanel', { name: 'Parts' })).toHaveAttribute('aria-label', 'parts used and requested panel')
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openStatusPanel()
     expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
+    expect(screen.getByLabelText('status workflow review')).toHaveFocus()
     expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openArchivePanel()
     expect(screen.getByRole('heading', { name: 'Archive Review' })).toBeInTheDocument()
+    expect(screen.getByLabelText('archive workflow review')).toHaveFocus()
     expect(screen.getByLabelText('Archive Reason')).toBeInTheDocument()
   })
 
@@ -220,6 +227,9 @@ describe('JobTicketDetailPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Note' }))
     expect(screen.getByRole('heading', { name: 'Add Note' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'History' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('button', { name: 'Back to ticket overview' })).toBeInTheDocument()
+    expect(screen.getByLabelText('quick note panel')).toHaveFocus()
     fireEvent.change(screen.getByLabelText('Ticket note'), { target: { value: 'Manager follow-up note' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Note' }))
     await waitFor(() => expect(jobTicketsApi.addWorkEntry).toHaveBeenCalledWith('j1', expect.objectContaining({
@@ -228,8 +238,11 @@ describe('JobTicketDetailPage', () => {
       notes: 'Manager follow-up note'
     })))
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
+    expect(screen.queryByLabelText('quick note panel')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Add Photo' }))
     expect(screen.getByRole('heading', { name: 'Add Photo' })).toBeInTheDocument()
+    expect(screen.getByLabelText('quick photo upload panel')).toHaveFocus()
     const file = new File(['photo'], 'after.jpg', { type: 'image/jpeg' })
     fireEvent.change(screen.getByLabelText('Photo or file'), { target: { files: [file] } })
     fireEvent.change(screen.getByLabelText('Caption'), { target: { value: 'After repair' } })
@@ -237,9 +250,13 @@ describe('JobTicketDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Upload Photo/File' }))
     await waitFor(() => expect(filesApi.upload).toHaveBeenCalledWith('j1', expect.any(FormData)))
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
+    expect(screen.queryByLabelText('quick photo upload panel')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }))
     expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
+    expect(screen.getByLabelText('labor and time entries panel')).toHaveFocus()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openStatusPanel()
     expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
   })
@@ -437,7 +454,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('Ticket part added.')).toBeInTheDocument()
   })
 
-  it('treats a no-equipment decision as dispatch-ready when the other requirements are complete', async () => {
+  it('treats a component-only ticket as ready to work when the other requirements are complete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -459,11 +476,11 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expectRenderedText('Ready for dispatch review')
-    expectRenderedText('this ticket can be dispatched without equipment')
+    expectRenderedText('Ready to work')
+    expectRenderedText('check the job scope for component-only work')
   })
 
-  it('marks completed tickets as outside active dispatch even when detail context is complete', async () => {
+  it('marks completed tickets as outside active work even when detail context is complete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -485,9 +502,9 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expectRenderedText('Not active dispatch')
-    expectRenderedText('Next Required UpdateTicket is outside the active dispatch queue.')
-    expectRenderedText('Dispatch statusTicket is outside the active dispatch queue.')
+    expectRenderedText('Not active work')
+    expectRenderedText('Next Required UpdateTicket is outside the active work queue.')
+    expectRenderedText('Work statusTicket is outside the active work queue.')
   })
 
   it('loads assignable technicians for manager assignment dropdown without calling the admin users endpoint', async () => {
@@ -501,7 +518,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(usersApi.list).not.toHaveBeenCalled()
     expect(usersApi.listAssignableEmployees).toHaveBeenCalled()
-    selectWorkflowTab('Dispatch')
+    selectWorkflowTab('Assignment & Schedule')
     expectRenderedText('Assigned employees: Alex Rivera.')
     expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
@@ -526,7 +543,7 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('Alex Rivera Lead Tech')
   })
 
-  it('warns when dispatch coverage is incomplete', async () => {
+  it('warns when assignment and schedule coverage is incomplete', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -545,8 +562,8 @@ describe('JobTicketDetailPage', () => {
 
     await screen.findAllByText('Needs attention')
     expectRenderedText('Next Required UpdateNo employees are assigned.')
-    expect(screen.getByText('4 open')).toBeInTheDocument()
-    expect(screen.getByRole('list', { name: 'open dispatch readiness checks' })).toBeInTheDocument()
+    expect(screen.getAllByText('4 open').length).toBeGreaterThan(0)
+    expect(screen.getByRole('list', { name: 'open assignment and schedule checks' })).toBeInTheDocument()
     expect(screen.getByText('Review 4 completed requirements')).toBeInTheDocument()
     expectRenderedText('No employees are assigned.')
     expectRenderedText('No lead tech is marked.')
@@ -554,18 +571,18 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('No due date is set.')
   })
 
-  it('marks dispatch readiness unavailable and disables assignment edits when assignments fail to load', async () => {
+  it('marks work readiness unavailable and disables assignment edits when assignments fail to load', async () => {
     vi.mocked(jobTicketsApi.listAssignments).mockRejectedValue(new ApiError('Assignments unavailable', 503, undefined))
 
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Assignment data unavailable')
-    expectRenderedText('Next Required UpdateAssignment data could not be loaded. Refresh or retry before dispatch review.')
-    selectWorkflowTab('Dispatch')
-    expect(screen.getByRole('alert')).toHaveTextContent('Assignment data could not be loaded. Refresh before editing assignments or dispatch review.')
+    expectRenderedText('Next Required UpdateAssignment data could not be loaded. Refresh or retry before assignment review.')
+    selectWorkflowTab('Assignment & Schedule')
+    expect(screen.getByRole('alert')).toHaveTextContent('Assignment data could not be loaded. Refresh before editing assignments or assignment review.')
     expect(screen.getByRole('button', { name: 'Assign Employee' })).toBeDisabled()
-    expectRenderedText('Assignment dataAssignment data could not be loaded. Refresh or retry before dispatch review.')
+    expectRenderedText('Assignment dataAssignment data could not be loaded. Refresh or retry before assignment review.')
   })
 
   it('prevents adding a second lead without clearing the current one first', async () => {
@@ -590,6 +607,21 @@ describe('JobTicketDetailPage', () => {
 
     await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('j1', { status: 4 }))
     expect(await screen.findByText('Status updated.')).toBeInTheDocument()
+  })
+
+  it('surfaces refresh failures after a status update without leaving the ticket loading', async () => {
+    renderPage()
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    vi.mocked(jobTicketsApi.get).mockRejectedValueOnce(new Error('reload failed'))
+
+    openStatusPanel()
+    fireEvent.change(screen.getByLabelText('Next Status'), { target: { value: '4' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Update to In Progress' }))
+
+    await waitFor(() => expect(jobTicketsApi.changeStatus).toHaveBeenCalledWith('j1', { status: 4 }))
+    expect(await screen.findByText('Status updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Unable to load job ticket details.')).toBeInTheDocument()
+    expect(screen.queryByText('Loading job review details...')).not.toBeInTheDocument()
   })
 
   it('feeds closeout warnings into invoice status review', async () => {
@@ -620,7 +652,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    fireEvent.click(screen.getByText('Print Job Review'))
+    fireEvent.click(screen.getByText('Print Review'))
 
     expect(window.print).toHaveBeenCalled()
   })
@@ -669,7 +701,7 @@ describe('JobTicketDetailPage', () => {
     renderPage('/manage/job-tickets/j1?returnTo=%2Fmanage%2Fjob-tickets%3Fstatus%3Dactive%26readiness%3Dneeds-review&returnLabel=Spoofed+Label&tab=parts')
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Back to Needs Dispatch Review' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Back to Needs Assignment Review' })).toHaveAttribute(
       'href',
       '/manage/job-tickets?status=active&readiness=needs-review'
     )
@@ -678,10 +710,10 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByLabelText('service details, customer, location, and equipment')).toHaveAttribute('hidden')
     fireEvent.keyDown(screen.getByRole('tab', { name: 'Parts' }), { key: 'ArrowRight' })
     expect(screen.getByRole('tab', { name: 'Files' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Files' })).toHaveFocus()
+    await waitFor(() => expect(screen.getByLabelText('job files and photos panel')).toHaveFocus())
   })
 
-  it('recommends closeout work instead of dispatch for a completed ticket', async () => {
+  it('recommends closeout work instead of assignment work for a completed ticket', async () => {
     vi.mocked(jobTicketsApi.get).mockResolvedValue({
       id: 'j1',
       ticketNumber: 'JT-1',
@@ -699,16 +731,35 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     const recommendation = screen.getByLabelText('recommended action')
+    expect(recommendation).toHaveTextContent('Finish invoice review')
+    expect(recommendation).toHaveTextContent('Target workflow')
     expect(recommendation).toHaveTextContent('Some loaded time entries still need approval review.')
-    expect(recommendation).not.toHaveTextContent('Ticket is outside the active dispatch queue.')
+    expect(recommendation).not.toHaveTextContent('Ticket is outside the active work queue.')
 
-    const openWorkflowButton = screen.getByRole('button', { name: 'Open workflow' })
+    const openWorkflowButton = screen.getByRole('button', { name: 'Open Invoice Review' })
     expect(openWorkflowButton).toHaveAttribute('title', 'Open the Invoice Review workflow screen')
     expect(screen.getByRole('tooltip', { name: 'Open the recommended Invoice Review screen for this ticket.' })).toBeInTheDocument()
     fireEvent.click(openWorkflowButton)
     expect(screen.getByRole('tab', { name: 'Invoice Review' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('button', { name: 'Back to ticket overview' })).toBeInTheDocument()
     expect(screen.getByLabelText('invoice review')).toHaveFocus()
+  })
+
+  it('keeps mobile quick actions wired to focused ticket workflows', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    const quickActions = screen.getByLabelText('mobile ticket quick actions')
+
+    fireEvent.click(within(quickActions).getByRole('button', { name: 'Quick Status' }))
+    expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back to ticket overview' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Service Details' })).toHaveAttribute('aria-selected', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
+    fireEvent.click(within(quickActions).getByRole('button', { name: 'Quick Labor' }))
+    expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
+    expect(screen.getByLabelText('labor and time entries panel')).toHaveFocus()
   })
 
 })

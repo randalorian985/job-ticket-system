@@ -37,6 +37,8 @@ TestResults/
 
 # Misc
 *.tmp
+.codex-remote-attachments/
+backups/
 
 # TypeScript
 *.tsbuildinfo

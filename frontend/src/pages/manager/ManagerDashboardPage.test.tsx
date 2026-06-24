@@ -30,7 +30,7 @@ describe('ManagerDashboardPage', () => {
     })
   })
 
-  it('renders the refreshed operations board and dispatch readiness summary from loaded manager job data', async () => {
+  it('renders the refreshed operations board and assignment summary from loaded manager job data', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'j1', ticketNumber: 'JT-1', status: 3 },
       { id: 'j2', ticketNumber: 'JT-2', status: 4, scheduledStartAtUtc: '2026-06-01T14:00:00Z', dueAtUtc: '2026-06-02T14:00:00Z' },
@@ -49,31 +49,28 @@ describe('ManagerDashboardPage', () => {
     expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
     expect(screen.getByLabelText('manager operations dashboard')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Create Job Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
-    const shortcuts = screen.getByLabelText('manager workspace shortcuts')
-    expect(within(shortcuts).getByRole('heading', { name: 'Workspace Shortcuts' })).toBeInTheDocument()
-    expect(within(shortcuts).getByRole('link', { name: 'Customers' })).toHaveAttribute('href', '/manage/customers')
-    expect(within(shortcuts).getByRole('link', { name: 'Part Requests' })).toHaveAttribute('href', '/manage/part-requests')
+    expect(screen.queryByLabelText('manager workspace shortcuts')).not.toBeInTheDocument()
 
     const kpis = screen.getByLabelText('operations summary')
-    expect(within(kpis).getByText('Open Jobs')).toBeInTheDocument()
+    expect(await within(kpis).findByText('Open Jobs')).toBeInTheDocument()
     expect(within(kpis).getByText('Assigned')).toBeInTheDocument()
     expect(within(kpis).getByText('In Progress')).toBeInTheDocument()
     expect(within(kpis).getByText('Waiting on Parts')).toBeInTheDocument()
-    expect(within(kpis).getByText('Dispatch-ready')).toBeInTheDocument()
+    expect(within(kpis).getByText('Ready to Work')).toBeInTheDocument()
     expect(within(kpis).getByText('All Jobs')).toBeInTheDocument()
 
     expect(screen.getByRole('heading', { name: 'Unresolved Jobs by Status' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Assignment & Schedule' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Back Office Review' })).toBeInTheDocument()
-    expect(screen.getByText('Next dispatch focus:')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'JT-1: Assign at least one employee before dispatch.' })).toHaveAttribute(
+    expect(screen.getByText('Next assignment focus:')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'JT-1: Assign at least one employee.' })).toHaveAttribute(
       'href',
       '/manage/job-tickets/j1?returnTo=%2Fmanage'
     )
     expect(jobTicketsApi.listAssignments).toHaveBeenCalledTimes(5)
   })
 
-  it('shows a ready dashboard dispatch focus when active tickets have assignment, lead, schedule, and due date', async () => {
+  it('shows a ready dashboard assignment focus when active tickets have assignment, lead, schedule, and due date', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'j2', ticketNumber: 'JT-2', status: 4, scheduledStartAtUtc: '2026-06-01T14:00:00Z', dueAtUtc: '2026-06-02T14:00:00Z' }
     ] as any)
@@ -84,11 +81,11 @@ describe('ManagerDashboardPage', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Dispatch Readiness' })).toBeInTheDocument()
-    expect(screen.getByText('Next dispatch focus: No dispatch blockers are visible from the dashboard data.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Assignment & Schedule' })).toBeInTheDocument()
+    expect(screen.getByText('Next assignment focus: No assignment or schedule blockers are visible from the dashboard data.')).toBeInTheDocument()
   })
 
-  it('shows an error instead of dispatch readiness panels when assignment loading fails', async () => {
+  it('shows an error instead of assignment panels when assignment loading fails', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'j2', ticketNumber: 'JT-2', status: 4, scheduledStartAtUtc: '2026-06-01T14:00:00Z', dueAtUtc: '2026-06-02T14:00:00Z' }
     ] as any)
@@ -101,12 +98,12 @@ describe('ManagerDashboardPage', () => {
     )
 
     expect(await screen.findByText('Unable to load the operations summary.')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Dispatch Readiness' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Assignment & Schedule' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Back Office Review' })).not.toBeInTheDocument()
-    expect(screen.queryByText(/Next dispatch focus:/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Next assignment focus:/)).not.toBeInTheDocument()
   })
 
-  it('keeps admin-only user link limited to admin users', async () => {
+  it('keeps configuration links out of the summary dashboard', async () => {
     vi.mocked(useAuth).mockReturnValue({ user: { role: 'Admin' } } as any)
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
 
@@ -116,6 +113,8 @@ describe('ManagerDashboardPage', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByText('Users')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(screen.queryByText('Ticket Filters')).not.toBeInTheDocument()
+    expect(screen.queryByText('Users')).not.toBeInTheDocument()
   })
 })

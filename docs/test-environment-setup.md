@@ -123,13 +123,19 @@ Pilot credentials:
 | Admin | `pilot.admin` | `PilotDemo123!` |
 | Manager | `pilot.manager` | `PilotDemo123!` |
 | Employee | `pilot.tech` | `PilotDemo123!` |
+| Employee | `pilot.tech.backup` | `PilotDemo123!` |
 
 Seeded job tickets:
 - `PILOT-READY-001`: completed ticket with approved labor/part lines and invoice-ready reporting data.
 - `PILOT-ACTIVE-002`: employee-assigned ticket for clock-in/out, work notes, parts, and file/photo walkthroughs.
 - `PILOT-PARTS-003`: waiting-on-parts ticket with a pending part line for manager review.
+- `PILOT-UNSCHEDULED-004`: submitted, unassigned ticket with missing schedule and due date for queue/dispatch readiness review.
+- `PILOT-NEEDS-LEAD-005`: assigned ticket with an employee but no lead tech marked.
+- `PILOT-TODAY-006`: urgent in-progress ticket assigned to both pilot technicians for compact queue and mobile workflow walkthroughs.
 
 Do not enable `PilotDemoSeed` in production-like environments. It intentionally creates demo customers, equipment, tickets, users, parts, and related workflow records.
+
+If a local database was seeded before these records existed, reset that local database or Docker volume before rerunning `PilotDemoSeed`; the seed service intentionally avoids duplicating records once the pilot marker customer exists.
 
 ## Choosing between bootstrap and seed data
 
@@ -184,7 +190,7 @@ Use this order:
 6. Record a blocker only after documenting which workarounds were attempted and why they were insufficient for the current task.
 
 Current known workaround:
-- GitHub Actions posts `scheduled-runner-bundle` manifest and chunk comments to issue #166 for the latest `main`.
+- GitHub Actions posts `scheduled-runner-bundle` manifest and chunk comments to issue #319 for the latest `main`.
 - The scheduled runner can reconstruct a checkout-like workspace from those chunks when normal GitHub checkout remains blocked.
 - Connector-created PRs must not be called merge-worthy until GitHub Actions or another checkout-capable environment has passed required validation.
 

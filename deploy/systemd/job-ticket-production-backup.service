@@ -1,0 +1,11 @@
+[Unit]
+Description=Job Ticket System production backup
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/job-ticket-system
+Environment=PROJECT_DIR=/opt/job-ticket-system
+Environment=RETENTION_DAYS=14
+ExecStart=/usr/local/sbin/job-ticket-production-backup

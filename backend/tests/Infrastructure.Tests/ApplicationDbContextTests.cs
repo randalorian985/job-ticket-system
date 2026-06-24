@@ -1,7 +1,9 @@
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Xunit;
 
 namespace JobTicketSystem.Infrastructure.Tests;
@@ -21,6 +23,7 @@ public sealed class ApplicationDbContextTests
         Assert.Contains(typeof(Vendor), entityTypes);
         Assert.Contains(typeof(PartCategory), entityTypes);
         Assert.Contains(typeof(Part), entityTypes);
+        Assert.Contains(typeof(TicketStatusFilterOption), entityTypes);
         Assert.Contains(typeof(JobTicket), entityTypes);
         Assert.Contains(typeof(JobTicketEmployee), entityTypes);
         Assert.Contains(typeof(TimeEntry), entityTypes);
@@ -120,6 +123,20 @@ public sealed class ApplicationDbContextTests
         Assert.NotEqual(default, customer.UpdatedAtUtc);
         Assert.Equal(DateTimeKind.Utc, customer.CreatedAtUtc.Kind);
         Assert.Equal(DateTimeKind.Utc, customer.UpdatedAtUtc.Kind);
+    }
+
+    [Fact]
+    public void Sql_server_migration_script_can_be_generated()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=JobTicketMigrationScriptSmoke;Trusted_Connection=True;TrustServerCertificate=True")
+            .Options;
+
+        using var context = new ApplicationDbContext(options);
+        var script = context.GetService<IMigrator>().GenerateScript();
+
+        Assert.Contains("TicketStatusFilterOptions", script);
+        Assert.Contains("Waiting on Customer", script);
     }
 
     private static ApplicationDbContext CreateContext()

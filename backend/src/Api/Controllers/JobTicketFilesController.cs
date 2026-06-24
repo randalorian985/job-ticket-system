@@ -40,7 +40,7 @@ public sealed class JobTicketFilesController(IJobTicketFilesService service, ICu
     }
 
     [HttpPost]
-    [RequestSizeLimit(50_000_000)]
+    [RequestSizeLimit(JobTicketFilesService.MaxUploadFileSizeBytes)]
     public async Task<ActionResult<JobTicketFileDto>> UploadAsync(Guid jobTicketId, [FromForm] UploadJobTicketFileRequestDto request, CancellationToken cancellationToken = default)
     {
         try

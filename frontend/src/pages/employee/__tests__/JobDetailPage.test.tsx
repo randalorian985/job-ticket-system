@@ -174,7 +174,7 @@ describe('JobDetailPage', () => {
         caption: 'Before photo'
       }
     ])
-    mockNoOpenEntry()
+    mockOpenEntry()
 
     renderJobDetail()
 
@@ -197,15 +197,21 @@ describe('JobDetailPage', () => {
     expect(within(jobReadiness).getByText('7 / 7')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('The job requirements are complete for assigned work.')).toBeInTheDocument()
     expect(within(jobReadiness).getByText('This ticket has the information needed to start work.')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Ticket is available for field work.')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Customer: Acme Manufacturing')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Service location: North Plant')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Equipment: Hydraulic Lift 7')).toBeInTheDocument()
-    expect(within(jobReadiness).getByText('Job instructions are available.')).toBeInTheDocument()
-    expect(screen.getByText('Job setup is ready for clock-in.')).toBeInTheDocument()
+    expect(within(jobReadiness).getByText('Ready for field work.')).toBeInTheDocument()
+    expect(within(jobReadiness).queryByLabelText('open job requirements')).not.toBeInTheDocument()
+    expect(screen.getByText('Job setup is ready for active work.')).toBeInTheDocument()
+
+    const nextAction = screen.getByLabelText('next job action')
+    expect(within(nextAction).getByText('Capture one field update at a time')).toBeInTheDocument()
+    expect(within(nextAction).getByText(/These tools are tied to this ticket and time entry/)).toBeInTheDocument()
+    const shortcuts = within(nextAction).getByLabelText('active job shortcuts')
+    expect(within(shortcuts).getByRole('link', { name: 'Add Note' })).toHaveAttribute('href', '#work-note-panel')
+    expect(within(shortcuts).getByRole('link', { name: 'Add Part' })).toHaveAttribute('href', '#part-request-panel')
+    expect(within(shortcuts).getByRole('link', { name: 'Upload Photo' })).toHaveAttribute('href', '#photo-upload-panel')
+    expect(within(shortcuts).getByRole('link', { name: 'Clock Out' })).toHaveAttribute('href', '#clock-card')
   })
 
-  it('keeps field recording disabled until the technician clocks into this ticket', async () => {
+  it('hides field recording tools until the technician clocks into this ticket', async () => {
     mockEmployeeAuth()
     mockJob()
     vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
@@ -218,12 +224,54 @@ describe('JobDetailPage', () => {
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeEnabled()
     expect(screen.getByLabelText('Clock note (optional)')).toBeEnabled()
-    expect(screen.getByLabelText('Work note')).toBeDisabled()
-    expect(screen.getByLabelText('Photo or file')).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Save Work Note' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Add / Request Part' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled()
-    expect(screen.getAllByText('Clock in to this ticket before adding work notes, parts, or photos.').length).toBeGreaterThan(0)
+    const nextAction = screen.getByLabelText('next job action')
+    expect(within(nextAction).getByText('Clock in when you are ready to work')).toBeInTheDocument()
+    expect(within(nextAction).getByRole('link', { name: 'Clock In' })).toHaveAttribute('href', '#clock-card')
+    expect(screen.getByLabelText('field tools locked')).toBeInTheDocument()
+    expect(screen.getByText('Clock in to add notes, parts, and photos')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Work note')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Photo or file')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Save Work Note' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add / Request Part' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Upload' })).not.toBeInTheDocument()
+    expect(screen.getByText('Clock in to this ticket before adding work notes, parts, or photos.')).toBeInTheDocument()
+  })
+
+  it('keeps a saved mobile work note distinct from a failed post-save refresh', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.addWorkEntry).mockResolvedValue({
+      id: 'work-2',
+      jobTicketId: 'job-1',
+      entryType: 1,
+      notes: 'Checked line routing',
+      performedAtUtc: '2026-04-28T10:00:00Z',
+      employeeId: 'employee-1'
+    } as any)
+    mockOpenEntry()
+
+    renderJobDetail()
+
+    expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+    vi.mocked(jobTicketsApi.get).mockRejectedValueOnce(new Error('refresh failed'))
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Work note'), 'Checked line routing')
+    await user.click(screen.getByRole('button', { name: 'Save Work Note' }))
+
+    await waitFor(() => {
+      expect(jobTicketsApi.addWorkEntry).toHaveBeenCalledWith('job-1', expect.objectContaining({
+        employeeId: 'employee-1',
+        entryType: 1,
+        notes: 'Checked line routing'
+      }))
+    })
+    expect(await screen.findByText('Work note saved, but refreshed job details could not be loaded. Refresh this page before continuing.')).toBeInTheDocument()
+    expect(screen.queryByText('Unable to save work note.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save Work Note' })).toBeEnabled()
   })
 
   it('does not show the clock-out form for an open entry on another ticket', async () => {
@@ -237,6 +285,9 @@ describe('JobDetailPage', () => {
     renderJobDetail()
 
     expect(await screen.findByText(/Open entry: Started/)).toHaveTextContent('on another ticket')
+    const nextAction = screen.getByLabelText('next job action')
+    expect(within(nextAction).getByText('Finish the active ticket first')).toBeInTheDocument()
+    expect(within(nextAction).getByRole('link', { name: 'Go to Active Ticket' })).toHaveAttribute('href', '/jobs/job-2')
     expect(screen.getByRole('link', { name: 'Open active ticket' })).toHaveAttribute('href', '/jobs/job-2')
     expect(screen.queryByRole('button', { name: 'Clock Out with GPS' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeDisabled()
@@ -436,7 +487,7 @@ describe('JobDetailPage', () => {
       }
     ])
     vi.mocked(filesApi.list).mockResolvedValue([])
-    mockNoOpenEntry()
+    mockOpenEntry()
 
     renderJobDetail()
 

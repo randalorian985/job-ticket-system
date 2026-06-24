@@ -14,6 +14,7 @@ const displayRelatedName = (value: string | null | undefined, unavailableLabel: 
   value?.trim() || unavailableLabel
 
 const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
+const fullyClosedStatuses = new Set([7, 8, 9, 10])
 
 function getAssignedJobReadiness(job: JobTicketListItemDto) {
   const isActiveFieldWork = activeFieldWorkStatuses.has(job.status)
@@ -35,6 +36,14 @@ function getAssignedJobReadiness(job: JobTicketListItemDto) {
   }
 }
 
+function getAssignedJobActionLabel(readiness: ReturnType<typeof getAssignedJobReadiness>) {
+  if (!readiness.isActiveFieldWork || readiness.openItems > 0) {
+    return 'Review Job'
+  }
+
+  return 'Open / Clock In'
+}
+
 export function MyJobsPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -49,7 +58,7 @@ export function MyJobsPage() {
       .listMine()
       .then((items) => {
         if (isMounted) {
-          setJobs(items)
+          setJobs(items.filter((item) => !fullyClosedStatuses.has(item.status)))
         }
       })
       .catch((requestError) => {
@@ -87,12 +96,6 @@ export function MyJobsPage() {
     [jobs]
   )
 
-  const activeCount = jobSummaries.filter((item) => item.readiness.isActiveFieldWork).length
-  const needsReviewCount = jobSummaries.filter(
-    (item) => item.readiness.isActiveFieldWork && item.readiness.openItems > 0
-  ).length
-  const nextJob = jobSummaries[0]
-
   return (
     <main className="mobile-shell employee-workspace">
       <header className="card employee-work-header">
@@ -109,55 +112,46 @@ export function MyJobsPage() {
       {isLoading ? <p className="muted" role="status">Loading assigned jobs...</p> : null}
       {error ? <p className="error">{error}</p> : null}
 
-      {!isLoading && !error && jobs.length ? (
-        <section className="employee-work-summary" aria-label="assigned jobs summary">
-          <div><span>Assigned</span><strong>{jobs.length}</strong></div>
-          <div><span>Active field work</span><strong>{activeCount}</strong></div>
-          <div><span>Needs job review</span><strong>{needsReviewCount}</strong></div>
-        </section>
-      ) : null}
-
-      {nextJob && !error ? (
-        <section className="card employee-next-job" aria-label="next assigned job">
-          <span className="muted employee-eyebrow">Next up</span>
-          <h2>Start with the first assigned job</h2>
-          <p className="muted">{nextJob.readiness.label}: {nextJob.readiness.nextStep}</p>
-          <Link className="button-link" to={`/jobs/${nextJob.job.id}`}>Open First Job</Link>
-        </section>
-      ) : null}
-
       <section className="stack" aria-label="assigned job list">
         {jobSummaries.map(({ job, readiness }) => {
           const readinessClass = readiness.openItems ? 'readiness-review' : 'readiness-ready'
           const statusLabel = getJobTicketStatusLabel(job.status)
           const priorityLabel = getJobTicketPriorityLabel(job.priority)
+          const scheduledLabel = formatOptionalDateTime(job.scheduledStartAtUtc)
           const dueLabel = formatOptionalDateTime(job.dueAtUtc)
+          const primaryActionLabel = getAssignedJobActionLabel(readiness)
 
           return (
-            <article key={job.id} className={`card assigned-job-card ${readinessClass}`}>
+            <article key={job.id} className={`card assigned-job-card assigned-job-card-compact ${readinessClass}`}>
               <div className="assigned-job-heading">
                 <div>
                   <h2>{job.ticketNumber}</h2>
-                  <p>{job.title}</p>
+                  <p className="assigned-job-title">{job.title}</p>
+                  <p className="muted assigned-job-location">
+                    {displayRelatedName(job.customerName, 'Customer unavailable')} | {displayRelatedName(job.serviceLocationName, 'Service location unavailable')}
+                  </p>
                 </div>
-                <span className={`status-pill readiness-pill ${readinessClass}`}>{readiness.label}</span>
+                <span className={`status-pill readiness-pill ${readinessClass}`}>{statusLabel}</span>
               </div>
-              <p className="muted assigned-job-summary-line">Status: {statusLabel} | Priority: {priorityLabel}</p>
-              <p className="muted assigned-job-summary-line">Due: {dueLabel}</p>
-              <p className="muted assigned-job-summary-line">Start readiness: {readiness.label}</p>
-              <div className="assigned-job-meta">
-                <div><strong>Status</strong><span>{statusLabel}</span></div>
+
+              <div className="assigned-job-chip-row" aria-label={`${job.ticketNumber} quick facts`}>
                 <div><strong>Priority</strong><span>{priorityLabel}</span></div>
-                <div><strong>Scheduled</strong><span>{formatOptionalDateTime(job.scheduledStartAtUtc)}</span></div>
+                <div><strong>Scheduled</strong><span>{scheduledLabel}</span></div>
                 <div><strong>Due</strong><span>{dueLabel}</span></div>
               </div>
-              <div className="assigned-job-context">
-                <div><strong>Customer</strong><span>{displayRelatedName(job.customerName, 'Customer unavailable')}</span></div>
-                <div><strong>Service location</strong><span>{displayRelatedName(job.serviceLocationName, 'Service location unavailable')}</span></div>
-                <div><strong>Equipment</strong><span>{displayRelatedName(job.equipmentName, 'No equipment attached')}</span></div>
+
+              <div className="assigned-job-context-line">
+                <strong>Equipment Being Serviced</strong>
+                <span>{displayRelatedName(job.equipmentName, 'See job instructions')}</span>
               </div>
-              <p className="muted">Next required update: {readiness.nextStep}</p>
-              <Link className="button-link secondary-link" to={`/jobs/${job.id}`}>Open Job</Link>
+              <p className="muted assigned-job-summary-line">{readiness.label}: {readiness.nextStep}</p>
+              <Link
+                aria-label={`${primaryActionLabel} ${job.ticketNumber}`}
+                className="button-link assigned-job-primary-action"
+                to={`/jobs/${job.id}`}
+              >
+                {primaryActionLabel}
+              </Link>
             </article>
           )
         })}

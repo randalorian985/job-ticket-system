@@ -1,0 +1,310 @@
+/* Employee mobile field workflow and manager queue density controls. */
+.employee-workspace,
+.employee-active-job-tools {
+  gap: 0.85rem;
+}
+
+.employee-work-header,
+.assigned-job-heading,
+.employee-job-heading,
+.queue-results-actions,
+.ticket-view-toggle {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.employee-work-header h1,
+.assigned-job-heading h2,
+.employee-job-heading h1 {
+  margin: 0;
+}
+
+.assigned-job-heading > div,
+.employee-job-heading > div,
+.queue-results-heading > div {
+  min-width: 0;
+}
+
+.employee-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  margin: 0 0 0.15rem;
+  text-transform: uppercase;
+}
+
+.assigned-job-card-compact {
+  border-left: 5px solid var(--accent-dark);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.assigned-job-card-compact.readiness-review {
+  border-left-color: #b45309;
+}
+
+.assigned-job-card-compact.readiness-ready {
+  border-left-color: var(--accent-navy);
+}
+
+.assigned-job-title,
+.employee-job-title {
+  color: var(--ink);
+  font-weight: 850;
+  margin: 0.15rem 0;
+  overflow-wrap: anywhere;
+}
+
+.assigned-job-location,
+.assigned-job-summary-line,
+.employee-job-description {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.assigned-job-chip-row,
+.employee-job-context,
+.compact-ticket-list-header,
+.compact-ticket-row {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.assigned-job-chip-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.assigned-job-chip-row > div,
+.assigned-job-context-line,
+.employee-job-context > div {
+  background: var(--surface-panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.65rem;
+}
+
+.assigned-job-chip-row strong,
+.assigned-job-context-line strong,
+.employee-job-context span,
+.compact-ticket-list-header {
+  color: #5f6675;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.assigned-job-chip-row span,
+.assigned-job-context-line span,
+.employee-job-context strong,
+.compact-ticket-row strong,
+.compact-ticket-row span {
+  overflow-wrap: anywhere;
+}
+
+.assigned-job-primary-action {
+  justify-content: center;
+  text-align: center;
+}
+
+.employee-readiness-card .check-list {
+  margin-top: 0;
+}
+
+.employee-clock-card {
+  border-color: #b7c4d6;
+}
+
+.employee-next-action-card {
+  background: #ffffff;
+  border-left: 5px solid #3157c8;
+}
+
+.employee-next-action-card h2 {
+  margin: 0.1rem 0 0.25rem;
+}
+
+.employee-next-action-card.is-active {
+  border-left-color: #087153;
+}
+
+.employee-next-action-card.is-locked {
+  border-left-color: #b45309;
+}
+
+.employee-action-strip {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.employee-action-strip .button-link {
+  justify-content: center;
+  min-height: 2.55rem;
+  padding-inline: 0.65rem;
+  text-align: center;
+}
+
+.employee-field-tools-gate {
+  background: #f8fbff;
+  border-color: #bfd5f1;
+}
+
+.queue-results-actions {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ticket-view-toggle {
+  background: var(--surface-panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  gap: 0.35rem;
+  padding: 0.25rem;
+}
+
+.ticket-view-toggle .compact-button[aria-pressed="true"] {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #ffffff;
+}
+
+.compact-ticket-list {
+  display: grid;
+  gap: 0.4rem;
+  overflow-x: auto;
+}
+
+.compact-ticket-list-header,
+.compact-ticket-row {
+  grid-template-columns: minmax(9rem, 1.1fr) minmax(11rem, 1.15fr) minmax(10rem, 1fr) minmax(12rem, 1.15fr) minmax(9rem, 0.9fr) minmax(6.8rem, auto);
+}
+
+.compact-ticket-list-header {
+  border-bottom: 1px solid var(--line);
+  padding: 0 0.65rem 0.45rem;
+}
+
+.compact-ticket-row {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--inactive);
+  border-radius: 8px;
+  min-width: 0;
+  padding: 0.65rem;
+}
+
+.compact-ticket-row.readiness-ready {
+  border-left-color: var(--accent-navy);
+}
+
+.compact-ticket-row.readiness-review {
+  border-left-color: #b45309;
+}
+
+.compact-ticket-row > div,
+.compact-ticket-primary {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.compact-ticket-primary span,
+.compact-ticket-row span {
+  color: var(--muted-ink);
+  font-size: 0.86rem;
+}
+
+.compact-ticket-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.compact-ticket-chip {
+  align-items: center;
+  background: #eef4ff;
+  border: 1px solid #ccd9ef;
+  border-radius: 999px;
+  color: #24324a !important;
+  display: inline-flex;
+  font-size: 0.72rem !important;
+  font-weight: 850;
+  line-height: 1;
+  min-height: 1.45rem;
+  padding: 0.24rem 0.48rem;
+  width: fit-content;
+}
+
+.compact-ticket-chip-priority {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #7c2d12 !important;
+}
+
+.compact-ticket-readiness strong,
+.compact-ticket-timing strong {
+  color: var(--ink);
+}
+
+.compact-ticket-open {
+  justify-content: center;
+  min-height: 2.3rem;
+  padding-inline: 0.8rem;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .compact-ticket-list-header,
+  .compact-ticket-row {
+    grid-template-columns: minmax(9rem, 1fr) minmax(11rem, 1fr) minmax(10rem, 1fr) minmax(10rem, 1fr) minmax(6.8rem, auto);
+  }
+
+  .compact-ticket-list-header span:nth-child(5),
+  .compact-ticket-row > div:nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .employee-work-header,
+  .assigned-job-heading,
+  .employee-job-heading,
+  .queue-results-actions,
+  .queue-saved-views-heading,
+  .queue-saved-view-row,
+  .ticket-view-toggle {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .assigned-job-chip-row,
+  .employee-job-context,
+  .employee-action-strip,
+  .compact-ticket-row {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-ticket-list-header {
+    display: none;
+  }
+
+  .compact-ticket-open,
+  .queue-saved-view-control,
+  .assigned-job-primary-action {
+    width: 100%;
+  }
+
+  .queue-saved-view-counts {
+    justify-content: flex-start;
+  }
+}

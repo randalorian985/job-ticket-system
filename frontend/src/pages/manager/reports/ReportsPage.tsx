@@ -5,7 +5,9 @@ import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { masterDataApi } from '../../../api/masterDataApi'
 import { reportsApi } from '../../../api/reportsApi'
 import { usersApi } from '../../../api/usersApi'
+import { useCompanyBranding } from '../../../features/companyBranding/CompanyBrandingContext'
 import { csvDataUri, escapeCsvValue, toCsv, type CsvColumn } from '../../../utils/csv'
+import { downloadReportPdf, type PdfReportColumn } from '../../../utils/reportPdf'
 import type {
   AssignableEmployeeDto,
   CustomerDto,
@@ -227,7 +229,7 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Job Status', value: (row: InvoiceReadySummaryDto) => getJobStatusLabel(row.jobStatus) },
     { header: 'Invoice Status', value: (row: InvoiceReadySummaryDto) => getInvoiceStatusLabel(row.invoiceStatus) },
     { header: 'Approved Labor Hours', value: (row: InvoiceReadySummaryDto) => row.laborHours, render: (row) => hours(row.laborHours), align: 'number' },
-    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: InvoiceReadySummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Billable', value: (row: InvoiceReadySummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Parts Billable', value: (row: InvoiceReadySummaryDto) => row.partsBillableTotal, render: (row) => money(row.partsBillableTotal), align: 'number' },
     { header: 'Tax', value: (row: InvoiceReadySummaryDto) => row.tax, render: (row) => money(row.tax), align: 'number' },
     { header: 'Grand Total', value: (row: InvoiceReadySummaryDto) => row.grandTotal, render: (row) => money(row.grandTotal), align: 'number' }
@@ -235,8 +237,8 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
   jobCost: [
     { header: 'Job Ticket', value: (row: JobCostSummaryDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
     { header: 'Approved Labor Hours', value: (row: JobCostSummaryDto) => row.laborHours, render: (row) => hours(row.laborHours), align: 'number' },
-    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: JobCostSummaryDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: JobCostSummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost', value: (row: JobCostSummaryDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable', value: (row: JobCostSummaryDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Parts Cost', value: (row: JobCostSummaryDto) => row.partsCostTotal, render: (row) => money(row.partsCostTotal), align: 'number' },
     { header: 'Parts Billable', value: (row: JobCostSummaryDto) => row.partsBillableTotal, render: (row) => money(row.partsBillableTotal), align: 'number' },
     { header: 'Grand Total', value: (row: JobCostSummaryDto) => row.grandTotal, render: (row) => money(row.grandTotal), align: 'number' }
@@ -257,16 +259,16 @@ const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Job Ticket', value: (row: LaborByJobDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
     { header: 'Customer', value: (row: LaborByJobDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
     { header: 'Approved Labor Hours', value: (row: LaborByJobDto) => row.approvedLaborHours, render: (row) => hours(row.approvedLaborHours), align: 'number' },
-    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: LaborByJobDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: LaborByJobDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost', value: (row: LaborByJobDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable', value: (row: LaborByJobDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Created (UTC)', value: (row: LaborByJobDto) => dateForExport(row.createdAtUtc), render: (row) => dateUtc(row.createdAtUtc) },
     { header: 'Completed (UTC)', value: (row: LaborByJobDto) => dateForExport(row.completedAtUtc), render: (row) => dateUtc(row.completedAtUtc) }
   ],
   laborEmployee: [
     { header: 'Employee', value: (row: LaborByEmployeeDto) => row.employeeName },
     { header: 'Approved Labor Hours', value: (row: LaborByEmployeeDto) => row.approvedLaborHours, render: (row) => hours(row.approvedLaborHours), align: 'number' },
-    { header: 'Labor Cost (time-entry labor-rate snapshot)', value: (row: LaborByEmployeeDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
-    { header: 'Labor Billable (time-entry labor-rate snapshot)', value: (row: LaborByEmployeeDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
+    { header: 'Labor Cost', value: (row: LaborByEmployeeDto) => row.laborCostTotal, render: (row) => money(row.laborCostTotal), align: 'number' },
+    { header: 'Labor Billable', value: (row: LaborByEmployeeDto) => row.laborBillableTotal, render: (row) => money(row.laborBillableTotal), align: 'number' },
     { header: 'Job Count', value: (row: LaborByEmployeeDto) => row.jobCount, align: 'number' }
   ],
   partsJob: [
@@ -363,7 +365,7 @@ const buildFilterSummary = (
   return summary.length
     ? summary.join(' | ')
     : reportFilterFields[mode].length
-      ? 'No optional filters are active. Results reflect the default visible window of loaded rows.'
+      ? 'No filters are active. Showing the default 50-row window.'
       : 'This report is scoped to the selected source record.'
 }
 
@@ -377,23 +379,34 @@ const reportCsvWithMetadata = (
   title: string,
   generatedAt: string | null,
   filterSummary: string,
+  companyName: string,
+  companyDetails: string[],
   rows: ReportRow[],
   columns: Array<ReportColumn<ReportRow>>
 ) => {
   if (!rows.length || !columns.length) return ''
 
   const metadataRows = [
+    ['Company', companyName],
+    ['Company details', companyDetails.join(' | ')],
     ['Report', title],
     ['Generated', generatedAt ?? ''],
     ['Applied scope', filterSummary],
-    ['Visible rows', rows.length],
-    ['Columns', columns.length]
+    ['Visible rows', rows.length]
   ].map((row) => row.map((value) => escapeCsvValue(value)).join(','))
 
   return [...metadataRows, '', toCsv(rows, columns)].join('\n')
 }
 
+const reportBrandName = 'Job Ticket System'
+
 export function ReportsPage() {
+  const {
+    configuration: companyConfiguration,
+    logoUrl: companyLogoUrl,
+    initials: companyInitials,
+    addressLines: companyAddressLines
+  } = useCompanyBranding()
   const savedDefaults = useMemo(readSavedReportDefaults, [])
   const [activeScreen, setActiveScreen] = useState<'catalog' | 'results'>('catalog')
   const [filtersByMode, setFiltersByMode] = useState<ReportFiltersByMode>(savedDefaults.filtersByMode ?? {})
@@ -618,9 +631,30 @@ export function ReportsPage() {
       : ''),
     [customerLabelById, employeeLabelById, filtersByMode, mode, serviceLocationLabelById, sourceLabel]
   )
+  const companyReportDetails = useMemo(
+    () => [
+      companyConfiguration.legalName && companyConfiguration.legalName !== companyConfiguration.companyName
+        ? companyConfiguration.legalName
+        : null,
+      companyConfiguration.contactName ? `Contact: ${companyConfiguration.contactName}` : null,
+      ...companyAddressLines,
+      companyConfiguration.phone,
+      companyConfiguration.email,
+      companyConfiguration.website
+    ].filter((line): line is string => Boolean(line)),
+    [companyAddressLines, companyConfiguration.companyName, companyConfiguration.contactName, companyConfiguration.email, companyConfiguration.legalName, companyConfiguration.phone, companyConfiguration.website]
+  )
   const csv = useMemo(
-    () => reportCsvWithMetadata(title, generatedAt, filterSummary, rows, columns as Array<ReportColumn<ReportRow>>),
-    [columns, filterSummary, generatedAt, rows, title]
+    () => reportCsvWithMetadata(
+      title,
+      generatedAt,
+      filterSummary,
+      companyConfiguration.companyName,
+      companyReportDetails,
+      rows,
+      columns as Array<ReportColumn<ReportRow>>
+    ),
+    [columns, companyConfiguration.companyName, companyReportDetails, filterSummary, generatedAt, rows, title]
   )
   const csvHref = useMemo(() => csvDataUri(csv), [csv])
 
@@ -635,13 +669,21 @@ export function ReportsPage() {
     setSourceSelections((current) => ({ ...current, [reportMode]: value }))
   }
 
-  const printReport = () => {
-    const originalTitle = document.title
-    document.title = `report-${reportSlug(title)}${generatedFileDate ? `-${generatedFileDate}` : ''}`
-    window.print()
-    window.setTimeout(() => {
-      document.title = originalTitle
-    }, 0)
+  const downloadPdf = () => {
+    if (!mode || !hasRows || !generatedAt) return
+
+    downloadReportPdf<ReportRow>({
+      brandName: reportBrandName,
+      companyName: companyConfiguration.companyName,
+      companyDetails: companyReportDetails,
+      title,
+      description: reportDescriptions[mode],
+      generatedAt,
+      filterSummary,
+      fileName: `report-${reportSlug(title)}${generatedFileDate ? `-${generatedFileDate}` : ''}.pdf`,
+      rows,
+      columns: columns as Array<PdfReportColumn<ReportRow>>
+    })
   }
 
   const renderSourceControl = (reportMode: ReportMode) => {
@@ -818,14 +860,14 @@ export function ReportsPage() {
     if (fields.includes('employee')) {
       controls.push(
         <label key="employee">
-          Technician
+          Employee
           <select
             aria-label={`${titleForMode} employee filter`}
             value={filters.employeeId ?? ''}
             onChange={(event) => updateFilters(reportMode, { employeeId: event.target.value || undefined })}
             disabled={referenceLoading}
           >
-            <option value="">Any technician</option>
+            <option value="">Any employee</option>
             {employees.map((employee) => (
               <option key={employee.id} value={employee.id}>{employee.firstName} {employee.lastName}</option>
             ))}
@@ -900,7 +942,7 @@ export function ReportsPage() {
 
     return (
       <details className="report-filter-details">
-        <summary>Optional filters</summary>
+        <summary>Show optional filters</summary>
         <div className="report-inline-filters">
           {controls}
         </div>
@@ -920,18 +962,13 @@ export function ReportsPage() {
             </p>
           </div>
           <div className="row">
-            <Link className="secondary-button" to="/manage/wiki#reports">Wiki</Link>
+            <Link className="button-link secondary-link" to="/manage/wiki#reports">Wiki</Link>
             <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
           </div>
         </div>
-        <div className="report-hero-metrics" aria-label="report hub summary">
-          <div><span>Report types</span><strong>{Object.keys(reportTitleMap).length}</strong></div>
-          <div><span>Groups</span><strong>{reportSections.length}</strong></div>
-          <div><span>Output</span><strong>CSV / PDF</strong></div>
-        </div>
         <div className="report-note-panel">
           <strong>Labor totals</strong>
-          <span>Labor totals are labeled as time-entry labor-rate snapshot values. The implemented API uses captured time-entry cost and bill rates first, then falls back only for legacy entries without snapshots.</span>
+          <span>Run reports from this panel, then export CSV or PDF after rows load. Labor totals use rate snapshots first, with captured costs and bill rates used before legacy fallbacks.</span>
         </div>
         {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
@@ -966,8 +1003,8 @@ export function ReportsPage() {
               </button>
             ) : null}
             {hasRows ? (
-              <button type="button" className="secondary-button" onClick={printReport}>
-                Print / Save PDF
+              <button type="button" className="secondary-button" onClick={downloadPdf}>
+                Download PDF
               </button>
             ) : null}
             {hasRows ? (
@@ -978,26 +1015,35 @@ export function ReportsPage() {
           </div>
         </div>
         {mode ? (
-          <div className="report-result-meta" aria-label="generated report metadata">
-            <div>
-              <span>Rows</span>
-              <strong>{rows.length}</strong>
+          <div className="report-document-head">
+            <div className="report-company-branding" aria-label="report company header">
+              {companyLogoUrl ? (
+                <img src={companyLogoUrl} alt={`${companyConfiguration.companyName} logo`} />
+              ) : (
+                <span className="product-mark" aria-hidden="true">{companyInitials}</span>
+              )}
+              <div>
+                <strong>{companyConfiguration.companyName}</strong>
+                {companyReportDetails.length ? <span>{companyReportDetails.join(' | ')}</span> : null}
+              </div>
             </div>
-            <div>
-              <span>Columns</span>
-              <strong>{columns.length}</strong>
+            <div className="report-report-heading" aria-label="report summary">
+              <p className="eyebrow">Manager/Admin Report</p>
+              <h2>{title}</h2>
+              <p className="report-print-subtitle">{reportDescriptions[mode]}</p>
+              <div className="report-report-metrics" aria-label="generated report metadata">
+                <div>
+                  <span>Generated</span>
+                  <strong>{generatedAt ?? 'Pending'}</strong>
+                </div>
+                <div>
+                  <span>Rows</span>
+                  <strong>{rows.length}</strong>
+                </div>
+                <div>
+                </div>
+              </div>
             </div>
-            <div>
-              <span>Generated</span>
-              <strong>{generatedAt ?? 'Pending'}</strong>
-            </div>
-          </div>
-        ) : null}
-        {mode ? (
-          <div className="report-print-heading">
-            <p className="eyebrow">Manager/Admin Report</p>
-            <h2>{title}</h2>
-            <p>{generatedAt ? `Generated ${generatedAt}` : 'Generated report preview'}</p>
           </div>
         ) : null}
         {reportMessage ? <p className="success action-feedback-panel report-result-feedback">{reportMessage}</p> : null}
@@ -1022,12 +1068,19 @@ export function ReportsPage() {
         ) : null}
         {hasRows ? (
           <div className="table-scroll report-results-table">
-            <table aria-label={`${title} results`}>
+            <table className="report-results-grid" aria-label={`${title} results`}>
               <caption>{title} results table with {rows.length} visible row{rows.length === 1 ? '' : 's'}.</caption>
               <thead>
                 <tr>
-                  {columns.map((column) => (
-                    <th key={column.header} className={column.align === 'number' ? 'numeric-cell' : undefined}>
+                  {columns.map((column, columnIndex) => (
+                    <th
+                      key={column.header}
+                      className={[
+                        'report-table-cell',
+                        columnIndex === 0 ? 'primary-cell' : '',
+                        column.align === 'number' ? 'numeric-cell' : 'text-cell'
+                      ].filter(Boolean).join(' ')}
+                    >
                       {column.header}
                     </th>
                   ))}
@@ -1036,8 +1089,15 @@ export function ReportsPage() {
               <tbody>
                 {rows.map((row, index) => (
                   <tr key={index}>
-                    {columns.map((column) => (
-                      <td key={column.header} className={column.align === 'number' ? 'numeric-cell' : undefined}>
+                    {columns.map((column, columnIndex) => (
+                      <td
+                        key={column.header}
+                        className={[
+                          'report-table-cell',
+                          columnIndex === 0 ? 'primary-cell' : '',
+                          column.align === 'number' ? 'numeric-cell' : 'text-cell'
+                        ].filter(Boolean).join(' ')}
+                      >
                         {column.render ? column.render(row as never) : column.value(row as never)}
                       </td>
                     ))}
@@ -1049,32 +1109,34 @@ export function ReportsPage() {
         ) : null}
       </section>
 
-      <div className="stack" hidden={activeScreen !== 'catalog'}>
+      <div className="report-catalog stack" role="region" aria-label="report catalog" hidden={activeScreen !== 'catalog'}>
         {reportSections.map((section) => (
           <section className="report-section report-section-panel stack" key={section.title} aria-label={section.title}>
             <div className="report-section-heading">
               <div>
-                <p className="eyebrow">Report group</p>
                 <h3>{section.title}</h3>
                 <p className="muted">{section.description}</p>
               </div>
-              <span className="report-section-count">{section.modes.length} reports</span>
             </div>
             <div className="report-action-grid">
               {section.modes.map((reportMode) => (
                 <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
                   <div className="report-card-top">
                     <h4>{reportTitleMap[reportMode]}</h4>
-                    <span>{reportFilterFields[reportMode].length ? 'Filterable' : 'Source required'}</span>
+                    <span>{reportFilterFields[reportMode].length ? 'Optional filters' : 'Choose source'}</span>
                   </div>
-                  <p className="muted">{reportDescriptions[reportMode]}</p>
-                  <div className="report-card-inputs">
-                    {renderSourceControl(reportMode)}
-                    {renderFilterControls(reportMode)}
+                  <div className="report-card-body">
+                    <p className="muted">{reportDescriptions[reportMode]}</p>
+                    <div className="report-card-inputs">
+                      {renderSourceControl(reportMode)}
+                      {renderFilterControls(reportMode)}
+                    </div>
                   </div>
-                  <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
-                    {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
-                  </button>
+                  <div className="report-card-footer">
+                    <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
+                      {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>

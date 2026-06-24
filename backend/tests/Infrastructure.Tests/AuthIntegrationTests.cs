@@ -376,6 +376,44 @@ public sealed class AuthIntegrationTests
     }
 
     [Fact]
+    public async Task Ticket_status_filter_configuration_allows_manager_read_admin_mutation_and_blocks_employee()
+    {
+        await using var factory = new TestApiFactory();
+        await factory.SeedAsync((db, auth) => SeedUsersAsync(db, auth));
+
+        var managerClient = factory.CreateClient();
+        await managerClient.SetBearerTokenAsync("manager", "ManagerPass!123");
+        var managerList = await managerClient.GetAsync("/api/ticket-status-filters");
+        Assert.Equal(HttpStatusCode.OK, managerList.StatusCode);
+
+        var managerMutation = await managerClient.PutAsJsonAsync("/api/ticket-status-filters", new SaveTicketStatusFilterConfigurationDto([
+            new(null, "In Progress", JobTicketStatus.InProgress, 10, true)
+        ]));
+        Assert.Equal(HttpStatusCode.Forbidden, managerMutation.StatusCode);
+
+        var employeeClient = factory.CreateClient();
+        await employeeClient.SetBearerTokenAsync("employee", "EmployeePass!123");
+        var employeeList = await employeeClient.GetAsync("/api/ticket-status-filters");
+        var employeeMutation = await employeeClient.PutAsJsonAsync("/api/ticket-status-filters", new SaveTicketStatusFilterConfigurationDto([
+            new(null, "Assigned", JobTicketStatus.Assigned, 10, true)
+        ]));
+        Assert.Equal(HttpStatusCode.Forbidden, employeeList.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, employeeMutation.StatusCode);
+
+        var adminClient = factory.CreateClient();
+        await adminClient.SetBearerTokenAsync("admin", "AdminPass!123");
+        var adminMutation = await adminClient.PutAsJsonAsync("/api/ticket-status-filters", new SaveTicketStatusFilterConfigurationDto([
+            new(null, "Field Work", JobTicketStatus.InProgress, 10, true),
+            new(null, "Review Ready", JobTicketStatus.Completed, 20, true)
+        ]));
+        Assert.Equal(HttpStatusCode.OK, adminMutation.StatusCode);
+
+        var configured = await managerClient.GetFromJsonAsync<List<TicketStatusFilterOptionDto>>("/api/ticket-status-filters");
+        string[] expectedLabels = ["Field Work", "Review Ready"];
+        Assert.Equal(expectedLabels, configured!.Select(x => x.DisplayLabel).ToArray());
+    }
+
+    [Fact]
     public async Task Admin_user_invalid_payloads_return_controlled_bad_request_responses()
     {
         await using var factory = new TestApiFactory();

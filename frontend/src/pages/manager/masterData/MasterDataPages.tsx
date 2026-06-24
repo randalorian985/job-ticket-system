@@ -35,6 +35,44 @@ const hasRequiredText = (value?: string | null) => Boolean(value?.trim())
 const hasRequiredTexts = (...values: Array<string | null | undefined>) => values.every(hasRequiredText)
 const hasNonNegativeNumbers = (...values: number[]) => values.every((value) => Number.isFinite(value) && value >= 0)
 const hasValidEquipmentYear = (value?: number | null) => value === null || value === undefined || (Number.isInteger(value) && value >= 1900 && value <= 2100)
+const compactAddress = (...values: Array<string | null | undefined>) => values.filter((value) => value?.trim()).join(', ')
+const customerBillingAddress = (customer: CustomerDto) => compactAddress(
+  customer.billingAddressLine1,
+  customer.billingAddressLine2,
+  compactAddress(customer.billingCity, customer.billingState, customer.billingPostalCode)
+)
+const fallbackText = (value: string | null | undefined, fallback: string) => value?.trim() || fallback
+const compactListField = (label: string, value: string | null | undefined, fallback = 'Not provided', className = '') => (
+  <div className={`compact-list-field${value?.trim() ? '' : ' compact-list-field-empty'}${className ? ` ${className}` : ''}`}>
+    <span className="compact-list-label">{label}</span>
+    <span className="compact-list-value">{fallbackText(value, fallback)}</span>
+  </div>
+)
+const compactListStackedField = (label: string, values: Array<string | null | undefined>, fallback = 'Not provided', className = '') => {
+  const visibleValues = values.filter((value): value is string => Boolean(value?.trim()))
+
+  return (
+    <div className={`compact-list-field compact-list-field-stacked${visibleValues.length ? '' : ' compact-list-field-empty'}${className ? ` ${className}` : ''}`}>
+      <span className="compact-list-label">{label}</span>
+      {visibleValues.length
+        ? visibleValues.map((value, index) => <span className="compact-list-value" key={`${label}-${index}`}>{value}</span>)
+        : <span className="compact-list-value compact-list-muted">{fallback}</span>}
+    </div>
+  )
+}
+const customerHasBillingAddress = (customer?: CustomerDto | null) => Boolean(customer && (
+  customer.billingAddressLine1?.trim() ||
+  customer.billingAddressLine2?.trim() ||
+  customer.billingCity?.trim() ||
+  customer.billingState?.trim() ||
+  customer.billingPostalCode?.trim()
+))
+const serviceLocationAddress = (location: ServiceLocationDto) => compactAddress(
+  location.addressLine1,
+  location.addressLine2,
+  compactAddress(location.city, location.state, location.postalCode),
+  location.country
+)
 const activeOrSelected = <T extends { id: string, isArchived?: boolean }>(items: T[], selectedIds: Array<string | null | undefined>) => {
   const selected = new Set(selectedIds.filter(Boolean))
   return items.filter((item) => !item.isArchived || selected.has(item.id))
@@ -55,8 +93,37 @@ const confirmArchiveAction = (entityLabel: string, entityName: string, isArchive
   return window.confirm(`Are you sure you want to ${action} ${entityLabel} "${entityName}"?`)
 }
 
-const emptyCustomerDraft: CreateCustomerDto = { name: '' }
-const emptyServiceLocationDraft: CreateServiceLocationDto = { companyName: '', locationName: '', addressLine1: '', city: '', state: '', postalCode: '', country: 'US', isActive: true }
+const emptyCustomerDraft: CreateCustomerDto = {
+  name: '',
+  accountNumber: '',
+  contactName: '',
+  email: '',
+  phone: '',
+  billingAddressLine1: '',
+  billingAddressLine2: '',
+  billingCity: '',
+  billingState: '',
+  billingPostalCode: ''
+}
+const emptyServiceLocationDraft: CreateServiceLocationDto = {
+  companyName: '',
+  locationName: '',
+  onSiteContactName: '',
+  onSiteContactPhone: '',
+  onSiteContactEmail: '',
+  addressLine1: '',
+  addressLine2: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  parishCounty: '',
+  country: 'US',
+  gateCode: '',
+  accessInstructions: '',
+  safetyRequirements: '',
+  siteNotes: '',
+  isActive: true
+}
 const emptyEquipmentDraft: CreateEquipmentDto = { customerId: '', serviceLocationId: '', ownerCustomerId: null, responsibleBillingCustomerId: null, name: '', equipmentNumber: '' }
 const emptyPartDraft: CreatePartDto = { partCategoryId: '', partNumber: '', name: '', unitCost: 0, unitPrice: 0, quantityOnHand: 0, reorderThreshold: 0 }
 const emptyVendorDraft: CreateVendorDto = { name: '' }
@@ -102,7 +169,18 @@ export function CustomersPage() {
       .finally(() => setIsLoading(false))
   }
   useEffect(() => { load() }, [])
-  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && matchesTextSearch(search, [x.name, x.accountNumber, x.contactName, x.email, x.phone])), [items, search, archiveFilter])
+  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && matchesTextSearch(search, [
+    x.name,
+    x.accountNumber,
+    x.contactName,
+    x.email,
+    x.phone,
+    x.billingAddressLine1,
+    x.billingAddressLine2,
+    x.billingCity,
+    x.billingState,
+    x.billingPostalCode
+  ])), [items, search, archiveFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!hasRequiredText(draft.name)) { setSuccess(null); return setError('Customer name is required.') }
@@ -134,7 +212,12 @@ export function CustomersPage() {
       accountNumber: customer.accountNumber,
       contactName: customer.contactName,
       email: customer.email,
-      phone: customer.phone
+      phone: customer.phone,
+      billingAddressLine1: customer.billingAddressLine1,
+      billingAddressLine2: customer.billingAddressLine2,
+      billingCity: customer.billingCity,
+      billingState: customer.billingState,
+      billingPostalCode: customer.billingPostalCode
     })
     setEditId(customer.id)
     setError(null)
@@ -164,6 +247,15 @@ export function CustomersPage() {
           <label>Email<input placeholder="Email" value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></label>
           <label>Phone<input placeholder="Phone" value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></label>
         </div>
+        <div className="row">
+          <label>Billing address<input placeholder="Billing address" value={draft.billingAddressLine1 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine1: e.target.value })} /></label>
+          <label>Address line 2<input placeholder="Address line 2" value={draft.billingAddressLine2 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine2: e.target.value })} /></label>
+        </div>
+        <div className="row">
+          <label>City<input placeholder="City" value={draft.billingCity ?? ''} onChange={(e) => setDraft({ ...draft, billingCity: e.target.value })} /></label>
+          <label>State<input placeholder="State" value={draft.billingState ?? ''} onChange={(e) => setDraft({ ...draft, billingState: e.target.value })} /></label>
+          <label>ZIP / postal code<input placeholder="ZIP / postal code" value={draft.billingPostalCode ?? ''} onChange={(e) => setDraft({ ...draft, billingPostalCode: e.target.value })} /></label>
+        </div>
         {editId ? <p className="muted">Editing customer. Save changes or return to the customer list.</p> : null}
         <div className="row">
           <button type="submit">{editId ? 'Save Customer' : 'Create Customer'}</button>
@@ -172,41 +264,49 @@ export function CustomersPage() {
       </form>
 
       <div className="stack" hidden={editorOpen}>
-        <MasterDataFilters label="customers" search={search} searchPlaceholder="Search by name, account, contact, email, or phone" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all') }} />
+        <MasterDataFilters label="customers" search={search} searchPlaceholder="Search by name, account, contact, email, phone, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all') }} />
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="customers" />
         <MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="customers" />
-        <ul className="master-data-list">
-          {filteredItems.map((customer) => (
-            <MasterDataItem
-              key={customer.id}
-              title={customer.name}
-              statusArchived={customer.isArchived}
-              meta={[
-                `Account: ${customer.accountNumber ?? 'No account'}`,
-                customer.contactName ? `Contact: ${customer.contactName}` : null,
-                customer.email ? `Email: ${customer.email}` : null,
-                customer.phone ? `Phone: ${customer.phone}` : null
-              ]}
-              actions={<>
-                <button type="button" onClick={() => startEdit(customer)}>Edit</button>
-                <button type="button" onClick={async () => {
-                  if (!confirmArchiveAction('customer', customer.name, customer.isArchived)) return
-                  const action = customer.isArchived ? 'unarchived' : 'archived'
-                  try {
-                    setError(null)
-                    setSuccess(null)
-                    if (customer.isArchived) await masterDataApi.unarchiveCustomer(customer.id)
-                    else await masterDataApi.archiveCustomer(customer.id)
-                    await load()
-                    setSuccess(`Customer "${customer.name}" was ${action}.`)
-                  } catch {
-                    setSuccess(null)
-                    setError('Unable to update customer archive state.')
-                  }
-                }}>{customer.isArchived ? 'Unarchive' : 'Archive'}</button>
-              </>}
-            />
-          ))}
+        <ul className="master-data-list compact-master-list customer-list">
+          {filteredItems.map((customer) => {
+            const billingAddress = customerBillingAddress(customer)
+
+            return (
+              <li className="master-data-item compact-master-list-item customer-list-item" key={customer.id}>
+                <div className="compact-list-primary">
+                  <div className="master-data-title-row">
+                    <strong className="master-data-title">{customer.name}</strong>
+                    <span className={`status-pill ${customer.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(customer.isArchived)}</span>
+                  </div>
+                  <span className="customer-list-account">Account: {fallbackText(customer.accountNumber, 'No account')}</span>
+                </div>
+                {compactListField('Contact', customer.contactName)}
+                {compactListStackedField('Email / phone', [
+                  customer.email || 'No email',
+                  customer.phone || 'No phone'
+                ])}
+                {compactListField('Billing', billingAddress, 'No billing address', 'customer-list-billing compact-list-address')}
+                <div className="master-data-actions compact-list-actions">
+                  <button type="button" onClick={() => startEdit(customer)}>Edit</button>
+                  <button type="button" onClick={async () => {
+                    if (!confirmArchiveAction('customer', customer.name, customer.isArchived)) return
+                    const action = customer.isArchived ? 'unarchived' : 'archived'
+                    try {
+                      setError(null)
+                      setSuccess(null)
+                      if (customer.isArchived) await masterDataApi.unarchiveCustomer(customer.id)
+                      else await masterDataApi.archiveCustomer(customer.id)
+                      await load()
+                      setSuccess(`Customer "${customer.name}" was ${action}.`)
+                    } catch {
+                      setSuccess(null)
+                      setError('Unable to update customer archive state.')
+                    }
+                  }}>{customer.isArchived ? 'Unarchive' : 'Archive'}</button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>
@@ -242,7 +342,26 @@ export function ServiceLocationsPage() {
     if (!editId) setDraft((current) => ({ ...current, customerId: activeFilterId(customers, customerFilter) || null }))
   }, [customerFilter, editId])
   const customerOptions = useMemo(() => activeOrSelected(customers, [draft.customerId]), [customers, draft.customerId])
-  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [x.locationName, x.companyName, customerNameById(customers, x.customerId), x.addressLine1, x.city, x.state, x.postalCode, x.country])), [items, customers, search, archiveFilter, customerFilter])
+  const selectedCustomer = useMemo(() => customers.find((customer) => customer.id === draft.customerId), [customers, draft.customerId])
+  const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [
+    x.locationName,
+    x.companyName,
+    customerNameById(customers, x.customerId),
+    x.onSiteContactName,
+    x.onSiteContactPhone,
+    x.onSiteContactEmail,
+    x.addressLine1,
+    x.addressLine2,
+    x.city,
+    x.state,
+    x.postalCode,
+    x.parishCounty,
+    x.country,
+    x.gateCode,
+    x.accessInstructions,
+    x.safetyRequirements,
+    x.siteNotes
+  ])), [items, customers, search, archiveFilter, customerFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!hasRequiredTexts(draft.companyName, draft.locationName, draft.addressLine1, draft.city, draft.state, draft.postalCode, draft.country)) { setSuccess(null); return setError('All address fields are required.') }
@@ -275,6 +394,34 @@ export function ServiceLocationsPage() {
     setSuccess(null)
     setEditorOpen(true)
   }
+  const useCustomerAddress = () => {
+    if (!selectedCustomer) {
+      setSuccess(null)
+      setError('Select a related customer before using customer address.')
+      return
+    }
+
+    if (!customerHasBillingAddress(selectedCustomer)) {
+      setSuccess(null)
+      setError('Selected customer has no billing address to copy.')
+      return
+    }
+
+    setDraft((current) => ({
+      ...current,
+      companyName: current.companyName || selectedCustomer.name,
+      onSiteContactName: current.onSiteContactName || selectedCustomer.contactName || '',
+      onSiteContactPhone: current.onSiteContactPhone || selectedCustomer.phone || '',
+      onSiteContactEmail: current.onSiteContactEmail || selectedCustomer.email || '',
+      addressLine1: selectedCustomer.billingAddressLine1 || current.addressLine1,
+      addressLine2: selectedCustomer.billingAddressLine2 || current.addressLine2,
+      city: selectedCustomer.billingCity || current.city,
+      state: selectedCustomer.billingState || current.state,
+      postalCode: selectedCustomer.billingPostalCode || current.postalCode
+    }))
+    setError(null)
+    setSuccess('Customer address copied into the service location form.')
+  }
 
   return (
     <section className="card stack">
@@ -289,18 +436,36 @@ export function ServiceLocationsPage() {
       {success ? <p className="success action-feedback-panel">{success}</p> : null}
 
       <form onSubmit={save} className="stack" aria-label="service location form" hidden={!editorOpen}>
+        <label>Related customer<select value={draft.customerId ?? ''} onChange={(e) => setDraft({ ...draft, customerId: e.target.value || null })}><option value="">No customer</option>{customerOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
+        <div className="copy-helper-row">
+          <button type="button" className="secondary-button" onClick={useCustomerAddress} disabled={!selectedCustomer}>Use customer address</button>
+        </div>
         <label>Company<input placeholder="Company" value={draft.companyName} onChange={(e) => setDraft({ ...draft, companyName: e.target.value })} /></label>
         <label>Location name<input placeholder="Location Name" value={draft.locationName} onChange={(e) => setDraft({ ...draft, locationName: e.target.value })} /></label>
-        <label>Address<input placeholder="Address" value={draft.addressLine1} onChange={(e) => setDraft({ ...draft, addressLine1: e.target.value })} /></label>
+        <div className="row">
+          <label>On-site contact<input placeholder="On-site contact" value={draft.onSiteContactName ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactName: e.target.value })} /></label>
+          <label>On-site phone<input placeholder="On-site phone" value={draft.onSiteContactPhone ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactPhone: e.target.value })} /></label>
+          <label>On-site email<input placeholder="On-site email" value={draft.onSiteContactEmail ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactEmail: e.target.value })} /></label>
+        </div>
+        <div className="row">
+          <label>Address<input placeholder="Address" value={draft.addressLine1} onChange={(e) => setDraft({ ...draft, addressLine1: e.target.value })} /></label>
+          <label>Address line 2<input placeholder="Address line 2" value={draft.addressLine2 ?? ''} onChange={(e) => setDraft({ ...draft, addressLine2: e.target.value })} /></label>
+        </div>
         <div className="row">
           <label>City<input placeholder="City" value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} /></label>
           <label>State<input placeholder="State" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })} /></label>
         </div>
         <div className="row">
           <label>Postal code<input placeholder="Postal" value={draft.postalCode} onChange={(e) => setDraft({ ...draft, postalCode: e.target.value })} /></label>
+          <label>Parish / county<input placeholder="Parish / county" value={draft.parishCounty ?? ''} onChange={(e) => setDraft({ ...draft, parishCounty: e.target.value })} /></label>
           <label>Country<input placeholder="Country" value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })} /></label>
         </div>
-        <label>Related customer<select value={draft.customerId ?? ''} onChange={(e) => setDraft({ ...draft, customerId: e.target.value || null })}><option value="">No customer</option>{customerOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
+        <div className="row">
+          <label>Gate code<input placeholder="Gate code" value={draft.gateCode ?? ''} onChange={(e) => setDraft({ ...draft, gateCode: e.target.value })} /></label>
+          <label>Access instructions<input placeholder="Access instructions" value={draft.accessInstructions ?? ''} onChange={(e) => setDraft({ ...draft, accessInstructions: e.target.value })} /></label>
+        </div>
+        <label>Safety requirements<textarea placeholder="Safety requirements" value={draft.safetyRequirements ?? ''} onChange={(e) => setDraft({ ...draft, safetyRequirements: e.target.value })} /></label>
+        <label>Site notes<textarea placeholder="Site notes" value={draft.siteNotes ?? ''} onChange={(e) => setDraft({ ...draft, siteNotes: e.target.value })} /></label>
         <label><input type="checkbox" checked={draft.isActive ?? true} onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })} /> Active</label>
         {editId ? <p className="muted">Editing service location. Save changes or return to the location list.</p> : null}
         <div className="row">
@@ -310,43 +475,57 @@ export function ServiceLocationsPage() {
       </form>
 
       <div className="stack" hidden={editorOpen}>
-        <MasterDataFilters label="service locations" search={search} searchPlaceholder="Search by location, customer, company, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all'); setCustomerFilter('') }}>
+        <MasterDataFilters label="service locations" search={search} searchPlaceholder="Search by location, customer, company, contact, phone, or address" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all'); setCustomerFilter('') }}>
           <label>Customer<select value={customerFilter} onChange={(event) => setCustomerFilter(event.target.value)}><option value="">All customers</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
         </MasterDataFilters>
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="service locations" />
         <MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="service locations" />
-        <ul className="master-data-list">
-          {filteredItems.map((location) => (
-            <MasterDataItem
-              key={location.id}
-              title={location.locationName}
-              statusArchived={location.isArchived}
-              meta={[
-                `Company: ${location.companyName}`,
-                `Customer: ${customerNameById(customers, location.customerId) || 'No customer'}`,
-                `Service status: ${location.isActive ? 'Active' : 'Inactive'}`,
-                `${location.addressLine1}, ${location.city}, ${location.state} ${location.postalCode} ${location.country}`
-              ]}
-              actions={<>
-                <button type="button" onClick={() => startEdit(location)}>Edit</button>
-                <button type="button" onClick={async () => {
-                  if (!confirmArchiveAction('service location', location.locationName, location.isArchived)) return
-                  const action = location.isArchived ? 'unarchived' : 'archived'
-                  try {
-                    setError(null)
-                    setSuccess(null)
-                    if (location.isArchived) await masterDataApi.unarchiveServiceLocation(location.id)
-                    else await masterDataApi.archiveServiceLocation(location.id)
-                    await load()
-                    setSuccess(`Service location "${location.locationName}" was ${action}.`)
-                  } catch {
-                    setSuccess(null)
-                    setError('Unable to update service location archive state.')
-                  }
-                }}>{location.isArchived ? 'Unarchive' : 'Archive'}</button>
-              </>}
-            />
-          ))}
+        <ul className="master-data-list compact-master-list service-location-list">
+          {filteredItems.map((location) => {
+            const accessNotes = [
+              location.gateCode ? `Gate: ${location.gateCode}` : null,
+              location.parishCounty ? `County: ${location.parishCounty}` : null
+            ]
+
+            return (
+              <li className="master-data-item compact-master-list-item service-location-list-item" key={location.id}>
+                <div className="compact-list-primary">
+                  <div className="master-data-title-row">
+                    <strong className="master-data-title">{location.locationName}</strong>
+                    <span className={`status-pill ${location.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(location.isArchived)}</span>
+                    <span className={`status-pill ${location.isActive ? 'active' : 'inactive'}`}>{location.isActive ? 'Service active' : 'Service inactive'}</span>
+                  </div>
+                  <span className="compact-list-subtext">{fallbackText(location.companyName, 'No company')}</span>
+                </div>
+                {compactListField('Customer', customerNameById(customers, location.customerId), 'No customer')}
+                {compactListStackedField('Contact', [
+                  location.onSiteContactName,
+                  location.onSiteContactPhone,
+                  location.onSiteContactEmail
+                ], 'No site contact')}
+                {compactListField('Address', serviceLocationAddress(location), 'No address', 'service-location-address compact-list-address')}
+                {compactListStackedField('Access', accessNotes, 'No access notes', 'service-location-access')}
+                <div className="master-data-actions compact-list-actions">
+                  <button type="button" onClick={() => startEdit(location)}>Edit</button>
+                  <button type="button" onClick={async () => {
+                    if (!confirmArchiveAction('service location', location.locationName, location.isArchived)) return
+                    const action = location.isArchived ? 'unarchived' : 'archived'
+                    try {
+                      setError(null)
+                      setSuccess(null)
+                      if (location.isArchived) await masterDataApi.unarchiveServiceLocation(location.id)
+                      else await masterDataApi.archiveServiceLocation(location.id)
+                      await load()
+                      setSuccess(`Service location "${location.locationName}" was ${action}.`)
+                    } catch {
+                      setSuccess(null)
+                      setError('Unable to update service location archive state.')
+                    }
+                  }}>{location.isArchived ? 'Unarchive' : 'Archive'}</button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>
@@ -478,43 +657,55 @@ export function EquipmentPage() {
         </MasterDataFilters>
         <MasterDataListSummary loading={isLoading} totalCount={items.length} filteredItems={filteredItems} noun="equipment records" />
         <MasterDataListState loading={isLoading} totalCount={items.length} filteredCount={filteredItems.length} noun="equipment records" />
-        <ul className="master-data-list">
-          {filteredItems.map((equipment) => (
-            <MasterDataItem
-              key={equipment.id}
-              title={equipment.name}
-              statusArchived={equipment.isArchived}
-              meta={[
-                `Owner: ${customerNameById(customers, equipment.ownerCustomerId ?? equipment.customerId) || 'Customer unavailable'}`,
-                `Billing: ${equipment.responsibleBillingCustomerId ? customerNameById(customers, equipment.responsibleBillingCustomerId) || 'Customer unavailable' : 'No separate billing customer'}`,
-                `Location: ${locationNameById(locations, equipment.serviceLocationId) || 'Service location unavailable'}`,
-                equipment.equipmentNumber ? `Equipment #: ${equipment.equipmentNumber}` : null,
-                equipment.unitNumber ? `Unit: ${equipment.unitNumber}` : null,
-                equipment.manufacturer || equipment.modelNumber ? `Model: ${[equipment.manufacturer, equipment.modelNumber].filter(Boolean).join(' ')}` : null,
-                equipment.serialNumber ? `Serial: ${equipment.serialNumber}` : null,
-                equipment.equipmentType ? `Type: ${equipment.equipmentType}` : null,
-                equipment.year ? `Year: ${equipment.year}` : null
-              ]}
-              actions={<>
-                <button type="button" onClick={() => startEdit(equipment)}>Edit</button>
-                <button type="button" onClick={async () => {
-                  if (!confirmArchiveAction('equipment', equipment.name, equipment.isArchived)) return
-                  const action = equipment.isArchived ? 'unarchived' : 'archived'
-                  try {
-                    setError(null)
-                    setSuccess(null)
-                    if (equipment.isArchived) await masterDataApi.unarchiveEquipment(equipment.id)
-                    else await masterDataApi.archiveEquipment(equipment.id)
-                    await load()
-                    setSuccess(`Equipment "${equipment.name}" was ${action}.`)
-                  } catch {
-                    setSuccess(null)
-                    setError('Unable to update equipment archive state.')
-                  }
-                }}>{equipment.isArchived ? 'Unarchive' : 'Archive'}</button>
-              </>}
-            />
-          ))}
+        <ul className="master-data-list compact-master-list equipment-list">
+          {filteredItems.map((equipment) => {
+            const equipmentIdentity = [
+              equipment.equipmentNumber ? `Equipment #: ${equipment.equipmentNumber}` : null,
+              equipment.unitNumber ? `Unit: ${equipment.unitNumber}` : null
+            ].filter(Boolean).join(' | ')
+            const modelName = [equipment.manufacturer, equipment.modelNumber].filter(Boolean).join(' ')
+
+            return (
+              <li className="master-data-item compact-master-list-item equipment-list-item" key={equipment.id}>
+                <div className="compact-list-primary">
+                  <div className="master-data-title-row">
+                    <strong className="master-data-title">{equipment.name}</strong>
+                    <span className={`status-pill ${equipment.isArchived ? 'inactive' : 'active'}`}>{archiveStatusLabel(equipment.isArchived)}</span>
+                  </div>
+                  <span className="compact-list-subtext">{equipmentIdentity || 'No equipment number'}</span>
+                </div>
+                {compactListField('Location', locationNameById(locations, equipment.serviceLocationId), 'Service location unavailable')}
+                {compactListStackedField('Customers', [
+                  `Owner: ${customerNameById(customers, equipment.ownerCustomerId ?? equipment.customerId) || 'Customer unavailable'}`,
+                  `Billing: ${equipment.responsibleBillingCustomerId ? customerNameById(customers, equipment.responsibleBillingCustomerId) || 'Customer unavailable' : 'No separate billing customer'}`
+                ], 'No customer relationships')}
+                {compactListStackedField('Model / serial', [
+                  modelName ? `Model: ${modelName}` : null,
+                  equipment.serialNumber ? `Serial: ${equipment.serialNumber}` : null,
+                  equipment.equipmentType ? `Type: ${equipment.equipmentType}` : null,
+                  equipment.year ? `Year: ${equipment.year}` : null
+                ], 'No model details', 'equipment-model')}
+                <div className="master-data-actions compact-list-actions">
+                  <button type="button" onClick={() => startEdit(equipment)}>Edit</button>
+                  <button type="button" onClick={async () => {
+                    if (!confirmArchiveAction('equipment', equipment.name, equipment.isArchived)) return
+                    const action = equipment.isArchived ? 'unarchived' : 'archived'
+                    try {
+                      setError(null)
+                      setSuccess(null)
+                      if (equipment.isArchived) await masterDataApi.unarchiveEquipment(equipment.id)
+                      else await masterDataApi.archiveEquipment(equipment.id)
+                      await load()
+                      setSuccess(`Equipment "${equipment.name}" was ${action}.`)
+                    } catch {
+                      setSuccess(null)
+                      setError('Unable to update equipment archive state.')
+                    }
+                  }}>{equipment.isArchived ? 'Unarchive' : 'Archive'}</button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>

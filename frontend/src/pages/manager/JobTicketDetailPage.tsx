@@ -36,113 +36,38 @@ import {
   TIME_ENTRY_APPROVAL_STATUS,
 } from "./managerDisplay";
 import { JobTicketEditorForm } from "./JobTicketEditorForm";
+import {
+  MobileQuickActions,
+  RecommendedActionPanel,
+  TicketWorkbenchHero,
+  TicketWorkbenchKpis,
+  TicketWorkbenchRail,
+  WorkflowFocusHeading,
+  WorkflowPath,
+  WorkflowTabs,
+} from "./jobTicketDetail/JobTicketWorkbenchShell";
+import {
+  allowedManagerUploadTypes,
+  displayValue,
+  emptyDisplay,
+  formatCurrency,
+  formatFileSize,
+  formatHours,
+  getAddressLine,
+  getPartDisplayName,
+  getPartRequestLabel,
+  getPartReviewLabel,
+  isWorkflowTab,
+  numberFormatter,
+  primaryWorkflowPanelNames,
+  sortActivityDescending,
+  workflowTabs,
+  type ActivityItem,
+  type WorkbenchDrawer,
+  type WorkflowPathStep,
+  type WorkflowTab,
+} from "./jobTicketDetail/jobTicketDetailHelpers";
 import { activeDispatchStatusValues, getSafeManagerReturnContext } from "./managerTaskNavigation";
-
-type WorkbenchDrawer = "ticket" | "status" | "archive" | "part" | "note" | "photo" | null;
-type WorkflowTab = "overview" | "dispatch" | "time" | "parts" | "files" | "closeout" | "activity";
-
-const workflowTabs: Array<{ value: WorkflowTab; label: string; description: string }> = [
-  { value: "overview", label: "Service Details", description: "Review the customer, location, equipment, scope, and billing details." },
-  { value: "dispatch", label: "Dispatch", description: "Manage technician assignments and dispatch readiness." },
-  { value: "time", label: "Labor", description: "Review work entries, time entries, and approval status." },
-  { value: "parts", label: "Parts", description: "Review parts used, requested, ordered, and awaiting approval." },
-  { value: "files", label: "Files", description: "Review job files, photos, and invoice attachments." },
-  { value: "closeout", label: "Invoice Review", description: "Review closeout requirements and invoice-ready totals." },
-  { value: "activity", label: "History", description: "Review ticket activity in chronological order." },
-];
-
-const isWorkflowTab = (value: string | null): value is WorkflowTab =>
-  workflowTabs.some((tab) => tab.value === value);
-
-const primaryWorkflowPanelNames: Record<WorkflowTab, string> = {
-  overview: "ticket-overview",
-  dispatch: "assignments",
-  time: "time-labor",
-  parts: "parts",
-  files: "files",
-  closeout: "closeout",
-  activity: "activity",
-};
-
-type ActivityItem = {
-  id: string;
-  type: string;
-  occurredAtUtc?: string | null;
-  title: string;
-  detail?: string | null;
-};
-
-const emptyDisplay = "-";
-const allowedManagerUploadTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-const displayValue = (value?: string | null) => value?.trim() ? value : emptyDisplay;
-
-const currencyFormatter = new Intl.NumberFormat(undefined, {
-  style: "currency",
-  currency: "USD",
-});
-
-const numberFormatter = new Intl.NumberFormat(undefined, {
-  maximumFractionDigits: 2,
-});
-
-const formatCurrency = (value?: number | null) => currencyFormatter.format(value ?? 0);
-const formatHours = (value: number) => `${numberFormatter.format(value)}h`;
-
-const formatFileSize = (bytes?: number | null) => {
-  if (typeof bytes !== "number" || !Number.isFinite(bytes)) {
-    return "Size unknown";
-  }
-
-  if (bytes < 1024 * 1024) {
-    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  }
-
-  return `${numberFormatter.format(bytes / (1024 * 1024))} MB`;
-};
-
-const getPartDisplayName = (part: JobTicketPartDto) => {
-  if (part.partNumber && part.partName) {
-    return `${part.partNumber} - ${part.partName}`;
-  }
-
-  return part.partName || part.partNumber || "Unnamed part";
-};
-
-const getPartReviewLabel = (status: number) => {
-  if (status === JOB_PART_APPROVAL_STATUS.Pending) {
-    return "Pending review";
-  }
-
-  return getApprovalLabel(status);
-};
-
-const getPartRequestLabel = (part: JobTicketPartDto) => {
-  if (part.officeOrderRequested) {
-    return "Needs ordered";
-  }
-
-  return "Ticket part only";
-};
-
-const getAddressLine = (location?: ServiceLocationDto) => {
-  if (!location) {
-    return emptyDisplay;
-  }
-
-  return [
-    location.addressLine1,
-    [location.city, location.state, location.postalCode].filter(Boolean).join(", "),
-    location.country,
-  ]
-    .filter((item) => item?.trim())
-    .join(" ");
-};
-
-const sortActivityDescending = (left: ActivityItem, right: ActivityItem) => {
-  const leftTime = left.occurredAtUtc ? new Date(left.occurredAtUtc).getTime() : 0;
-  const rightTime = right.occurredAtUtc ? new Date(right.occurredAtUtc).getTime() : 0;
-  return rightTime - leftTime;
-};
 
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
@@ -324,7 +249,7 @@ export function JobTicketDetailPage() {
           {
             label: "Assignment data",
             isReady: false,
-            detail: "Assignment data could not be loaded. Refresh or retry before dispatch review.",
+            detail: "Assignment data could not be loaded. Refresh or retry before assignment review.",
           },
         ]
       : [
@@ -345,11 +270,11 @@ export function JobTicketDetailPage() {
         ];
     const checks = [
       {
-        label: "Dispatch status",
+        label: "Work status",
         isReady: isActiveDispatchStatus,
         detail: isActiveDispatchStatus
-          ? "Ticket is in the active dispatch queue."
-          : "Ticket is outside the active dispatch queue.",
+          ? "Ticket is in the active work queue."
+          : "Ticket is outside the active work queue.",
       },
       ...assignmentChecks,
       {
@@ -381,11 +306,11 @@ export function JobTicketDetailPage() {
           : "Service location is not selected.",
       },
       {
-        label: "Equipment decision",
+        label: "Service equipment",
         isReady: Boolean(job),
         detail: job?.equipmentId
-          ? "Equipment is selected."
-          : "No equipment is attached; this ticket can be dispatched without equipment.",
+          ? "Crane/equipment being serviced is selected."
+          : "No service equipment is selected; check the job scope for component-only work.",
       },
     ];
     const warnings = checks
@@ -396,12 +321,12 @@ export function JobTicketDetailPage() {
       checks,
       readyCount: checks.filter((check) => check.isReady).length,
       statusLabel: !isActiveDispatchStatus
-        ? "Not active dispatch"
+        ? "Not active work"
         : assignmentLoadFailed
           ? "Assignment data unavailable"
           : warnings.length
             ? "Needs attention"
-            : "Ready for dispatch review",
+            : "Ready to work",
       warnings,
     };
   }, [assignmentLoadFailed, assignments, employeesById, job, leadAssignment]);
@@ -409,7 +334,7 @@ export function JobTicketDetailPage() {
   const dispatchWarnings = dispatchReadiness.warnings;
   const openDispatchChecks = dispatchReadiness.checks.filter((check) => !check.isReady);
   const completedDispatchChecks = dispatchReadiness.checks.filter((check) => check.isReady);
-  const nextDispatchFix = dispatchWarnings[0] ?? "All dispatch requirements are complete.";
+  const nextDispatchFix = dispatchWarnings[0] ?? "All assignment and schedule requirements are complete.";
 
   const closeoutReview = useMemo(() => {
     const warnings: string[] = [];
@@ -428,11 +353,11 @@ export function JobTicketDetailPage() {
           : "Customer or service location is missing.",
       },
       {
-        label: "Equipment verification",
+        label: "Service equipment review",
         isReady: Boolean(job?.equipmentId),
         detail: job?.equipmentId
-          ? "Equipment is attached for review."
-          : "Confirm whether this ticket should remain without equipment before invoice review.",
+          ? "Crane/equipment being serviced is listed for review."
+          : "If no service equipment is listed, confirm the component or part is clear in the job scope before invoice review.",
       },
       {
         label: "Billing information",
@@ -535,7 +460,7 @@ export function JobTicketDetailPage() {
         case 4:
           if (dispatchWarnings.length) {
             warnings.push(
-              ...dispatchWarnings.map((warning) => `Dispatch readiness: ${warning}`),
+              ...dispatchWarnings.map((warning) => `Assignment readiness: ${warning}`),
             );
           }
           break;
@@ -564,7 +489,7 @@ export function JobTicketDetailPage() {
     }
 
     if (hasChange && !warnings.length) {
-      summary = `${summary} Current dispatch and history cues do not show any obvious blockers.`;
+      summary = `${summary} Current assignment, schedule, and history cues do not show any obvious blockers.`;
     }
 
     return {
@@ -633,78 +558,79 @@ export function JobTicketDetailPage() {
     if (!jobTicketId) return;
 
     setIsLoading(true);
-    const [
-      jobResponse,
-      assignmentResponse,
-      entryResponse,
-      timeResponse,
-      partsResponse,
-      filesResponse,
-      invoiceResponse,
-      customerResponse,
-      locationResponse,
-      equipmentResponse,
-      catalogPartResponse,
-    ] = await Promise.all([
-      jobTicketsApi.get(jobTicketId),
-      jobTicketsApi.listAssignments(jobTicketId)
-        .then((items) => ({ items, failed: false }))
-        .catch(() => ({ items: [], failed: true })),
-      jobTicketsApi.listWorkEntries(jobTicketId),
-      timeEntriesApi.listByJob(jobTicketId).catch(() => []),
-      jobTicketsApi.listParts(jobTicketId),
-      filesApi.list(jobTicketId),
-      reportsApi.getInvoiceReadySummary(jobTicketId)
-        .then((summary) => ({ summary, error: null as string | null }))
-        .catch((requestError) => {
-          if (requestError instanceof ApiError && requestError.status === 404) {
-            return { summary: null, error: null };
-          }
+    try {
+      const [
+        jobResponse,
+        assignmentResponse,
+        entryResponse,
+        timeResponse,
+        partsResponse,
+        filesResponse,
+        invoiceResponse,
+        customerResponse,
+        locationResponse,
+        equipmentResponse,
+        catalogPartResponse,
+      ] = await Promise.all([
+        jobTicketsApi.get(jobTicketId),
+        jobTicketsApi.listAssignments(jobTicketId)
+          .then((items) => ({ items, failed: false }))
+          .catch(() => ({ items: [], failed: true })),
+        jobTicketsApi.listWorkEntries(jobTicketId),
+        timeEntriesApi.listByJob(jobTicketId).catch(() => []),
+        jobTicketsApi.listParts(jobTicketId),
+        filesApi.list(jobTicketId),
+        reportsApi.getInvoiceReadySummary(jobTicketId)
+          .then((summary) => ({ summary, error: null as string | null }))
+          .catch((requestError) => {
+            if (requestError instanceof ApiError && requestError.status === 404) {
+              return { summary: null, error: null };
+            }
 
-          return { summary: null, error: "Invoice-ready summary is unavailable right now." };
-        }),
-      masterDataApi.listCustomers(),
-      masterDataApi.listServiceLocations(),
-      masterDataApi.listEquipment(),
-      masterDataApi.listParts(),
-    ]);
+            return { summary: null, error: "Invoice-ready summary is unavailable right now." };
+          }),
+        masterDataApi.listCustomers(),
+        masterDataApi.listServiceLocations(),
+        masterDataApi.listEquipment(),
+        masterDataApi.listParts(),
+      ]);
 
-    setJob(jobResponse);
-    setStatusValue(String(jobResponse.status));
-    setAssignmentLoadFailed(assignmentResponse.failed);
-    setAssignments(assignmentResponse.items);
-    setEntries(entryResponse);
-    setTimeEntries(timeResponse);
-    setParts(partsResponse);
-    setFiles(filesResponse);
-    setInvoiceSummary(invoiceResponse.summary);
-    setInvoiceSummaryError(invoiceResponse.error);
-    setCustomers(customerResponse);
-    setLocations(locationResponse);
-    setEquipment(equipmentResponse);
-    setCatalogParts(catalogPartResponse.filter((part) => !part.isArchived));
+      setJob(jobResponse);
+      setStatusValue(String(jobResponse.status));
+      setAssignmentLoadFailed(assignmentResponse.failed);
+      setAssignments(assignmentResponse.items);
+      setEntries(entryResponse);
+      setTimeEntries(timeResponse);
+      setParts(partsResponse);
+      setFiles(filesResponse);
+      setInvoiceSummary(invoiceResponse.summary);
+      setInvoiceSummaryError(invoiceResponse.error);
+      setCustomers(customerResponse);
+      setLocations(locationResponse);
+      setEquipment(equipmentResponse);
+      setCatalogParts(catalogPartResponse.filter((part) => !part.isArchived));
 
-    if (user?.role === "Admin" || user?.role === "Manager") {
-      setEmployees(await usersApi.listAssignableEmployees().catch(() => []));
-    }
+      if (user?.role === "Admin" || user?.role === "Manager") {
+        setEmployees(await usersApi.listAssignableEmployees().catch(() => []));
+      }
 
-    setError(null);
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    load().catch((requestError) => {
+      setError(null);
+    } catch (requestError) {
       if (
         requestError instanceof ApiError &&
         (requestError.status === 401 || requestError.status === 403)
       ) {
         setError("You do not have permission to load this manager view.");
-        setIsLoading(false);
-        return;
+      } else {
+        setError("Unable to load job ticket details.");
       }
-      setError("Unable to load job ticket details.");
+    } finally {
       setIsLoading(false);
-    });
+    }
+  };
+
+  useEffect(() => {
+    load();
   }, [jobTicketId]);
 
   const toggleDrawer = (drawer: WorkbenchDrawer) => {
@@ -1002,7 +928,10 @@ export function JobTicketDetailPage() {
       }
     : null;
 
-  const selectWorkflowTab = (tab: WorkflowTab) => {
+  const selectWorkflowTab = (tab: WorkflowTab, focusWorkflow = true) => {
+    if (focusWorkflow) {
+      setActiveDrawer(null);
+    }
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams);
       if (tab === "overview") {
@@ -1010,11 +939,15 @@ export function JobTicketDetailPage() {
       } else {
         nextParams.set("tab", tab);
       }
+      if (focusWorkflow) {
+        nextParams.set("view", "workflow");
+      }
       return nextParams;
     }, { replace: true });
   };
 
   const openRecommendedWorkflow = (tab: WorkflowTab) => {
+    setActiveDrawer(null);
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams);
       if (tab === "overview") nextParams.delete("tab");
@@ -1025,6 +958,7 @@ export function JobTicketDetailPage() {
   };
 
   const closeWorkflowFocus = () => {
+    setActiveDrawer(null);
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams);
       nextParams.delete("view");
@@ -1033,7 +967,9 @@ export function JobTicketDetailPage() {
   };
 
   const openWorkflowDrawer = (tab: WorkflowTab, drawer: Exclude<WorkbenchDrawer, null>) => {
-    selectWorkflowTab(tab);
+    if (activeDrawer !== drawer) {
+      selectWorkflowTab(tab, true);
+    }
     toggleDrawer(drawer);
   };
 
@@ -1049,7 +985,7 @@ export function JobTicketDetailPage() {
 
     event.preventDefault();
     const nextTab = workflowTabs[nextIndex].value;
-    selectWorkflowTab(nextTab);
+    selectWorkflowTab(nextTab, true);
     document.getElementById(`ticket-workflow-tab-${nextTab}`)?.focus();
   };
 
@@ -1070,18 +1006,68 @@ export function JobTicketDetailPage() {
       : closeoutReview.warnings.length
         ? "closeout"
         : "overview";
-  const recommendedAction = hasActiveDispatchBlocker
+  const recommendedActionDetail = hasActiveDispatchBlocker
     ? dispatchWarnings[0]
     : partsReview.blockerCount
       ? partsReview.nextAction
       : closeoutReview.warnings[0] ?? "Review the service details and continue the current workflow.";
   const recommendedWorkflowLabel = workflowTabs.find((tab) => tab.value === recommendedWorkflow)?.label ?? "Overview";
   const activeWorkflowLabel = workflowTabs.find((tab) => tab.value === activeTab)?.label ?? "Overview";
+  const recommendedActionTitle = hasActiveDispatchBlocker
+    ? "Resolve assignment blocker"
+    : partsReview.blockerCount
+      ? "Review parts blocker"
+      : closeoutReview.warnings.length
+        ? "Finish invoice review"
+        : "Review service details";
+  const recommendedActionStatus = hasActiveDispatchBlocker
+    ? `${dispatchWarnings.length} assignment item${dispatchWarnings.length === 1 ? "" : "s"} open`
+    : partsReview.blockerCount
+      ? `${partsReview.blockerCount} parts blocker${partsReview.blockerCount === 1 ? "" : "s"}`
+      : closeoutReview.warnings.length
+        ? `${closeoutReview.warnings.length} invoice review item${closeoutReview.warnings.length === 1 ? "" : "s"} open`
+        : "No immediate blockers visible";
+  const workflowPathSteps: WorkflowPathStep[] = [
+    {
+      label: "Assignment & Schedule",
+      value: "dispatch",
+      summary: dispatchWarnings.length ? `${dispatchWarnings.length} open` : "Ready",
+      state: dispatchWarnings.length ? "open" : "ready",
+    },
+    {
+      label: "Field Work",
+      value: "time",
+      summary: `${entries.length + timeEntries.length} labor notes`,
+      state: entries.length || timeEntries.length ? "ready" : "open",
+    },
+    {
+      label: "Parts / Files",
+      value: partsReview.blockerCount ? "parts" : "files",
+      summary: partsReview.blockerCount ? `${partsReview.blockerCount} blockers` : `${parts.length + files.length} records`,
+      state: partsReview.blockerCount ? "alert" : "ready",
+    },
+    {
+      label: "Invoice Review",
+      value: "closeout",
+      summary: closeoutReview.warnings.length ? `${closeoutReview.warnings.length} open` : "Ready",
+      state: closeoutReview.warnings.length ? "open" : "ready",
+    },
+  ];
+
+  const openLaborWorkflow = () => {
+    selectWorkflowTab("time", true);
+    setActiveDrawer(null);
+  };
 
   useEffect(() => {
-    if (!workflowFocusMode) return;
-    document.getElementById(`ticket-workflow-panel-${primaryWorkflowPanelNames[activeTab]}`)?.focus({ preventScroll: true });
-  }, [activeTab, workflowFocusMode]);
+    if (!workflowFocusMode || activeDrawer) return;
+    document.getElementById(`ticket-workflow-panel-${primaryWorkflowPanelNames[activeTab]}`)?.focus();
+  }, [activeDrawer, activeTab, workflowFocusMode]);
+
+  useEffect(() => {
+    if (!activeDrawer) return;
+    document.getElementById(`ticket-workbench-drawer-${activeDrawer}`)?.focus();
+  }, [activeDrawer]);
 
   if (!canShow) return <section className="card">Missing job id.</section>;
 
@@ -1098,298 +1084,84 @@ export function JobTicketDetailPage() {
           Loading job review details...
         </p>
       ) : null}
-      {error ? <p className="error">{error}</p> : null}
+      {error ? <p className="error" role="alert">{error}</p> : null}
       {message ? <p className="success" role="status">{message}</p> : null}
       {job ? (
         <>
-          <header className="ticket-workbench-hero print-review" hidden={workflowFocusMode}>
-            <div className="ticket-workbench-title">
-              <span className="muted">Service ticket</span>
-              <h2>{job.ticketNumber}</h2>
-              <p>{job.title}</p>
-            </div>
-            <div className="ticket-workbench-command-bar no-print">
-              <button
-                type="button"
-                className="secondary-button"
-                title="Open the browser print dialog for this job review."
-                onClick={() => window.print()}
-              >
-                Print Job Review
-              </button>
-              <button
-                type="button"
-                title="Edit ticket details without leaving this workspace."
-                onClick={() => toggleDrawer("ticket")}
-              >
-                {activeDrawer === "ticket" ? "Close Ticket Editor" : "Edit Ticket"}
-              </button>
-              <button
-                type="button"
-                title="Review readiness warnings before changing ticket status."
-                onClick={() => toggleDrawer("status")}
-              >
-                {activeDrawer === "status" ? "Close Status Panel" : "Change Status"}
-              </button>
-              <button
-                type="button"
-                className="secondary-button"
-                title="Review archive impact and enter a reason before confirmation."
-                onClick={() => toggleDrawer("archive")}
-              >
-                {activeDrawer === "archive" ? "Close Archive Panel" : "Archive Review"}
-              </button>
-            </div>
-            <div className="ticket-workbench-hero-meta" aria-label="ticket key details">
-              <div>
-                <span>Status</span>
-                <strong>{getJobTicketStatusLabel(job.status)}</strong>
-              </div>
-              <div>
-                <span>Priority</span>
-                <strong>{getJobTicketPriorityLabel(job.priority)}</strong>
-              </div>
-              <div>
-                <span>Customer</span>
-                <strong>{selectedCustomer?.name ?? job.customerName ?? "Customer unavailable"}</strong>
-              </div>
-              <div>
-                <span>Service location</span>
-                <strong>{selectedLocation?.locationName ?? job.serviceLocationName ?? "Location unavailable"}</strong>
-              </div>
-              <div>
-                <span>Equipment</span>
-                <strong>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentName ?? "Equipment unavailable") : emptyDisplay}</strong>
-              </div>
-              <div>
-                <span>Due</span>
-                <strong>{formatDate(job.dueAtUtc)}</strong>
-              </div>
-            </div>
-          </header>
+          <TicketWorkbenchHero
+            activeDrawer={activeDrawer}
+            job={job}
+            selectedBillingParty={billingParty}
+            selectedCustomer={selectedCustomer}
+            selectedEquipment={selectedEquipment}
+            selectedLocation={selectedLocation}
+            workflowFocusMode={workflowFocusMode}
+            onOpenDrawer={openWorkflowDrawer}
+          />
 
-          <section className="ticket-recommended-action no-print" aria-label="recommended action" hidden={workflowFocusMode}>
-            <div>
-              <span>Recommended next action</span>
-              <strong>{recommendedAction}</strong>
-            </div>
-            <span className="tooltip-anchor">
-              <button
-                type="button"
-                aria-describedby="open-workflow-tooltip"
-                title={`Open the ${recommendedWorkflowLabel} workflow screen`}
-                onClick={() => openRecommendedWorkflow(recommendedWorkflow)}
-              >
-                Open workflow
-              </button>
-              <span id="open-workflow-tooltip" className="control-tooltip" role="tooltip">
-                Open the recommended {recommendedWorkflowLabel} screen for this ticket.
-              </span>
-            </span>
-          </section>
+          <RecommendedActionPanel
+            actionDetail={recommendedActionDetail}
+            actionStatus={recommendedActionStatus}
+            actionTitle={recommendedActionTitle}
+            recommendedWorkflow={recommendedWorkflow}
+            workflowFocusMode={workflowFocusMode}
+            workflowLabel={recommendedWorkflowLabel}
+            onOpenWorkflow={openRecommendedWorkflow}
+          />
 
-          {workflowFocusMode ? (
-            <header className="workflow-focus-heading no-print">
-              <div>
-                <span className="muted">Focused ticket workflow</span>
-                <h2>{activeWorkflowLabel}</h2>
-                <p className="muted">{job.ticketNumber} - {job.title}</p>
-              </div>
-              <button type="button" className="secondary-button" onClick={closeWorkflowFocus}>Back to ticket overview</button>
-            </header>
-          ) : null}
+          <WorkflowPath
+            steps={workflowPathSteps}
+            workflowFocusMode={workflowFocusMode}
+            onSelectWorkflowTab={selectWorkflowTab}
+          />
 
-          <nav className="ticket-workflow-tabs no-print" aria-label="ticket workflow sections">
-            <div role="tablist" aria-label="ticket workflow tabs">
-              {workflowTabs.map((tab) => (
-                <button
-                  id={`ticket-workflow-tab-${tab.value}`}
-                  type="button"
-                  role="tab"
-                  aria-controls={`ticket-workflow-panel-${primaryWorkflowPanelNames[tab.value]}`}
-                  aria-selected={activeTab === tab.value}
-                  tabIndex={activeTab === tab.value ? 0 : -1}
-                  title={tab.description}
-                  className={activeTab === tab.value ? "ticket-workflow-tab-active" : ""}
-                  key={tab.value}
-                  onClick={() => selectWorkflowTab(tab.value)}
-                  onKeyDown={(event) => handleWorkflowTabKeyDown(event, tab.value)}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </nav>
+          <WorkflowFocusHeading
+            activeWorkflowLabel={activeWorkflowLabel}
+            job={job}
+            workflowFocusMode={workflowFocusMode}
+            onClose={closeWorkflowFocus}
+          />
 
-          <section className="ticket-workbench-kpis" aria-label="ticket workspace summary" hidden={workflowFocusMode}>
-            <div className={dispatchWarnings.length ? "metric-tile metric-tile-review" : "metric-tile metric-tile-ready"}>
-              <span>Dispatch</span>
-              <strong>{dispatchReadiness.statusLabel}</strong>
-              <small>{dispatchReadiness.readyCount} / {dispatchReadiness.checks.length} checks</small>
-            </div>
-            <div className={closeoutReview.warnings.length ? "metric-tile metric-tile-review" : "metric-tile metric-tile-ready"}>
-              <span>Closeout</span>
-              <strong>{closeoutReview.warnings.length ? "Needs review" : "Ready"}</strong>
-              <small>{closeoutReview.warnings.length} open items</small>
-            </div>
-            <div className={partsReview.blockerCount ? "metric-tile metric-tile-alert" : "metric-tile"}>
-              <span>Parts</span>
-              <strong>{partsReview.statusLabel}</strong>
-              <small>{partsReview.blockerCount} blockers</small>
-            </div>
-            <div className="metric-tile">
-              <span>Labor</span>
-              <strong>{formatHours(laborSummary.approvedLaborHours)}</strong>
-              <small>{laborSummary.approvedClosedTimeEntries.length} approved entries</small>
-            </div>
-            <div className="metric-tile">
-              <span>Files/photos</span>
-              <strong>{files.length}</strong>
-              <small>{files.filter((file) => file.isInvoiceAttachment).length} invoice attachments</small>
-            </div>
-            <div className="metric-tile metric-tile-money">
-              <span>Invoice Review</span>
-              <strong>{invoiceSummary ? formatCurrency(invoiceSummary.grandTotal) : "Not ready"}</strong>
-              <small>{invoiceSummary ? "Invoice report loaded" : "Complete invoice checks"}</small>
-            </div>
-          </section>
+          <WorkflowTabs
+            activeTab={activeTab}
+            onSelectWorkflowTab={selectWorkflowTab}
+            onWorkflowTabKeyDown={handleWorkflowTabKeyDown}
+          />
+
+          <MobileQuickActions
+            workflowFocusMode={workflowFocusMode}
+            onOpenDrawer={openWorkflowDrawer}
+            onOpenLabor={openLaborWorkflow}
+          />
+
+          <TicketWorkbenchKpis
+            closeoutReview={closeoutReview}
+            dispatchReadiness={dispatchReadiness}
+            dispatchWarnings={dispatchWarnings}
+            files={files}
+            invoiceSummary={invoiceSummary}
+            laborSummary={laborSummary}
+            partsReview={partsReview}
+            workflowFocusMode={workflowFocusMode}
+          />
 
           <section className={workflowFocusMode ? "ticket-workbench-layout ticket-workbench-layout-focused" : "ticket-workbench-layout"}>
-            <aside className="ticket-workbench-rail no-print" aria-label="ticket actions and dispatch requirements" hidden={workflowFocusMode}>
-              <section className="workbench-panel workbench-panel-compact">
-                <h3>Ticket Actions</h3>
-                <div className="ticket-action-grid">
-                  <button
-                    type="button"
-                    title="Edit customer, scheduling, service, and billing details."
-                    onClick={() => toggleDrawer("ticket")}
-                  >
-                    Edit Ticket
-                  </button>
-                  <button
-                    type="button"
-                    title="Review warnings and choose the ticket's next status."
-                    onClick={() => toggleDrawer("status")}
-                  >
-                    Change Status
-                  </button>
-                  <button
-                    type="button"
-                    title="Add a Manager/Admin note to this ticket's history."
-                    onClick={() => openWorkflowDrawer("activity", "note")}
-                  >
-                    Add Note
-                  </button>
-                  <button
-                    type="button"
-                    title="Upload a job photo, document, or invoice attachment."
-                    onClick={() => openWorkflowDrawer("files", "photo")}
-                  >
-                    Add Photo
-                  </button>
-                  <button
-                    type="button"
-                    title="Open labor and time entries for review or approval follow-up."
-                    onClick={() => {
-                      selectWorkflowTab("time");
-                      setActiveDrawer(null);
-                    }}
-                  >
-                    Add Labor
-                  </button>
-                  <button
-                    type="button"
-                    className="action-wide"
-                    title="Record a used part or create a request for office ordering."
-                    onClick={() => openWorkflowDrawer("parts", "part")}
-                  >
-                    Open Add / Request Part Panel
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-button action-wide"
-                    title="Review archive impact and enter a reason before confirmation."
-                    onClick={() => toggleDrawer("archive")}
-                  >
-                    Archive Review
-                  </button>
-                </div>
-              </section>
-
-              <section className="workbench-panel workbench-panel-compact">
-                <h3>Assigned Technicians</h3>
-                <div className="rail-facts">
-                  <div>
-                    <span>Lead tech</span>
-                    <strong>{leadAssignment ? getEmployeeDisplayName(leadAssignment) : "Needs assignment"}</strong>
-                  </div>
-                  <div>
-                    <span>Assigned</span>
-                    <strong>{assignments.length}</strong>
-                  </div>
-                  <div>
-                    <span>Scheduled</span>
-                    <strong>{formatDate(job.scheduledStartAtUtc)}</strong>
-                  </div>
-                  <div>
-                    <span>Requested</span>
-                    <strong>{formatDate(job.requestedAtUtc)}</strong>
-                  </div>
-                </div>
-              </section>
-
-              <section className="workbench-panel workbench-panel-compact dispatch-requirements-panel">
-                <div className="dispatch-requirements-heading">
-                  <h3>Dispatch Requirements</h3>
-                  <span className="tooltip-anchor">
-                    <button
-                      type="button"
-                      className="help-tooltip-trigger"
-                      aria-label="About dispatch requirements"
-                      aria-describedby="dispatch-requirements-tooltip"
-                    >
-                      i
-                    </button>
-                    <span id="dispatch-requirements-tooltip" className="control-tooltip" role="tooltip">
-                      These checks identify missing information before dispatch review. Completed checks stay available below.
-                    </span>
-                  </span>
-                </div>
-                <div className={openDispatchChecks.length ? "dispatch-readiness-summary dispatch-readiness-summary-open" : "dispatch-readiness-summary dispatch-readiness-summary-ready"}>
-                  <strong>{openDispatchChecks.length ? `${openDispatchChecks.length} open` : "Ready"}</strong>
-                  <span>{dispatchReadiness.readyCount} of {dispatchReadiness.checks.length} complete</span>
-                </div>
-                {openDispatchChecks.length ? (
-                  <ul className="check-list dispatch-open-checks" aria-label="open dispatch readiness checks">
-                    {openDispatchChecks.map((check) => (
-                      <li className="check-item-open" key={check.label}>
-                        <strong>{check.label}</strong>
-                        <span>{check.detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="dispatch-ready-message">No dispatch blockers are currently visible.</p>
-                )}
-                <details className="dispatch-completed-details">
-                  <summary>
-                    Review {completedDispatchChecks.length} completed requirement{completedDispatchChecks.length === 1 ? "" : "s"}
-                  </summary>
-                  <ul className="check-list" aria-label="completed dispatch readiness checks">
-                    {completedDispatchChecks.map((check) => (
-                      <li className="check-item-ready" key={check.label}>
-                        <strong>{check.label}</strong>
-                        <span>{check.detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              </section>
-            </aside>
+            <TicketWorkbenchRail
+              assignments={assignments}
+              completedDispatchChecks={completedDispatchChecks}
+              dispatchReadiness={dispatchReadiness}
+              getEmployeeDisplayName={getEmployeeDisplayName}
+              job={job}
+              leadAssignment={leadAssignment}
+              openDispatchChecks={openDispatchChecks}
+              workflowFocusMode={workflowFocusMode}
+              onOpenDrawer={openWorkflowDrawer}
+              onOpenLabor={openLaborWorkflow}
+            />
 
             <div className="ticket-workbench-main">
               {activeDrawer === "ticket" && editPayload ? (
-                <section className="workbench-drawer no-print" aria-label="ticket editor panel">
+                <section id="ticket-workbench-drawer-ticket" className="workbench-drawer no-print" aria-label="ticket editor panel" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Edit Ticket</h3>
@@ -1429,7 +1201,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "note" ? (
-                <section className="workbench-drawer no-print" aria-label="quick note panel">
+                <section id="ticket-workbench-drawer-note" className="workbench-drawer no-print" aria-label="quick note panel" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Add Note</h3>
@@ -1443,7 +1215,7 @@ export function JobTicketDetailPage() {
                         aria-label="Ticket note"
                         value={quickNote}
                         onChange={(event) => setQuickNote(event.target.value)}
-                        placeholder="Add a clear note for dispatch, closeout, or customer follow-up."
+                        placeholder="Add a clear note for assignments, closeout, or customer follow-up."
                       />
                     </label>
                     <div className="row">
@@ -1455,7 +1227,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "photo" ? (
-                <section className="workbench-drawer no-print" aria-label="quick photo upload panel">
+                <section id="ticket-workbench-drawer-photo" className="workbench-drawer no-print" aria-label="quick photo upload panel" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Add Photo</h3>
@@ -1497,7 +1269,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "status" ? (
-                <section className="workbench-drawer no-print" aria-label="status workflow review">
+                <section id="ticket-workbench-drawer-status" className="workbench-drawer no-print" aria-label="status workflow review" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Status Review</h3>
@@ -1515,7 +1287,7 @@ export function JobTicketDetailPage() {
                       <strong>{statusReview.nextLabel}</strong>
                     </div>
                     <div>
-                      <span>Dispatch Status</span>
+                      <span>Work Readiness</span>
                       <strong>{dispatchReadiness.statusLabel}</strong>
                     </div>
                   </div>
@@ -1548,7 +1320,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "archive" ? (
-                <section className="workbench-drawer no-print" aria-label="archive workflow review">
+                <section id="ticket-workbench-drawer-archive" className="workbench-drawer no-print" aria-label="archive workflow review" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Archive Review</h3>
@@ -1646,16 +1418,16 @@ export function JobTicketDetailPage() {
                         : "Location status unavailable"}
                     </p>
                   </section>
-                  <section className="context-block" aria-label="equipment">
-                    <span>Equipment</span>
-                    <h4>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentName ?? "Equipment unavailable") : "No equipment attached"}</h4>
+                  <section className="context-block" aria-label="equipment being serviced">
+                    <span>Crane / Equipment Being Serviced</span>
+                    <h4>{job.equipmentId ? (selectedEquipment?.name ?? job.equipmentName ?? "Equipment unavailable") : "See job scope"}</h4>
                     <p>{displayValue(selectedEquipment?.equipmentType)} {displayValue(selectedEquipment?.manufacturer)} {displayValue(selectedEquipment?.modelNumber)}</p>
                     {!selectedEquipment && job.equipmentNumber ? <p className="muted">Equipment {job.equipmentNumber}</p> : null}
                     <p className="muted">Unit {displayValue(selectedEquipment?.unitNumber)} | Serial {displayValue(selectedEquipment?.serialNumber)}</p>
                   </section>
                 </div>
 
-                <div className="fact-grid" aria-label="job dispatch details">
+                <div className="fact-grid" aria-label="job assignment and schedule details">
                   <div>
                     <span>Job Type</span>
                     <strong>{displayValue(job.jobType)}</strong>
@@ -1712,7 +1484,7 @@ export function JobTicketDetailPage() {
                   <span className={assignmentLoadFailed ? "status-chip status-chip-alert" : "status-chip"}>{assignments.length} assigned</span>
                 </div>
                 {assignmentLoadFailed ? (
-                  <p className="error" role="alert">Assignment data could not be loaded. Refresh before editing assignments or dispatch review.</p>
+                  <p className="error" role="alert">Assignment data could not be loaded. Refresh before editing assignments or assignment review.</p>
                 ) : null}
                 {assignments.length ? (
                   <ul className="record-list">
@@ -1788,7 +1560,7 @@ export function JobTicketDetailPage() {
                     <strong>{getJobTicketPriorityLabel(job.priority)}</strong>
                   </div>
                   <div>
-                    <span>Dispatch Status</span>
+                    <span>Work Readiness</span>
                     <strong>{dispatchReadiness.statusLabel}</strong>
                   </div>
                   <div>
@@ -1797,13 +1569,13 @@ export function JobTicketDetailPage() {
                   </div>
                 </div>
                 {dispatchWarnings.length ? (
-                  <ul className="muted" aria-label="dispatch warnings">
+                  <ul className="muted" aria-label="assignment warnings">
                     {dispatchWarnings.map((warning) => (
                       <li key={warning}>{warning}</li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="muted">Assignment, lead tech, schedule, due date, customer, service location, and equipment decision are all present.</p>
+                  <p className="muted">Employee assignment, lead tech, schedule, due date, customer, service location, and service equipment choice are all present.</p>
                 )}
               </article>
 
@@ -1914,7 +1686,7 @@ export function JobTicketDetailPage() {
                 </section>
                 <p className="muted">{partsReview.nextAction}</p>
                 {activeDrawer === "part" ? (
-                  <section className="workbench-drawer no-print" aria-label="add or request part drawer">
+                  <section id="ticket-workbench-drawer-part" className="workbench-drawer no-print" aria-label="add or request part drawer" tabIndex={-1}>
                     <div className="workbench-panel-heading">
                       <div>
                         <h4>Add / Request Part</h4>
@@ -2075,6 +1847,26 @@ export function JobTicketDetailPage() {
                     {closeoutReview.warnings.length ? "Needs closeout review" : "Ready for invoice handoff"}
                   </span>
                 </div>
+                <section className={closeoutReview.warnings.length ? "closeout-next-steps closeout-next-steps-open" : "closeout-next-steps closeout-next-steps-ready"} aria-label="invoice review next steps">
+                  <div>
+                    <span>{closeoutReview.warnings.length ? "Open closeout requirements" : "Invoice review path"}</span>
+                    <strong>{closeoutReview.warnings.length ? `${closeoutReview.warnings.length} item${closeoutReview.warnings.length === 1 ? "" : "s"} need attention` : "Ready for billing handoff"}</strong>
+                  </div>
+                  {closeoutReview.warnings.length ? (
+                    <ol>
+                      {closeoutReview.warnings.slice(0, 4).map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>Labor, time approval, parts, documentation, notes, billing details, and closeout status are ready for invoice review.</p>
+                  )}
+                  <div className="closeout-action-row">
+                    <button type="button" className="secondary-button" onClick={() => openWorkflowDrawer("overview", "status")}>Change Status</button>
+                    <button type="button" className="secondary-button" onClick={() => selectWorkflowTab("time", true)}>Review Labor</button>
+                    <button type="button" className="secondary-button" onClick={() => openWorkflowDrawer("files", "photo")}>Add File</button>
+                  </div>
+                </section>
                 <div className="fact-grid">
                   <div>
                     <span>Invoice Checks</span>

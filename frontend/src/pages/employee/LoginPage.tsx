@@ -2,9 +2,11 @@ import { FormEvent, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/httpClient'
 import { useAuth } from '../../features/auth/AuthContext'
+import { useCompanyBranding } from '../../features/companyBranding/CompanyBrandingContext'
 
 export function LoginPage() {
   const { user, login, logout } = useAuth()
+  const { configuration, logoUrl, initials } = useCompanyBranding()
   const navigate = useNavigate()
   const location = useLocation()
   const [usernameOrEmail, setUsernameOrEmail] = useState('')
@@ -44,9 +46,13 @@ export function LoginPage() {
     <main className="mobile-shell login-page">
       <section className="card login-card">
         <header className="login-heading">
-          <span className="product-mark" aria-hidden="true">JT</span>
+          {logoUrl ? (
+            <img className="login-logo" src={logoUrl} alt={`${configuration.companyName} logo`} />
+          ) : (
+            <span className="product-mark" aria-hidden="true">{initials}</span>
+          )}
           <div>
-            <p className="eyebrow">Field service workspace</p>
+            <p className="eyebrow">{configuration.companyName}</p>
             <h1>Sign in</h1>
             <p className="muted">Open assigned jobs or the Manager/Admin console.</p>
           </div>

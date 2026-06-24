@@ -4,13 +4,16 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 
 ## Current Project State
 - Core backend/API workflows remain implemented and validated.
-- Employee mobile workflow remains implemented.
-- Manager/Admin job-ticket, assignment, reporting, master-data, purchasing-support, and inventory-foundation workflows remain implemented on `main`.
+- Employee mobile workflow remains implemented with a concise assigned-job list and a clock-in-first job detail flow that uses a plain-language Next action card, keeping notes, parts, photos, and history behind the active job state.
+- Manager/Admin job-ticket, assignment, reporting, master-data, and purchasing-support workflows remain implemented on `main`; Inventory is hidden from the menu and client wiki until that workflow is completed.
 - Manager/Admin Phase 3B master-data polish has started with expanded existing-field create/edit forms and active-only relationship defaults for customers, service locations, equipment, vendors, part categories, and parts, while preserving existing archive/unarchive workflows and APIs.
 - Manager/Admin reports are organized into invoice/closeout, labor/parts, and service-history sections with shared filters, source-ID validation, date/paging validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from the currently loaded rows.
 - Manager/Admin screen cleanup separates report catalog/results, master-data list/editor, and Admin user list/editor states into focused screens without changing backend APIs; Admin user management now filters accounts by search, role, and active/inactive status.
-- Manager/Admin job-ticket queue can export the currently visible filtered ticket rows to client-side CSV for dispatch handoff without adding backend export APIs.
-- Manager/Admin Dispatch Board is now a first-class operational screen at `/manage/dispatch`, with Unscheduled, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views. Dispatchers can schedule jobs, assign crane/equipment, assign operator/crew, move day-of work forward, open tickets, and finalize completed tickets using existing ticket, assignment, work-entry, and status APIs.
+- Manager/Admin job-ticket queue can switch between rich readiness cards and a persisted compact operating list that prioritizes ticket, lead/team, readiness, timing, and one Open Ticket action; it uses Admin-configured status filter options with seeded default active field-work statuses and can export the currently visible filtered ticket rows to client-side CSV without adding backend export APIs.
+- Employee assigned-job lists hide fully closed tickets (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`) while Manager/Admin users can still find those tickets in the queue, ticket workspace, reports, and history.
+- Manager/Admin Job Tickets is the main operating screen for creating, assigning, scheduling, and reviewing work. The legacy `/manage/dispatch` URL redirects to Job Tickets because assignment and scheduling now live on the ticket itself.
+- Production deployment configuration and readiness runbooks are source-controlled, with explicit migration startup, disabled normal production seed/bootstrap services, health proxying, backup/restore guidance, rollback steps, and client-UAT gates documented.
+- Controlled production-demo readiness is documented with a source-controlled SQL/uploaded-files backup verification script and clear full go-live gates.
 - Labor report totals are labeled as time-entry labor-rate snapshot values and preserve the existing API fallback behavior for legacy entries without captured snapshots.
 - Parts Request Workflow Phase 2 adds in-ticket Add / Request Part flows without adding purchasing, receiving, inventory expansion, recommendations, or automatic compatibility decisions.
 - Technicians can search/select existing parts through a technician-safe lookup or type a new/unlisted part from inside an assigned service ticket.
@@ -18,21 +21,24 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office order/request queue item.
 - Technicians must be clocked into the selected job ticket before recording field work through work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
 - Manager/Admin service-ticket detail now presents a cohesive field-service workbench with ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
-- Manager/Admin ticket actions use focused panels for section-based ticket editing, quick notes, photo/file upload, labor review, status review, archive review, and Add / Request Part while staying on existing ticket, part-request, assignment, file, time, and reporting APIs.
+- Manager/Admin ticket actions use URL-backed focused workflow panels for section-based ticket editing, quick notes, photo/file upload, labor review, status review, archive review, and Add / Request Part while staying on existing ticket, part-request, assignment, file, time, and reporting APIs.
+- Manager/Admin ticket workflow guidance now highlights the recommended next action, target workflow, workflow path, mobile quick actions, and invoice-review requirements without changing backend APIs or business workflow.
+- Manager/Admin ticket create/edit now treats billing party as an explicit relationship that can default from the customer, follow job-site/equipment billing context, or be overridden to any customer record without being overwritten by later customer changes.
 - Manager/Admin task navigation uses URL-backed queue filters, dashboard links into filtered queues, queue-aware return links, workflow tabs, and a recommended next action that opens the selected ticket workflow in a focused view.
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
 - Manager/Admin back-office users can review the parts request queue, filter/search it, update request status, add internal notes, record part cost and billable price snapshots, mark billable state, and match a request to an existing catalog part.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
 - A shared presentation system now polishes every existing Employee and Manager/Admin route with consistent typography, compact actions, form controls, tables, cards, navigation, responsive behavior, and loading/empty/error states.
+- Local pilot seed data includes six demo tickets across invoice-ready, assigned, waiting-on-parts, unassigned, needs-lead, and urgent in-progress scenarios for Employee, Manager/Admin queue, parts, and reports walkthroughs.
 
 ## Current UI Direction
 The Manager/Admin Service Ticket Workspace Redesign is implemented for the job-ticket detail/workspace flow, and the same restrained operational design system is applied across the rest of the existing application.
 
-The service-ticket side now centers on a coherent field-service operations flow: Dispatch Board, work queue, ticket workspace, technician assignment, service scope, labor, parts, files/photos, status, and invoice-ready closeout. The design direction remains adapted to Crane's job-ticket scope.
+The service-ticket side now centers on one job-ticket record: the queue creates and finds tickets, the ticket workspace handles Assignment & Schedule, technicians capture work, Managers/Admins review the ticket, and Reports supports invoice-ready review. The design direction remains adapted to Crane's job-ticket scope.
 
 This UI direction does not approve external client portals, online payments, quote approval automation, customer notification automation, purchasing expansion, inventory expansion, parts recommendations, AI/scoring, automatic compatibility, or automatic approval.
 
-The Dispatch Board is currently ticket-backed. It does not add a separate dispatch-job table, backend dispatch enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
+There is intentionally no separate Dispatch module. A crane/equipment selection identifies the customer's unit being serviced; it is not a dispatched company resource or employee assignment. Specific components or parts being serviced belong in the ticket's job scope and instructions. Assignment and scheduling do not add a separate record, table, status enum, schema migration, automatic scheduling, automatic approval, or invoice generation.
 
 ## Scope Boundary
 The project remains centered on the job-ticket workflow:
@@ -49,8 +55,13 @@ Parts Request Workflow Phase 2 is not a purchasing, receiving, vendor invoice, l
 - Scope contract: [docs/project-scope.md](docs/project-scope.md)
 - API contract: [docs/api-contract.md](docs/api-contract.md)
 - Client-facing system wiki: [docs/system-wiki.md](docs/system-wiki.md)
+- Service-ticket workflow audit: [docs/service-ticket-workflow-audit.md](docs/service-ticket-workflow-audit.md)
 - Development setup and validation: [docs/development-setup.md](docs/development-setup.md)
 - Test environment setup and workarounds: [docs/test-environment-setup.md](docs/test-environment-setup.md)
+- Production readiness runbook: [docs/production-readiness-runbook.md](docs/production-readiness-runbook.md)
+- Production demo readiness: [docs/production-demo-readiness-2026-06-22.md](docs/production-demo-readiness-2026-06-22.md)
+- Production readiness audit: [docs/production-readiness-audit-2026-06-18.md](docs/production-readiness-audit-2026-06-18.md)
+- Wiki screenshot refresh note: [docs/wiki-screenshot-refresh-2026-06-22.md](docs/wiki-screenshot-refresh-2026-06-22.md)
 - Historical audit log: [docs/historical-bug-regression-audit.md](docs/historical-bug-regression-audit.md)
 - Database design: [docs/database-design.md](docs/database-design.md)
 - Local demo runbook: [docs/local-demo-runbook.md](docs/local-demo-runbook.md)
@@ -64,6 +75,7 @@ Docker dev enables local pilot seed data. Demo users:
 - `pilot.admin` / `PilotDemo123!`
 - `pilot.manager` / `PilotDemo123!`
 - `pilot.tech` / `PilotDemo123!`
+- `pilot.tech.backup` / `PilotDemo123!`
 - Bootstrap-only admin: `test.admin` / `TestAdmin123!`
 
 ## Validation Commands
@@ -85,5 +97,6 @@ cd frontend && npm test
 - Preserve soft-delete/archive behavior.
 - Keep Employee and Manager/Admin route boundaries intact.
 - Treat `/manage` as Manager/Admin-only and `/manage/users` as Admin-only.
+- Treat `/manage/ticket-status-filters` and `PUT /api/ticket-status-filters` as Admin-only configuration surfaces; Manager/Admin users may read the configured queue filters.
 - Do not expose cost, price, vendor, purchase, inventory, catalog-admin, or billing controls to technicians.
 - Keep deferred purchasing expansion, inventory expansion, recommendation, AI/scoring, and automatic compatibility domains deferred until explicitly selected.

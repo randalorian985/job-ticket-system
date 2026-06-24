@@ -17,11 +17,13 @@ Screenshots in this wiki are captured from the demo/pilot environment. They are 
 For a first client walkthrough, use this order:
 
 1. Start with [Roles And Access](#roles-and-access) so users understand what each account type can do.
-2. Review [Sign-In And Session Behavior](#sign-in-and-session-behavior).
-3. Walk technicians through [Employee Workflow](#employee-workflow).
-4. Walk office staff through [Manager/Admin Workspace](#manageradmin-workspace).
-5. Review [Time Tracking And Approval](#time-tracking-and-approval), [Parts And Part Requests](#parts-and-part-requests), and [Reports](#reports).
-6. Finish with [Current Scope Boundaries](#current-scope-boundaries) so the client knows what is intentionally not included.
+2. Confirm [Company Configuration](#company-configuration) before showing branded UI or report output.
+3. Review [Sign-In And Session Behavior](#sign-in-and-session-behavior).
+4. Walk technicians through [Employee Workflow](#employee-workflow).
+5. Walk office staff through [Manager/Admin Workspace](#manageradmin-workspace).
+6. Review [Time Tracking And Approval](#time-tracking-and-approval), [Parts And Part Requests](#parts-and-part-requests), and [Reports](#reports).
+7. Review [Production Demo Operations](#production-demo-operations) before a VPS-backed client demo.
+8. Finish with [Current Scope Boundaries](#current-scope-boundaries) so the client knows what is intentionally not included.
 
 For live training, use the [Client Training Checklist](#client-training-checklist) near the end of this wiki.
 
@@ -32,23 +34,28 @@ The screenshots below appear again in the workflow sections where they are most 
 | Screen | Screenshot |
 | --- | --- |
 | Login | [login.png](assets/system-wiki/login.png) |
-| Employee assigned jobs | [employee-jobs.png](assets/system-wiki/employee-jobs.png) |
-| Employee job detail | [employee-job-detail.png](assets/system-wiki/employee-job-detail.png) |
+| Employee assigned jobs concise list | [employee-jobs.png](assets/system-wiki/employee-jobs.png) |
+| Employee job detail clock-in-first workflow | [employee-job-detail.png](assets/system-wiki/employee-job-detail.png) |
 | Manager/Admin dashboard | [manager-dashboard.png](assets/system-wiki/manager-dashboard.png) |
-| Dispatch board | [dispatch-board.png](assets/system-wiki/dispatch-board.png) |
-| Dispatch unscheduled jobs | [dispatch-unscheduled-jobs.png](assets/system-wiki/dispatch-unscheduled-jobs.png) |
-| Dispatch schedule workflow | [dispatch-schedule-job.png](assets/system-wiki/dispatch-schedule-job.png) |
-| Mobile dispatch board | [dispatch-board-mobile.png](assets/system-wiki/dispatch-board-mobile.png) |
-| Job-ticket queue | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
+| Job-ticket queue rich and compact views | [job-ticket-queue.png](assets/system-wiki/job-ticket-queue.png) |
 | Job-ticket workspace | [job-ticket-workspace.png](assets/system-wiki/job-ticket-workspace.png) |
 | Section-based ticket editor | [ticket-section-editor.png](assets/system-wiki/ticket-section-editor.png) |
+| Quick note workflow | [ticket-quick-note.png](assets/system-wiki/ticket-quick-note.png) |
+| Status review workflow | [ticket-status-review.png](assets/system-wiki/ticket-status-review.png) |
+| Labor workflow | [ticket-labor-workflow.png](assets/system-wiki/ticket-labor-workflow.png) |
+| Parts add/request workflow | [ticket-parts-workflow.png](assets/system-wiki/ticket-parts-workflow.png) |
+| Invoice review workflow | [ticket-invoice-review.png](assets/system-wiki/ticket-invoice-review.png) |
+| Mobile ticket workspace | [ticket-workspace-mobile.png](assets/system-wiki/ticket-workspace-mobile.png) |
+| Mobile ticket editor | [ticket-edit-mobile.png](assets/system-wiki/ticket-edit-mobile.png) |
+| Mobile labor workflow | [ticket-labor-mobile.png](assets/system-wiki/ticket-labor-mobile.png) |
+| Mobile parts workflow | [ticket-parts-mobile.png](assets/system-wiki/ticket-parts-mobile.png) |
 | Time approval | [time-approval.png](assets/system-wiki/time-approval.png) |
 | Parts requests | [part-requests.png](assets/system-wiki/part-requests.png) |
 | Master data customers | [master-data-customers.png](assets/system-wiki/master-data-customers.png) |
 | Purchasing support | [purchasing.png](assets/system-wiki/purchasing.png) |
-| Inventory foundation | [inventory.png](assets/system-wiki/inventory.png) |
 | Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) |
 | Admin users | [admin-users.png](assets/system-wiki/admin-users.png) |
+| Ticket filter configuration | [ticket-status-filters.png](assets/system-wiki/ticket-status-filters.png) |
 
 ## Roles And Access
 
@@ -86,7 +93,7 @@ Manager users can:
 - manage customer, location, equipment, vendor, part category, and part records;
 - review part requests;
 - use reports;
-- use the existing purchasing-support and inventory-foundation screens.
+- use the existing purchasing-support screen.
 
 Manager users cannot:
 - access Admin-only user management;
@@ -97,6 +104,8 @@ Manager users cannot:
 Admins have Manager capabilities plus user administration.
 
 Admin users can:
+- manage Company Configuration for the crane company's own logo, profile, and colors;
+- manage which status filter options appear in the Manager/Admin job-ticket queue;
 - create user accounts;
 - edit user account information;
 - deactivate/archive users;
@@ -117,7 +126,6 @@ Admin users can:
 
 ### Manager/Admin Routes
 - `/manage`: Manager/Admin dashboard.
-- `/manage/dispatch`: dispatch board for scheduling, assignment, day-of status movement, ticket review, and billing readiness handoff.
 - `/manage/job-tickets`: job-ticket queue.
 - `/manage/job-tickets/new`: create job ticket.
 - `/manage/job-tickets/{jobTicketId}`: job-ticket workspace.
@@ -126,13 +134,35 @@ Admin users can:
 - `/manage/equipment`: equipment.
 - `/manage/parts`: parts, vendors, and part categories.
 - `/manage/part-requests`: parts request queue.
-- `/manage/inventory`: inventory foundation.
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
 - `/manage/time-approval`: time approval queue.
 - `/manage/parts-approval`: parts approval workflow.
 - `/manage/reports`: reports hub.
+- `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
+- `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
 - `/manage/users`: Admin-only user management.
+- `/manage/dispatch`: legacy bookmark route that redirects to `/manage/job-tickets`.
+
+## Production Demo Operations
+
+The current VPS baseline is ready for controlled production demos after validation, health checks, and backup verification pass. This is separate from full client production go-live, which still requires restore-drill evidence, off-host backup storage, alerting, and UAT signoff.
+
+Before a client-facing VPS demo, the operator should confirm:
+- frontend and backend validation passed for the deployed commit;
+- `GET /health` returns `Healthy` through the public site and the local VPS proxy;
+- SQL Server, API, and frontend containers are healthy;
+- a fresh backup exists under `/opt/job-ticket-system/backups/<UTC stamp>/`;
+- the SQL backup reported `RESTORE VERIFYONLY` as valid;
+- uploaded files/photos were archived with the same backup stamp;
+- `job-ticket-production-backup.timer` is active on the VPS for recurring backups;
+- normal production restarts keep `TestBootstrap` and `PilotDemoSeed` disabled.
+
+The source-controlled backup entrypoint is `scripts/production-backup.sh`. It creates a SQL Server backup, verifies it, archives uploaded files/photos, and applies retention cleanup. The current Ubuntu VPS runs that script through the `job-ticket-production-backup.timer` systemd timer.
+
+See [Production Demo Readiness - June 22, 2026](/docs/production-demo-readiness-2026-06-22.md) and [Production Readiness Runbook](/docs/production-readiness-runbook.md) for the command-level checklist.
+
+For the Employee clock-in-first and Manager/Admin compact queue update, deploy only after the draft PR is reviewed, validated, and merged to `main`. The VPS checklist in the production runbook includes the required post-merge smoke tests and screenshot refresh targets.
 
 ## Sign-In And Session Behavior
 
@@ -149,25 +179,26 @@ Admin users can:
 ## Employee Workflow
 
 ### Assigned Jobs List
-The employee job list shows assigned work in a mobile-friendly layout.
+The employee job list is a short mobile work list, not a dashboard. Each card gives the technician enough context to choose the right job without scanning extra summary panels.
 
 Employees can review:
 - ticket number;
 - title;
-- status;
 - priority;
+- status;
 - scheduled start;
 - due date;
-- customer;
-- service location;
-- equipment;
-- readiness status;
-- next required update.
+- customer and service location;
+- equipment being serviced;
+- readiness status and the next required update;
+- one primary action: **Open / Clock In** when the job is ready, or **Review Job** when setup needs attention.
 
 ![Employee assigned jobs list](assets/system-wiki/employee-jobs.png)
 
+Fully closed tickets do not appear in the normal employee assigned-job list. This includes Completed, Cancelled, Invoiced, and Reviewed tickets. Those tickets are not deleted; Managers/Admins can still find them in the job-ticket queue, ticket workspace, reports, history, and audit trails.
+
 Readiness helps employees understand whether a job has enough information to start. It may flag:
-- inactive or completed ticket status;
+- inactive field-work status;
 - missing scheduled start;
 - missing due date;
 - missing customer;
@@ -179,8 +210,13 @@ When an employee opens a job, the detail screen shows:
 - status and priority;
 - customer, service location, and equipment labels;
 - job description;
-- readiness checks;
-- clock-in/clock-out controls;
+- a short "Before You Start" readiness review;
+- a plain-language "Next action" card;
+- clock-in/clock-out controls.
+
+The "Next action" card is the technician's main guide. Before clock-in, it points the employee to clock in or to finish the already-active ticket. After clock-in, it shows short links for Add Note, Add Part, Upload Photo, and Clock Out so the employee can do one field update at a time.
+
+Before clock-in, the deeper field tools are hidden behind a clear message. After the technician clocks into that exact ticket, the active-job tools appear:
 - work note form;
 - add/request part form;
 - upload photo/file form;
@@ -201,7 +237,7 @@ It checks:
 - due date;
 - customer;
 - service location;
-- equipment assignment;
+- crane/equipment being serviced;
 - job instructions.
 
 If information is missing, the employee should contact a Manager/Admin before starting or continuing work.
@@ -245,6 +281,8 @@ The guard applies to:
 - photo/file uploads.
 
 If an employee is clocked into another job, they must open that active ticket or clock out before recording work on a different ticket.
+
+The Employee screen hides the field-recording forms until the technician is clocked into that exact ticket. This keeps mobile scrolling short and prevents work notes, parts, or photos from being added to the wrong time entry.
 
 Manager/Admin back-office actions are not gated by an employee clock-in.
 
@@ -299,18 +337,20 @@ Employees can add an optional caption.
 
 Unsupported file types are rejected.
 
+Files must be 50 MB or smaller.
+
 ## Manager/Admin Workspace
 
 ### Dashboard
-The dashboard summarizes operational work and provides quick entry into common queues.
+The dashboard is a quiet summary screen. It shows the current shape of the work without trying to replace the job-ticket queue.
 
 Typical dashboard actions include:
 - review active job tickets;
 - open filtered job queues;
-- check dispatch/readiness attention areas;
+- check assignment and schedule attention areas;
 - move into time approval, parts requests, reports, or master-data workflows.
 
-Dashboard links use the same Manager/Admin role boundary as the rest of the workspace.
+Dashboard links use the same Manager/Admin role boundary as the rest of the workspace. Primary and secondary dashboard actions use the shared Manager/Admin button styling so shortcuts look consistent with the job-ticket queue and wiki links.
 
 ![Manager/Admin dashboard](assets/system-wiki/manager-dashboard.png)
 
@@ -321,21 +361,42 @@ Managers/Admins can filter by:
 - status;
 - priority;
 - customer;
-- dispatch readiness;
+- work readiness;
 - attention condition;
 - search text.
 
-Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and dispatch readiness. It does not create a server-side export job.
+The status choices in the queue come from Admin configuration. Admins choose the display label, existing ticket status value, display order, and active/inactive flag. If no custom configuration exists, the queue uses the default active field-work filters: Submitted, Assigned, In Progress, Waiting on Parts, and Waiting on Customer.
+
+Changing these options does not create a new workflow. It only changes how the Status filter is labeled and ordered in the Manager/Admin queue. Existing ticket status names, numeric values, status-change rules, and reports stay the same.
+
+Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and work readiness. It does not create a server-side export job.
 
 Queue URLs are shareable. If a Manager/Admin opens a ticket from a filtered queue, the ticket detail can preserve a safe return link back to that queue.
+
+The queue has two view modes:
+- **Rich cards**: the full review card view with readiness detail, assignment context, and timing fields.
+- **Compact list**: a denser operating list that prioritizes ticket number, title, customer/location, assigned tech, status, priority, scheduled date, due date, and the Open action.
+
+The selected view is remembered in the browser for that Manager/Admin user session. It does not change the ticket data, filters, CSV export, routes, or authorization rules.
+
+The queue also includes a compact **Saved Views** dropdown for common operating queues:
+- Open Tickets;
+- Closed Tickets;
+- Today;
+- Waiting on Parts;
+- Ready to Invoice;
+- Needs Assignment;
+- Completed Review.
+
+Saved views apply normal queue filters and show small counts inline. They are intentionally presented as a dropdown and compact count chips instead of dashboard-style cards.
 
 Important queue concepts:
 - active job queue;
 - waiting tickets;
 - waiting on parts;
 - invoice-ready queue;
-- needs dispatch review;
-- dispatch-ready queue;
+- needs assignment review;
+- ready to work queue;
 - unassigned tickets;
 - tickets needing a lead;
 - unscheduled tickets;
@@ -359,6 +420,28 @@ Job-ticket creation uses existing master data where applicable:
 
 Validation prevents invalid or incomplete submissions where the UI has enough information to do so.
 
+Ticket creation now has a guided in-form path:
+- Customer;
+- Billing party;
+- Job location;
+- Equipment;
+- Schedule / assign tech;
+- Review and create.
+
+The wizard stays on the same screen and jumps the user to the relevant form section. It does not change the backend ticket workflow or create a separate approval path.
+
+The ticket form includes copy helpers to reduce duplicate typing:
+- **Use customer address** copies customer billing address/contact details into a new job location;
+- **Use selected customer** sets the ticket billing party to the selected customer;
+- **Use job-site customer** sets the billing party from the selected service location's related customer when available;
+- **Use equipment billing customer** sets the billing party from the selected equipment's responsible billing customer when available;
+- **Use billing address** copies the selected billing party contact into ticket billing fields;
+- **Use job-site contact** copies the selected service-location contact into ticket billing fields.
+
+Selecting a customer defaults the billing party to that customer only when no separate billing party has already been chosen. If a manager selects a different billing party, later customer changes preserve that explicit billing override.
+
+Inline data-quality warnings call out cleanup items without blocking the ticket, including missing customer phone, missing job-location ZIP, missing lead tech, and missing due date.
+
 ### Job Ticket Workspace
 The Manager/Admin ticket detail page is organized as a field-service workbench.
 
@@ -379,13 +462,13 @@ It includes:
 - workflow tabs.
 
 Workflow tabs include:
-- Overview;
-- Dispatch;
-- Time;
+- Service Details;
+- Assignment & Schedule;
+- Labor;
 - Parts;
 - Files;
-- Closeout;
-- Activity.
+- Invoice Review;
+- History.
 
 The workspace keeps related work on one screen instead of forcing Managers/Admins through scattered pages.
 
@@ -397,207 +480,125 @@ Managers/Admins open a ticket from the job-ticket queue, dashboard links, report
 The ticket view is organized around review first and editing second:
 - the top summary shows ticket number, title, status, priority, customer, location, equipment, and due date;
 - the recommended next action opens the most relevant workflow screen;
-- workflow tabs separate Service Details, Dispatch, Labor, Parts, Files, Invoice Review, and History;
+- workflow tabs separate Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History;
 - the side action rail keeps common Manager/Admin actions visible without taking over the whole screen.
 
 This view is intended to answer "what needs attention?" before asking the user to edit anything.
 
-### Dispatch Flow
-Dispatch is now the parent Manager/Admin operational workflow. The dispatcher starts at `/manage/dispatch`, not inside an individual ticket, and uses the Dispatch Board to schedule jobs, assign crane/equipment, assign operator and crew, move day-of work forward, and hand completed work into ticket review and billing readiness.
+### Assignment And Schedule Workflow
+**Plain-language rule:** there is one work record: the job ticket. The system does not have a separate Dispatch module or a separate dispatcher workflow. Managers/Admins create a job ticket, assign technicians, set schedule and due dates, and review the ticket as work moves forward.
 
-Previous workflow:
-- dispatch readiness was visible in the dashboard, job-ticket queue, and ticket workspace;
-- scheduling, assignment, and status changes were possible, but users usually had to open a ticket detail screen to act;
-- dispatch existed as a readiness concept on tickets rather than a clear first-class board.
+Use each area for one clear purpose:
+- use **Job Tickets** to create, find, assign, schedule, and edit work records;
+- use the ticket workspace's **Assignment & Schedule** tab for assigned technicians, lead tech, schedule, due date, and assignment warnings;
+- use the ticket workspace for scope, labor, parts, files, notes, status changes, and closeout review;
+- use **Reports** for billing-ready and invoice review.
 
-New workflow:
-- open **Dispatch** from the Manager/Admin navigation;
-- choose a board view: **Unscheduled Jobs**, **Today**, **Tomorrow**, **This Week**, **Completed**, **Needs Ticket Review**, or **Ready for Billing**;
-- review each job card for customer, job site, requested/scheduled timing, job type, crane/equipment, operator, crew, dispatch status, ticket status, conflicts, and missing assignments;
-- use card actions for Schedule, Assign Crane, Assign Operator, Assign Crew, Dispatch, Mark En Route, Mark On Site, Start Work, Complete Work, Open Ticket, Finalize Ticket, or Ready for Billing where applicable;
-- use the focused Schedule Job panel when scheduling or assignment details need to change.
+People are assigned to a job ticket. The customer's crane or other equipment is what the ticket says the team is servicing. It is not assigned as a company resource. If the work is on a component or part, describe that clearly in **Job / Scope** or **Service Instructions**.
 
-Reason for change:
-- dispatchers should not have to open a ticket screen for routine dispatch actions;
-- the operational day is easier to run from board views than from a generic ticket list;
-- schedule, crane, operator, crew, status, ticket review, and billing handoff are now visible in one workflow.
+Old bookmarks to `/manage/dispatch` redirect to `/manage/job-tickets` so users land in the current workflow.
 
-![Dispatch board](assets/system-wiki/dispatch-board.png)
-
-![Dispatch unscheduled jobs view](assets/system-wiki/dispatch-unscheduled-jobs.png)
-
-#### Dispatch Board
-The Dispatch Board uses existing job-ticket, equipment, assignment, work-entry, and status APIs. It does not introduce a new backend dispatch-job table.
-
-Board views:
-- **Unscheduled Jobs**: open work without a scheduled start;
-- **Today**: scheduled active work for the current day;
-- **Tomorrow**: scheduled active work for the next day;
-- **This Week**: scheduled active work in the next seven days;
-- **Completed**: completed, reviewed, finalized, and invoiced ticket-backed work;
-- **Needs Ticket Review**: completed work that should move into ticket review;
-- **Ready for Billing**: reviewed/finalized work that can be handed to reporting/billing review.
-
-Each card shows:
-- customer;
-- job site/location;
-- requested date/time;
-- scheduled date/time;
-- job type/title;
-- crane needed;
-- assigned crane;
-- assigned operator;
-- assigned crew;
-- current dispatch lifecycle label;
-- ticket status/review label;
-- conflict or missing-assignment warnings.
-
-#### Job Lifecycle
-The client-facing operational lifecycle is:
+#### One Job-Ticket Workflow
+The job ticket moves through the existing workflow from request through review. Assignment and schedule details are part of that ticket.
 
 ```mermaid
 flowchart TD
-  A["Job Request"] --> B["Review / Estimate"]
-  B --> C["Schedule"]
-  C --> D["Assign Crane"]
-  D --> E["Assign Operator / Crew"]
-  E --> F["Dispatch"]
-  F --> G["En Route"]
-  G --> H["On Site"]
-  H --> I["In Progress"]
-  I --> J["Work Complete"]
-  J --> K["Generate / Update Ticket"]
-  K --> L["Customer Approval / Signature"]
-  L --> M["Finalize Ticket"]
-  M --> N["Ready for Billing"]
+  A["Create Job Ticket"] --> B["Review Scope, Customer, Location, Equipment"]
+  B --> C["Assign Technicians And Lead Tech"]
+  C --> D["Set Schedule And Due Date"]
+  D --> E["Technician Works Ticket"]
+  E --> F["Manager/Admin Reviews Labor, Parts, Files, And Status"]
+  F --> G["Invoice Review / Reports"]
 ```
 
-Current implementation note: the board is ticket-backed. A job request is represented by a job ticket today. **Create Job Request** opens the existing ticket creation route. There is no separate unsaved dispatch-job record without a ticket yet.
+The UI uses the real ticket statuses: Draft, Submitted, Assigned, In Progress, Waiting on Parts, Waiting on Customer, Completed, Cancelled, Invoiced, and Reviewed. It does not invent separate Requested, Scheduled, or Dispatched statuses.
 
-#### Dispatch Statuses
-The Dispatch Board presents dispatcher-friendly lifecycle labels while preserving existing backend job-ticket status enum values.
+#### Quick Views
+The Job Tickets screen has a small set of practical quick views:
+- **Active tickets**;
+- **Waiting**;
+- **Missing due**;
+- **Unassigned**;
+- **Needs review**;
+- **Ready to work**.
 
-Displayed dispatch statuses include:
-- Requested;
-- Needs Scheduling;
-- Scheduled;
-- Dispatched;
-- En Route;
-- On Site;
-- In Progress;
-- Work Complete;
-- Ticket In Review;
-- Ticket Finalized;
-- Ready for Billing;
-- Invoiced.
+These quick views are not a second workflow. They only apply filters to the same job-ticket list. Admin-configured status labels stay in the Status filter so the screen does not become crowded with shortcut boxes.
 
-Backend impacts: no backend enum values were changed. En Route and On Site actions currently record dispatch work-entry notes while keeping the ticket in the assigned/scheduled state until Start Work moves the ticket to In Progress.
+#### Compact List
+The Job Tickets screen has two views:
+- **Rich cards** for deeper review;
+- **Compact list** for day-to-day scanning.
 
-#### Scheduling Workflow
-Use **Schedule**, **Assign Crane**, **Assign Operator**, or **Assign Crew** from a dispatch card to open the focused Schedule Job panel.
+The compact list keeps each row focused on:
+- ticket number and title;
+- status and priority badges;
+- customer and service location;
+- lead tech and assigned team;
+- work readiness;
+- schedule and due timing;
+- one **Open Ticket** action.
 
-The Schedule Job panel includes:
-- job information;
-- requested date/time;
-- scheduled date/time;
-- due date/time;
-- crane assignment;
-- operator assignment;
-- crew assignment;
-- notes;
-- conflict warnings;
-- Save Schedule;
-- Cancel.
+Use the compact list when the queue feels busy. It is designed to keep the important operating signals visible without bringing back a separate Dispatch screen.
 
-![Dispatch schedule job panel](assets/system-wiki/dispatch-schedule-job.png)
+#### Assignment And Schedule Checks
+The system checks for the information Managers/Admins need before field work is clear:
+- assigned technician;
+- lead tech;
+- scheduled start;
+- due date;
+- customer;
+- service location;
+- crane/equipment being serviced, when the ticket is for a whole equipment record;
+- service scope or notes for component-only work.
 
-#### Crane Assignment Workflow
-Crane assignment uses existing equipment records. The board labels this as crane assignment for dispatch language, while the stored relationship remains the existing job-ticket equipment field.
-
-The board warns when the same crane/equipment appears scheduled on another active job for the selected day.
-
-#### Operator / Crew Assignment Workflow
-The operator is the lead job-ticket assignment. Crew members are non-lead job-ticket assignments.
-
-Validation and warnings include:
-- missing operator;
-- missing crew/assignment;
-- lead/operator not selected;
-- employee already assigned to another active job on the selected day.
-
-The UI allows a dispatcher to save with warnings so real-world exceptions can be handled intentionally. This is a warning workflow, not automatic approval or automatic scheduling.
-
-#### Day-Of-Job Workflow
-Dispatchers can move jobs forward directly from the card:
-- **Dispatch** marks the job as assigned/scheduled when schedule and assignments are present;
-- **Mark En Route** records a dispatch activity note;
-- **Mark On Site** records a dispatch activity note;
-- **Start Work** moves the ticket to In Progress;
-- **Complete Work** moves the ticket to Completed.
-
-These actions are available without opening the ticket detail screen.
-
-#### Ticket Generation From Dispatch
-The current system is ticket-backed, so the dispatch board works with existing job tickets:
-- if a dispatcher needs a new job request, use **Create Job Request**;
-- if a job already exists, use **Open Ticket** from the card;
-- after Work Complete, use **Finalize Ticket** or open the ticket for detailed section-based review.
-
-Future recommendation: if Crane needs dispatch records before ticket creation, add a dedicated dispatch-job model and a Generate Ticket API in a separate approved backend phase.
+Missing items appear as **Needs assignment review** or **Needs attention** depending on the screen. Complete tickets show **Ready to work**.
 
 #### Ticket Review And Finalization
-After Work Complete:
-- the job appears in **Needs Ticket Review**;
-- Managers/Admins can open the ticket to review the section-based ticket data, labor, parts, files/photos, closeout readiness, and activity;
-- **Finalize Ticket** moves completed work into the reviewed/finalized state supported by the existing ticket status enum.
-
-The section-based ticket editing model remains intact:
-- ticket view stays organized as section cards and workflow tabs;
-- top-level Edit Ticket opens section selection;
-- quick actions remain available for Add Note, Add Photo, Add Labor, and Change Status.
+Review completed work in the ticket workspace. Managers/Admins review ticket data, labor, parts, files/photos, closeout readiness, and activity there. Moving Completed work to Reviewed remains a ticket action.
 
 #### Billing Readiness
-Reviewed/finalized jobs appear in **Ready for Billing**. This is a handoff state for reporting and invoice-ready review.
+Use Reports for billing-ready and invoice review. Job Tickets do not generate invoices, collect payments, or create a separate billing queue.
 
-Important boundary:
-- the system does not generate invoices;
-- the system does not collect payments;
-- billing readiness uses existing reports and ticket closeout data.
-
-#### Mobile Dispatch UX
+#### Mobile Workflow
 On mobile:
-- board tabs wrap into a compact grid;
-- job cards stack vertically;
-- card facts remain readable without narrow table columns;
-- primary actions remain visible on the card;
-- the Schedule Job panel fills the viewport with obvious Save Schedule and Cancel controls.
-
-![Mobile dispatch board](assets/system-wiki/dispatch-board-mobile.png)
+- use the Job Tickets queue or dashboard links to find the ticket;
+- use the compact ticket list for dense scanning;
+- open the ticket workspace for Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History;
+- focused workflow panels keep the selected task near the top of the screen.
 
 #### Permissions And Validation Rules
-Dispatch Board access is Manager/Admin-only through the existing `/manage` route boundary.
+Assignment and schedule work is Manager/Admin-only through the existing `/manage` route boundary.
 
 Validation and warnings preserve existing data integrity:
-- missing scheduled date/time blocks Schedule save;
-- missing operator blocks Schedule save;
-- assignment conflicts are shown as warnings;
-- crane/equipment conflicts are shown as warnings;
-- existing ticket update and assignment APIs remain the persistence boundary;
-- no auth weakening, enum renumbering, schema migration, automatic approval, automatic compatibility, AI/scoring, or purchasing/inventory expansion was introduced.
+- missing assignment, lead tech, schedule, or due date are shown as review items;
+- existing ticket update and employee-assignment APIs remain the persistence boundary;
+- no separate dispatch entity, status enum, database table, or API is introduced;
+- no auth weakening, enum renumbering, Dispatch-specific schema migration, automatic scheduling, or purchasing/inventory expansion is introduced.
 
 ### Ticket Editing
 Managers/Admins edit ticket information through a focused in-page panel. The previous workflow opened one large edit form containing customer, service location, equipment, scope, billing, dates, status, and priority fields at the same time. That worked functionally, but it forced users to scan a long form and created extra mobile scrolling.
 
 The new workflow keeps editing in the ticket workspace but splits the edit panel into sections:
 - **Basics**: title, job type, priority, and status;
-- **Customer & Equipment**: customer, service location, billing party, equipment, quick-add relationship helpers, and recent equipment service history;
+- **Customer & Service Equipment**: customer, service location, billing party, crane/equipment being serviced, quick-add relationship helpers, and recent equipment service history;
 - **Scope & Notes**: description, internal notes, and customer notes;
 - **Billing**: purchase order and billing contact fields;
 - **Schedule**: requested, scheduled start, and due dates.
 
-The same dispatch-readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
+The same assignment and schedule readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
 
-![Section-based ticket editor with dispatch readiness](assets/system-wiki/ticket-section-editor.png)
+The editor also shows the same ticket create guide used on new tickets, so managers can quickly jump back to customer, billing, job-location, equipment, schedule, or review sections. Billing party is treated as its own relationship: it can match the customer, follow the job-site customer, follow the equipment billing customer, or point at any other customer record. Copy helpers are available inside relationship and billing sections, and data-quality warnings stay visible while editing.
+
+![Section-based ticket editor with assignment and schedule readiness](assets/system-wiki/ticket-section-editor.png)
+
+Workflow tabs and action buttons now open the selected ticket workflow in a focused view. This means the selected panel appears directly under the workflow heading and tabs instead of requiring mobile users to scroll past the overview rail. The focused view includes a **Back to ticket overview** control, and that control closes any open focused panel before returning to the normal ticket overview.
+
+The ticket overview also includes a workflow-guidance area:
+- **Recommended next action** names the next practical step, explains the blocker or reason, shows the target workflow, and opens that workflow directly.
+- **Ticket workflow path** shows Assignment & Schedule, Field Work, Parts / Files, and Invoice Review so office users can jump to the right stage without hunting through the page.
+- The **Invoice Review** workflow shows open closeout requirements before invoice totals so billing handoff work is visible before users review dollars.
+
+![Invoice review workflow](assets/system-wiki/ticket-invoice-review.png)
 
 The edit workflow should preserve:
 - customer/service-location relationships;
@@ -616,8 +617,9 @@ User experience improvements:
 - fewer fields compete for attention at one time;
 - section buttons make the edit model predictable;
 - mobile users can edit one section at a time instead of working through a long stacked form;
-- dispatch-readiness feedback remains visible while editing;
+- assignment and schedule readiness feedback remains visible while editing;
 - quick actions let users add notes, upload photos/files, review labor, or change status without opening the full editor.
+- mobile ticket shortcuts keep Add Note, Add Photo, Labor, and Status close to the top of the ticket overview.
 
 Technical implementation details:
 - `JobTicketEditorForm` owns the section state and still emits the same ticket update payload.
@@ -655,6 +657,12 @@ Mobile users should prefer:
 - the Status Review panel for status changes;
 - section editing only when ticket details need to change.
 
+On the mobile ticket overview, the compact quick-action row gives direct access to Add Note, Add Photo, Labor, and Status without waiting for users to scroll into the side rail.
+
+![Mobile ticket workspace](assets/system-wiki/ticket-workspace-mobile.png)
+
+![Mobile ticket editor](assets/system-wiki/ticket-edit-mobile.png)
+
 ### Section-Based Editing Architecture
 Section-based editing is a frontend presentation architecture. It does not split the backend ticket update command. The frontend keeps one edit draft and one save action so existing validation, API contracts, and persistence behavior remain stable.
 
@@ -682,12 +690,48 @@ The enhancement does not weaken authorization. It only changes the Manager/Admin
 
 ### Quick Actions
 Quick actions are short paths for common ticket updates:
-- **Add Note** opens a focused note panel and saves a Manager/Admin work entry to ticket history.
-- **Add Photo** opens a focused upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
-- **Add Labor** opens the existing Labor workflow tab for time/labor review and follow-up.
-- **Change Status** opens the existing Status Review panel with warnings and status selection.
+- **Add Note** opens the focused History workflow with a note panel and saves a Manager/Admin work entry to ticket history.
+- **Add Photo** opens the focused Files workflow with an upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
+- **Add Labor** opens the focused Labor workflow tab for time/labor review and follow-up.
+- **Change Status** opens a focused Status Review panel with warnings and status selection.
+- **Open Add / Request Part Panel** opens the focused Parts workflow with the existing in-ticket add/request form.
 
 Quick actions are intended for small updates. Use the section editor when relationship, billing, schedule, or detailed ticket fields need to change.
+
+![Quick note workflow](assets/system-wiki/ticket-quick-note.png)
+
+![Status review workflow](assets/system-wiki/ticket-status-review.png)
+
+![Labor workflow](assets/system-wiki/ticket-labor-workflow.png)
+
+![Parts add/request workflow](assets/system-wiki/ticket-parts-workflow.png)
+
+Mobile focused workflows keep the selected panel directly under the workflow tabs so users do not need to hunt below the ticket overview rail.
+
+![Mobile labor workflow](assets/system-wiki/ticket-labor-mobile.png)
+
+![Mobile parts workflow](assets/system-wiki/ticket-parts-mobile.png)
+
+### Ticket Workflow Audit And Repairs
+The Service Ticket workflow audit completed on June 18, 2026 verified the existing business workflow without redesigning it. The audit covered workflow tabs, ticket actions, workflow cards, mobile visibility, and accessibility cues.
+
+Findings and repairs:
+- workflow tabs already changed active content, but action shortcuts could leave the target panel below the normal overview rail on mobile;
+- quick-action drawers did not have a reliable focus target, which made the opened panel less obvious for keyboard and assistive-technology users;
+- the focused workflow panel could take focus back from an opened drawer;
+- **Back to ticket overview** returned from focused mode but did not close an open focused drawer;
+- active tab and drawer focus contrast needed stronger shared styling.
+
+Implemented repairs:
+- direct workflow tab and action-rail navigation now sets the URL-backed `view=workflow` state;
+- Add Note, Add Photo, Add Labor, Add / Request Part, Edit Ticket, Change Status, and Archive Review open focused panels where appropriate;
+- drawer panels receive programmatic focus when opened;
+- workflow panel focus waits when a drawer is active;
+- **Back to ticket overview** clears open focused drawers;
+- global error messages announce as alerts;
+- active workflow tabs and focused drawers use stronger shared contrast/focus styling.
+
+See [Service Ticket Workflow Audit - June 18, 2026](/docs/service-ticket-workflow-audit-2026-06-18.md) for the detailed audit report, root cause notes, regression results, and remaining recommendations.
 
 ### Assignment Management
 Managers/Admins can assign active, non-archived Employee users to tickets.
@@ -797,6 +841,8 @@ Customer data can include:
 - account/contact details;
 - billing-related contact fields where supported.
 
+Customer billing address and contact details can be reused by service-location and ticket billing helpers. The helper copies existing values into the active form; it does not create a new customer address model.
+
 ### Service Locations
 Service locations represent where work is performed.
 
@@ -808,6 +854,8 @@ Managers/Admins can:
 - filter and review locations.
 
 Service locations should remain aligned to the correct customer.
+
+The service-location form includes **Use customer address**. After a related customer is selected, this copies the customer's billing address and contact details into the service-location address/contact fields so managers do not have to retype the same information.
 
 ### Equipment
 Equipment records represent assets serviced by the company.
@@ -840,7 +888,7 @@ Managers/Admins can:
 - filter and review categories.
 
 ### Parts
-Part records represent catalog parts used in job tickets, part requests, reports, purchasing support, and inventory foundation.
+Part records represent catalog parts used in job tickets, part requests, reports, and purchasing support.
 
 Managers/Admins can:
 - create parts;
@@ -871,32 +919,9 @@ Managers/Admins can work with:
 
 This is existing purchasing support. It is not approval to expand into a larger purchasing, accounting, receiving, or vendor-invoice product without a separate approved scope.
 
+The purchasing screen shows success and error feedback for create, submit, receiving, close, archive, and vendor-invoice save actions. Inventory remains hidden until that workflow is completed, so users should treat purchasing as purchase-order coordination rather than a complete warehouse workflow.
+
 ![Manager/Admin purchasing support screen](assets/system-wiki/purchasing.png)
-
-## Inventory Foundation
-
-The inventory screen provides a foundation for stock visibility and transaction review.
-
-Managers/Admins can:
-- create and edit stock locations;
-- archive/unarchive stock locations;
-- view stock summaries;
-- filter stock by location and part;
-- view inventory transactions;
-- create manual adjustments with a reason.
-
-Inventory transactions can include receipt transactions from purchasing support and manual adjustments.
-
-This foundation does not include:
-- warehouse expansion;
-- truck inventory expansion;
-- transfer workflows;
-- low-stock alerts;
-- replenishment automation;
-- recommendation scoring;
-- AI guidance.
-
-![Manager/Admin inventory foundation screen](assets/system-wiki/inventory.png)
 
 ## Reports
 
@@ -934,7 +959,7 @@ The frontend validates required source selections, date ranges, and paging value
 Report inputs are saved per report on the user's browser. For example, changing the selected job ticket on Invoice-ready Summary does not change the selected job ticket on Job Cost Summary. Use **Reset report inputs** to clear saved report defaults and return filters to their standard values.
 
 ### Report Output
-Generated reports continue to open in a separate results screen within the reports workflow.
+Generated reports continue to open in a separate results screen within the reports workflow. Report groups use compact sections with consistent run cards, while generated output uses a single bordered preview surface.
 
 From generated report results, users can:
 - review report metadata, including visible row count, visible column count, generated time, and applied scope;
@@ -946,13 +971,94 @@ From generated report results, users can:
 Important reporting boundaries:
 - PDF output uses the browser print dialog.
 - CSV export is generated in the browser from currently loaded rows and includes report metadata at the top of the file.
+- Company Configuration name, logo, address, phone, email, and website appear in report print/save-PDF headers and CSV metadata when saved.
 - Empty reports do not expose CSV or print/save-PDF actions.
 - The system does not generate invoices.
 - The system does not collect payments.
 - The system does not provide a customer portal.
 - The system does not run server-side reporting jobs.
 
+### Future Service Estimate / Quote Export Direction
+
+Real crane-company service estimates read as formal customer-facing work-order quote packets rather than generic reports. When this becomes approved scope, the export should use Company Configuration for the crane company's own identity and continue using customer, work site, contact, and equipment data from job-ticket/customer records.
+
+A future service estimate or quote export should support:
+- branded header with company logo, company address/contact details, and optional compliance or association marks;
+- document stripe with document type, quote/work-order number, page count, and date;
+- customer block separate from work-site block;
+- customer contact, phone, email, and salesperson/service representative details;
+- equipment block with serial number, unit make, unit description, and unit model;
+- description-of-work section;
+- parts, mileage, labor, and miscellaneous line items with part number, description, quantity, unit measure, unit cost, and total cost;
+- estimate total separated clearly from line-item details;
+- terms, finance-charge language, or other legal footer text managed as future company/export configuration.
+
+This is future export guidance only. It does not change the current customer-selection workflow, does not create quotes, and does not replace the existing browser print/save-PDF report output.
+
 ![Manager/Admin reports hub](assets/system-wiki/reports-hub.png)
+
+## Company Configuration
+
+Company Configuration is Admin-only and represents the crane company's own identity. It is not the customer/account record used when choosing who work is for on a job ticket.
+
+Admin-only access:
+- `/manage/company-configuration`
+
+Admins can manage:
+- company name and legal name;
+- primary contact;
+- phone, email, and website;
+- address;
+- company logo;
+- primary, secondary, and accent colors.
+
+Company Configuration is used by:
+- the login screen brand area;
+- the Manager/Admin shell header;
+- generated report print/save-PDF headers;
+- generated report CSV metadata;
+- shared UI brand color variables.
+
+Logo upload accepts JPG/JPEG, PNG, and WebP images up to 2 MB. The upload path validates file extension, content type, size, and image signature before storing the file.
+
+Customer records remain separate. The Customers screen and job-ticket customer, billing-party customer, service-location, and equipment selections continue to represent the customer or account receiving the work.
+
+API summary:
+- `GET /api/company-configuration`: public branding/profile read for the UI.
+- `PUT /api/company-configuration`: Admin-only profile and color update.
+- `POST /api/company-configuration/logo`: Admin-only logo upload.
+- `GET /api/company-configuration/logo`: public logo stream when a logo exists.
+
+## Ticket Filter Configuration
+
+Ticket Filter Configuration is Admin-only and controls the status shortcut boxes shown in the Manager/Admin job-ticket queue.
+
+Admin-only access:
+- `/manage/ticket-status-filters`
+
+Admins can:
+- view the current status filter list;
+- add a filter that maps to an existing ticket status;
+- rename the label shown on a filter box;
+- change display order;
+- mark a filter active or inactive;
+- save the global filter list.
+
+Managers can use the resulting filters in the job-ticket queue, but Managers cannot edit the configuration. Employees cannot access this configuration.
+
+Important boundaries:
+- this is not a custom workflow engine;
+- it does not add new ticket statuses;
+- it does not change ticket status numeric values;
+- it does not change status transition rules;
+- inactive filters do not appear in the normal queue shortcut row;
+- closed tickets remain available to Manager/Admin users through queue filters, ticket workspace, reports, and history.
+
+API summary:
+- `GET /api/ticket-status-filters`: Manager/Admin-readable filter list.
+- `PUT /api/ticket-status-filters`: Admin-only save for labels, mapped existing status values, display order, and active/inactive flags.
+
+![Admin ticket filter configuration screen](assets/system-wiki/ticket-status-filters.png)
 
 ## Admin User Management
 
@@ -1020,30 +1126,33 @@ Common validation examples:
 - employees must be clocked into the selected job before recording field work.
 
 When a request fails, the screen should show a useful error message and keep the user in the workflow.
+Manager/Admin ticket workspace refreshes, Employee mobile post-action refreshes, and Parts Request Queue filter reloads should also clear loading states after failures, so users are not left waiting without feedback or told that a saved action failed.
 
 ## Recommended Operating Process
 
 ### Daily Manager/Admin Flow
 1. Open the dashboard.
-2. Review urgent queue summaries.
-3. Open the Dispatch Board for unscheduled, today, tomorrow, this-week, completed, ticket-review, and billing-ready work.
-4. Schedule jobs and assign crane, operator, and crew from dispatch cards.
-5. Move day-of jobs through Dispatch, En Route, On Site, In Progress, and Work Complete.
-6. Open tickets needing detailed section-based review.
-7. Review tickets waiting on parts.
-8. Review pending time entries.
-9. Review reports for closeout and invoice-ready work.
+2. Review the quiet operations summary.
+3. Open Job Tickets and choose **Compact list** for fast scanning or **Rich cards** for deeper readiness review.
+4. Use Quick Views for Active tickets, Waiting, Missing due, Unassigned, Needs review, and Ready to work.
+5. Open the ticket workspace and use **Assignment & Schedule** to assign technicians, mark the lead tech, and set schedule and due dates.
+6. Confirm the crane/equipment being serviced or describe component-only work in the ticket scope.
+7. Review completed work in the ticket workspace.
+8. Review tickets waiting on parts.
+9. Review pending time entries.
+10. Review reports for closeout and invoice-ready work.
 
 ### Technician Field Flow
 1. Sign in.
 2. Open assigned jobs.
-3. Review the first assigned job and readiness checks.
-4. Open the job.
+3. Pick the correct job from the concise card list.
+4. Open the job and review the "Before You Start" readiness summary.
 5. Clock in with GPS.
-6. Record work notes as work is performed.
-7. Add/request parts as needed.
-8. Upload photos or PDFs as supporting evidence.
-9. Clock out with a required work summary.
+6. Use the active-job tools that appear after clock-in.
+7. Record work notes as work is performed.
+8. Add/request parts as needed.
+9. Upload photos or PDFs as supporting evidence.
+10. Clock out with a required work summary.
 
 ### Back-Office Parts Flow
 1. Open the parts request queue.
@@ -1070,12 +1179,14 @@ The system currently does not include:
 - client hub workflow;
 - online payments;
 - payment collection;
+- formal service estimate/quote generation;
 - quote approval automation;
 - customer notification automation;
 - new purchasing expansion beyond the existing baseline;
 - receiving expansion beyond the existing baseline;
 - vendor invoice tracking expansion;
 - landed-cost expansion beyond existing supported fields;
+- inventory workflow;
 - warehouse inventory expansion;
 - truck inventory expansion;
 - low-stock alerts;
@@ -1108,16 +1219,17 @@ Use this checklist when introducing the system to a client team.
 
 ### Manager Training
 - Use the dashboard.
-- Use the Dispatch Board.
-- Schedule jobs without opening ticket detail.
-- Assign crane, operator, and crew.
-- Move day-of jobs through dispatch status actions.
+- Use Job Tickets as the main operating screen.
+- Use quick views without letting the page become a wall of shortcuts.
+- Confirm the service equipment, then assign technicians and the lead tech in the ticket workspace.
+- Set scheduled start and due dates on the ticket.
+- Review completed tickets in the ticket workspace and billing-ready work in Reports.
 - Filter job-ticket queues.
 - Create a job ticket.
 - Open the ticket workspace.
 - Assign employees.
 - Update ticket status/priority.
-- Review dispatch readiness.
+- Review assignment and schedule readiness.
 - Review time entries.
 - Approve/reject/edit-and-approve time.
 - Review part requests.
@@ -1137,18 +1249,13 @@ Use this checklist when introducing the system to a client team.
 - Maintain part, vendor, and category data.
 - Review Needs ordered part requests.
 - Use purchasing support carefully within current scope.
-- Review inventory foundation records.
 - Produce closeout reports.
 
-## Demo Users
+## Demo Access
 
-Local demo environments may include these users:
-- `pilot.admin` / `PilotDemo123!`
-- `pilot.manager` / `PilotDemo123!`
-- `pilot.tech` / `PilotDemo123!`
-- bootstrap-only admin: `test.admin` / `TestAdmin123!`
+Demo, pilot, and training accounts are environment-specific. For customer sessions, provide usernames and temporary passwords through the agreed handoff channel instead of publishing credentials in the wiki.
 
-Demo users are for local/pilot environments only and should not be treated as production credentials.
+Demo users are for controlled demo or pilot environments only and should not be treated as production credentials.
 
 ## Support Notes
 

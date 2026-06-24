@@ -8,14 +8,14 @@ This workaround gives the runner a checkout-like working tree without requiring 
 
 The `Scheduled Runner Workspace Bundle` GitHub Actions workflow runs inside GitHub, where `actions/checkout` is available. It packages the requested ref, posts a manifest comment, and posts base64 bundle chunks to an issue.
 
-The workflow starts automatically on every push to `main`, posting a fresh default-branch bundle to issue #166. That means each merged PR should leave the scheduled runner with a current reconstructable workspace even when direct checkout is still blocked.
+The workflow starts automatically on every push to `main`, posting a fresh default-branch bundle to issue #319. That means each merged PR should leave the scheduled runner with a current reconstructable workspace even when direct checkout is still blocked.
 
 The workflow can also be started in either of these ways:
 
 - Run the workflow manually and choose the ref and issue number.
 - Comment `/runner-bundle` on a repository issue. The issue-comment trigger is limited to repository owners, members, and collaborators and uses the repository default branch.
 
-By default, bundle comments are intended for issue #166, the scheduled-runner checkout-access blocker.
+By default, bundle comments are intended for issue #319, the active scheduled-runner checkout-access bridge. Issue #166 is retained as historical context but has reached GitHub's issue-comment limit.
 
 ## Scheduled Runner Recovery Flow
 
@@ -43,7 +43,7 @@ A missing `.git` directory in the reconstructed bundle is not a blocker. Use the
 For large or coordinated patches:
 
 1. Confirm no active PR or draft PR already owns the current task.
-2. Reconstruct latest `main` from the newest issue #166 bundle before editing.
+2. Reconstruct latest `main` from the newest issue #319 bundle before editing.
 3. Make the complete local file changes in the reconstructed workspace.
 4. Compare the local post-edit files against the connector-fetched `main` files so the final diff is understood before publishing.
 5. Publish the final changed files through GitHub connector writes only after the local diff is reviewed.

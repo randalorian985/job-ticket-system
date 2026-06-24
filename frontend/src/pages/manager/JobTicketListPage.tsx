@@ -2,21 +2,23 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
+import { ticketStatusFiltersApi } from '../../api/ticketStatusFiltersApi'
 import { ApiError } from '../../api/httpClient'
-import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto } from '../../types'
+import type { CustomerDto, JobTicketAssignmentDto, JobTicketListItemDto, ServiceLocationDto, TicketStatusFilterOptionDto } from '../../types'
 import { csvDataUri, toCsv, type CsvColumn } from '../../utils/csv'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from '../employee/jobDisplay'
-import { formatDate, jobStatusOptions, priorityOptions } from './managerDisplay'
-import { activeDispatchStatusValues, buildJobTicketDetailPath, normalizeJobTicketQueueSearchParams, readJobTicketQueueFilters } from './managerTaskNavigation'
+import { defaultTicketStatusFilterOptions, formatDate, priorityOptions } from './managerDisplay'
+import { activeDispatchStatusValues, buildJobTicketDetailPath, closedJobTicketStatusValues, normalizeJobTicketQueueSearchParams, readJobTicketQueueFilters } from './managerTaskNavigation'
 
 const allFilterValue = 'all'
 const activeStatusValues = activeDispatchStatusValues
+const closedStatusValues = closedJobTicketStatusValues
 const waitingStatusValues = new Set([5, 6])
 const dispatchReadinessFilterOptions = [
-  { value: allFilterValue, label: 'All dispatch readiness' },
-  { value: 'ready', label: 'Dispatch-ready' },
-  { value: 'needs-review', label: 'Needs dispatch review' },
-  { value: 'not-active', label: 'Not active dispatch' }
+  { value: allFilterValue, label: 'All work readiness' },
+  { value: 'ready', label: 'Ready to work' },
+  { value: 'needs-review', label: 'Needs assignment review' },
+  { value: 'not-active', label: 'Not active work' }
 ]
 
 type DispatchReadiness = {
@@ -32,6 +34,14 @@ type QueuePreset = {
   priority?: string
   readiness?: string
   attention?: string
+}
+
+type SavedQueueViewKey = 'custom' | 'open-tickets' | 'closed-tickets' | 'today' | 'waiting-parts' | 'ready-invoice' | 'needs-assignment' | 'completed-review'
+
+type SavedQueueView = {
+  value: SavedQueueViewKey
+  label: string
+  preset?: QueuePreset
 }
 
 type QueueExportRow = {
@@ -52,6 +62,8 @@ type QueueExportRow = {
   completedAtUtc: string
 }
 
+type TicketViewMode = 'rich' | 'compact'
+
 const queueExportColumns: CsvColumn<QueueExportRow>[] = [
   { header: 'Ticket Number', value: (row) => row.ticketNumber },
   { header: 'Title', value: (row) => row.title },
@@ -61,8 +73,8 @@ const queueExportColumns: CsvColumn<QueueExportRow>[] = [
   { header: 'Service Location', value: (row) => row.serviceLocation },
   { header: 'Assigned Employees', value: (row) => row.assignedEmployees },
   { header: 'Lead Employees', value: (row) => row.leadEmployees },
-  { header: 'Dispatch Readiness', value: (row) => row.dispatchReadiness },
-  { header: 'Dispatch Detail', value: (row) => row.dispatchDetail },
+  { header: 'Work Readiness', value: (row) => row.dispatchReadiness },
+  { header: 'Work Readiness Detail', value: (row) => row.dispatchDetail },
   { header: 'Next Required Update', value: (row) => row.nextRequiredUpdate },
   { header: 'Requested Date (UTC)', value: (row) => row.requestedAtUtc },
   { header: 'Scheduled Start (UTC)', value: (row) => row.scheduledStartAtUtc },
@@ -70,14 +82,52 @@ const queueExportColumns: CsvColumn<QueueExportRow>[] = [
   { header: 'Completed Date (UTC)', value: (row) => row.completedAtUtc }
 ]
 
+const ticketViewModeStorageKey = 'job-ticket-manager-queue-view-mode'
 const dateForExport = (value?: string | null) => value ? value.slice(0, 10) : ''
+const savedQueueViews: SavedQueueView[] = [
+  { value: 'custom', label: 'Custom filters' },
+  { value: 'open-tickets', label: 'Open Tickets', preset: { status: 'active' } },
+  { value: 'closed-tickets', label: 'Closed Tickets', preset: { status: 'closed' } },
+  { value: 'today', label: 'Today', preset: { status: 'active' } },
+  { value: 'waiting-parts', label: 'Waiting on Parts', preset: { status: '5' } },
+  { value: 'ready-invoice', label: 'Ready to Invoice', preset: { status: '10' } },
+  { value: 'needs-assignment', label: 'Needs Assignment', preset: { status: 'active', readiness: 'needs-review' } },
+  { value: 'completed-review', label: 'Completed Review', preset: { status: '7' } }
+]
+
+const isSameLocalDate = (value: string | null | undefined, comparisonDate: Date) => {
+  if (!value) {
+    return false
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return false
+  }
+
+  return date.getFullYear() === comparisonDate.getFullYear() &&
+    date.getMonth() === comparisonDate.getMonth() &&
+    date.getDate() === comparisonDate.getDate()
+}
+
+const getStoredTicketViewMode = (): TicketViewMode => {
+  if (typeof window === 'undefined') {
+    return 'rich'
+  }
+
+  try {
+    return window.localStorage.getItem(ticketViewModeStorageKey) === 'compact' ? 'compact' : 'rich'
+  } catch {
+    return 'rich'
+  }
+}
 
 const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[] | null): DispatchReadiness => {
   if (!activeStatusValues.has(job.status)) {
     return {
-      label: 'Not active dispatch',
-      detail: 'Ticket is outside the active dispatch queue.',
-      nextStep: 'No dispatch validation is needed until the ticket returns to an active status.',
+      label: 'Not active work',
+      detail: 'Ticket is outside the active work queue.',
+      nextStep: 'No assignment or schedule validation is needed until the ticket returns to an active status.',
       openItems: 0,
       isReady: false
     }
@@ -87,7 +137,7 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
     return {
       label: 'Assignment data unavailable',
       detail: 'Assignment data could not be loaded for this ticket.',
-      nextStep: 'Reload technician assignments before making dispatch decisions.',
+      nextStep: 'Reload technician assignments before making assignment or schedule decisions.',
       openItems: 0,
       isReady: false
     }
@@ -98,7 +148,7 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
   if (!assignments.length) {
     openItems.push({
       label: 'assignment',
-      nextStep: 'Assign at least one employee before dispatch.'
+      nextStep: 'Assign at least one employee.'
     })
   }
 
@@ -112,29 +162,29 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
   if (!job.scheduledStartAtUtc) {
     openItems.push({
       label: 'scheduled start',
-      nextStep: 'Set a scheduled start time before dispatch.'
+      nextStep: 'Set a scheduled start time.'
     })
   }
 
   if (!job.dueAtUtc) {
     openItems.push({
       label: 'due date',
-      nextStep: 'Add a due date so dispatch can see timing expectations.'
+      nextStep: 'Add a due date for timing expectations.'
     })
   }
 
   if (!openItems.length) {
     return {
-      label: 'Ready for dispatch',
+      label: 'Ready to work',
       detail: 'Assignment, lead tech, schedule, and due date are present.',
-      nextStep: 'All dispatch requirements are complete.',
+      nextStep: 'All assignment and schedule requirements are complete.',
       openItems: 0,
       isReady: true
     }
   }
 
   return {
-    label: 'Needs dispatch review',
+    label: 'Needs assignment review',
     detail: `Missing ${openItems.map((item) => item.label).join(', ')}.`,
     nextStep: openItems[0].nextStep,
     openItems: openItems.length,
@@ -145,12 +195,47 @@ const getDispatchReadiness = (job: JobTicketListItemDto, assignments: JobTicketA
 const getAssignmentDisplayName = (assignment: JobTicketAssignmentDto) =>
   assignment.employeeName?.trim() || 'Employee unavailable'
 
+const getDataQualityWarnings = (
+  job: JobTicketListItemDto,
+  customer: CustomerDto | undefined,
+  location: ServiceLocationDto | undefined,
+  assignments: JobTicketAssignmentDto[] | null
+) => {
+  const warnings: string[] = []
+
+  if (customer && !customer.phone?.trim()) {
+    warnings.push('This customer has no phone.')
+  }
+
+  if (location && !location.postalCode?.trim()) {
+    warnings.push('This job location has no ZIP.')
+  }
+
+  if (activeStatusValues.has(job.status) && assignments !== null && !assignments.some((assignment) => assignment.isLead)) {
+    warnings.push('No lead tech assigned.')
+  }
+
+  if (activeStatusValues.has(job.status) && !job.dueAtUtc) {
+    warnings.push('No due date set.')
+  }
+
+  return warnings
+}
+
+const normalizeStatusFilterOptions = (options: TicketStatusFilterOptionDto[]) =>
+  options
+    .filter((option) => option.isActive && Number.isInteger(option.status) && option.status >= 1 && option.status <= 10)
+    .sort((left, right) => left.displayOrder - right.displayOrder || left.displayLabel.localeCompare(right.displayLabel))
+
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
   const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
   const [assignmentDataUnavailable, setAssignmentDataUnavailable] = useState(false)
   const [customers, setCustomers] = useState<Record<string, CustomerDto>>({})
   const [locations, setLocations] = useState<Record<string, ServiceLocationDto>>({})
+  const [ticketStatusFilters, setTicketStatusFilters] = useState<TicketStatusFilterOptionDto[]>(defaultTicketStatusFilterOptions)
+  const [ticketViewMode, setTicketViewMode] = useState<TicketViewMode>(getStoredTicketViewMode)
+  const [savedQueueView, setSavedQueueView] = useState<SavedQueueViewKey>('custom')
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const queueFilters = readJobTicketQueueFilters(searchParams)
@@ -166,6 +251,7 @@ export function JobTicketListPage() {
   const currentSearch = searchParams.toString()
 
   const updateFilter = (name: string, value: string) => {
+    setSavedQueueView('custom')
     setSearchParams((currentParams) => {
       const nextParams = normalizeJobTicketQueueSearchParams(currentParams)
       if (!value || value === allFilterValue) {
@@ -193,6 +279,30 @@ export function JobTicketListPage() {
       return nextParams
     }, { replace: true })
   }
+  const applySavedQueueView = (value: SavedQueueViewKey) => {
+    setSavedQueueView(value)
+    const view = savedQueueViews.find((item) => item.value === value)
+    if (view?.preset) {
+      applyQueuePreset(view.preset)
+    } else {
+      setSearchParams((currentParams) => {
+        const nextParams = normalizeJobTicketQueueSearchParams(currentParams)
+        nextParams.delete('status')
+        nextParams.delete('priority')
+        nextParams.delete('readiness')
+        nextParams.delete('attention')
+        return nextParams
+      }, { replace: true })
+    }
+  }
+  const updateTicketViewMode = (mode: TicketViewMode) => {
+    setTicketViewMode(mode)
+    try {
+      window.localStorage.setItem(ticketViewModeStorageKey, mode)
+    } catch {
+      // Local storage is optional; the view still changes for the current session.
+    }
+  }
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -214,6 +324,7 @@ export function JobTicketListPage() {
           masterDataApi.listCustomers(),
           masterDataApi.listServiceLocations()
         ])
+        const statusFilterResponse = await ticketStatusFiltersApi.list().catch(() => defaultTicketStatusFilterOptions)
 
         const assignmentResults = await Promise.all(
           tickets.map(async (ticket) => {
@@ -242,6 +353,7 @@ export function JobTicketListPage() {
         setAssignmentDataUnavailable(assignmentResults.some((item) => item.failed))
         setCustomers(Object.fromEntries(customersResponse.map((item) => [item.id, item])))
         setLocations(Object.fromEntries(locationsResponse.map((item) => [item.id, item])))
+        setTicketStatusFilters(statusFilterResponse.length ? statusFilterResponse : [])
         setError(null)
       } catch (requestError) {
         if (requestError instanceof ApiError && (requestError.status === 401 || requestError.status === 403)) {
@@ -268,9 +380,21 @@ export function JobTicketListPage() {
     () => Object.values(customers).sort((left, right) => left.name.localeCompare(right.name)),
     [customers]
   )
+  const configuredStatusFilters = useMemo(() => normalizeStatusFilterOptions(ticketStatusFilters), [ticketStatusFilters])
+  const selectedStatusFallback = useMemo(() => {
+    const selectedStatus = Number(statusFilter)
+    if (!Number.isInteger(selectedStatus) || selectedStatus < 1 || selectedStatus > 10) {
+      return null
+    }
+
+    return configuredStatusFilters.some((filter) => filter.status === selectedStatus)
+      ? null
+      : { value: selectedStatus, label: getJobTicketStatusLabel(selectedStatus) }
+  }, [configuredStatusFilters, statusFilter])
 
   const filteredJobs = useMemo(() => {
     const normalizedSearch = searchText.trim().toLocaleLowerCase()
+    const today = new Date()
 
     return jobs.filter((job) => {
       const customerName = customers[job.customerId]?.name ?? 'Customer unavailable'
@@ -280,6 +404,7 @@ export function JobTicketListPage() {
       const readiness = getDispatchReadiness(job, assignments)
       const matchesStatus = statusFilter === allFilterValue
         || (statusFilter === 'active' && activeStatusValues.has(job.status))
+        || (statusFilter === 'closed' && closedStatusValues.has(job.status))
         || (statusFilter === 'waiting' && waitingStatusValues.has(job.status))
         || String(job.status) === statusFilter
       const matchesPriority = priorityFilter === allFilterValue || String(job.priority) === priorityFilter
@@ -295,15 +420,28 @@ export function JobTicketListPage() {
         (attentionFilter === 'needs-lead' && activeStatusValues.has(job.status) && assignments !== null && !assignments.some((assignment) => assignment.isLead))
       const matchesSearch = !normalizedSearch || [job.ticketNumber, job.title, customerName, locationName, ...assignmentNames]
         .some((value) => value.toLocaleLowerCase().includes(normalizedSearch))
+      const matchesSavedQueueView = savedQueueView === 'custom' ||
+        (savedQueueView === 'open-tickets' && activeStatusValues.has(job.status)) ||
+        (savedQueueView === 'closed-tickets' && closedStatusValues.has(job.status)) ||
+        (savedQueueView === 'today' && activeStatusValues.has(job.status) && isSameLocalDate(job.scheduledStartAtUtc, today)) ||
+        (savedQueueView === 'waiting-parts' && job.status === 5) ||
+        (savedQueueView === 'ready-invoice' && job.status === 10) ||
+        (savedQueueView === 'needs-assignment' && activeStatusValues.has(job.status) && readiness.openItems > 0) ||
+        (savedQueueView === 'completed-review' && job.status === 7)
 
-      return matchesStatus && matchesPriority && matchesCustomer && matchesDispatchReadiness && matchesAttention && matchesSearch
+      return matchesStatus && matchesPriority && matchesCustomer && matchesDispatchReadiness && matchesAttention && matchesSearch && matchesSavedQueueView
     })
-  }, [assignmentDataUnavailable, assignmentMap, attentionFilter, customerFilter, customers, dispatchReadinessFilter, jobs, locations, priorityFilter, searchText, statusFilter])
+  }, [assignmentDataUnavailable, assignmentMap, attentionFilter, customerFilter, customers, dispatchReadinessFilter, jobs, locations, priorityFilter, savedQueueView, searchText, statusFilter])
 
   const triageSummary = useMemo(() => {
     const activeJobs = jobs.filter((job) => activeStatusValues.has(job.status))
+    const closedJobs = jobs.filter((job) => closedStatusValues.has(job.status))
     const urgentJobs = jobs.filter((job) => job.priority === 4 && activeStatusValues.has(job.status))
     const waitingJobs = jobs.filter((job) => waitingStatusValues.has(job.status))
+    const todayJobs = activeJobs.filter((job) => isSameLocalDate(job.scheduledStartAtUtc, new Date()))
+    const waitingOnPartsJobs = jobs.filter((job) => job.status === 5)
+    const readyToInvoiceJobs = jobs.filter((job) => job.status === 10)
+    const completedReviewJobs = jobs.filter((job) => job.status === 7)
     const unscheduledJobs = activeJobs.filter((job) => !job.scheduledStartAtUtc)
     const missingDueDateJobs = activeJobs.filter((job) => !job.dueAtUtc)
     const unassignedJobs = assignmentDataUnavailable ? [] : activeJobs.filter((job) => !(assignmentMap[job.id]?.length))
@@ -314,8 +452,13 @@ export function JobTicketListPage() {
 
     return {
       activeCount: activeJobs.length,
+      closedCount: closedJobs.length,
       urgentCount: urgentJobs.length,
       waitingCount: waitingJobs.length,
+      todayCount: todayJobs.length,
+      waitingOnPartsCount: waitingOnPartsJobs.length,
+      readyToInvoiceCount: readyToInvoiceJobs.length,
+      completedReviewCount: completedReviewJobs.length,
       unscheduledCount: unscheduledJobs.length,
       missingDueDateCount: missingDueDateJobs.length,
       unassignedCount: unassignedJobs.length,
@@ -330,6 +473,7 @@ export function JobTicketListPage() {
     customerFilter !== allFilterValue ||
     dispatchReadinessFilter !== allFilterValue ||
     attentionFilter !== allFilterValue ||
+    savedQueueView !== 'custom' ||
     Boolean(searchText.trim())
 
   const queueExportRows = useMemo<QueueExportRow[]>(() => filteredJobs.map((job) => {
@@ -374,7 +518,10 @@ export function JobTicketListPage() {
           ? `Filtered view showing ${filteredJobs.length} of ${jobs.length} tickets.`
           : `Showing all ${jobs.length} loaded tickets.`
 
-  const resetFilters = () => setSearchParams({}, { replace: true })
+  const resetFilters = () => {
+    setSavedQueueView('custom')
+    setSearchParams({}, { replace: true })
+  }
 
   const queuePath = `${location.pathname}${normalizedSearch ? `?${normalizedSearch}` : ''}`
   const getTicketDetailPath = (jobTicketId: string) =>
@@ -385,7 +532,7 @@ export function JobTicketListPage() {
       <header className="job-ticket-queue-header">
         <div>
           <h2>Job Tickets</h2>
-          <p className="muted">Search, filter, and isolate dispatch-ready or dispatch-review tickets using existing ticket and assignment data.</p>
+          <p className="muted">Search and filter job tickets by status, technician assignment, schedule, and due dates.</p>
         </div>
         <Link className="button-link" to="/manage/job-tickets/new">Create Ticket</Link>
       </header>
@@ -400,8 +547,10 @@ export function JobTicketListPage() {
           <select value={statusFilter} onChange={(event) => updateFilter('status', event.target.value)}>
             <option value={allFilterValue}>All statuses</option>
             <option value="active">Active statuses</option>
+            <option value="closed">Closed statuses</option>
             <option value="waiting">Waiting on parts or customer</option>
-            {jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            {configuredStatusFilters.map((item) => <option key={item.id} value={item.status}>{item.displayLabel}</option>)}
+            {selectedStatusFallback ? <option value={selectedStatusFallback.value}>{selectedStatusFallback.label}</option> : null}
           </select>
         </label>
         <label className="sr-label">
@@ -419,7 +568,7 @@ export function JobTicketListPage() {
           </select>
         </label>
         <label className="sr-label">
-          Dispatch readiness
+          Work readiness
           <select value={dispatchReadinessFilter} onChange={(event) => updateFilter('readiness', event.target.value)} disabled={assignmentDataUnavailable}>
             {dispatchReadinessFilterOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
@@ -432,39 +581,40 @@ export function JobTicketListPage() {
       </section>
 
       {!isLoading && !error && jobs.length ? (
-        <section className="queue-shortcuts" aria-label="queue summary">
-          <div className="queue-shortcuts-heading">
+        <section className="queue-saved-views" aria-label="saved queue views">
+          <div className="queue-saved-views-heading">
             <div>
-              <h3>Ticket Filter Shortcuts</h3>
-              <p className="muted">Select a count to filter the ticket list.</p>
+              <h3>Saved Views</h3>
+              <p className="muted">Common manager queues stay compact and use the filters above.</p>
             </div>
             {hasActiveFilters ? <span className="status-pill">Filtered view</span> : null}
           </div>
-          <div className="queue-kpi-grid">
-            <button aria-pressed={statusFilter === 'active' && priorityFilter === allFilterValue && dispatchReadinessFilter === allFilterValue && attentionFilter === allFilterValue} className="queue-kpi-card" onClick={() => applyQueuePreset({ status: 'active' })} title="Show submitted through waiting statuses" type="button"><span>Active tickets</span><strong>{triageSummary.activeCount}</strong></button>
-            <button aria-pressed={statusFilter === 'active' && priorityFilter === '4'} className="queue-kpi-card queue-kpi-card-alert" onClick={() => applyQueuePreset({ status: 'active', priority: '4' })} title="Show urgent active tickets" type="button"><span>Urgent active</span><strong>{triageSummary.urgentCount}</strong></button>
-            <button aria-pressed={statusFilter === 'waiting'} className="queue-kpi-card" onClick={() => applyQueuePreset({ status: 'waiting' })} title="Show tickets waiting on parts or customers" type="button"><span>Waiting</span><strong>{triageSummary.waitingCount}</strong></button>
-            <button aria-pressed={attentionFilter === 'unscheduled'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'unscheduled' })} title="Show active tickets without a scheduled start" type="button"><span>Unscheduled</span><strong>{triageSummary.unscheduledCount}</strong></button>
-            <button aria-pressed={attentionFilter === 'missing-due'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'missing-due' })} title="Show active tickets without a due date" type="button"><span>Missing due</span><strong>{triageSummary.missingDueDateCount}</strong></button>
-            {assignmentDataUnavailable ? (
-              <div className="queue-kpi-card queue-kpi-card-review queue-kpi-card-static"><span>Technician Assignments</span><strong>Unavailable</strong></div>
-            ) : (
-              <>
-                <button aria-pressed={attentionFilter === 'unassigned'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'unassigned' })} title="Show active tickets that need an assigned technician" type="button"><span>Unassigned</span><strong>{triageSummary.unassignedCount}</strong></button>
-                <button aria-pressed={attentionFilter === 'needs-lead'} className="queue-kpi-card" onClick={() => applyQueuePreset({ attention: 'needs-lead' })} title="Show active tickets without a lead technician" type="button"><span>Needs lead</span><strong>{triageSummary.needsLeadCount}</strong></button>
-                <button aria-pressed={dispatchReadinessFilter === 'ready'} className="queue-kpi-card queue-kpi-card-ready" onClick={() => applyQueuePreset({ status: 'active', readiness: 'ready' })} title="Show dispatch-ready tickets" type="button"><span>Dispatch-ready</span><strong>{triageSummary.dispatchReadyCount}</strong></button>
-                <button aria-pressed={dispatchReadinessFilter === 'needs-review'} className="queue-kpi-card queue-kpi-card-review" onClick={() => applyQueuePreset({ status: 'active', readiness: 'needs-review' })} title="Show tickets that need dispatch review" type="button"><span>Needs review</span><strong>{triageSummary.needsDispatchReviewCount}</strong></button>
-              </>
-            )}
+          <div className="queue-saved-view-row">
+            <label className="sr-label queue-saved-view-control">
+              Saved view
+              <select value={savedQueueView} onChange={(event) => applySavedQueueView(event.target.value as SavedQueueViewKey)}>
+                {savedQueueViews.map((view) => <option key={view.value} value={view.value}>{view.label}</option>)}
+              </select>
+            </label>
+            <div className="queue-saved-view-counts" aria-label="saved view counts">
+              <span><strong>{triageSummary.activeCount}</strong> Open Tickets</span>
+              <span><strong>{triageSummary.closedCount}</strong> Closed Tickets</span>
+              <span><strong>{triageSummary.todayCount}</strong> Today</span>
+              <span><strong>{triageSummary.waitingOnPartsCount}</strong> Waiting on Parts</span>
+              <span><strong>{triageSummary.readyToInvoiceCount}</strong> Ready to Invoice</span>
+              <span><strong>{triageSummary.needsDispatchReviewCount}</strong> Needs Assignment</span>
+              <span><strong>{triageSummary.completedReviewCount}</strong> Completed Review</span>
+              {assignmentDataUnavailable ? <span><strong>!</strong> Assignments unavailable</span> : null}
+            </div>
           </div>
         </section>
       ) : null}
 
       {!isLoading && !error && assignmentDataUnavailable ? (
-        <p className="queue-warning warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and dispatch-readiness filters are unavailable until assignments reload.</p>
+        <p className="queue-warning warning" role="status">Assignment data could not be loaded for one or more tickets. Assignment ownership, lead-tech status, and work-readiness filters are unavailable until assignments reload.</p>
       ) : null}
 
-      {isLoading ? <p className="muted" role="status">Loading manager job tickets…</p> : null}
+      {isLoading ? <p className="muted" role="status">Loading manager job tickets...</p> : null}
       {error ? <p className="error">{error}</p> : null}
       {!isLoading && !error && !jobs.length ? <p className="muted">No job tickets found. Create a ticket to start the pilot workflow.</p> : null}
       {!isLoading && !error && jobs.length > 0 && !filteredJobs.length ? <p className="muted">No job tickets match the current filters. Reset filters to see all tickets.</p> : null}
@@ -476,11 +626,82 @@ export function JobTicketListPage() {
               <h3>Ticket Queue</h3>
               <span className="muted">Showing {filteredJobs.length} of {jobs.length} tickets.</span>
             </div>
-            <a className="button-link secondary-link" href={queueCsvHref} download={queueCsvFileName}>
-              Export visible queue as CSV
-            </a>
+            <div className="queue-results-actions">
+              <div className="ticket-view-toggle" role="group" aria-label="ticket queue view">
+                <button
+                  aria-pressed={ticketViewMode === 'rich'}
+                  className="secondary-button compact-button"
+                  onClick={() => updateTicketViewMode('rich')}
+                  type="button"
+                >
+                  Rich cards
+                </button>
+                <button
+                  aria-pressed={ticketViewMode === 'compact'}
+                  className="secondary-button compact-button"
+                  onClick={() => updateTicketViewMode('compact')}
+                  type="button"
+                >
+                  Compact list
+                </button>
+              </div>
+              <a className="button-link secondary-link" href={queueCsvHref} download={queueCsvFileName}>
+                Export visible queue as CSV
+              </a>
+            </div>
           </div>
-          <ul className="review-list ticket-queue-list">
+          {ticketViewMode === 'compact' ? (
+            <div className="compact-ticket-list" aria-label="compact ticket list">
+              <div className="compact-ticket-list-header" aria-hidden="true">
+                <span>Ticket</span>
+                <span>Customer / Location</span>
+                <span>Lead / Team</span>
+                <span>Readiness</span>
+                <span>Timing</span>
+                <span>Open</span>
+              </div>
+              {filteredJobs.map((job) => {
+                const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
+                const leadAssignments = assignments?.filter((item) => item.isLead) ?? []
+                const leadSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : leadAssignments.length ? leadAssignments.map(getAssignmentDisplayName).join(', ') : 'Needs lead'
+                const assignmentSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : assignments?.length ? assignments.map(getAssignmentDisplayName).join(', ') : 'Unassigned'
+                const readiness = getDispatchReadiness(job, assignments)
+                const readinessClass = readiness.isReady ? 'readiness-ready' : readiness.openItems > 0 || assignmentDataUnavailable ? 'readiness-review' : 'readiness-inactive'
+                const customer = customers[job.customerId]
+                const locationRecord = locations[job.serviceLocationId]
+                const customerName = customer?.name ?? job.customerName ?? 'Customer unavailable'
+                const locationName = locationRecord?.locationName ?? job.serviceLocationName ?? 'Location unavailable'
+                const dataQualityWarnings = getDataQualityWarnings(job, customer, locationRecord, assignments)
+
+                return (
+                  <article key={job.id} className={`compact-ticket-row ${readinessClass}`} aria-label={`${job.ticketNumber} compact ticket`}>
+                    <div className="compact-ticket-primary">
+                      <Link className="ticket-number-link" to={getTicketDetailPath(job.id)}>{job.ticketNumber}</Link>
+                      <span>{job.title}</span>
+                      <div className="compact-ticket-badges" aria-label={`${job.ticketNumber} status and priority`}>
+                        <span className="compact-ticket-chip">{getJobTicketStatusLabel(job.status)}</span>
+                        <span className="compact-ticket-chip compact-ticket-chip-priority">{getJobTicketPriorityLabel(job.priority)}</span>
+                      </div>
+                    </div>
+                    <div><strong>{customerName}</strong><span>{locationName}</span></div>
+                    <div><strong>Lead: {leadSummary}</strong><span>{assignmentSummary}</span></div>
+                    <div className="compact-ticket-readiness">
+                      <strong>{readiness.label}</strong>
+                      <span>{readiness.isReady ? 'Ready for work.' : readiness.nextStep}</span>
+                      {dataQualityWarnings.length ? (
+                        <ul className="data-quality-warning-list compact-data-quality" aria-label={`${job.ticketNumber} data quality warnings`}>
+                          {dataQualityWarnings.map((warning) => <li key={warning}>{warning}</li>)}
+                        </ul>
+                      ) : null}
+                    </div>
+                    <div className="compact-ticket-timing"><strong>Scheduled: {formatDate(job.scheduledStartAtUtc)}</strong><span>Due: {formatDate(job.dueAtUtc)}</span></div>
+                    <Link className="button-link secondary-link compact-ticket-open" to={getTicketDetailPath(job.id)}>Open Ticket</Link>
+                  </article>
+                )
+              })}
+            </div>
+          ) : (
+            <ul className="review-list ticket-queue-list">
             {filteredJobs.map((job) => {
               const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
               const leadAssignments = assignments?.filter((item) => item.isLead) ?? []
@@ -488,6 +709,9 @@ export function JobTicketListPage() {
               const assignmentSummary = assignmentDataUnavailable ? 'Assignment data unavailable' : assignments?.length ? assignments.map(getAssignmentDisplayName).join(', ') : 'Unassigned'
               const readiness = getDispatchReadiness(job, assignments)
               const readinessClass = readiness.isReady ? 'readiness-ready' : readiness.openItems > 0 || assignmentDataUnavailable ? 'readiness-review' : 'readiness-inactive'
+              const customer = customers[job.customerId]
+              const locationRecord = locations[job.serviceLocationId]
+              const dataQualityWarnings = getDataQualityWarnings(job, customer, locationRecord, assignments)
 
               return (
                 <li key={job.id} className={`ticket-list-item ${readinessClass}`}>
@@ -500,14 +724,19 @@ export function JobTicketListPage() {
                     <span className={`status-pill readiness-pill ${readinessClass}`}>{readiness.label}</span>
                   </div>
                   <div className="ticket-meta-grid">
-                    <div><strong>Customer</strong><span>{customers[job.customerId]?.name ?? job.customerName ?? 'Customer unavailable'}</span></div>
-                    <div><strong>Location</strong><span>{locations[job.serviceLocationId]?.locationName ?? job.serviceLocationName ?? 'Location unavailable'}</span></div>
+                    <div><strong>Customer</strong><span>{customer?.name ?? job.customerName ?? 'Customer unavailable'}</span></div>
+                    <div><strong>Location</strong><span>{locationRecord?.locationName ?? job.serviceLocationName ?? 'Location unavailable'}</span></div>
                     <div><strong>Assigned</strong><span>{assignmentSummary}</span></div>
                     <div><strong>Lead</strong><span>{leadSummary}</span></div>
                   </div>
+                  {dataQualityWarnings.length ? (
+                    <ul className="data-quality-warning-list" aria-label={`${job.ticketNumber} data quality warnings`}>
+                      {dataQualityWarnings.map((warning) => <li key={warning}>{warning}</li>)}
+                    </ul>
+                  ) : null}
                   <div className="readiness-panel">
                     <div>Assigned: {assignmentSummary} · Lead: {leadSummary}</div>
-                    <div>Dispatch status: {readiness.label} · {readiness.detail}</div>
+                    <div>Work status: {readiness.label} · {readiness.detail}</div>
                     <div>Next required update: {readiness.nextStep}</div>
                   </div>
                   <div className="ticket-meta-grid ticket-date-grid">
@@ -519,7 +748,8 @@ export function JobTicketListPage() {
                 </li>
               )
             })}
-          </ul>
+            </ul>
+          )}
         </section>
       ) : null}
     </section>

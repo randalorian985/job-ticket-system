@@ -2,24 +2,23 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
-import { useAuth } from '../../features/auth/AuthContext'
 import type { JobTicketAssignmentDto, JobTicketListItemDto } from '../../types'
 import { buildJobTicketDetailPath } from './managerTaskNavigation'
 import './ManagerDashboardPage.css'
 
 const openStatuses = new Set([1, 2, 3, 4, 5, 6])
-const activeDispatchStatuses = new Set([2, 3, 4, 5, 6])
+const activeWorkStatuses = new Set([2, 3, 4, 5, 6])
 
-function getDispatchOpenItems(job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[]) {
-  if (!activeDispatchStatuses.has(job.status)) {
+function getAssignmentOpenItems(job: JobTicketListItemDto, assignments: JobTicketAssignmentDto[]) {
+  if (!activeWorkStatuses.has(job.status)) {
     return []
   }
 
   return [
-    assignments.length ? null : 'Assign at least one employee before dispatch.',
+    assignments.length ? null : 'Assign at least one employee.',
     assignments.some((assignment) => assignment.isLead) ? null : 'Mark one assigned employee as the lead tech.',
-    job.scheduledStartAtUtc ? null : 'Set a scheduled start time before dispatch.',
-    job.dueAtUtc ? null : 'Add a due date so dispatch can see timing expectations.'
+    job.scheduledStartAtUtc ? null : 'Set a scheduled start time.',
+    job.dueAtUtc ? null : 'Add a due date for timing expectations.'
   ].filter((item): item is string => Boolean(item))
 }
 
@@ -32,26 +31,10 @@ function getPercent(count: number, max: number) {
 }
 
 export function ManagerDashboardPage() {
-  const { user } = useAuth()
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
   const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
   const [isLoadingSummary, setIsLoadingSummary] = useState(true)
   const [summaryError, setSummaryError] = useState<string | null>(null)
-  const links = [
-    { to: '/manage/job-tickets', label: 'Job Tickets' },
-    { to: '/manage/customers', label: 'Customers' },
-    { to: '/manage/service-locations', label: 'Service Locations' },
-    { to: '/manage/equipment', label: 'Equipment' },
-    { to: '/manage/parts', label: 'Parts' },
-    { to: '/manage/part-requests', label: 'Part Requests' },
-    { to: '/manage/time-approval', label: 'Time Approval' },
-    { to: '/manage/parts-approval', label: 'Parts Approval' },
-    { to: '/manage/reports', label: 'Reports' }
-  ]
-
-  if (user?.role === 'Admin') {
-    links.push({ to: '/manage/users', label: 'Users' })
-  }
 
   useEffect(() => {
     let isCancelled = false
@@ -100,12 +83,12 @@ export function ManagerDashboardPage() {
   }, [])
 
   const summary = useMemo(() => {
-    const activeDispatchJobs = jobs.filter((job) => activeDispatchStatuses.has(job.status))
-    const activeDispatchReadiness = activeDispatchJobs.map((job) => ({
+    const activeWorkJobs = jobs.filter((job) => activeWorkStatuses.has(job.status))
+    const activeWorkReadiness = activeWorkJobs.map((job) => ({
       job,
-      openItems: getDispatchOpenItems(job, assignmentMap[job.id] ?? [])
+      openItems: getAssignmentOpenItems(job, assignmentMap[job.id] ?? [])
     }))
-    const nextDispatchFocus = activeDispatchReadiness.find((item) => item.openItems.length)
+    const nextAssignmentFocus = activeWorkReadiness.find((item) => item.openItems.length)
 
     return {
       allJobs: jobs.length,
@@ -116,12 +99,12 @@ export function ManagerDashboardPage() {
       waitingOnParts: jobs.filter((job) => job.status === 5).length,
       completedReviewReady: jobs.filter((job) => job.status === 7).length,
       invoiceReady: jobs.filter((job) => job.status === 10).length,
-      dispatchReady: activeDispatchReadiness.filter((item) => !item.openItems.length).length,
-      needsDispatchReview: activeDispatchReadiness.filter((item) => item.openItems.length).length,
-      nextDispatchFocus: nextDispatchFocus
-        ? `${nextDispatchFocus.job.ticketNumber}: ${nextDispatchFocus.openItems[0]}`
-        : 'No dispatch blockers are visible from the dashboard data.',
-      nextDispatchFocusId: nextDispatchFocus?.job.id ?? null
+      readyToWork: activeWorkReadiness.filter((item) => !item.openItems.length).length,
+      needsAssignmentReview: activeWorkReadiness.filter((item) => item.openItems.length).length,
+      nextAssignmentFocus: nextAssignmentFocus
+        ? `${nextAssignmentFocus.job.ticketNumber}: ${nextAssignmentFocus.openItems[0]}`
+        : 'No assignment or schedule blockers are visible from the dashboard data.',
+      nextAssignmentFocusId: nextAssignmentFocus?.job.id ?? null
     }
   }, [assignmentMap, jobs])
 
@@ -136,38 +119,24 @@ export function ManagerDashboardPage() {
     { label: 'Invoice-ready', count: summary.invoiceReady, to: '/manage/job-tickets?status=10' }
   ]
   const readinessRows = [
-    { label: 'Dispatch-ready', count: summary.dispatchReady, to: '/manage/job-tickets?status=active&readiness=ready' },
-    { label: 'Needs dispatch review', count: summary.needsDispatchReview, to: '/manage/job-tickets?status=active&readiness=needs-review' }
+    { label: 'Ready to work', count: summary.readyToWork, to: '/manage/job-tickets?status=active&readiness=ready' },
+    { label: 'Needs assignment review', count: summary.needsAssignmentReview, to: '/manage/job-tickets?status=active&readiness=needs-review' }
   ]
-  const maxReadinessCount = Math.max(summary.dispatchReady, summary.needsDispatchReview, 1)
+  const maxReadinessCount = Math.max(summary.readyToWork, summary.needsAssignmentReview, 1)
 
   return (
     <section className="manager-dashboard-board" aria-label="manager operations dashboard">
       <header className="dashboard-hero-strip">
         <div>
           <h2>Job ticket management dashboard</h2>
-          <p className="muted">Manager/Admin view for dispatch readiness, open work, and back-office review queues.</p>
+          <p className="muted">Manager/Admin summary for open work, technician assignment, scheduling, and back-office review queues.</p>
         </div>
         <div className="row dashboard-actions">
           <Link className="button-link" to="/manage/job-tickets/new">Create Job Ticket</Link>
-          <Link to="/manage/job-tickets">Review jobs</Link>
-          <Link to="/manage/wiki#manager-admin-workspace">Wiki</Link>
+          <Link className="button-link secondary-link" to="/manage/job-tickets">Review jobs</Link>
+          <Link className="button-link secondary-link" to="/manage/wiki#manager-admin-workspace">Wiki</Link>
         </div>
       </header>
-
-      <section className="operations-panel operations-shortcut-panel" aria-label="manager workspace shortcuts">
-        <div className="operations-shortcut-heading">
-          <h3>Workspace Shortcuts</h3>
-          <span>Jump to common Manager/Admin work without scrolling the dashboard.</span>
-        </div>
-        <div className="dashboard-grid operations-link-grid">
-          {links.map((item) => (
-            <Link key={item.to} className="nav-card operations-link" to={item.to}>
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </section>
 
       <section className="operations-kpi-grid" aria-label="operations summary">
         {isLoadingSummary ? <p className="muted" role="status">Loading operations summary...</p> : null}
@@ -178,7 +147,7 @@ export function ManagerDashboardPage() {
             <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=3"><span>Assigned</span><strong>{summary.assigned}</strong></Link>
             <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=4"><span>In Progress</span><strong>{summary.inProgress}</strong></Link>
             <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=5"><span>Waiting on Parts</span><strong>{summary.waitingOnParts}</strong></Link>
-            <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=active&readiness=ready"><span>Dispatch-ready</span><strong>{summary.dispatchReady}</strong></Link>
+            <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets?status=active&readiness=ready"><span>Ready to Work</span><strong>{summary.readyToWork}</strong></Link>
             <Link className="operations-kpi-tile operations-queue-link" to="/manage/job-tickets"><span>All Jobs</span><strong>{summary.allJobs}</strong></Link>
           </>
         ) : null}
@@ -202,7 +171,7 @@ export function ManagerDashboardPage() {
           </article>
 
           <article className="operations-panel">
-            <h3>Dispatch Readiness</h3>
+            <h3>Assignment & Schedule</h3>
             <div className="operations-bar-list">
               {readinessRows.map((row) => (
                 <Link className="operations-bar-row operations-queue-link" key={row.label} to={row.to}>
@@ -215,10 +184,10 @@ export function ManagerDashboardPage() {
               ))}
             </div>
             <p className="muted">
-              Next dispatch focus:{' '}
-              {summary.nextDispatchFocusId ? (
-                <Link to={buildJobTicketDetailPath(summary.nextDispatchFocusId, "/manage")}>{summary.nextDispatchFocus}</Link>
-              ) : summary.nextDispatchFocus}
+              Next assignment focus:{' '}
+              {summary.nextAssignmentFocusId ? (
+                <Link to={buildJobTicketDetailPath(summary.nextAssignmentFocusId, "/manage")}>{summary.nextAssignmentFocus}</Link>
+              ) : summary.nextAssignmentFocus}
             </p>
           </article>
 
@@ -227,7 +196,7 @@ export function ManagerDashboardPage() {
             <div className="operations-review-grid">
               <Link className="operations-queue-link" to="/manage/job-tickets?status=7"><strong>{summary.completedReviewReady}</strong><span>Completed / review-ready</span></Link>
               <Link className="operations-queue-link" to="/manage/job-tickets?status=10"><strong>{summary.invoiceReady}</strong><span>Invoice-ready</span></Link>
-              <Link className="operations-queue-link" to="/manage/job-tickets?status=active&readiness=needs-review"><strong>{summary.needsDispatchReview}</strong><span>Needs dispatch review</span></Link>
+              <Link className="operations-queue-link" to="/manage/job-tickets?status=active&readiness=needs-review"><strong>{summary.needsAssignmentReview}</strong><span>Needs assignment review</span></Link>
             </div>
           </article>
         </section>

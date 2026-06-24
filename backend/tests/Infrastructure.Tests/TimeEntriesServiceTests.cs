@@ -247,6 +247,7 @@ public sealed class TimeEntriesServiceTests
         await Assert.ThrowsAsync<ValidationException>(() => service.RejectAsync(entryId, new RejectTimeEntryRequestDto("Unauthorized"), refs.Employee.Id));
         await Assert.ThrowsAsync<ValidationException>(() => service.EditAndApproveAsync(entryId, new AdjustTimeEntryRequestDto("Unauthorized", null, null, 1m, 1m, null, null), refs.Employee.Id));
         await Assert.ThrowsAsync<ValidationException>(() => service.BulkApproveAsync(new BulkApproveTimeEntriesRequestDto(new[] { entryId }), refs.Employee.Id));
+        await Assert.ThrowsAsync<ValidationException>(() => service.ArchiveAsync(entryId, new ArchiveTimeEntryRequestDto("Unauthorized"), refs.Employee.Id));
     }
 
     [Fact]
@@ -329,6 +330,39 @@ public sealed class TimeEntriesServiceTests
         Assert.Equal(1, interceptor.SaveCount);
         Assert.Equal(TimeEntryApprovalStatus.Approved, entry.ApprovalStatus);
         Assert.Single(context.TimeEntryAdjustments.Where(x => x.TimeEntryId == entry.Id));
+    }
+
+    [Fact]
+    public async Task Archive_time_entry_requires_manager_reason_and_excludes_from_review()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var start = DateTime.UtcNow.AddHours(-2);
+        var entry = new TimeEntry
+        {
+            JobTicketId = refs.JobTicket.Id,
+            EmployeeId = refs.Employee.Id,
+            StartedAtUtc = start,
+            EndedAtUtc = start.AddHours(1),
+            LaborHours = 1m,
+            BillableHours = 1m
+        };
+        context.TimeEntries.Add(entry);
+        await context.SaveChangesAsync();
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+
+        await Assert.ThrowsAsync<ValidationException>(() => service.ArchiveAsync(entry.Id, new ArchiveTimeEntryRequestDto("   "), refs.Manager.Id));
+
+        var archived = await service.ArchiveAsync(entry.Id, new ArchiveTimeEntryRequestDto("Duplicate time entry"), refs.Manager.Id);
+
+        Assert.True(archived);
+        Assert.Empty(await service.ListForReviewAsync(new TimeEntryReviewFilters()));
+        var archivedEntity = await context.TimeEntries.IgnoreQueryFilters().SingleAsync(x => x.Id == entry.Id);
+        Assert.True(archivedEntity.IsDeleted);
+        Assert.Equal(refs.Manager.Id, archivedEntity.DeletedByUserId);
+        Assert.NotNull(archivedEntity.DeletedAtUtc);
+        var audit = await context.AuditLogs.SingleAsync(x => x.EntityId == entry.Id && x.ActionType == AuditActionType.Delete);
+        Assert.Contains("Duplicate time entry", audit.NewValuesJson);
     }
 
     [Fact]

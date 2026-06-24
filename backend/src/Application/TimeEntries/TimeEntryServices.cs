@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JobTicketSystem.Application.MasterData;
 using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Entities;
@@ -20,6 +21,7 @@ public interface ITimeEntriesService
     Task<TimeEntryDto?> ApproveAsync(Guid id, Guid approvedByUserId, CancellationToken cancellationToken = default);
     Task<TimeEntryDto?> RejectAsync(Guid id, RejectTimeEntryRequestDto request, Guid rejectedByUserId, CancellationToken cancellationToken = default);
     Task<TimeEntryDto?> AdjustAsync(Guid id, AdjustTimeEntryRequestDto request, Guid adjustedByUserId, bool managerOverride, CancellationToken cancellationToken = default);
+    Task<bool> ArchiveAsync(Guid id, ArchiveTimeEntryRequestDto request, Guid archivedByUserId, CancellationToken cancellationToken = default);
 }
 
 public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : ITimeEntriesService
@@ -276,6 +278,27 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Map(entry);
+    }
+
+    public async Task<bool> ArchiveAsync(Guid id, ArchiveTimeEntryRequestDto request, Guid archivedByUserId, CancellationToken cancellationToken = default)
+    {
+        EnsureManagerOrAdmin();
+        ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
+        EnsureActorId(archivedByUserId, "ArchivedByUserId");
+
+        var entry = await dbContext.TimeEntries.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entry is null) return false;
+
+        entry.IsDeleted = true;
+        entry.DeletedAtUtc = DateTime.UtcNow;
+        entry.DeletedByUserId = archivedByUserId;
+
+        AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Delete, null, AuditJson(
+            ("Action", "Archive"),
+            ("ArchivedByUserId", archivedByUserId),
+            ("Reason", request.Reason.Trim())));
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     private Task<TimeEntry?> LoadTimeEntryForAdjustmentAsync(Guid id, CancellationToken cancellationToken)
@@ -546,6 +569,11 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         });
     }
 
+    private static string AuditJson(params (string Name, object? Value)[] values)
+    {
+        return JsonSerializer.Serialize(values.ToDictionary(x => x.Name, x => x.Value));
+    }
+
     private static void ValidateClockIn(ClockInRequestDto request)
     {
         if (!request.ClockInLatitude.HasValue) throw new ValidationException("ClockInLatitude is required.");
@@ -581,6 +609,7 @@ public sealed record ClockOutRequestDto(
 
 public sealed record BulkApproveTimeEntriesRequestDto(IReadOnlyList<Guid> TimeEntryIds);
 public sealed record RejectTimeEntryRequestDto(string Reason);
+public sealed record ArchiveTimeEntryRequestDto(string Reason);
 
 public sealed record AdjustTimeEntryRequestDto(
     string Reason,

@@ -1,5 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../api/masterDataApi'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
@@ -107,27 +106,25 @@ describe('PartRequestsPage', () => {
     expect(screen.getByText(/Qty 2 · Needs ordered/)).toBeInTheDocument()
     expect(partRequestsApi.listQueue).toHaveBeenCalledWith({ status: '', search: '', jobTicketId: '' })
 
-    const user = userEvent.setup()
-    await user.click(screen.getByLabelText('Parts request job ticket filter'))
-    await user.type(screen.getByLabelText('Parts request job ticket filter'), 'Hydraulic')
-    await user.click(screen.getByRole('option', { name: 'JT-2026-000101 - Hydraulic Repair' }))
-    await user.type(screen.getByLabelText('Search requests'), 'hose')
-    await user.selectOptions(screen.getByLabelText('Status filter'), '1')
-    await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
+    const ticketFilter = screen.getByLabelText('Parts request job ticket filter')
+    fireEvent.focus(ticketFilter)
+    fireEvent.change(ticketFilter, { target: { value: 'Hydraulic' } })
+    fireEvent.click(screen.getByRole('option', { name: 'JT-2026-000101 - Hydraulic Repair' }))
+    fireEvent.change(screen.getByLabelText('Search requests'), { target: { value: 'hose' } })
+    fireEvent.change(screen.getByLabelText('Status filter'), { target: { value: '1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }))
 
     await waitFor(() => {
       expect(partRequestsApi.listQueue).toHaveBeenLastCalledWith({ status: 1, search: 'hose', jobTicketId: 'job-1' })
     })
 
-    await user.selectOptions(screen.getByLabelText('Catalog part match'), 'part-1')
-    await user.selectOptions(screen.getByLabelText('Status'), '2')
-    await user.type(screen.getByLabelText('Internal status notes'), 'Matched and approved.')
-    await user.clear(screen.getByLabelText('Part cost'))
-    await user.type(screen.getByLabelText('Part cost'), '50')
-    await user.clear(screen.getByLabelText('Billable price'))
-    await user.type(screen.getByLabelText('Billable price'), '75')
-    await user.click(screen.getByLabelText('Billable after back-office review'))
-    await user.click(screen.getByRole('button', { name: 'Save Request Review' }))
+    fireEvent.change(screen.getByLabelText('Catalog part match'), { target: { value: 'part-1' } })
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: '2' } })
+    fireEvent.change(screen.getByLabelText('Internal status notes'), { target: { value: 'Matched and approved.' } })
+    fireEvent.change(screen.getByLabelText('Part cost'), { target: { value: '50' } })
+    fireEvent.change(screen.getByLabelText('Billable price'), { target: { value: '75' } })
+    fireEvent.click(screen.getByLabelText('Billable after back-office review'))
+    fireEvent.click(screen.getByRole('button', { name: 'Save Request Review' }))
 
     await waitFor(() => {
       expect(partRequestsApi.update).toHaveBeenCalledWith('request-1', {
@@ -142,5 +139,42 @@ describe('PartRequestsPage', () => {
       })
     })
     expect(screen.getByText('Part request updated.')).toBeInTheDocument()
+  })
+
+  it('surfaces filtered queue load failures instead of leaving the workflow loading', async () => {
+    vi.mocked(partRequestsApi.listQueue)
+      .mockResolvedValueOnce([
+        {
+          id: 'request-1',
+          jobTicketId: 'job-1',
+          jobTicketNumber: 'JT-2026-000101',
+          jobTicketTitle: 'Hydraulic Repair',
+          partId: null,
+          partNumber: 'Hydraulic hose',
+          partName: 'Hydraulic hose',
+          quantity: 2,
+          notes: 'Need hose at the lift',
+          technicianNotes: 'Need hose at the lift',
+          requestNotes: null,
+          internalStatusNotes: null,
+          unitCostSnapshot: 0,
+          salePriceSnapshot: 0,
+          isBillable: false,
+          needsOrdered: true,
+          status: 1,
+          requestedAtUtc: '2026-06-01T15:00:00Z'
+        }
+      ])
+      .mockRejectedValueOnce(new Error('queue failed'))
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([])
+
+    render(<PartRequestsPage />)
+
+    expect(await screen.findByRole('heading', { name: 'Requests Awaiting Review' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Search requests'), { target: { value: 'hose' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }))
+
+    expect(await screen.findByText('Unable to load part requests.')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 })

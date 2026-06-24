@@ -14,19 +14,23 @@ Core scope:
 - supporting Employee and Manager/Admin workflows around job-ticket operations.
 
 ## Current Control State
-- The implemented baseline includes auth, employee mobile workflow, Manager/Admin job-ticket workflow, reporting/time review, master data, purchasing support, and inventory foundation already present on `main`.
+- The implemented baseline includes auth, employee mobile workflow, Manager/Admin job-ticket workflow, reporting/time review, master data, and purchasing support already present on `main`. Inventory remains hidden from the Manager/Admin menu and client wiki until that workflow is completed.
 - Parts Request Workflow Phase 2 is added as a job-ticket-first workflow.
 - Technicians can search/select an existing catalog part through a safe lookup or type a new/unlisted part from inside an assigned service/job ticket.
 - Technicians can mark a selected or unlisted part as `Needs ordered`; those items appear in the Manager/Admin back-office parts request queue.
 - If `Needs ordered` is not selected, the item is recorded on the ticket without creating a back-office request queue item.
-- Technician field recording now requires an open time entry for the selected job ticket before an Employee records work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
+- Technician field recording now requires an open time entry for the selected job ticket before an Employee records work notes, parts, part requests, or file/photo uploads; the Employee job detail screen uses a plain-language Next action card, hides deeper field tools until clock-in, and keeps Manager/Admin back-office actions outside the employee clock-in gate.
+- Employee assigned-job lists exclude fully closed tickets (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`) without removing them from Manager/Admin queues, reports, history, or audit trails.
+- File/photo uploads accept JPG/JPEG, PNG, WebP, and PDF files up to 50 MB, with the limit enforced in both the HTTP layer and application service.
 - Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket detail uses focused in-page panels for section-based ticket editing, quick notes, photo/file upload, labor review, status changes, archive review, and Add / Request Part actions backed by existing APIs; the recommended action opens the relevant workflow tab in a focused ticket view.
-- Manager/Admin Dispatch Board is implemented as the first-class dispatch workflow at `/manage/dispatch`. It provides Unscheduled Jobs, Today, Tomorrow, This Week, Completed, Needs Ticket Review, and Ready for Billing views; card-level Schedule, Assign Crane, Assign Operator, Assign Crew, Dispatch, Mark En Route, Mark On Site, Start Work, Complete Work, Open Ticket, Finalize Ticket, and Ready for Billing actions; and a focused Schedule Job panel backed by existing job-ticket update, assignment, status, and work-entry APIs.
+- On a job ticket, the crane/equipment field means the customer's unit being serviced. It is not a company crane assignment; only employees are assigned to tickets. Component or part details belong in the job scope or service instructions.
+- Manager/Admin Job Tickets is the main operating screen for creating, assigning, scheduling, and reviewing work. Assignment and schedule details live on the ticket itself, and the legacy `/manage/dispatch` URL redirects to `/manage/job-tickets`.
 - Manager/Admin reporting is implemented as a bounded reports hub for the existing reporting domains: invoice/closeout review, job cost summaries, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history. The frontend validates required source IDs, date ranges, and paging values before calling existing report APIs.
 - Reporting UI polish includes clear sections, shared filters, required source-ID validation, loading/empty/error states, export-friendly tables, browser print/save-PDF output from generated results, and client-side CSV export from currently loaded rows only.
 - Manager/Admin screen cleanup uses distinct report catalog/results, master-data list/editor, and Admin user list/editor states while preserving create/update/archive and account-management outcomes. Admin user management includes client-side account search, role filtering, and active/inactive filtering.
-- Manager/Admin job-ticket queue export produces client-side CSV from the currently visible filtered ticket rows, including readable customer, service-location, assignment, lead, and dispatch-readiness labels. This does not add backend export endpoints or reporting jobs.
+- Manager/Admin job-ticket queue supports both rich readiness cards and a persisted compact operating list for dense day-to-day scanning. The compact list prioritizes ticket, status/priority badges, customer/location, lead/team, readiness, timing, and one Open Ticket action. Queue export produces client-side CSV from the currently visible filtered ticket rows, including readable customer, service-location, assignment, lead, and work-readiness labels. This does not add backend export endpoints or reporting jobs.
+- Admin-configured ticket status filter options are implemented for the Manager/Admin job-ticket queue. The configuration maps display labels, order, and active/inactive flags to existing `JobTicketStatus` values only; it seeds the default active field-work status filters and does not add a custom workflow engine, new status enum values, lifecycle transitions, hard deletes, or weakened authorization.
 - Labor reporting labels totals as time-entry labor-rate snapshot values and keeps the existing API behavior that falls back only for legacy entries without captured snapshots.
 - Manager/Admin back-office users can review, filter, and search the parts request queue and update request status, internal notes, cost snapshot, billable price snapshot, billable state, and optional catalog part match.
 - No dedicated Parts Manager role is added in Phase 2; existing Manager/Admin access remains the back-office authorization boundary.
@@ -36,6 +40,7 @@ Core scope:
 - Manager/Admin task navigation now uses URL-backed job-ticket queue filters, dashboard links into exact queues, queue-aware return links, workflow tabs, and the `view=workflow` ticket focus state; these are frontend navigation contracts only and do not change backend APIs or business rules.
 - Manager/Admin Time Approval is now a queue-first workflow with default pending-entry loading, employee-name filtering, broad job/customer/site/location search, contextual review details, bulk approve, reject, and edit-and-approve with audit-safe adjustment records.
 - The latest post-Time Approval regression audit is recorded in the historical audit log and keeps the project in a clean planning state for the next selected Manager/Admin workflow lane.
+- Local pilot seed data now covers six demo tickets across ready-for-invoice, assigned field work, waiting-on-parts, unassigned scheduling, missing-lead review, and urgent in-progress work without adding migrations or production seed behavior.
 
 ## Current Planning Direction
 The next feature work should remain a bounded Manager/Admin workflow slice, selected only after any active audit or stabilization PR is closed and GitHub checks are clean.
@@ -78,7 +83,7 @@ This planning direction does not approve purchasing expansion, receiving, vendor
 The Manager/Admin service-ticket side should move toward a field-service operations workbench rather than a collection of disconnected forms.
 
 Implemented redesign focus:
-- first-class dispatch board for scheduling, crane/equipment assignment, operator/crew assignment, day-of movement, ticket review, and billing-readiness handoff;
+- Job Tickets as the main Manager/Admin operating screen for active-ticket filtering, assignment, scheduling, and review;
 - ticket overview and status/priority clarity;
 - customer, service location, and equipment context near the top of the ticket;
 - technician assignments and scheduling/visit context where existing APIs support it;
@@ -89,12 +94,14 @@ Implemented redesign focus:
 - invoice-ready summary and closeout readiness using existing reporting/closeout behavior;
 - responsive Manager/Admin layout that stays scannable on narrow screens;
 - focused in-page action panels when they reduce unnecessary page switching;
-- shareable queue URLs for status, priority, customer, dispatch readiness, and search filters;
+- shareable queue URLs for status, priority, customer, work readiness, and search filters;
 - dashboard summary links that open the corresponding filtered queue;
 - queue-aware breadcrumbs that preserve the originating job queue across ticket review;
-- ticket workflow tabs for Overview, Dispatch, Time, Parts, Files, Closeout, and Activity, with a visible recommended next action.
+- ticket workflow tabs for Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History, with a visible recommended next action.
+- service-ticket workflow stabilization keeps direct tab/action navigation in the focused `view=workflow` screen, focuses opened action panels, and closes focused drawers when returning to the ticket overview.
+- ticket workflow refinement keeps the same ticket-backed workbench but makes the next action, target workflow, mobile quick actions, and invoice-review closeout requirements more visible.
 
-The current dispatch board is ticket-backed. It does not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or schema migration. En Route and On Site are recorded as ticket work-entry notes until a future approved backend dispatch model exists.
+Assignment and scheduling are intentionally ticket-backed. They do not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or Dispatch-specific schema migration.
 
 The design may take inspiration from field-service lifecycle products and dense repair-ticket detail views, but it must be adapted to Crane's actual job-ticket workflow. The intended flow is work queue to ticket workspace to closeout/invoice-ready review.
 
@@ -157,7 +164,7 @@ Allowed back-office fields in Phase 2:
 
 Manager/Admin ticket detail may show and create ticket parts/requests, summarize waiting-on-parts state, and route Needs ordered work into the back-office review queue. This remains a ticket-support workflow, not a purchasing or inventory workflow.
 
-This does not approve new or expanded purchase-order behavior beyond the existing purchasing-support baseline, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory expansion, inventory transactions beyond the existing inventory-foundation baseline, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
+This does not approve new or expanded purchase-order behavior beyond the existing purchasing-support baseline, receiving, vendor invoice tracking, landed cost, warehouse/truck inventory expansion, inventory workflow reintroduction, low-stock alerts, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
 
 ## Protected Baseline
 The following must remain stable:
@@ -166,6 +173,7 @@ The following must remain stable:
 - employee assigned-job workflow;
 - Manager/Admin routes;
 - `/manage/users` Admin-only access;
+- `/manage/ticket-status-filters` Admin-only access;
 - DTO-based APIs;
 - soft-delete/archive behavior;
 - explicit backend enum numeric values;
@@ -181,9 +189,9 @@ The following are not approved as part of Parts Request Workflow Phase 2, UI pol
 - receiving expansion;
 - vendor invoice tracking expansion;
 - landed-cost expansion;
-- warehouse inventory expansion beyond the existing inventory-foundation baseline;
+- warehouse inventory expansion;
 - truck inventory expansion;
-- inventory transactions beyond the existing inventory-foundation baseline;
+- inventory workflow reintroduction or expansion;
 - low-stock alerts;
 - replenishment workflows;
 - recommendation engine;

@@ -30,6 +30,8 @@ describe('ManagerShell', () => {
             <Route path="job-tickets/:jobTicketId" element={<p>Ticket detail page</p>} />
             <Route path="reports" element={<p>Reports page</p>} />
             <Route path="wiki" element={<p>Wiki page</p>} />
+            <Route path="company-configuration" element={<p>Company configuration page</p>} />
+            <Route path="ticket-status-filters" element={<p>Ticket filters page</p>} />
             <Route path="users" element={<p>Users page</p>} />
           </Route>
         </Routes>
@@ -61,6 +63,8 @@ describe('ManagerShell', () => {
   it('keeps admin-only navigation out of the manager section picker', () => {
     renderShell('/manage')
 
+    expect(screen.queryByRole('option', { name: 'Company Configuration' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Ticket Filters' })).not.toBeInTheDocument()
     expect(screen.queryByRole('option', { name: 'Users' })).not.toBeInTheDocument()
     expect(screen.queryByText('Admin')).not.toBeInTheDocument()
   })
@@ -74,6 +78,8 @@ describe('ManagerShell', () => {
     renderShell('/manage/users')
 
     const sectionPicker = screen.getByLabelText('Manager section navigation')
+    expect(screen.getByRole('option', { name: 'Company Configuration' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Ticket Filters' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Users' })).toBeInTheDocument()
     expect(sectionPicker).toHaveValue('/manage/users')
     expect(screen.getByText('Admin')).toBeInTheDocument()
@@ -83,10 +89,20 @@ describe('ManagerShell', () => {
     renderShell('/manage/reports')
 
     expect(screen.getByRole('navigation', { name: 'manager navigation' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Job Tickets' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Wiki' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Reports' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Dispatch' })).not.toBeInTheDocument()
     expect(screen.getByText('Customers & Equipment')).toBeInTheDocument()
     expect(screen.getByText('Parts & Supply')).toBeInTheDocument()
+    expect(screen.getByText('Review & Reference')).toBeInTheDocument()
+  })
+
+  it('keeps unfinished inventory workflow out of manager navigation', () => {
+    renderShell('/manage/reports')
+
+    expect(screen.queryByRole('option', { name: 'Inventory' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Inventory' })).not.toBeInTheDocument()
   })
 
   it('closes the previously opened desktop menu when another menu opens', async () => {

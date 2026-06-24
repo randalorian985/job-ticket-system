@@ -24,12 +24,15 @@ public sealed class PilotDemoSeedTests
 
         Assert.True(first.Created);
         Assert.False(second.Created);
-        Assert.Equal(3, second.DemoUserCount);
-        Assert.Equal(2, second.DemoCustomerCount);
-        Assert.Equal(3, second.DemoJobTicketCount);
+        Assert.Equal(4, second.DemoUserCount);
+        Assert.Equal(3, second.DemoCustomerCount);
+        Assert.Equal(6, second.DemoJobTicketCount);
         Assert.Equal(1, second.InvoiceReadyJobTicketCount);
-        Assert.Equal(3, await context.JobTickets.CountAsync(x => x.TicketNumber.StartsWith("PILOT-")));
+        Assert.Equal(6, await context.JobTickets.CountAsync(x => x.TicketNumber.StartsWith("PILOT-")));
         Assert.Equal(4, await context.Parts.CountAsync(x => x.PartNumber.StartsWith("PILOT-")));
+        Assert.True(await context.JobTickets.AnyAsync(x => x.TicketNumber == "PILOT-UNSCHEDULED-004" && x.ScheduledStartAtUtc == null && x.DueAtUtc == null));
+        Assert.True(await context.JobTickets.AnyAsync(x => x.TicketNumber == "PILOT-NEEDS-LEAD-005" && x.AssignedEmployees.Any(a => !a.IsLead)));
+        Assert.True(await context.JobTickets.AnyAsync(x => x.TicketNumber == "PILOT-TODAY-006" && x.Status == JobTicketStatus.InProgress && x.AssignedEmployees.Any(a => a.IsLead)));
     }
 
     [Fact]

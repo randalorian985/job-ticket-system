@@ -108,7 +108,7 @@ describe('CustomersPage', () => {
     fireEvent.change(screen.getByPlaceholderText('Name'), { target: { value: 'Bad Customer' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create Customer' }))
 
-    await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({ name: 'Bad Customer' }))
+    await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith(expect.objectContaining({ name: 'Bad Customer' })))
     expect(await screen.findByText('Name is required.')).toBeInTheDocument()
   })
 
@@ -122,6 +122,11 @@ describe('CustomersPage', () => {
     fireEvent.change(screen.getByLabelText('Contact name'), { target: { value: 'Alex Manager' } })
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'alex@example.com' } })
     fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '555-0100' } })
+    fireEvent.change(screen.getByLabelText('Billing address'), { target: { value: '100 Billing Rd' } })
+    fireEvent.change(screen.getByLabelText('Address line 2'), { target: { value: 'Suite 2' } })
+    fireEvent.change(screen.getByLabelText('City'), { target: { value: 'Tulsa' } })
+    fireEvent.change(screen.getByLabelText('State'), { target: { value: 'OK' } })
+    fireEvent.change(screen.getByLabelText('ZIP / postal code'), { target: { value: '74101' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create Customer' }))
 
     await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({
@@ -129,7 +134,12 @@ describe('CustomersPage', () => {
       accountNumber: 'AC-100',
       contactName: 'Alex Manager',
       email: 'alex@example.com',
-      phone: '555-0100'
+      phone: '555-0100',
+      billingAddressLine1: '100 Billing Rd',
+      billingAddressLine2: 'Suite 2',
+      billingCity: 'Tulsa',
+      billingState: 'OK',
+      billingPostalCode: '74101'
     }))
   })
 
@@ -164,12 +174,16 @@ describe('CustomersPage', () => {
 
   it('filters customers by search/status, resets filters, and shows no-match state', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([
-      { id: 'c1', name: 'Acme', contactName: 'Alex', email: 'alex@example.com', isArchived: false },
+      { id: 'c1', name: 'Acme', contactName: 'Alex', email: 'alex@example.com', billingAddressLine1: '100 Main', billingCity: 'Tulsa', billingState: 'OK', billingPostalCode: '74101', isArchived: false },
       { id: 'c2', name: 'Beta', contactName: 'Bea', email: 'bea@example.com', isArchived: true }
     ] as any)
 
-    const { container } = render(<CustomersPage />)
+    render(<CustomersPage />)
     expect(await screen.findByText(/Acme/)).toBeInTheDocument()
+    const acmeCard = screen.getByText(/Acme/).closest('.master-data-item')
+    expect(acmeCard).not.toBeNull()
+    expect(within(acmeCard as HTMLElement).getByText('Billing')).toBeInTheDocument()
+    expect(within(acmeCard as HTMLElement).getByText('100 Main, Tulsa, OK, 74101')).toBeInTheDocument()
     expect(screen.getByText('Showing 2 of 2 loaded customers.')).toBeInTheDocument()
     expect(screen.getByText('1 active / 1 archived visible.')).toBeInTheDocument()
     expect(screen.getByText('Counts reflect currently loaded records only.')).toBeInTheDocument()
@@ -215,12 +229,16 @@ describe('ServiceLocationsPage', () => {
   it('filters service locations by customer and search', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }, { id: 'c2', name: 'Beta' }] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([
-      { id: 'l1', customerId: 'c1', companyName: 'Acme', locationName: 'HQ', addressLine1: '1 Main', city: 'Tulsa', state: 'OK', postalCode: '74101', country: 'US', isActive: true, isArchived: false },
+      { id: 'l1', customerId: 'c1', companyName: 'Acme', locationName: 'HQ', onSiteContactPhone: '555-0100', addressLine1: '1 Main', city: 'Tulsa', state: 'OK', postalCode: '74101', country: 'US', isActive: true, isArchived: false },
       { id: 'l2', customerId: 'c2', companyName: 'Beta', locationName: 'Depot', addressLine1: '2 Oak', city: 'Dallas', state: 'TX', postalCode: '75001', country: 'US', isActive: true, isArchived: false }
     ] as any)
 
     render(<ServiceLocationsPage />)
     expect(await screen.findByText(/HQ/)).toBeInTheDocument()
+    const hqRow = screen.getByText(/HQ/).closest('.master-data-item')
+    expect(hqRow).not.toBeNull()
+    expect(within(hqRow as HTMLElement).getByText('Contact')).toBeInTheDocument()
+    expect(within(hqRow as HTMLElement).getByText('555-0100')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c2' } })
     expect(screen.queryByText(/HQ/)).not.toBeInTheDocument()
     expect(screen.getByText(/Depot/)).toBeInTheDocument()
@@ -259,11 +277,20 @@ describe('ServiceLocationsPage', () => {
     const { container } = render(<ServiceLocationsPage />)
     fireEvent.change(await screen.findByPlaceholderText('Company'), { target: { value: 'Acme Crane' } })
     fireEvent.change(screen.getByPlaceholderText('Location Name'), { target: { value: 'North Yard' } })
+    fireEvent.change(screen.getByPlaceholderText('On-site contact'), { target: { value: 'Casey Tech' } })
+    fireEvent.change(screen.getByPlaceholderText('On-site phone'), { target: { value: '555-0300' } })
+    fireEvent.change(screen.getByPlaceholderText('On-site email'), { target: { value: 'casey@example.com' } })
     fireEvent.change(screen.getByPlaceholderText('Address'), { target: { value: '100 Main St' } })
+    fireEvent.change(screen.getByPlaceholderText('Address line 2'), { target: { value: 'Dock 4' } })
     fireEvent.change(screen.getByPlaceholderText('City'), { target: { value: 'Tulsa' } })
     fireEvent.change(screen.getByPlaceholderText('State'), { target: { value: 'OK' } })
     fireEvent.change(screen.getByPlaceholderText('Postal'), { target: { value: '74101' } })
+    fireEvent.change(screen.getByPlaceholderText('Parish / county'), { target: { value: 'Tulsa County' } })
     fireEvent.change(screen.getByPlaceholderText('Country'), { target: { value: 'USA' } })
+    fireEvent.change(screen.getByPlaceholderText('Gate code'), { target: { value: '4321' } })
+    fireEvent.change(screen.getByPlaceholderText('Access instructions'), { target: { value: 'Use north gate' } })
+    fireEvent.change(screen.getByPlaceholderText('Safety requirements'), { target: { value: 'Hard hat required' } })
+    fireEvent.change(screen.getByPlaceholderText('Site notes'), { target: { value: 'Check in at office' } })
     fireEvent.change(container.querySelector('form select')!, { target: { value: 'c1' } })
     fireEvent.click(screen.getByLabelText('Active'))
     fireEvent.click(screen.getByRole('button', { name: 'Create Location' }))
@@ -271,14 +298,55 @@ describe('ServiceLocationsPage', () => {
     await waitFor(() => expect(masterDataApi.createServiceLocation).toHaveBeenCalledWith({
       companyName: 'Acme Crane',
       locationName: 'North Yard',
+      onSiteContactName: 'Casey Tech',
+      onSiteContactPhone: '555-0300',
+      onSiteContactEmail: 'casey@example.com',
       addressLine1: '100 Main St',
+      addressLine2: 'Dock 4',
       city: 'Tulsa',
       state: 'OK',
       postalCode: '74101',
+      parishCounty: 'Tulsa County',
       country: 'USA',
+      gateCode: '4321',
+      accessInstructions: 'Use north gate',
+      safetyRequirements: 'Hard hat required',
+      siteNotes: 'Check in at office',
       customerId: 'c1',
       isActive: false
     }))
+  })
+
+  it('copies related customer billing address into the service-location form', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{
+      id: 'c1',
+      name: 'Acme',
+      contactName: 'Alex Customer',
+      email: 'alex@example.com',
+      phone: '555-0100',
+      billingAddressLine1: '100 Billing Rd',
+      billingAddressLine2: 'Suite 5',
+      billingCity: 'Tulsa',
+      billingState: 'OK',
+      billingPostalCode: '74101'
+    }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
+
+    render(<ServiceLocationsPage />)
+
+    fireEvent.change(await screen.findByLabelText('Related customer'), { target: { value: 'c1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Use customer address' }))
+
+    expect(screen.getByLabelText('Company')).toHaveValue('Acme')
+    expect(screen.getByLabelText('On-site contact')).toHaveValue('Alex Customer')
+    expect(screen.getByLabelText('On-site phone')).toHaveValue('555-0100')
+    expect(screen.getByLabelText('On-site email')).toHaveValue('alex@example.com')
+    expect(screen.getByLabelText('Address')).toHaveValue('100 Billing Rd')
+    expect(screen.getByLabelText('Address line 2')).toHaveValue('Suite 5')
+    expect(screen.getByLabelText('City')).toHaveValue('Tulsa')
+    expect(screen.getByLabelText('State')).toHaveValue('OK')
+    expect(screen.getByLabelText('Postal code')).toHaveValue('74101')
+    expect(screen.getByText('Customer address copied into the service location form.')).toBeInTheDocument()
   })
 })
 

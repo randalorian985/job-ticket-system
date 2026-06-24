@@ -77,9 +77,9 @@ export function TimeApprovalPage() {
     try {
       await action()
       setError(null)
-      setMessage(successMessage)
       setReviewEntry(null)
       await load()
+      setMessage(successMessage)
       return true
     } catch (requestError) {
       setError(managerTimeError(requestError, 'Unable to update the time entry.'))
@@ -99,9 +99,34 @@ export function TimeApprovalPage() {
 
   const approve = (id: string) => runAction(() => timeEntriesApi.approve(id), 'Time entry approved.')
   const reject = (id: string, reason: string) => runAction(() => timeEntriesApi.reject(id, { reason }), 'Time entry rejected.')
+  const saveEdit = (id: string, request: AdjustTimeEntryRequestDto) => runAction(() => timeEntriesApi.adjust(id, request), 'Time entry changes were saved.')
   const editAndApprove = (id: string, request: AdjustTimeEntryRequestDto) => runAction(() => timeEntriesApi.editAndApprove(id, request), 'Time entry changes were saved and approved.')
+  const deleteEntry = (id: string, reason: string) => runAction(() => timeEntriesApi.deleteEntry(id, { reason }), 'Time entry deleted.')
   const bulkApprove = async () => {
     if (await runAction(() => timeEntriesApi.bulkApprove(selectedIds), 'Selected time entries approved.')) setSelectedIds([])
+  }
+
+  if (reviewEntry) {
+    return (
+      <section className="card stack" aria-label="Time approval edit screen">
+        <div>
+          <h2>Edit Time Approval</h2>
+          <p className="muted">Review the selected time entry, save manager edits, approve it, reject it, or delete it without returning to the queue first.</p>
+        </div>
+        <Errorable error={error} />
+        {message ? <p className="muted">{message}</p> : null}
+        <TimeEntryReviewPanel
+          entry={reviewEntry}
+          onClose={() => setReviewEntry(null)}
+          onApprove={approve}
+          onReject={reject}
+          onSaveEdit={saveEdit}
+          onEditAndApprove={editAndApprove}
+          onDelete={deleteEntry}
+          onValidationError={setError}
+        />
+      </section>
+    )
   }
 
   return (
@@ -130,16 +155,6 @@ export function TimeApprovalPage() {
         onBulkApprove={() => void bulkApprove()}
         onReview={setReviewEntry}
       />
-      {reviewEntry ? (
-        <TimeEntryReviewPanel
-          entry={reviewEntry}
-          onClose={() => setReviewEntry(null)}
-          onApprove={approve}
-          onReject={reject}
-          onEditAndApprove={editAndApprove}
-          onValidationError={setError}
-        />
-      ) : null}
     </section>
   )
 }

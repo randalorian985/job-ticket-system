@@ -54,7 +54,7 @@ const equipment = [
   { id: 'eq1', customerId: 'c1', serviceLocationId: 's1', name: 'Truck 7' }
 ] as any
 
-describe('JobTicketEditorForm dispatch requirements review', () => {
+describe('JobTicketEditorForm assignment and schedule requirements review', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(reportsApi.getEquipmentHistory).mockResolvedValue([])
@@ -66,7 +66,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     fireEvent.click(screen.getByRole('button', { name }))
   }
 
-  it('summarizes completed dispatch requirements', () => {
+  it('summarizes completed assignment and schedule requirements', () => {
     render(
       <JobTicketEditorForm
         initial={baseTicket}
@@ -78,14 +78,14 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    expect(screen.getByLabelText('dispatch requirements review')).toBeInTheDocument()
-    expect(screen.getByText('Ready to dispatch')).toBeInTheDocument()
+    expect(screen.getByLabelText('assignment and schedule requirements review')).toBeInTheDocument()
+    expect(screen.getByText('Ready to work')).toBeInTheDocument()
     expect(screen.getByText('7 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: All dispatch requirements are complete.')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status, customer, service location, equipment decision, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: All assignment and schedule requirements are complete.')).toBeInTheDocument()
+    expect(screen.getByText('Work status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
   })
 
-  it('keeps no-equipment tickets dispatchable when the remaining requirements are present', () => {
+  it('keeps no-equipment tickets ready when the remaining requirements are present', () => {
     render(
       <JobTicketEditorForm
         initial={{ ...baseTicket, equipmentId: null }}
@@ -97,12 +97,12 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    expect(screen.getByText('Ready to dispatch')).toBeInTheDocument()
+    expect(screen.getByText('Ready to work')).toBeInTheDocument()
     expect(screen.getByText('7 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status, customer, service location, equipment decision, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
+    expect(screen.getByText('Work status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
   })
 
-  it('marks tickets outside active dispatch status as needing dispatch review', () => {
+  it('marks tickets outside active work status as needing assignment review', () => {
     render(
       <JobTicketEditorForm
         initial={{ ...baseTicket, status: 7 }}
@@ -114,13 +114,13 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    expect(screen.getByText('Needs dispatch updates')).toBeInTheDocument()
+    expect(screen.getByText('Needs assignment updates')).toBeInTheDocument()
     expect(screen.getByText('6 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: Move the ticket into an active dispatch status before dispatch review.')).toBeInTheDocument()
-    expect(screen.getByText('Dispatch status: Move the ticket into an active dispatch status before dispatch review.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Move the ticket into an active work status before assignment review.')).toBeInTheDocument()
+    expect(screen.getByText('Work status: Move the ticket into an active work status before assignment review.')).toBeInTheDocument()
   })
 
-  it('names missing dispatch requirements and updates as fields are filled', () => {
+  it('names missing assignment and schedule requirements and updates as fields are filled', () => {
     const initial = {
       ...baseTicket,
       description: null,
@@ -141,16 +141,16 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    expect(screen.getByText('Needs dispatch updates')).toBeInTheDocument()
+    expect(screen.getByText('Needs assignment updates')).toBeInTheDocument()
     expect(screen.getByText('4 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: Set a scheduled start before dispatch.')).toBeInTheDocument()
-    expect(screen.getByText('Scheduled start: Set a scheduled start before dispatch.')).toBeInTheDocument()
-    expect(screen.getByText('Due date: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Set a scheduled start before work starts.')).toBeInTheDocument()
+    expect(screen.getByText('Scheduled start: Set a scheduled start before work starts.')).toBeInTheDocument()
+    expect(screen.getByText('Due date: Add a due date for timing expectations.')).toBeInTheDocument()
     expect(screen.getByText('Job instructions: Add job instructions or notes for the technician.')).toBeInTheDocument()
 
     openEditSection('Schedule')
     fireEvent.change(screen.getByLabelText('Scheduled Start (UTC)'), { target: { value: '2026-04-02T09:30' } })
-    expect(screen.getByText('Next required update: Add a due date so dispatch can see timing expectations.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: Add a due date for timing expectations.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Due (UTC)'), { target: { value: '2026-04-03T17:00' } })
     expect(screen.getByText('Next required update: Add job instructions or notes for the technician.')).toBeInTheDocument()
@@ -158,9 +158,9 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     openEditSection('Scope & Notes')
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Replace seal and test restart.' } })
 
-    expect(screen.getByText('Ready to dispatch')).toBeInTheDocument()
+    expect(screen.getByText('Ready to work')).toBeInTheDocument()
     expect(screen.getByText('7 / 7')).toBeInTheDocument()
-    expect(screen.getByText('Next required update: All dispatch requirements are complete.')).toBeInTheDocument()
+    expect(screen.getByText('Next required update: All assignment and schedule requirements are complete.')).toBeInTheDocument()
   })
 
   it('keeps the readiness helper explicit and field-based', () => {
@@ -172,9 +172,9 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
     })
 
     expect(checks).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Dispatch status', isReady: true }),
+      expect.objectContaining({ label: 'Work status', isReady: true }),
       expect.objectContaining({ label: 'Service location', isReady: false }),
-      expect.objectContaining({ label: 'Equipment decision', isReady: true }),
+      expect.objectContaining({ label: 'Service equipment', isReady: true }),
       expect.objectContaining({ label: 'Due date', isReady: false }),
       expect.objectContaining({ label: 'Customer', isReady: true })
     ]))
@@ -188,9 +188,9 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
 
     expect(checks).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        label: 'Dispatch status',
+        label: 'Work status',
         isReady: false,
-        detail: 'Move the ticket into an active dispatch status before dispatch review.'
+        detail: 'Move the ticket into an active work status before assignment review.'
       })
     ]))
   })
@@ -203,7 +203,11 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       accountNumber: 'NW-10',
       contactName: 'Nora North',
       email: 'nora@example.com',
-      phone: '555-0200'
+      phone: '555-0200',
+      billingAddressLine1: '500 Billing Ave',
+      billingCity: 'Waco',
+      billingState: 'TX',
+      billingPostalCode: '76701'
     })
 
     render(
@@ -217,13 +221,17 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
+    openEditSection('Customer & Service Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add customer' }))
     fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'Northwind' } })
     fireEvent.change(screen.getByLabelText('Account Number'), { target: { value: 'NW-10' } })
     fireEvent.change(screen.getByLabelText('Contact Name'), { target: { value: 'Nora North' } })
     fireEvent.change(screen.getByLabelText('Contact Phone'), { target: { value: '555-0200' } })
     fireEvent.change(screen.getByLabelText('Contact Email'), { target: { value: 'nora@example.com' } })
+    fireEvent.change(screen.getByLabelText('Billing Address'), { target: { value: '500 Billing Ave' } })
+    fireEvent.change(screen.getByLabelText('Billing City'), { target: { value: 'Waco' } })
+    fireEvent.change(screen.getByLabelText('Billing State'), { target: { value: 'TX' } })
+    fireEvent.change(screen.getByLabelText('Billing ZIP / Postal'), { target: { value: '76701' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
 
     await waitFor(() => expect(masterDataApi.createCustomer).toHaveBeenCalledWith({
@@ -231,14 +239,19 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       accountNumber: 'NW-10',
       contactName: 'Nora North',
       email: 'nora@example.com',
-      phone: '555-0200'
+      phone: '555-0200',
+      billingAddressLine1: '500 Billing Ave',
+      billingAddressLine2: null,
+      billingCity: 'Waco',
+      billingState: 'TX',
+      billingPostalCode: '76701'
     }))
 
     expect(await screen.findByText('Northwind added and selected.')).toBeInTheDocument()
     expect(screen.getByLabelText('Customer')).toHaveValue('c2')
     expect(screen.getByLabelText('Billing Party')).toHaveValue('c2')
     expect(screen.getByLabelText('Service Location')).toHaveValue('')
-    expect(screen.getByLabelText('Equipment')).toHaveValue('')
+    expect(screen.getByLabelText('Crane / Equipment Being Serviced')).toHaveValue('')
     openEditSection('Billing')
     expect(screen.getByLabelText('Billing Contact Name')).toHaveValue('Nora North')
     expect(screen.getByLabelText('Billing Contact Phone')).toHaveValue('555-0200')
@@ -248,6 +261,35 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
 
     expect(screen.getByText('Customer, location, billing party, and title are required.')).toBeInTheDocument()
     expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('defaults billing party from customer without overwriting an explicit billing override', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, customerId: '', serviceLocationId: '', billingPartyCustomerId: '', equipmentId: null }}
+        customers={[
+          { id: 'c1', name: 'Acme' },
+          { id: 'c2', name: 'Separate Billing Co' },
+          { id: 'c3', name: 'Northwind' }
+        ] as any}
+        serviceLocations={serviceLocations}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    openEditSection('Customer & Service Equipment')
+    fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c1' } })
+
+    expect(screen.getByLabelText('Billing Party')).toHaveValue('c1')
+    expect(screen.getByText('Billing party is the selected customer.')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Billing Party'), { target: { value: 'c2' } })
+    expect(screen.getByText('Billing party is separate from the customer and job site.')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c3' } })
+    expect(screen.getByLabelText('Billing Party')).toHaveValue('c2')
   })
 
   it('validates customer quick-add before calling the API', () => {
@@ -262,7 +304,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
+    openEditSection('Customer & Service Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add customer' }))
     fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
 
@@ -276,11 +318,20 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       customerId: 'c1',
       companyName: 'Acme',
       locationName: 'North Shop',
+      onSiteContactName: 'Nora Site',
+      onSiteContactPhone: '555-0300',
+      onSiteContactEmail: 'site@example.com',
       addressLine1: '55 North St',
+      addressLine2: 'Dock 4',
       city: 'Waco',
       state: 'TX',
       postalCode: '76701',
+      parishCounty: 'McLennan',
       country: 'USA',
+      gateCode: '4321',
+      accessInstructions: 'Use north gate',
+      safetyRequirements: 'Hard hat required',
+      siteNotes: 'Check in at office',
       isActive: true
     })
 
@@ -295,26 +346,149 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
+    openEditSection('Customer & Service Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add location' }))
     fireEvent.change(screen.getByLabelText('Location Name'), { target: { value: 'North Shop' } })
+    fireEvent.change(screen.getByLabelText('On-site Contact'), { target: { value: 'Nora Site' } })
+    fireEvent.change(screen.getByLabelText('On-site Phone'), { target: { value: '555-0300' } })
+    fireEvent.change(screen.getByLabelText('On-site Email'), { target: { value: 'site@example.com' } })
     fireEvent.change(screen.getByLabelText('Street Address'), { target: { value: '55 North St' } })
+    fireEvent.change(screen.getByLabelText('Street Address 2'), { target: { value: 'Dock 4' } })
     fireEvent.change(screen.getByLabelText('City'), { target: { value: 'Waco' } })
     fireEvent.change(screen.getByLabelText('State'), { target: { value: 'TX' } })
     fireEvent.change(screen.getByLabelText('Postal Code'), { target: { value: '76701' } })
+    fireEvent.change(screen.getByLabelText('Parish / County'), { target: { value: 'McLennan' } })
+    fireEvent.change(screen.getByLabelText('Gate Code'), { target: { value: '4321' } })
+    fireEvent.change(screen.getByLabelText('Access Instructions'), { target: { value: 'Use north gate' } })
+    fireEvent.change(screen.getByLabelText('Safety Requirements'), { target: { value: 'Hard hat required' } })
+    fireEvent.change(screen.getByLabelText('Site Notes'), { target: { value: 'Check in at office' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add Location' }))
 
     await waitFor(() => expect(masterDataApi.createServiceLocation).toHaveBeenCalledWith(expect.objectContaining({
       customerId: 'c1',
       companyName: 'Acme',
       locationName: 'North Shop',
+      onSiteContactName: 'Nora Site',
+      onSiteContactPhone: '555-0300',
+      onSiteContactEmail: 'site@example.com',
       addressLine1: '55 North St',
+      addressLine2: 'Dock 4',
       city: 'Waco',
       state: 'TX',
-      postalCode: '76701'
+      postalCode: '76701',
+      parishCounty: 'McLennan',
+      gateCode: '4321',
+      accessInstructions: 'Use north gate',
+      safetyRequirements: 'Hard hat required',
+      siteNotes: 'Check in at office'
     })))
     expect(await screen.findByText('North Shop added and selected.')).toBeInTheDocument()
     expect(screen.getByLabelText('Service Location')).toHaveValue('s2')
+  })
+
+  it('copies the selected customer address into the quick-add job location form', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, serviceLocationId: '', equipmentId: null }}
+        customers={[{
+          id: 'c1',
+          name: 'Acme',
+          contactName: 'Alex Customer',
+          phone: '555-0100',
+          email: 'alex@example.com',
+          billingAddressLine1: '100 Billing Rd',
+          billingAddressLine2: 'Suite 5',
+          billingCity: 'Tulsa',
+          billingState: 'OK',
+          billingPostalCode: '74101'
+        }] as any}
+        serviceLocations={[]}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    openEditSection('Customer & Service Equipment')
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add location' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Use customer address' }))
+
+    expect(screen.getByLabelText('Location Name')).toHaveValue('Acme')
+    expect(screen.getByLabelText('On-site Contact')).toHaveValue('Alex Customer')
+    expect(screen.getByLabelText('On-site Phone')).toHaveValue('555-0100')
+    expect(screen.getByLabelText('On-site Email')).toHaveValue('alex@example.com')
+    expect(screen.getByLabelText('Street Address')).toHaveValue('100 Billing Rd')
+    expect(screen.getByLabelText('Street Address 2')).toHaveValue('Suite 5')
+    expect(screen.getByLabelText('City')).toHaveValue('Tulsa')
+    expect(screen.getByLabelText('State')).toHaveValue('OK')
+    expect(screen.getByLabelText('Postal Code')).toHaveValue('74101')
+    expect(screen.getByText('Customer address copied into the job location.')).toBeInTheDocument()
+  })
+
+  it('copies billing-party and job-site contact details into billing fields', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, billingPartyCustomerId: 'bill-1', billingContactName: null, billingContactPhone: null, billingContactEmail: null }}
+        customers={[
+          { id: 'c1', name: 'Acme', phone: '555-0100' },
+          { id: 'bill-1', name: 'Acme AP', contactName: 'Bill Contact', phone: '555-0400', email: 'billing@example.com' }
+        ] as any}
+        serviceLocations={[{
+          id: 's1',
+          customerId: 'c1',
+          locationName: 'HQ',
+          onSiteContactName: 'Site Contact',
+          onSiteContactPhone: '555-0300',
+          onSiteContactEmail: 'site@example.com',
+          postalCode: '74101'
+        }] as any}
+        equipment={equipment}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    openEditSection('Billing')
+    fireEvent.click(screen.getByRole('button', { name: 'Use billing address' }))
+
+    expect(screen.getByLabelText('Billing Contact Name')).toHaveValue('Bill Contact')
+    expect(screen.getByLabelText('Billing Contact Phone')).toHaveValue('555-0400')
+    expect(screen.getByLabelText('Billing Contact Email')).toHaveValue('billing@example.com')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use job-site contact' }))
+
+    expect(screen.getByLabelText('Billing Contact Name')).toHaveValue('Site Contact')
+    expect(screen.getByLabelText('Billing Contact Phone')).toHaveValue('555-0300')
+    expect(screen.getByLabelText('Billing Contact Email')).toHaveValue('site@example.com')
+  })
+
+  it('uses equipment billing customer as the ticket billing party', () => {
+    render(
+      <JobTicketEditorForm
+        initial={{ ...baseTicket, billingPartyCustomerId: 'c1' }}
+        customers={[
+          { id: 'c1', name: 'Acme' },
+          { id: 'bill-1', name: 'Acme AP' }
+        ] as any}
+        serviceLocations={serviceLocations}
+        equipment={[{
+          id: 'eq1',
+          customerId: 'c1',
+          serviceLocationId: 's1',
+          responsibleBillingCustomerId: 'bill-1',
+          name: 'Truck 7'
+        }] as any}
+        submitLabel="Save Ticket"
+        onSubmit={vi.fn()}
+      />
+    )
+
+    openEditSection('Customer & Service Equipment')
+    fireEvent.click(screen.getByRole('button', { name: 'Use equipment billing customer' }))
+
+    expect(screen.getByLabelText('Billing Party')).toHaveValue('bill-1')
+    expect(screen.getByText('Equipment billing customer selected as the billing party.')).toBeInTheDocument()
+    expect(screen.getByText('Billing party is the equipment billing customer.')).toBeInTheDocument()
   })
 
   it('quick-adds equipment in the selected customer and service-location context', async () => {
@@ -344,7 +518,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
+    openEditSection('Customer & Service Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
     fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Pump 9' } })
     fireEvent.change(screen.getByLabelText('Equipment Number'), { target: { value: 'EQ-9' } })
@@ -369,7 +543,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       year: 2025
     })))
     expect(await screen.findByText('Pump 9 added and selected.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
+    expect(screen.getByLabelText('Crane / Equipment Being Serviced')).toHaveValue('eq2')
   })
 
   it('shows recent service history for the selected equipment using existing report data', async () => {
@@ -399,7 +573,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
+    openEditSection('Customer & Service Equipment')
     expect(await screen.findByText('JT-1001: Replace hydraulic hose')).toBeInTheDocument()
     expect(reportsApi.getEquipmentHistory).toHaveBeenCalledWith('eq1', { offset: 0, limit: 3 })
     const serviceHistory = screen.getByLabelText('equipment service history')
@@ -421,11 +595,11 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
-    expect(screen.getByText('Select equipment to review recent service history before saving this ticket.')).toBeInTheDocument()
+    openEditSection('Customer & Service Equipment')
+    expect(screen.getByText('Select the crane/equipment being serviced to review its recent service history before saving this ticket.')).toBeInTheDocument()
     expect(reportsApi.getEquipmentHistory).not.toHaveBeenCalled()
 
-    fireEvent.change(screen.getByLabelText('Equipment'), { target: { value: 'eq1' } })
+    fireEvent.change(screen.getByLabelText('Crane / Equipment Being Serviced'), { target: { value: 'eq1' } })
 
     expect(await screen.findByText('Equipment service history is unavailable right now.')).toBeInTheDocument()
   })
@@ -462,7 +636,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
+    openEditSection('Customer & Service Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
     fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: ' truck 7 ' } })
     fireEvent.change(screen.getByLabelText('Serial Number'), { target: { value: 'sn-7' } })
@@ -480,7 +654,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       serialNumber: 'sn-7'
     })))
     expect(await screen.findByText('Truck 7 - Replacement added and selected.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Equipment')).toHaveValue('eq2')
+    expect(screen.getByLabelText('Crane / Equipment Being Serviced')).toHaveValue('eq2')
   })
 
   it('quick-adds a job-type reference value and submits it with the ticket', async () => {
@@ -522,7 +696,7 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
+    openEditSection('Customer & Service Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
     fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Pump 9' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
@@ -545,12 +719,12 @@ describe('JobTicketEditorForm dispatch requirements review', () => {
       />
     )
 
-    openEditSection('Customer & Equipment')
+    openEditSection('Customer & Service Equipment')
     fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
     fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Truck 8' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
 
     expect(await screen.findByText('Serial number is already assigned.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Equipment')).toHaveValue('eq1')
+    expect(screen.getByLabelText('Crane / Equipment Being Serviced')).toHaveValue('eq1')
   })
 })

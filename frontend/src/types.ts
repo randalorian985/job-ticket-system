@@ -6,6 +6,70 @@ export type SystemInfoDto = {
   version: string
 }
 
+export type CompanyConfigurationDto = {
+  id: string
+  companyName: string
+  legalName?: string | null
+  contactName?: string | null
+  email?: string | null
+  phone?: string | null
+  website?: string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  state?: string | null
+  postalCode?: string | null
+  country?: string | null
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string
+  hasLogo: boolean
+  logoOriginalFileName?: string | null
+  logoContentType?: string | null
+  logoFileSizeBytes?: number | null
+  logoUploadedAtUtc?: string | null
+  createdAtUtc?: string | null
+  updatedAtUtc?: string | null
+}
+
+export type UpdateCompanyConfigurationDto = {
+  companyName: string
+  legalName?: string | null
+  contactName?: string | null
+  email?: string | null
+  phone?: string | null
+  website?: string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  state?: string | null
+  postalCode?: string | null
+  country?: string | null
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string
+}
+
+export type TicketStatusFilterOptionDto = {
+  id: string
+  displayLabel: string
+  status: number
+  displayOrder: number
+  isActive: boolean
+}
+
+export type SaveTicketStatusFilterOptionDto = {
+  id?: string | null
+  displayLabel: string
+  status: number
+  displayOrder: number
+  isActive: boolean
+}
+
+export type SaveTicketStatusFilterConfigurationDto = {
+  options: SaveTicketStatusFilterOptionDto[]
+}
+
 export type ApiValidationError = {
   error?: string
   errors?: Record<string, string[]>
@@ -45,6 +109,7 @@ export type JobTicketListItemDto = {
   completedAtUtc?: string | null
   customerName?: string | null
   serviceLocationName?: string | null
+  equipmentId?: string | null
   equipmentName?: string | null
 }
 
@@ -305,6 +370,10 @@ export type RejectTimeEntryRequestDto = {
   reason: string
 }
 
+export type ArchiveTimeEntryRequestDto = {
+  reason: string
+}
+
 export type AdjustTimeEntryRequestDto = {
   reason: string
   startedAtUtc?: string | null
@@ -399,6 +468,11 @@ export type CustomerDto = {
   contactName?: string | null
   email?: string | null
   phone?: string | null
+  billingAddressLine1?: string | null
+  billingAddressLine2?: string | null
+  billingCity?: string | null
+  billingState?: string | null
+  billingPostalCode?: string | null
   isArchived?: boolean
 }
 
@@ -409,6 +483,11 @@ export type CreateCustomerDto = {
   contactName?: string | null
   email?: string | null
   phone?: string | null
+  billingAddressLine1?: string | null
+  billingAddressLine2?: string | null
+  billingCity?: string | null
+  billingState?: string | null
+  billingPostalCode?: string | null
 }
 
 export type UpdateCustomerDto = CreateCustomerDto
@@ -418,11 +497,20 @@ export type ServiceLocationDto = {
   customerId?: string | null
   companyName: string
   locationName: string
+  onSiteContactName?: string | null
+  onSiteContactPhone?: string | null
+  onSiteContactEmail?: string | null
   addressLine1: string
+  addressLine2?: string | null
   city: string
   state: string
   postalCode: string
+  parishCounty?: string | null
   country: string
+  gateCode?: string | null
+  accessInstructions?: string | null
+  safetyRequirements?: string | null
+  siteNotes?: string | null
   isActive: boolean
   isArchived?: boolean
 }
@@ -467,11 +555,20 @@ export type CreateServiceLocationDto = {
   customerId?: string | null
   companyName: string
   locationName: string
+  onSiteContactName?: string | null
+  onSiteContactPhone?: string | null
+  onSiteContactEmail?: string | null
   addressLine1: string
+  addressLine2?: string | null
   city: string
   state: string
   postalCode: string
+  parishCounty?: string | null
   country: string
+  gateCode?: string | null
+  accessInstructions?: string | null
+  safetyRequirements?: string | null
+  siteNotes?: string | null
   isActive?: boolean
 }
 
