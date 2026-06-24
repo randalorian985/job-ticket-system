@@ -122,24 +122,53 @@ function buildCompanyBrandingValue(
   }
 }
 
+export type BrandColors = {
+  primary: string
+  secondary: string
+  accent: string
+  brandStrong: string
+  brandSoft: string
+  brandContrast: string
+  accentDark: string
+  accentNavy: string
+  accentSoft: string
+}
+
+export function computeBrandColors(configuration: CompanyConfigurationDto): BrandColors {
+  const primary = normalizeHex(configuration.primaryColor, defaultCompanyConfiguration.primaryColor)
+  const secondary = normalizeHex(configuration.secondaryColor, defaultCompanyConfiguration.secondaryColor)
+  const accent = normalizeHex(configuration.accentColor, defaultCompanyConfiguration.accentColor)
+  return {
+    primary,
+    secondary,
+    accent,
+    brandStrong: shadeColor(primary, -22),
+    brandSoft: mixColor(primary, '#ffffff', 0.88),
+    brandContrast: contrastColor(primary),
+    accentDark: shadeColor(accent, -18),
+    accentNavy: shadeColor(primary, -22),
+    accentSoft: mixColor(primary, '#ffffff', 0.93),
+  }
+}
+
 function applyBrandVariables(configuration: CompanyConfigurationDto) {
   if (typeof document === 'undefined') return
 
   const root = document.documentElement
-  const primary = normalizeHex(configuration.primaryColor, defaultCompanyConfiguration.primaryColor)
-  const secondary = normalizeHex(configuration.secondaryColor, defaultCompanyConfiguration.secondaryColor)
-  const accent = normalizeHex(configuration.accentColor, defaultCompanyConfiguration.accentColor)
+  const c = computeBrandColors(configuration)
 
-  root.style.setProperty('--company-primary', primary)
-  root.style.setProperty('--company-secondary', secondary)
-  root.style.setProperty('--company-accent', accent)
-  root.style.setProperty('--brand', primary)
-  root.style.setProperty('--brand-strong', shadeColor(primary, -22))
-  root.style.setProperty('--brand-soft', mixColor(primary, '#ffffff', 0.88))
-  root.style.setProperty('--brand-contrast', contrastColor(primary))
-  root.style.setProperty('--accent', accent)
-  root.style.setProperty('--accent-dark', shadeColor(accent, -18))
-  root.style.setProperty('--ready', accent)
+  root.style.setProperty('--company-primary', c.primary)
+  root.style.setProperty('--company-secondary', c.secondary)
+  root.style.setProperty('--company-accent', c.accent)
+  root.style.setProperty('--brand', c.primary)
+  root.style.setProperty('--brand-strong', c.brandStrong)
+  root.style.setProperty('--brand-soft', c.brandSoft)
+  root.style.setProperty('--brand-contrast', c.brandContrast)
+  root.style.setProperty('--accent', c.accent)
+  root.style.setProperty('--accent-dark', c.accentDark)
+  root.style.setProperty('--accent-navy', c.accentNavy)
+  root.style.setProperty('--accent-soft', c.accentSoft)
+  root.style.setProperty('--ready', c.accent)
 }
 
 function normalizeHex(value: string | null | undefined, fallback: string) {

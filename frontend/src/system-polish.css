@@ -12,6 +12,8 @@
   --company-primary: #3157c8;
   --company-secondary: #172033;
   --company-accent: #087f5b;
+  --accent-navy: #004f93;
+  --accent-soft: #eef3ff;
   --success: #087f5b;
   --warning-strong: #9a6700;
   --danger: #b4234d;
@@ -204,7 +206,7 @@ button:hover:not(:disabled),
 .secondary-link:hover {
   background: #f4f7fb;
   border-color: #93a4ba;
-  color: #172033;
+  color: var(--company-secondary);
 }
 
 .danger-button {
@@ -324,7 +326,7 @@ td button {
 .manager-nav-menu-panel .active-nav-link {
   background: #e8edf7;
   border-color: #a9b9d3;
-  color: #172033;
+  color: var(--company-secondary);
 }
 
 .manager-primary-links .active-nav-link:hover,
@@ -333,7 +335,7 @@ td button {
 .manager-nav-menu-panel .active-nav-link:focus-visible {
   background: #e1e8f4;
   border-color: #9fb0cc;
-  color: #172033;
+  color: var(--company-secondary);
 }
 
 .manager-nav-menu {

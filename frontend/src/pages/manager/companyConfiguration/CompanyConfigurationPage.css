@@ -150,6 +150,50 @@
   font-size: 0.78rem;
 }
 
+.company-swatch-usage {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.company-derived-swatches {
+  border-top: 1px solid #e5eaf1;
+  padding-top: 0.55rem;
+}
+
+.company-derived-swatches summary {
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  list-style: none;
+  padding: 0.1rem 0;
+  user-select: none;
+}
+
+.company-derived-swatches summary::-webkit-details-marker {
+  display: none;
+}
+
+.company-derived-swatches summary::after {
+  border-bottom: 0;
+  border-left: 0.22rem solid transparent;
+  border-right: 0.22rem solid transparent;
+  border-top: 0.28rem solid currentColor;
+  content: "";
+  display: inline-block;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.company-derived-swatches[open] summary::after {
+  border-bottom: 0.28rem solid currentColor;
+  border-top: 0;
+}
+
+.company-swatch-grid-derived {
+  margin-top: 0.5rem;
+}
+
 .company-export-preview {
   overflow: hidden;
   padding: 0;
