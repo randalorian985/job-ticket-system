@@ -750,7 +750,7 @@ describe('ReportsPage', () => {
     expect(screen.getByText('Parts by Job')).toBeInTheDocument()
     expect(screen.getByText('Customer Service History')).toBeInTheDocument()
     expect(screen.getByText('Equipment Service History')).toBeInTheDocument()
-    expect(screen.getByText(/Labor totals use rate snapshots first/i)).toBeInTheDocument()
+    expect(screen.getByText(/Labor totals reflect the rate captured/i)).toBeInTheDocument()
   })
 
   it('applies supported filters, renders jobs ready to invoice rows, and exports escaped CSV', async () => {
@@ -776,7 +776,7 @@ describe('ReportsPage', () => {
       invoiceStatus: 2
     }))
 
-    const csvHref = screen.getByRole('link', { name: 'Export loaded rows as CSV' }).getAttribute('href') ?? ''
+    const csvHref = screen.getByRole('link', { name: 'Export CSV' }).getAttribute('href') ?? ''
     const csv = decodeURIComponent(csvHref.replace('data:text/csv;charset=utf-8,', ''))
     expect(csv).toContain('Job Ticket,Customer,Billing Party')
     expect(csv).toContain('"Acme, ""North""\nRegion"')
@@ -805,7 +805,7 @@ describe('ReportsPage', () => {
     expect(within(table).getByRole('cell', { name: 'Casey Tech' })).toBeInTheDocument()
     expect(screen.getByText('4 h')).toBeInTheDocument()
     expect(screen.getByText('$160.00')).toBeInTheDocument()
-    expect(screen.getByText((_, element) => element?.classList.contains('report-print-subtitle') ?? false)).toHaveTextContent('Approved labor totals grouped by employee with time-entry labor-rate snapshot values.')
+    expect(screen.getByText((_, element) => element?.classList.contains('report-print-subtitle') ?? false)).toHaveTextContent('Approved time entries grouped by employee, showing total hours and billable time per worker.')
   })
 
   it('renders parts by job rows with job detail drill-in', async () => {

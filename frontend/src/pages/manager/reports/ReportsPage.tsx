@@ -60,7 +60,6 @@ type FilterField =
   | 'paging'
 
 const defaultFilters: ReportQueryFilters = { offset: 0, limit: 50 }
-const snapshotLabel = 'time-entry labor-rate snapshot'
 
 const reportTitleMap: Record<ReportMode, string> = {
   invoiceReady: 'Invoice-ready Summary',
@@ -74,30 +73,30 @@ const reportTitleMap: Record<ReportMode, string> = {
 }
 
 const reportDescriptions: Record<ReportMode, string> = {
-  invoiceReady: 'One invoice-ready job summary using the implemented job-ticket reporting API.',
-  jobCost: 'One job cost summary using approved labor, approved parts, and the current API totals.',
-  jobsReady: 'Jobs that have approved billable activity and are ready for invoice review.',
-  laborJob: `Approved labor totals grouped by job ticket with ${snapshotLabel} values.`,
-  laborEmployee: `Approved labor totals grouped by employee with ${snapshotLabel} values.`,
-  partsJob: 'Approved job-part quantity and snapshot price totals grouped by job.',
-  customerHistory: 'Service history for a selected customer.',
-  equipmentHistory: 'Service history for selected equipment.'
+  invoiceReady: 'Invoice-ready totals for a single job ticket — approved labor, parts used, and billable amounts.',
+  jobCost: 'Cost breakdown for a single job ticket — approved labor hours, parts used, and running totals.',
+  jobsReady: 'Jobs with approved billable activity that are ready for invoice review. Filter by date, customer, status, or billing party.',
+  laborJob: `Approved time entries grouped by job ticket, with hours and billable totals for each assignment.`,
+  laborEmployee: 'Approved time entries grouped by employee, showing total hours and billable time per worker.',
+  partsJob: 'Approved parts used on each job, with quantities and billable price totals per ticket.',
+  customerHistory: 'Complete service record for a selected customer — all tickets, statuses, and dates.',
+  equipmentHistory: 'Complete service record for a selected piece of equipment — all tickets, statuses, and dates.'
 }
 
 const reportSections: Array<{ title: string, description: string, modes: ReportMode[] }> = [
   {
     title: 'Invoice and Closeout',
-    description: 'Review invoice-ready jobs and single-ticket invoice/cost summaries from existing report APIs.',
+    description: 'Review jobs ready for invoicing and pull cost summaries for individual tickets.',
     modes: ['invoiceReady', 'jobCost', 'jobsReady']
   },
   {
     title: 'Labor and Parts',
-    description: 'Audit approved time and parts totals with export-friendly columns for operational review.',
+    description: 'Review approved time and parts totals by job or employee, ready to export.',
     modes: ['laborJob', 'laborEmployee', 'partsJob']
   },
   {
     title: 'Service History',
-    description: 'Review service history for a selected customer or piece of equipment.',
+    description: 'Look up the complete service record for a customer or piece of equipment.',
     modes: ['customerHistory', 'equipmentHistory']
   }
 ]
@@ -955,7 +954,7 @@ export function ReportsPage() {
       <header className="card stack report-hub-hero">
         <div className="report-hero-layout">
           <div>
-            <p className="eyebrow">Manager/Admin reporting</p>
+            <p className="eyebrow">Reporting</p>
             <h2>Reports</h2>
             <p className="muted">
               Pick the report you need, set its source or optional filters in the same panel, then run it.
@@ -968,7 +967,7 @@ export function ReportsPage() {
         </div>
         <div className="report-note-panel">
           <strong>Labor totals</strong>
-          <span>Run reports from this panel, then export CSV or PDF after rows load. Labor totals use rate snapshots first, with captured costs and bill rates used before legacy fallbacks.</span>
+          <span>Run reports from this panel, then export to CSV or PDF after rows load. Labor totals reflect the rate captured at the time each entry was approved.</span>
         </div>
         {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
@@ -976,19 +975,18 @@ export function ReportsPage() {
       {activeScreen === 'catalog' ? <Errorable error={error} /> : null}
 
       <section className="card stack report-preview-panel print-report-surface" aria-label="report preview" aria-live="polite" aria-busy={loadingMode !== null} hidden={activeScreen !== 'results'}>
-        <div className="report-results-heading report-results-toolbar">
-          <div>
-            <p className="eyebrow">Generated report</p>
-            <h3>{title || 'Report Preview'}</h3>
+        <div className="report-results-toolbar no-print">
+          <div className="report-toolbar-title">
+            <h3>{title || 'Report'}</h3>
             <p className="muted">
               {mode
                 ? `${rows.length} visible row${rows.length === 1 ? '' : 's'} loaded for review.`
                 : 'Run a report from the hub to load export-friendly rows here.'}
             </p>
           </div>
-          <div className="row report-result-actions no-print">
+          <div className="row report-result-actions">
             <button type="button" className="secondary-button" onClick={() => setActiveScreen('catalog')}>
-              Back to report catalog
+              Report catalog
             </button>
             {mode ? (
               <button
@@ -1003,20 +1001,25 @@ export function ReportsPage() {
               </button>
             ) : null}
             {hasRows ? (
+              <button type="button" className="secondary-button" onClick={() => window.print()}>
+                Print
+              </button>
+            ) : null}
+            {hasRows ? (
               <button type="button" className="secondary-button" onClick={downloadPdf}>
                 Download PDF
               </button>
             ) : null}
             {hasRows ? (
               <a className="button-link" href={csvHref} download={csvFileName(title, generatedFileDate)}>
-                Export loaded rows as CSV
+                Export CSV
               </a>
             ) : null}
           </div>
         </div>
         {mode ? (
           <div className="report-document-head">
-            <div className="report-company-branding" aria-label="report company header">
+            <div className="report-letterhead" aria-label="report company header">
               {companyLogoUrl ? (
                 <img src={companyLogoUrl} alt={`${companyConfiguration.companyName} logo`} />
               ) : (
@@ -1028,7 +1031,6 @@ export function ReportsPage() {
               </div>
             </div>
             <div className="report-report-heading" aria-label="report summary">
-              <p className="eyebrow">Manager/Admin Report</p>
               <h2>{title}</h2>
               <p className="report-print-subtitle">{reportDescriptions[mode]}</p>
               <div className="report-report-metrics" aria-label="generated report metadata">
@@ -1039,8 +1041,6 @@ export function ReportsPage() {
                 <div>
                   <span>Rows</span>
                   <strong>{rows.length}</strong>
-                </div>
-                <div>
                 </div>
               </div>
             </div>

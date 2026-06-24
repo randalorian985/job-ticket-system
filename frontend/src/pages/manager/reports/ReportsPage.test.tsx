@@ -68,7 +68,7 @@ vi.mock('../../../utils/reportPdf', () => ({
 }))
 
 const readCsvFromExportLink = () => {
-  const href = screen.getByRole('link', { name: 'Export loaded rows as CSV' }).getAttribute('href') ?? ''
+  const href = screen.getByRole('link', { name: 'Export CSV' }).getAttribute('href') ?? ''
   return decodeURIComponent(href.replace('data:text/csv;charset=utf-8,', ''))
 }
 
@@ -154,7 +154,7 @@ describe('ReportsPage', () => {
     expect(screen.getByRole('heading', { name: 'Reports' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'report preview' })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'report catalog' })).toBeInTheDocument()
-    expect(screen.getByText(/Run reports from this panel, then export CSV or PDF after rows load/i)).toBeInTheDocument()
+    expect(screen.getByText(/Run reports from this panel, then export to CSV or PDF/i)).toBeInTheDocument()
     expect(screen.queryByText('Report group')).not.toBeInTheDocument()
     expect(screen.queryByText(/3 reports/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/2 reports/i)).not.toBeInTheDocument()
@@ -203,7 +203,7 @@ describe('ReportsPage', () => {
     fireEvent.click(within(laborByJobCard).getByRole('button', { name: 'Run Labor by Job' }))
 
     expect(await screen.findByRole('link', { name: 'JT-2026-000123' })).toHaveAttribute('href', '/manage/job-tickets/job-1')
-    expect(screen.getByRole('button', { name: 'Back to report catalog' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Report catalog' })).toBeInTheDocument()
     expect(screen.getByText('Labor by Job loaded with 1 visible row.')).toBeInTheDocument()
     expect(screen.getByLabelText('generated report metadata')).toHaveTextContent(/Generated\s*.*Rows\s*1/)
     expect(screen.queryByText('Columns')).not.toBeInTheDocument()
@@ -212,7 +212,7 @@ describe('ReportsPage', () => {
     expect(screen.getByRole('cell', { name: '$300.00' })).toBeInTheDocument()
     expect(screen.getByLabelText('report company header')).toHaveTextContent('Mudbug Digital')
     expect(screen.getByAltText('Mudbug Digital logo')).toHaveAttribute('src', '/branding/mudbug-logo.png')
-    expect(screen.getByText('Manager/Admin Report')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Labor by Job' })).toBeInTheDocument()
     expect(screen.getByText('Applied scope')).toBeInTheDocument()
     expect(screen.getAllByText(/Customer: Acme Service \(ACME\)/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Service location: Acme Service - Plant 4/).length).toBeGreaterThan(0)
@@ -220,14 +220,14 @@ describe('ReportsPage', () => {
     expect(screen.queryByText(/Employee: emp-7/)).not.toBeInTheDocument()
     expect(screen.getAllByText(/Limit: 75/).length).toBeGreaterThan(0)
 
-    const exportLink = screen.getByRole('link', { name: 'Export loaded rows as CSV' })
+    const exportLink = screen.getByRole('link', { name: 'Export CSV' })
     expect(exportLink.getAttribute('download')).toMatch(/^report-labor-by-job-\d{4}-\d{2}-\d{2}\.csv$/)
     fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }))
     expect(downloadReportPdf).toHaveBeenCalledTimes(1)
     expect(downloadReportPdf).toHaveBeenCalledWith(expect.objectContaining({
       brandName: 'Job Ticket System',
       title: 'Labor by Job',
-      description: 'Approved labor totals grouped by job ticket with time-entry labor-rate snapshot values.',
+      description: 'Approved time entries grouped by job ticket, with hours and billable totals for each assignment.',
       fileName: expect.stringMatching(/^report-labor-by-job-\d{4}-\d{2}-\d{2}\.pdf$/)
     }))
 
@@ -278,7 +278,7 @@ describe('ReportsPage', () => {
     resolveReport([])
 
     expect(await screen.findByText('No rows match the current report and filters. Adjust the filters or selected record, then run the report again.')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Export CSV' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Print / Save PDF' })).not.toBeInTheDocument()
   })
 
@@ -300,7 +300,7 @@ describe('ReportsPage', () => {
 
     expect(screen.getByText('Select a job ticket before running Invoice-ready Summary.')).toBeInTheDocument()
     expect(reportsApi.getInvoiceReadySummary).not.toHaveBeenCalled()
-    expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Export CSV' })).not.toBeInTheDocument()
   })
 
   it('keeps every report source dropdown selection independent', async () => {
@@ -400,7 +400,7 @@ describe('ReportsPage', () => {
 
     expect(await screen.findByText('From date must be on or before the to date.')).toBeInTheDocument()
     expect(reportsApi.getLaborByJob).not.toHaveBeenCalled()
-    expect(screen.queryByRole('link', { name: 'Export loaded rows as CSV' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Export CSV' })).not.toBeInTheDocument()
   })
 
   it('keeps invoice-ready reporting aligned with the implemented API response and export columns', async () => {
