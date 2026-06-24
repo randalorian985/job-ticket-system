@@ -105,7 +105,7 @@ const ticketEditorSections: Array<{
   { value: 'relationships', label: 'Customer & Service Equipment', description: 'Customer, location, billing party, and the crane/equipment being serviced.' },
   { value: 'scope', label: 'Scope & Notes', description: 'Job description, internal notes, and customer notes.' },
   { value: 'billing', label: 'Billing', description: 'Purchase order and billing contact details.' },
-  { value: 'schedule', label: 'Schedule', description: 'Requested, scheduled, and due dates.' }
+  { value: 'schedule', label: 'Schedule', description: 'Requested, scheduled, and due dates. Assign technicians after ticket creation.' }
 ]
 
 const activeDispatchStatuses = new Set([2, 3, 4, 5, 6])
@@ -498,7 +498,7 @@ export function JobTicketEditorForm({
     },
     {
       value: 'schedule',
-      label: 'Schedule / assign tech',
+      label: 'Schedule',
       section: 'schedule',
       isReady: Boolean(form.scheduledStartAtUtc && form.dueAtUtc),
       detail: form.scheduledStartAtUtc && form.dueAtUtc ? 'Schedule ready' : 'Set schedule and due date'
@@ -934,12 +934,12 @@ export function JobTicketEditorForm({
           ))}
         </div>
       </section>
-      <section className="stack section-edit-readiness" aria-label="assignment and schedule requirements review">
-        <h3>Assignment & Schedule Requirements</h3>
+      <section className="stack section-edit-readiness" aria-label="dispatch readiness requirements review">
+        <h3>Dispatch Readiness Requirements</h3>
         <div className="review-grid">
           <div>
             <span className="muted">Work Readiness</span>
-            <strong>{dispatchOpenItems.length ? 'Needs assignment updates' : 'Ready to work'}</strong>
+            <strong>{dispatchOpenItems.length ? 'Needs schedule updates' : 'Ready to work'}</strong>
           </div>
           <div>
             <span className="muted">Requirements Ready</span>
@@ -952,7 +952,7 @@ export function JobTicketEditorForm({
         </div>
         <p className="muted">Next required update: {nextDispatchFix}</p>
         {dispatchOpenItems.length ? (
-          <ul className="muted" aria-label="assignment and schedule requirement warnings">
+          <ul className="muted" aria-label="dispatch readiness requirement warnings">
             {dispatchOpenItems.map((check) => (
               <li key={check.label}>{check.label}: {check.detail}</li>
             ))}
@@ -1249,6 +1249,7 @@ export function JobTicketEditorForm({
           <div className="section-editor-heading">
             <h3>Schedule</h3>
             <p className="muted">Edit requested, scheduled start, and due dates for work planning.</p>
+            <p className="muted">Technician assignment is completed after ticket creation on the ticket detail page.</p>
           </div>
           <div className="section-editor-grid">
             <label>Requested (UTC)<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>

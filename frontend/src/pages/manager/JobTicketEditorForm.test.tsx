@@ -79,7 +79,7 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
       />
     )
 
-    expect(screen.getByLabelText('assignment and schedule requirements review')).toBeInTheDocument()
+    expect(screen.getByLabelText('dispatch readiness requirements review')).toBeInTheDocument()
     expect(screen.getByText('Ready to work')).toBeInTheDocument()
     expect(screen.getByText('7 / 7')).toBeInTheDocument()
     expect(screen.getByText('Next required update: All assignment and schedule requirements are complete.')).toBeInTheDocument()
@@ -103,7 +103,7 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     expect(screen.getByText('Work status, customer, service location, service equipment choice, schedule, due date, and job instructions are ready.')).toBeInTheDocument()
   })
 
-  it('marks tickets outside active work status as needing assignment review', () => {
+  it('marks tickets outside active work status as needing schedule readiness updates', () => {
     render(
       <JobTicketEditorForm
         initial={{ ...baseTicket, status: 7 }}
@@ -115,7 +115,7 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
       />
     )
 
-    expect(screen.getByText('Needs assignment updates')).toBeInTheDocument()
+    expect(screen.getByText('Needs schedule updates')).toBeInTheDocument()
     expect(screen.getByText('6 / 7')).toBeInTheDocument()
     expect(screen.getByText('Next required update: Move the ticket into an active work status before assignment review.')).toBeInTheDocument()
     expect(screen.getByText('Work status: Move the ticket into an active work status before assignment review.')).toBeInTheDocument()
@@ -142,7 +142,7 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
       />
     )
 
-    expect(screen.getByText('Needs assignment updates')).toBeInTheDocument()
+    expect(screen.getByText('Needs schedule updates')).toBeInTheDocument()
     expect(screen.getByText('4 / 7')).toBeInTheDocument()
     expect(screen.getByText('Next required update: Set a scheduled start before work starts.')).toBeInTheDocument()
     expect(screen.getByText('Scheduled start: Set a scheduled start before work starts.')).toBeInTheDocument()
