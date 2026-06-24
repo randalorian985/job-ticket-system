@@ -3663,23 +3663,25 @@ td {
 
 .ticket-create-step-active small,
 .ticket-create-step-active span {
-  color: #e2e8f0;
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
 }
 
 .ticket-create-step-active span {
-  color: #ffffff;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .ticket-create-step-active:hover span,
 .ticket-create-step-active:focus-visible span {
-  color: #ffffff;
-  -webkit-text-fill-color: #ffffff;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .ticket-create-step-active:hover small,
 .ticket-create-step-active:focus-visible small {
-  color: #e2e8f0;
-  -webkit-text-fill-color: #e2e8f0;
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
 }
 
 .copy-helper-row {
@@ -3790,24 +3792,24 @@ td {
 
 .section-editor-nav .section-editor-nav-active span {
   color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .section-editor-nav .section-editor-nav-active small {
   color: #e2e8f0 !important;
-  -webkit-text-fill-color: #e2e8f0;
+  -webkit-text-fill-color: #e2e8f0 !important;
 }
 
 .section-editor-nav .section-editor-nav-active:hover span,
 .section-editor-nav .section-editor-nav-active:focus-visible span {
   color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .section-editor-nav .section-editor-nav-active:hover small,
 .section-editor-nav .section-editor-nav-active:focus-visible small {
   color: #e2e8f0 !important;
-  -webkit-text-fill-color: #e2e8f0;
+  -webkit-text-fill-color: #e2e8f0 !important;
 }
 
 .section-editor-panel {
