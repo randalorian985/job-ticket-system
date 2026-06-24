@@ -1264,7 +1264,7 @@ tbody tr:hover td {
 }
 .assigned-job-card:hover {
   border-color: #b7c8ea;
-  box-shadow: 0 8px 22px rgba(37, 48, 86, 0.08);
+  box-shadow: 0 8px 22px rgba(37, 48, 86, 0.04);
   transform: translateY(-1px);
 }
 
