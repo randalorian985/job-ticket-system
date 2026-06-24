@@ -3528,8 +3528,76 @@ td {
 
 }
 
-/* Manager time approval columns should follow their content instead of reserving empty space. */
+.time-approval-page {
+  gap: 0.75rem;
+}
+
+.time-approval-topbar {
+  align-items: flex-start;
+  border-bottom: 1px solid #e5ebf3;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(16rem, 1fr) minmax(28rem, auto);
+  padding-bottom: 0.75rem;
+}
+
+.time-approval-topbar h2,
+.time-approval-topbar p,
+.time-approval-filter-heading h3,
+.time-approval-filter-heading p,
+.time-approval-queue-heading h3,
+.time-approval-queue-heading p {
+  margin: 0;
+}
+
+.time-approval-filter-panel,
+.time-approval-queue-panel {
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+}
+
+.time-approval-filter-panel {
+  background: #fbfcfe;
+}
+
+.time-approval-filter-heading,
+.time-approval-queue-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.time-approval-filter-grid {
+  align-items: end;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(8.5rem, 0.65fr)) minmax(12rem, 1fr) minmax(12rem, 1fr) minmax(10.5rem, 0.8fr) minmax(13rem, 1.15fr) auto;
+}
+
+.time-approval-filter-grid label {
+  min-width: 0;
+}
+
+.time-approval-filter-grid button {
+  align-self: end;
+  min-height: 2.55rem;
+  white-space: nowrap;
+}
+
+.time-approval-status-line {
+  font-size: 0.86rem;
+  margin-top: -0.25rem;
+}
+
+/* Manager time approval columns should follow their content without leaving a short table in wide panels. */
 .time-approval-table {
+  min-width: 100%;
   table-layout: auto;
   width: max-content;
 }
@@ -3547,35 +3615,47 @@ td {
   white-space: normal;
 }
 
-/* Compact time approval summary shows key metrics in a tight inline row */
 .time-approval-summary {
-  align-items: center;
   display: grid;
-  gap: 0.8rem;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  padding: 0.75rem 0;
+  gap: 0.35rem;
 }
 
 .time-approval-summary > div {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e1e7f0;
+  border-radius: 7px;
+  display: grid;
   gap: 0.2rem;
-  text-align: center;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+}
+
+.time-approval-summary-compact {
+  align-self: start;
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  grid-template-columns: repeat(4, minmax(6rem, 1fr));
+  padding: 0.35rem;
+}
+
+.time-approval-summary-compact .time-approval-summary-primary {
+  background: var(--accent-soft);
+  border-color: #bfcbff;
 }
 
 .time-approval-summary strong {
   color: var(--ink);
-  font-size: 1.4rem;
+  font-size: 1.05rem;
   line-height: 1;
 }
 
 .time-approval-summary span {
   color: var(--muted-ink);
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .time-approval-actions {
@@ -3588,6 +3668,35 @@ td {
 .time-approval-actions .button-link,
 .time-approval-actions button {
   min-height: 2.2rem;
+}
+
+@media (max-width: 1180px) {
+  .time-approval-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .time-approval-filter-grid {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  }
+
+  .time-approval-filter-grid button {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .time-approval-filter-heading,
+  .time-approval-queue-heading {
+    display: grid;
+  }
+
+  .time-approval-summary-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .time-approval-actions {
+    justify-content: flex-start;
+  }
 }
 
 .time-entry-review-panel {

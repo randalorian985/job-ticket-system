@@ -130,21 +130,22 @@ export function TimeApprovalPage() {
   }
 
   return (
-    <section className="card stack">
-      <h2>Time Approval</h2>
-      <p className="muted">Use this order: filter the queue, select pending rows, then approve or edit selected entries.</p>
-      <TimeApprovalFilters employees={employees} jobTickets={jobTickets} filters={filters} loading={loading} onChange={setFilters} onApply={() => void load()} />
-      <Errorable error={error} />
-      {message ? <p className="muted">{message}</p> : null}
-      <div className="time-approval-summary" aria-label="Time review summary">
-        <div><strong>{summary.entries}</strong><span>Total rows</span></div>
-        <div><strong>{summary.pending}</strong><span>Pending</span></div>
-        <div><strong>{summary.approved}</strong><span>Approved</span></div>
-        <div><strong>{summary.rejected}</strong><span>Rejected</span></div>
-        <div><strong>{summary.laborHours.toFixed(2)}</strong><span>Labor hrs</span></div>
-        <div><strong>{summary.billableHours.toFixed(2)}</strong><span>Billable hrs</span></div>
-        <div><strong>{selectedIds.length}</strong><span>Selected</span></div>
+    <section className="card stack time-approval-page">
+      <div className="time-approval-topbar">
+        <div>
+          <h2>Time Approval</h2>
+          <p className="muted">Filter the queue, select pending rows, then approve or edit selected entries.</p>
+        </div>
+        <div className="time-approval-summary time-approval-summary-compact" aria-label="Time review summary">
+          <div className="time-approval-summary-primary"><strong>{summary.pending}</strong><span>Pending</span></div>
+          <div><strong>{summary.laborHours.toFixed(2)}</strong><span>Labor hrs</span></div>
+          <div><strong>{summary.billableHours.toFixed(2)}</strong><span>Billable hrs</span></div>
+          <div><strong>{selectedIds.length}</strong><span>Selected</span></div>
+        </div>
       </div>
+      <Errorable error={error} />
+      {message ? <p className="muted time-approval-status-line">{message}</p> : null}
+      <TimeApprovalFilters employees={employees} jobTickets={jobTickets} filters={filters} loading={loading} onChange={setFilters} onApply={() => void load()} />
       <TimeApprovalQueue
         entries={entries}
         selectedIds={selectedIds}

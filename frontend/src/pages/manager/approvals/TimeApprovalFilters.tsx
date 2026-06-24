@@ -17,14 +17,14 @@ export function TimeApprovalFilters({ employees, jobTickets, filters, loading, o
     onChange({ ...filters, [key]: value })
 
   return (
-    <article className="card stack">
-      <div className="report-results-heading">
+    <section className="time-approval-filter-panel stack" aria-label="Approval queue filters">
+      <div className="time-approval-filter-heading">
         <div>
           <h3>Approval queue filters</h3>
           <p className="muted">Pending entries load automatically. Every filter below is optional.</p>
         </div>
       </div>
-      <div className="report-filters">
+      <div className="time-approval-filter-grid">
         <label>
           Date from
           <input aria-label="Date from" type="date" value={filters.dateFrom} onChange={(event) => update('dateFrom', event.target.value)} />
@@ -68,10 +68,10 @@ export function TimeApprovalFilters({ employees, jobTickets, filters, loading, o
         </label>
         <label>
           Search
-          <input aria-label="Approval queue search" value={filters.search} onChange={(event) => update('search', event.target.value)} placeholder="Search job ticket, customer, site, location…" />
+          <input aria-label="Approval queue search" value={filters.search} onChange={(event) => update('search', event.target.value)} placeholder="Search job ticket, customer, site, location..." />
         </label>
-        <button type="button" onClick={onApply} disabled={loading}>{loading ? 'Loading…' : 'Apply Filters'}</button>
+        <button type="button" onClick={onApply} disabled={loading}>{loading ? 'Loading...' : 'Apply Filters'}</button>
       </div>
-    </article>
+    </section>
   )
 }

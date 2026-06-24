@@ -22,8 +22,8 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
   }
 
   return (
-    <article className="card stack">
-      <div className="report-results-heading">
+    <section className="time-approval-queue-panel stack">
+      <div className="time-approval-queue-heading">
         <div>
           <h3>Time Entry Approval Queue</h3>
           <p className="muted">{entries.length ? `${entries.length} entries match the current filters.` : 'No time entries match the current filters.'}</p>
@@ -31,7 +31,7 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
         <div className="row time-approval-actions">
           {exportHref ? <a className="button-link" href={exportHref} download="time-approval-review.csv">Export visible rows</a> : null}
           <button type="button" disabled={selectedIds.length === 0 || loading} onClick={onBulkApprove}>Approve Selected ({selectedIds.length})</button>
-          {selectedEntry ? <button type="button" disabled={loading} onClick={() => onReview(selectedEntry)}>Review Selected</button> : null}
+          {selectedEntry ? <button type="button" disabled={loading} onClick={() => onReview(selectedEntry)}>Edit Selected</button> : null}
         </div>
       </div>
       {entries.length ? (
@@ -59,19 +59,19 @@ export function TimeApprovalQueue({ entries, selectedIds, loading, onSelectionCh
                 <td>{entry.employeeName}</td>
                 <td>{new Date(entry.startedAtUtc).toLocaleDateString()}</td>
                 <td><strong>{entry.jobTicketNumber}</strong><br /><span className="muted">{entry.jobName}</span></td>
-                <td>{entry.locationName || '—'}</td>
-                <td>{entry.laborType ?? '—'}</td>
+                <td>{entry.locationName || '-'}</td>
+                <td>{entry.laborType ?? '-'}</td>
                 <td>{new Date(entry.startedAtUtc).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</td>
                 <td>{entry.endedAtUtc ? new Date(entry.endedAtUtc).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Open'}</td>
                 <td>{entry.laborHours.toFixed(2)}</td>
                 <td>{entry.billableHours.toFixed(2)}</td>
                 <td>{getApprovalLabel(entry.approvalStatus)}</td>
-                <td>{entry.workSummary || entry.clockInNote || entry.clockOutNote || entry.managerNotes ? '●' : '—'}</td>
+                <td>{entry.workSummary || entry.clockInNote || entry.clockOutNote || entry.managerNotes ? 'Yes' : '-'}</td>
               </tr>
             ))}</tbody>
           </table>
         </div>
       ) : null}
-    </article>
+    </section>
   )
 }
