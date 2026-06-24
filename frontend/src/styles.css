@@ -3631,6 +3631,7 @@ td {
 .ticket-create-step:focus-visible {
   border-color: #7a8eaf;
   box-shadow: 0 0 0 2px rgba(122, 142, 175, 0.2);
+  outline: none;
 }
 
 .ticket-create-step-active {
@@ -3643,7 +3644,8 @@ td {
 .ticket-create-step-active:focus-visible {
   background: #465b7c;
   border-color: #465b7c;
-  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.28);
+  box-shadow: 0 0 0 1px rgba(226, 232, 240, 0.45);
+  outline: none;
 }
 
 .ticket-create-step span {
@@ -3741,6 +3743,7 @@ td {
 .section-editor-nav button:focus-visible {
   border-color: #7a8eaf;
   box-shadow: 0 0 0 2px rgba(122, 142, 175, 0.2);
+  outline: none;
 }
 
 .section-editor-nav-active {
@@ -3753,7 +3756,8 @@ td {
 .section-editor-nav .section-editor-nav-active:focus-visible {
   background: #465b7c !important;
   border-color: #465b7c !important;
-  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.28);
+  box-shadow: 0 0 0 1px rgba(226, 232, 240, 0.45);
+  outline: none;
 }
 
 .section-editor-nav span {
