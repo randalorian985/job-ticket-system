@@ -260,17 +260,20 @@ export function CustomersPage() {
             {billingPartyOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
           </select>
         </label>
-        <p className="muted">Use this when tickets should default to another customer for billing. Leave it blank to bill this customer directly.</p>
-        <p className="muted">Current billing setup: {billingPartySummary}</p>
-        <div className="row">
-          <label>Billing address<input placeholder="Billing address" value={draft.billingAddressLine1 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine1: e.target.value })} /></label>
-          <label>Address line 2<input placeholder="Address line 2" value={draft.billingAddressLine2 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine2: e.target.value })} /></label>
-        </div>
-        <div className="row">
-          <label>City<input placeholder="City" value={draft.billingCity ?? ''} onChange={(e) => setDraft({ ...draft, billingCity: e.target.value })} /></label>
-          <label>State<input placeholder="State" value={draft.billingState ?? ''} onChange={(e) => setDraft({ ...draft, billingState: e.target.value })} /></label>
-          <label>ZIP / postal code<input placeholder="ZIP / postal code" value={draft.billingPostalCode ?? ''} onChange={(e) => setDraft({ ...draft, billingPostalCode: e.target.value })} /></label>
-        </div>
+        <p className="muted">{draft.billingPartyCustomerId ? `Invoices will be sent to ${customerNameById(items, draft.billingPartyCustomerId)}.` : 'Invoices will be sent to this customer using the address below.'}</p>
+        {!draft.billingPartyCustomerId ? (
+          <>
+            <div className="row">
+              <label>Billing address<input placeholder="Billing address" value={draft.billingAddressLine1 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine1: e.target.value })} /></label>
+              <label>Address line 2<input placeholder="Address line 2" value={draft.billingAddressLine2 ?? ''} onChange={(e) => setDraft({ ...draft, billingAddressLine2: e.target.value })} /></label>
+            </div>
+            <div className="row">
+              <label>City<input placeholder="City" value={draft.billingCity ?? ''} onChange={(e) => setDraft({ ...draft, billingCity: e.target.value })} /></label>
+              <label>State<input placeholder="State" value={draft.billingState ?? ''} onChange={(e) => setDraft({ ...draft, billingState: e.target.value })} /></label>
+              <label>ZIP / postal code<input placeholder="ZIP / postal code" value={draft.billingPostalCode ?? ''} onChange={(e) => setDraft({ ...draft, billingPostalCode: e.target.value })} /></label>
+            </div>
+          </>
+        ) : null}
         {editId ? <p className="muted">Editing customer. Save changes or return to the customer list.</p> : null}
         <div className="row">
           <button type="submit">{editId ? 'Save Customer' : 'Create Customer'}</button>
