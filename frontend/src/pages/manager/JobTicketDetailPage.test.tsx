@@ -652,7 +652,7 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    fireEvent.click(screen.getByText('Print Review'))
+    fireEvent.click(screen.getByRole('button', { name: /print (job )?review/i }))
 
     expect(window.print).toHaveBeenCalled()
   })
