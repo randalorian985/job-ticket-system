@@ -81,6 +81,39 @@ export function JobDetailPage() {
   const [isClocking, setIsClocking] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
+  // Restore part form from localStorage on mount
+  useEffect(() => {
+    const partFormKey = `part-form-${jobTicketId}`
+    const savedForm = localStorage.getItem(partFormKey)
+    if (savedForm) {
+      try {
+        const parsed = JSON.parse(savedForm)
+        setPartRequestDescription(parsed.description || '')
+        setPartRequestQuantity(parsed.quantity || '1')
+        setPartRequestNotes(parsed.notes || '')
+        setPartNeedsOrdered(parsed.needsOrdered ?? true)
+        setPartRequestUrgency(parsed.urgency || '')
+        setPartRequestNeededBy(parsed.neededBy || '')
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, [jobTicketId])
+
+  // Persist part form to localStorage whenever it changes
+  useEffect(() => {
+    const partFormKey = `part-form-${jobTicketId}`
+    const formState = {
+      description: partRequestDescription,
+      quantity: partRequestQuantity,
+      notes: partRequestNotes,
+      needsOrdered: partNeedsOrdered,
+      urgency: partRequestUrgency,
+      neededBy: partRequestNeededBy
+    }
+    localStorage.setItem(partFormKey, JSON.stringify(formState))
+  }, [jobTicketId, partRequestDescription, partRequestQuantity, partRequestNotes, partNeedsOrdered, partRequestUrgency, partRequestNeededBy])
+
   const selectedPart = useMemo(
     () => partLookupItems.find((part) => part.id === selectedPartId) ?? null,
     [partLookupItems, selectedPartId]
@@ -282,7 +315,17 @@ export function JobDetailPage() {
         return
       }
 
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
+      navigator.geolocation.getCurrentPosition(resolve, (geoError) => {
+        if (geoError.code === 1) {
+          reject(new Error('Location permission denied. Enable location access in your device settings and try again.'))
+        } else if (geoError.code === 3) {
+          reject(new Error('Location request timed out. Check your signal and try again.'))
+        } else if (geoError.code === 2) {
+          reject(new Error('Location unavailable. Check your signal and try again.'))
+        } else {
+          reject(new Error('Unable to determine location. Check your device settings and try again.'))
+        }
+      }, {
         enableHighAccuracy: true,
         timeout: 12000,
         maximumAge: 0
@@ -313,8 +356,10 @@ export function JobDetailPage() {
     } catch (clockError) {
       if (clockError instanceof ApiError) {
         setError(clockError.message)
+      } else if (clockError instanceof Error) {
+        setError(clockError.message)
       } else {
-        setError('Unable to clock in.')
+        setError('Unable to clock in. Check your location settings and try again.')
       }
     } finally {
       setIsClocking(false)
@@ -356,8 +401,10 @@ export function JobDetailPage() {
     } catch (clockError) {
       if (clockError instanceof ApiError) {
         setError(clockError.message)
+      } else if (clockError instanceof Error) {
+        setError(clockError.message)
       } else {
-        setError('Unable to clock out.')
+        setError('Unable to clock out. Check your location settings and try again.')
       }
     } finally {
       setIsClocking(false)
@@ -413,6 +460,19 @@ export function JobDetailPage() {
       return
     }
 
+    // Check for duplicate parts already added
+    const isDuplicate = partsUsed.some((part) => {
+      if (selectedPart) {
+        return part.partId === selectedPart.id && !part.isUnlistedPart
+      }
+      return part.isUnlistedPart && part.partName?.toLowerCase() === partDescription.toLowerCase()
+    })
+
+    if (isDuplicate) {
+      setError(`This part ("${partDescription}") has already been added to this ticket. You can add it again if needed, but double-check that this is intentional.`)
+      return
+    }
+
     setIsSubmittingPartRequest(true)
     setError(null)
     try {
@@ -432,6 +492,7 @@ export function JobDetailPage() {
       setPartRequestNotes('')
       setPartRequestUrgency('')
       setPartRequestNeededBy('')
+      localStorage.removeItem(`part-form-${jobTicketId}`)
       await refreshAfterAction('Part entry saved')
     } catch (saveError) {
       setError(saveError instanceof ApiError ? saveError.message : 'Unable to add or request part.')
@@ -580,7 +641,7 @@ export function JobDetailPage() {
         </p>
         {isClockedIntoAnotherJob ? (
           <p className="warning">
-            You are already clocked into another ticket. <Link to={`/jobs/${openEntry?.jobTicketId}`}>Open active ticket</Link> to clock out before starting this one.
+            ⏱ You are clocked into another ticket. The system enforces one active time entry per tech to keep all your field notes, parts, and photos on the correct ticket. <Link to={`/jobs/${openEntry?.jobTicketId}`}>Open active ticket</Link> to clock out before starting this one.
           </p>
         ) : null}
 
