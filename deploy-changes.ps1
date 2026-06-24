@@ -21,16 +21,16 @@ function Write-Step {
 }
 
 function Invoke-Git {
-	param([string]$Arguments)
-	$output = git $Arguments 2>&1
+	param([string[]]$Arguments)
+	$output = & git @Arguments 2>&1
 	if ($LASTEXITCODE -ne 0) {
-		throw "git $Arguments failed.`n$output"
+	throw "git $($Arguments -join ' ') failed.`n$output"
 	}
 	return $output
 }
 
 Write-Step "Checking local branch and working tree"
-$currentBranch = (Invoke-Git "branch --show-current").Trim()
+$currentBranch = (Invoke-Git @("branch", "--show-current")).Trim()
 if ($currentBranch -ne "main") {
 	throw "You must deploy from main. Current branch: $currentBranch"
 }
@@ -42,10 +42,10 @@ if ($unstagedExit -ne 0 -or $stagedExit -ne 0) {
 }
 
 Write-Step "Checking local sync status against origin/main"
-Invoke-Git "fetch origin main"
-$localHead = (Invoke-Git "rev-parse HEAD").Trim()
-$remoteHead = (Invoke-Git "rev-parse origin/main").Trim()
-$mergeBase = (Invoke-Git "merge-base HEAD origin/main").Trim()
+Invoke-Git @("fetch", "origin", "main")
+$localHead = (Invoke-Git @("rev-parse", "HEAD")).Trim()
+$remoteHead = (Invoke-Git @("rev-parse", "origin/main")).Trim()
+$mergeBase = (Invoke-Git @("merge-base", "HEAD", "origin/main")).Trim()
 
 if ($localHead -ne $remoteHead) {
 	if ($localHead -eq $mergeBase) {
@@ -56,7 +56,7 @@ if ($localHead -ne $remoteHead) {
 	}
 
 	Write-Step "Pushing local main to origin/main"
-	Invoke-Git "push origin main"
+	Invoke-Git @("push", "origin", "main")
 }
 
 Write-Step "Deploying on VPS"
