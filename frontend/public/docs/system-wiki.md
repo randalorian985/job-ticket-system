@@ -4,7 +4,7 @@
 This wiki explains how the Job Ticket System is used by Employees, Managers, and Admins. It is written for client handoff and operations training, not for software development.
 
 ## Consistency Standard
-- Use the same terms, screen names, and workflow order that appear in the live UI and the source docs.
+- Use the same terms, screen names, and workflow order that appear in the live UI and the steering docs.
 - Prefer one label per concept across the wiki so trainers and users see the same model everywhere.
 - If the UI changes a workflow name or section order, update the wiki in the same pass.
 
@@ -36,9 +36,8 @@ For live training, use the [Client Training Checklist](#client-training-checklis
 
 The screenshots below appear again in the workflow sections where they are most relevant:
 
-Last refresh: June 24, 2026 using full-size Chrome captures from the live VPS
-demo environment with pilot/demo accounts (including a refreshed Time Approval capture after queue clarity updates).
-
+Last refresh: June 24, 2026 — full-size Chrome captures from the live VPS demo environment with pilot/demo accounts.
+Screenshots marked *(pending refresh)* reflect UI changes made after the last capture and will be updated in the next scheduled pass.
 | Screen | Screenshot |
 | --- | --- |
 | Login | [login.png](assets/system-wiki/login.png) |
@@ -57,11 +56,11 @@ demo environment with pilot/demo accounts (including a refreshed Time Approval c
 | Mobile ticket editor | [ticket-edit-mobile.png](assets/system-wiki/ticket-edit-mobile.png) |
 | Mobile labor workflow | [ticket-labor-mobile.png](assets/system-wiki/ticket-labor-mobile.png) |
 | Mobile parts workflow | [ticket-parts-mobile.png](assets/system-wiki/ticket-parts-mobile.png) |
-| Time approval | [time-approval.png](assets/system-wiki/time-approval.png) |
+| Time approval | [time-approval.png](assets/system-wiki/time-approval.png) *(pending refresh)* |
 | Parts requests | [part-requests.png](assets/system-wiki/part-requests.png) |
 | Master data customers | [master-data-customers.png](assets/system-wiki/master-data-customers.png) |
 | Purchasing support | [purchasing.png](assets/system-wiki/purchasing.png) |
-| Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) |
+| Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) *(pending refresh)* |
 | Admin users | [admin-users.png](assets/system-wiki/admin-users.png) |
 | Ticket filter configuration | [ticket-status-filters.png](assets/system-wiki/ticket-status-filters.png) |
 
@@ -440,8 +439,13 @@ The wizard stays on the same screen and jumps the user to the relevant form sect
 
 The ticket form includes copy helpers to reduce duplicate typing:
 - **Use customer address** copies customer billing address/contact details into a new job location;
+- **Use selected customer** sets the ticket billing party to the selected customer;
+- **Use job-site customer** sets the billing party from the selected service location's related customer when available;
+- **Use equipment billing customer** sets the billing party from the selected equipment's responsible billing customer when available;
 - **Use billing address** copies the selected billing party contact into ticket billing fields;
 - **Use job-site contact** copies the selected service-location contact into ticket billing fields.
+
+Selecting a customer defaults the billing party to that customer only when no separate billing party has already been chosen. If a manager selects a different billing party, later customer changes preserve that explicit billing override.
 
 Inline data-quality warnings call out cleanup items without blocking the ticket, including missing customer phone, missing job-location ZIP, missing lead tech, and missing due date.
 
@@ -590,7 +594,7 @@ The new workflow keeps editing in the ticket workspace but splits the edit panel
 
 The same assignment and schedule readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
 
-The editor also shows the same ticket create guide used on new tickets, so managers can quickly jump back to customer, billing, job-location, equipment, schedule, or review sections. Copy helpers are available inside relationship and billing sections, and data-quality warnings stay visible while editing.
+The editor also shows the same ticket create guide used on new tickets, so managers can quickly jump back to customer, billing, job-location, equipment, schedule, or review sections. Billing party is treated as its own relationship: it can match the customer, follow the job-site customer, follow the equipment billing customer, or point at any other customer record. Copy helpers are available inside relationship and billing sections, and data-quality warnings stay visible while editing.
 
 ![Section-based ticket editor with assignment and schedule readiness](assets/system-wiki/ticket-section-editor.png)
 
@@ -943,20 +947,20 @@ The purchasing screen shows success and error feedback for create, submit, recei
 
 Reports are Manager/Admin-only.
 
-The reports hub is organized into:
-- invoice/closeout reports;
-- labor/parts reports;
-- service-history reports.
+The reports hub is organized into three sections:
+- **Invoice and Closeout** — review jobs ready for invoicing and pull cost summaries for individual tickets.
+- **Labor and Parts** — review approved time and parts totals by job or employee, ready to export.
+- **Service History** — look up the complete service record for a customer or piece of equipment.
 
 Implemented report types include:
-- invoice-ready summary for a selected job ticket;
-- job cost summary for a selected job ticket;
-- jobs ready to invoice;
-- labor by job;
-- labor by employee;
-- parts by job;
-- customer service history;
-- equipment service history.
+- **Invoice-ready Summary** — invoice-ready totals for a single job ticket: approved labor, parts used, and billable amounts.
+- **Job Cost Summary** — cost breakdown for a single job ticket: approved labor hours, parts used, and running totals.
+- **Jobs Ready to Invoice** — jobs with approved billable activity that are ready for invoice review. Filter by date, customer, status, or billing party.
+- **Labor by Job** — approved time entries grouped by job ticket, with hours and billable totals for each assignment.
+- **Labor by Employee** — approved time entries grouped by employee, showing total hours and billable time per worker.
+- **Parts by Job** — approved parts used on each job, with quantities and billable price totals per ticket.
+- **Customer Service History** — complete service record for a selected customer: all tickets, statuses, and dates.
+- **Equipment Service History** — complete service record for a selected piece of equipment: all tickets, statuses, and dates.
 
 Reports support shared filters where applicable:
 - from date;
@@ -974,25 +978,61 @@ The frontend validates required source selections, date ranges, and paging value
 
 Report inputs are saved per report on the user's browser. For example, changing the selected job ticket on Invoice-ready Summary does not change the selected job ticket on Job Cost Summary. Use **Reset report inputs** to clear saved report defaults and return filters to their standard values.
 
+### Running A Report
+
+Each report card in the catalog shows the report name, a plain-language description of what it returns, and either a source selector or optional filter controls. Click **Run** on a report card to load results.
+
+Once a report loads, the results screen shows:
+- the report toolbar at the top with action buttons;
+- a compact document header showing your company name, report title, description, generated time, row count, and applied scope;
+- the data table.
+
+### Report Toolbar
+
+The report toolbar appears at the top of the results screen and stays hidden when printing:
+- **Report catalog** — return to the report catalog without losing the current results.
+- **Run again** — re-run the same report with the current source and filters.
+- **Print** — open the browser print dialog. The print layout matches the PDF layout (see below).
+- **Download PDF** — generate and download a PDF using the same report data and company branding.
+- **Export CSV** — download the currently loaded rows as a date-stamped CSV file.
+
+Print and export actions only appear when rows are loaded.
+
 ### Report Output
-Generated reports continue to open in a separate results screen within the reports workflow. Report groups use compact sections with consistent run cards, while generated output uses a single bordered preview surface.
+
+Generated report results open in a results screen within the reports workflow.
 
 From generated report results, users can:
-- review report metadata, including visible row count, visible column count, generated time, and applied scope;
+- review the generated time, row count, and applied scope in the compact document header;
 - review rows in an export-friendly table;
 - run the same report again with the current source and filters;
 - export currently loaded rows to a date-stamped CSV file;
-- use browser print/save-PDF output where rows are available.
+- print with the browser print dialog;
+- download a PDF.
+
+### Print And PDF Output
+
+Both the browser **Print** button and **Download PDF** produce output in the same layout:
+- company brand name in teal as a small eyebrow;
+- company name and contact details;
+- report title (large);
+- report description;
+- three metadata boxes: Generated date, Row count, and Column count;
+- a divider line;
+- Applied scope summary;
+- data table with a teal/green header row and alternating row backgrounds;
+- footer on each page showing the brand name, report title, and page number.
+
+Company Configuration name, logo, address, phone, email, and website appear in print and PDF headers when saved.
+
+Empty reports do not expose Print or Download PDF actions.
 
 Important reporting boundaries:
-- PDF output uses the browser print dialog.
-- CSV export is generated in the browser from currently loaded rows and includes report metadata at the top of the file.
-- Company Configuration name, logo, address, phone, email, and website appear in report print/save-PDF headers and CSV metadata when saved.
-- Empty reports do not expose CSV or print/save-PDF actions.
 - The system does not generate invoices.
 - The system does not collect payments.
 - The system does not provide a customer portal.
 - The system does not run server-side reporting jobs.
+- CSV export is generated in the browser from currently loaded rows and includes report metadata at the top of the file.
 
 ### Future Service Estimate / Quote Export Direction
 
@@ -1026,7 +1066,24 @@ Admins can manage:
 - phone, email, and website;
 - address;
 - company logo;
-- primary, secondary, and accent colors.
+- primary, secondary, and accent brand colors.
+
+### Color Settings
+
+Three base colors are configurable:
+- **Primary** — used for buttons, headers, and navigation.
+- **Secondary** — used for active navigation link text and secondary button hover states.
+- **Accent** — used for success indicators, ready badges, and approve buttons.
+
+The live palette preview on the right side of the Company Configuration page shows all nine colors that will be applied — the three you set plus six that are automatically derived from them:
+- **Brand hover** — slightly darker shade of Primary, used for button hover and focus states.
+- **Brand soft** — very light tint of Primary, used for navigation hover backgrounds.
+- **Text on primary** — automatically chosen as black or white for readable text on Primary-colored buttons.
+- **Nav active** — darker shade of Primary, used for the active navigation link background.
+- **Nav active bg** — very light tint of Primary, used behind the active navigation link.
+- **Accent hover** — darker shade of Accent, used for approve and success button hover states.
+
+The derived colors update live as you change the base colors. Review all nine swatches before saving so you can catch any contrast or readability issues. If a derived color looks wrong, adjust the corresponding base color (Primary or Accent) and the derived colors will update automatically.
 
 Company Configuration is used by:
 - the login screen brand area;
