@@ -31,6 +31,8 @@ For live training, use the [Client Training Checklist](#client-training-checklis
 
 The screenshots below appear again in the workflow sections where they are most relevant:
 
+Last refresh: June 24, 2026 using full-size Chrome captures from the live VPS
+demo environment with pilot/demo accounts.
 | Screen | Screenshot |
 | --- | --- |
 | Login | [login.png](assets/system-wiki/login.png) |

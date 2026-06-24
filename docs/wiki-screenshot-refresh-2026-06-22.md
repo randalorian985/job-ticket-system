@@ -35,6 +35,16 @@ Refresh these wiki assets from the approved preview environment or from the VPS 
 - Refresh `job-ticket-queue.png` so the compact list shows the reduced row columns: ticket with badges, customer/location, lead/team, readiness, timing, and **Open Ticket**.
 - No new Dispatch screenshots are needed because assignment and schedule remain part of Job Tickets.
 
+## June 24, 2026 Full-Size Chrome Capture Note
+
+- All wiki screenshot assets were re-captured through Chrome automation from the live VPS deployment.
+- Desktop screenshots now use full-size captures (1920px-wide baseline with full-page height as needed).
+- Mobile workflow screenshots were re-captured with a phone viewport and full-page height.
+- Both screenshot directories were updated with matching files:
+	- `docs/assets/system-wiki/*.png`
+	- `frontend/public/docs/assets/system-wiki/*.png`
+- Capture credentials used pilot/demo accounts only.
+
 ## Guardrails
 
 - Capture screenshots with demo or pilot data only.
