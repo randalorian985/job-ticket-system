@@ -992,56 +992,75 @@ pre {
   padding: 0.62rem 0.75rem;
 }
 
-.customer-list-item {
+.customer-list-item,
+.service-location-list-item,
+.equipment-list-item {
   align-items: center;
-  grid-template-columns: minmax(14rem, 1.25fr) minmax(9rem, 0.8fr) minmax(11rem, 0.9fr) minmax(13rem, 1.05fr) minmax(13rem, 1.1fr) auto;
   padding: 0.58rem 0.75rem;
 }
 
-.customer-list-item .compact-list-primary {
+.customer-list-item {
+  grid-template-columns: minmax(14rem, 1.25fr) minmax(9rem, 0.8fr) minmax(11rem, 0.9fr) minmax(13rem, 1.05fr) minmax(13rem, 1.1fr) auto;
+}
+
+.service-location-list-item {
+  grid-template-columns: minmax(14rem, 1.25fr) minmax(11rem, 0.9fr) minmax(13rem, 1fr) minmax(14rem, 1.1fr) minmax(9rem, 0.8fr) auto;
+}
+
+.equipment-list-item {
+  grid-template-columns: minmax(14rem, 1.25fr) minmax(12rem, 1fr) minmax(15rem, 1.15fr) minmax(14rem, 1fr) auto;
+}
+
+.customer-list-item .compact-list-primary,
+.service-location-list-item .compact-list-primary,
+.equipment-list-item .compact-list-primary {
   gap: 0.12rem;
   grid-column: auto;
 }
 
-.customer-list-item .master-data-title {
+.customer-list-item .master-data-title,
+.service-location-list-item .master-data-title,
+.equipment-list-item .master-data-title {
   font-size: 0.98rem;
 }
 
-.customer-list-item .compact-list-field {
+.customer-list-item .compact-list-field,
+.service-location-list-item .compact-list-field,
+.equipment-list-item .compact-list-field {
   background: transparent;
   border: 0;
   border-radius: 0;
   padding: 0;
 }
 
-.customer-list-item .compact-list-label {
+.customer-list-item .compact-list-label,
+.service-location-list-item .compact-list-label,
+.equipment-list-item .compact-list-label {
   color: #64748b;
 }
 
-.customer-list-item .compact-list-value {
+.customer-list-item .compact-list-value,
+.service-location-list-item .compact-list-value,
+.equipment-list-item .compact-list-value {
   font-size: 0.84rem;
   line-height: 1.25;
 }
 
-.customer-list-item .compact-list-actions {
+.customer-list-item .compact-list-actions,
+.service-location-list-item .compact-list-actions,
+.equipment-list-item .compact-list-actions {
   align-self: center;
   display: flex;
   gap: 0.35rem;
   min-width: 0;
 }
 
-.customer-list-item .compact-list-actions button {
+.customer-list-item .compact-list-actions button,
+.service-location-list-item .compact-list-actions button,
+.equipment-list-item .compact-list-actions button {
   min-height: 2.1rem;
   padding: 0.34rem 0.65rem;
   width: auto;
-}
-
-.service-location-list-item {
-  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
-}
-
-.equipment-list-item {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
 }
 
 .compact-list-primary {
@@ -1103,6 +1122,7 @@ pre {
 }
 
 .compact-list-address .compact-list-value,
+.service-location-access .compact-list-value,
 .equipment-model .compact-list-value {
   display: -webkit-box;
   line-clamp: 2;
@@ -1518,6 +1538,28 @@ pre {
   padding-top: 0.75rem;
 }
 
+@media (max-width: 1180px) {
+  .service-location-list-item,
+  .equipment-list-item {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .service-location-list-item .compact-list-primary,
+  .equipment-list-item .compact-list-primary {
+    grid-column: 1 / -1;
+  }
+
+  .service-location-list-item .compact-list-actions,
+  .equipment-list-item .compact-list-actions {
+    justify-self: start;
+  }
+
+  .service-location-address,
+  .equipment-model {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 980px) {
   .queue-kpi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1530,11 +1572,15 @@ pre {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .customer-list-item .compact-list-primary {
+  .customer-list-item .compact-list-primary,
+  .service-location-list-item .compact-list-primary,
+  .equipment-list-item .compact-list-primary {
     grid-column: 1 / -1;
   }
 
-  .customer-list-item .compact-list-actions {
+  .customer-list-item .compact-list-actions,
+  .service-location-list-item .compact-list-actions,
+  .equipment-list-item .compact-list-actions {
     justify-self: start;
   }
 
@@ -1593,18 +1639,24 @@ pre {
     grid-template-columns: 1fr;
   }
 
-  .customer-list-item .compact-list-primary {
+  .customer-list-item .compact-list-primary,
+  .service-location-list-item .compact-list-primary,
+  .equipment-list-item .compact-list-primary {
     grid-column: auto;
   }
 
-  .customer-list-item .compact-list-actions {
+  .customer-list-item .compact-list-actions,
+  .service-location-list-item .compact-list-actions,
+  .equipment-list-item .compact-list-actions {
     align-items: stretch;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-self: stretch;
   }
 
-  .customer-list-item .compact-list-actions button {
+  .customer-list-item .compact-list-actions button,
+  .service-location-list-item .compact-list-actions button,
+  .equipment-list-item .compact-list-actions button {
     width: 100%;
   }
 
