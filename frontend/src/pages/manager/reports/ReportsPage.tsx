@@ -7,6 +7,7 @@ import { reportsApi } from '../../../api/reportsApi'
 import { usersApi } from '../../../api/usersApi'
 import { useCompanyBranding } from '../../../features/companyBranding/CompanyBrandingContext'
 import { csvDataUri, escapeCsvValue, toCsv, type CsvColumn } from '../../../utils/csv'
+import { downloadReportPdf, type PdfReportColumn } from '../../../utils/reportPdf'
 import type {
   AssignableEmployeeDto,
   CustomerDto,
@@ -398,6 +399,8 @@ const reportCsvWithMetadata = (
   return [...metadataRows, '', toCsv(rows, columns)].join('\n')
 }
 
+const reportBrandName = 'Job Ticket System'
+
 export function ReportsPage() {
   const {
     configuration: companyConfiguration,
@@ -667,13 +670,21 @@ export function ReportsPage() {
     setSourceSelections((current) => ({ ...current, [reportMode]: value }))
   }
 
-  const printReport = () => {
-    const originalTitle = document.title
-    document.title = `report-${reportSlug(title)}${generatedFileDate ? `-${generatedFileDate}` : ''}`
-    window.print()
-    window.setTimeout(() => {
-      document.title = originalTitle
-    }, 0)
+  const downloadPdf = () => {
+    if (!mode || !hasRows || !generatedAt) return
+
+    downloadReportPdf<ReportRow>({
+      brandName: reportBrandName,
+      companyName: companyConfiguration.companyName,
+      companyDetails: companyReportDetails,
+      title,
+      description: reportDescriptions[mode],
+      generatedAt,
+      filterSummary,
+      fileName: `report-${reportSlug(title)}${generatedFileDate ? `-${generatedFileDate}` : ''}.pdf`,
+      rows,
+      columns: columns as Array<PdfReportColumn<ReportRow>>
+    })
   }
 
   const renderSourceControl = (reportMode: ReportMode) => {
@@ -998,8 +1009,8 @@ export function ReportsPage() {
               </button>
             ) : null}
             {hasRows ? (
-              <button type="button" className="secondary-button" onClick={printReport}>
-                Print / Save PDF
+              <button type="button" className="secondary-button" onClick={downloadPdf}>
+                Download PDF
               </button>
             ) : null}
             {hasRows ? (
@@ -1009,6 +1020,29 @@ export function ReportsPage() {
             ) : null}
           </div>
         </div>
+        {mode ? (
+          <div className="report-print-heading">
+            <div className="report-print-heading-main">
+              <p className="report-print-brand">{reportBrandName}</p>
+              <h2>{title}</h2>
+              <p className="report-print-subtitle">{reportDescriptions[mode]}</p>
+            </div>
+            <div className="report-print-summary" aria-label="report print summary">
+              <div>
+                <span>Generated</span>
+                <strong>{generatedAt ?? 'Pending'}</strong>
+              </div>
+              <div>
+                <span>Rows</span>
+                <strong>{rows.length}</strong>
+              </div>
+              <div>
+                <span>Columns</span>
+                <strong>{columns.length}</strong>
+              </div>
+            </div>
+          </div>
+        ) : null}
         {mode ? (
           <div className="report-result-meta" aria-label="generated report metadata">
             <div>

@@ -6,6 +6,7 @@ import { masterDataApi } from '../../../api/masterDataApi'
 import { renderWithRouter } from '../../../test/renderWithRouter'
 import { reportsApi } from '../../../api/reportsApi'
 import { usersApi } from '../../../api/usersApi'
+import { downloadReportPdf } from '../../../utils/reportPdf'
 import { ReportsPage } from './ReportsPage'
 
 vi.mock('../../../api/jobTicketsApi', () => ({
@@ -60,6 +61,10 @@ vi.mock('../../../features/companyBranding/CompanyBrandingContext', () => ({
       website: 'https://mudbugdigital.test'
     })
   })
+}))
+
+vi.mock('../../../utils/reportPdf', () => ({
+  downloadReportPdf: vi.fn()
 }))
 
 const readCsvFromExportLink = () => {
@@ -216,12 +221,14 @@ describe('ReportsPage', () => {
 
     const exportLink = screen.getByRole('link', { name: 'Export loaded rows as CSV' })
     expect(exportLink.getAttribute('download')).toMatch(/^report-labor-by-job-\d{4}-\d{2}-\d{2}\.csv$/)
-    document.title = 'Job Ticket Management System'
-    vi.mocked(window.print).mockImplementation(() => {
-      expect(document.title).toMatch(/^report-labor-by-job-\d{4}-\d{2}-\d{2}$/)
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Print / Save PDF' }))
-    expect(window.print).toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }))
+    expect(downloadReportPdf).toHaveBeenCalledTimes(1)
+    expect(downloadReportPdf).toHaveBeenCalledWith(expect.objectContaining({
+      brandName: 'Job Ticket System',
+      title: 'Labor by Job',
+      description: 'Approved labor totals grouped by job ticket with time-entry labor-rate snapshot values.',
+      fileName: expect.stringMatching(/^report-labor-by-job-\d{4}-\d{2}-\d{2}\.pdf$/)
+    }))
 
     const csv = readCsvFromExportLink()
     expect(csv).toContain('Company,Mudbug Digital')
