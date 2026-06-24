@@ -1323,22 +1323,34 @@ tbody tr:hover td {
   -webkit-text-fill-color: #ffffff;
 }
 
+.ticket-create-step:not(.ticket-create-step-active):hover,
+.ticket-create-step:not(.ticket-create-step-active):focus-visible,
+.section-editor-nav button:not(.section-editor-nav-active):hover,
+.section-editor-nav button:not(.section-editor-nav-active):focus-visible {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.24) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
 .ticket-create-step.ticket-create-step-active,
 .section-editor-nav button.section-editor-nav-active {
-  background: var(--brand) !important;
-  border-color: var(--brand) !important;
-  color: var(--brand-contrast) !important;
-  -webkit-text-fill-color: var(--brand-contrast) !important;
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
 }
 
 .ticket-create-step.ticket-create-step-active:hover,
 .ticket-create-step.ticket-create-step-active:focus-visible,
 .section-editor-nav button.section-editor-nav-active:hover,
 .section-editor-nav button.section-editor-nav-active:focus-visible {
-  background: var(--brand-strong) !important;
-  border-color: var(--brand-strong) !important;
-  color: var(--brand-contrast) !important;
-  -webkit-text-fill-color: var(--brand-contrast) !important;
+  background: #dbe4ef !important;
+  border-color: #7f91ad !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.24) !important;
 }
 
 .ticket-create-step.ticket-create-step-active span,
@@ -1353,8 +1365,8 @@ tbody tr:hover td {
 .section-editor-nav button.section-editor-nav-active:hover small,
 .section-editor-nav button.section-editor-nav-active:focus-visible span,
 .section-editor-nav button.section-editor-nav-active:focus-visible small {
-  color: var(--brand-contrast) !important;
-  -webkit-text-fill-color: var(--brand-contrast) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
 }
 
 .ticket-recommended-action {
