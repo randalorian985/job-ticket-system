@@ -2410,6 +2410,15 @@ td {
   text-align: left;
 }
 
+.ticket-workflow-path button.ticket-workflow-path-step:hover,
+.ticket-workflow-path button.ticket-workflow-path-step:focus-visible {
+  background: #f8fafc;
+  border-color: #c6d2e1;
+  box-shadow: 0 0 0 2px rgba(122, 142, 175, 0.16);
+  color: #111827;
+  outline: none;
+}
+
 .ticket-workflow-path-step span {
   color: #475569;
   font-size: 0.74rem;
@@ -2417,12 +2426,28 @@ td {
   text-transform: uppercase;
 }
 
+.ticket-workflow-path button.ticket-workflow-path-step:hover span,
+.ticket-workflow-path button.ticket-workflow-path-step:focus-visible span {
+  color: #334155;
+}
+
 .ticket-workflow-path-step strong {
   font-size: 0.95rem;
 }
 
+.ticket-workflow-path button.ticket-workflow-path-step:hover strong,
+.ticket-workflow-path button.ticket-workflow-path-step:focus-visible strong {
+  color: #111827;
+}
+
 .ticket-workflow-path-ready {
   border-color: #9bd0b5;
+}
+
+.ticket-workflow-path button.ticket-workflow-path-ready:hover,
+.ticket-workflow-path button.ticket-workflow-path-ready:focus-visible {
+  background: #f2fbf6;
+  border-color: #84c0a0;
 }
 
 .ticket-workflow-path-open {
@@ -2430,9 +2455,21 @@ td {
   border-color: #e3bf69;
 }
 
+.ticket-workflow-path button.ticket-workflow-path-open:hover,
+.ticket-workflow-path button.ticket-workflow-path-open:focus-visible {
+  background: #fff4de;
+  border-color: #d8b057;
+}
+
 .ticket-workflow-path-alert {
   background: #fff4f6;
   border-color: #e6a6b2;
+}
+
+.ticket-workflow-path button.ticket-workflow-path-alert:hover,
+.ticket-workflow-path button.ticket-workflow-path-alert:focus-visible {
+  background: #ffecef;
+  border-color: #db95a2;
 }
 
 .ticket-mobile-quick-actions {

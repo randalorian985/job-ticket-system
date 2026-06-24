@@ -322,9 +322,18 @@ td button {
 
 .manager-primary-links .active-nav-link,
 .manager-nav-menu-panel .active-nav-link {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: var(--brand-contrast);
+  background: #e8edf7;
+  border-color: #a9b9d3;
+  color: #172033;
+}
+
+.manager-primary-links .active-nav-link:hover,
+.manager-primary-links .active-nav-link:focus-visible,
+.manager-nav-menu-panel .active-nav-link:hover,
+.manager-nav-menu-panel .active-nav-link:focus-visible {
+  background: #e1e8f4;
+  border-color: #9fb0cc;
+  color: #172033;
 }
 
 .manager-nav-menu {
