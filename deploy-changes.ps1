@@ -4,7 +4,12 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Split-Path -Parent $MyInvocation.MyCommandPath
+$scriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
+if (-not $scriptPath) {
+	throw "Unable to determine script path. Run deploy-changes.ps1 from the repository root."
+}
+
+$repoRoot = Split-Path -Parent $scriptPath
 Set-Location $repoRoot
 
 $vpsHost = "hal-vps"
