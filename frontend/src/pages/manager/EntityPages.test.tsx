@@ -523,10 +523,10 @@ describe('PartsPage', () => {
     render(<PartsPage />)
     expect(await screen.findByText(/FLT-1/)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Needs attention \(2\)/ }))
-    expect(screen.queryByText(/FLT-1/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Needs details \(2\)/ }))
+    expect(screen.getByText(/FLT-1/)).toBeInTheDocument()
     expect(screen.getByText(/BLT-2/)).toBeInTheDocument()
-    expect(screen.getByText(/KIT-3/)).toBeInTheDocument()
+    expect(screen.queryByText(/KIT-3/)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Unassigned vendor \(1\)/ }))
     expect(screen.queryByText(/BLT-2/)).not.toBeInTheDocument()

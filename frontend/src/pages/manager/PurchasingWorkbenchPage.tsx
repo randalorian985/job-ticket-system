@@ -54,11 +54,10 @@ function toUtcIsoDate(value: string) {
   return value ? `${value}T00:00:00.000Z` : null
 }
 
-function getStockStatus(part: PartDto) {
-  if (part.quantityOnHand <= 0) return 'Out of stock'
-  if (part.quantityOnHand < part.reorderThreshold) return 'Below reorder threshold'
-  if (part.quantityOnHand === part.reorderThreshold) return 'At reorder threshold'
-  return 'Healthy'
+function getCatalogStatus(part: PartDto) {
+  if (!part.vendorId) return 'Missing vendor link'
+  if (!part.description?.trim()) return 'Needs part details'
+  return 'Ready for ticket use'
 }
 
 function createInvoiceState(order?: PurchaseOrderDto | null): InvoiceFormState {
@@ -93,9 +92,9 @@ export function PurchasingWorkbenchPage() {
   const draftCount = useMemo(() => purchaseOrders.filter((order) => order.status === 1).length, [purchaseOrders])
   const archivedCount = useMemo(() => purchaseOrders.filter((order) => order.isArchived).length, [purchaseOrders])
 
-  const reorderCandidates = useMemo(() => activeParts
-    .filter((part) => part.quantityOnHand <= part.reorderThreshold)
-    .map((part) => ({ ...part, manualReorderQuantity: Math.max(part.reorderThreshold - part.quantityOnHand, 1), statusLabel: getStockStatus(part) })), [activeParts])
+  const optionalOrderCandidates = useMemo(() => activeParts
+    .filter((part) => !part.vendorId || !part.description?.trim())
+    .map((part) => ({ ...part, statusLabel: getCatalogStatus(part) })), [activeParts])
 
   const refresh = async () => {
     const [partList, vendorList, orderList] = await Promise.all([
@@ -117,16 +116,16 @@ export function PurchasingWorkbenchPage() {
 
   useEffect(() => {
     if (!form.partId && activeParts.length > 0) {
-      const firstCandidate = reorderCandidates[0] ?? activeParts[0]
+      const firstCandidate = optionalOrderCandidates[0] ?? activeParts[0]
       setForm((current) => ({
         ...current,
         vendorId: current.vendorId || firstCandidate.vendorId || activeVendors[0]?.id || '',
         partId: firstCandidate.id,
-        quantityOrdered: String('manualReorderQuantity' in firstCandidate ? firstCandidate.manualReorderQuantity : 1),
+        quantityOrdered: '1',
         unitCost: String(firstCandidate.unitCost ?? 0)
       }))
     }
-  }, [activeParts, activeVendors, form.partId, reorderCandidates])
+  }, [activeParts, activeVendors, form.partId, optionalOrderCandidates])
 
   const loadOrder = async (id: string) => {
     const order = await purchasingApi.getPurchaseOrder(id)
@@ -282,7 +281,7 @@ export function PurchasingWorkbenchPage() {
     <section className="stack supply-v2-screen">
       <article className="card supply-v2-card">
         <h2>Purchasing Workbench</h2>
-        <p className="muted">Manager/Admin workflow for purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording. Inventory remains hidden until that workflow is completed.</p>
+        <p className="muted">Manager/Admin workflow for purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording. Techs can add parts directly to tickets; order requests remain optional.</p>
         <div className="supply-v2-kpi-grid" aria-label="purchasing summary">
           <div className="supply-v2-kpi-card">
             <span className="muted">Visible POs</span>
@@ -340,7 +339,7 @@ export function PurchasingWorkbenchPage() {
           </label>
           <button type="submit" disabled={busyAction !== null}>{busyAction === 'create' ? 'Creating...' : 'Create purchase order'}</button>
         </form>
-        {selectedPart ? <p className="muted">Selected part status: {getStockStatus(selectedPart)} · on hand {quantityFormatter.format(selectedPart.quantityOnHand)} · reorder threshold {quantityFormatter.format(selectedPart.reorderThreshold)}</p> : null}
+        {selectedPart ? <p className="muted">Selected part status: {getCatalogStatus(selectedPart)} · vendor {selectedPart.vendorId ? 'linked' : 'not linked'} · order requests optional</p> : null}
       </article>
 
       <article className="card supply-v2-card">
@@ -422,10 +421,10 @@ export function PurchasingWorkbenchPage() {
       ) : null}
 
       <article className="card supply-v2-card">
-        <h3>Parts Below Reorder Point</h3>
-        <p className="muted">Reference list only; no replenishment automation or recommendation scoring is performed.</p>
+        <h3>Parts Needing Catalog Cleanup</h3>
+        <p className="muted">Reference list only for optional order-request workflow support; no replenishment automation or recommendation scoring is performed.</p>
         <ul className="supply-reorder-list">
-          {reorderCandidates.map((part) => <li key={part.id} className="supply-reorder-item">{part.partNumber} · {part.name}: {part.statusLabel}, manual reorder quantity {quantityFormatter.format(part.manualReorderQuantity)}</li>)}
+          {optionalOrderCandidates.map((part) => <li key={part.id} className="supply-reorder-item">{part.partNumber} · {part.name}: {part.statusLabel}</li>)}
         </ul>
       </article>
     </section>

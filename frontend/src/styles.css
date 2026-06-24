@@ -885,13 +885,31 @@ pre {
   color: #176341;
 }
 
+.parts-stock-status-ready {
+  background: #e9f8ef;
+  border-color: #b9e3ca;
+  color: #176341;
+}
+
 .parts-stock-status-attention {
   background: #fff5df;
   border-color: #f4d08d;
   color: #8a5d08;
 }
 
+.parts-stock-status-needsDetails {
+  background: #fff5df;
+  border-color: #f4d08d;
+  color: #8a5d08;
+}
+
 .parts-stock-status-out {
+  background: #ffe8e8;
+  border-color: #ecb3b3;
+  color: #992525;
+}
+
+.parts-stock-status-noVendor {
   background: #ffe8e8;
   border-color: #ecb3b3;
   color: #992525;

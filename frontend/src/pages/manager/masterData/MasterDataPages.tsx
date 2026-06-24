@@ -730,37 +730,30 @@ export function EquipmentPage() {
 
 
 type PartsWorkspaceScreen = 'parts' | 'vendors' | 'categories'
-type PartWorkflowFilter = 'all' | 'attention' | 'out' | 'noVendor'
-type PartSortMode = 'priority' | 'partNumber' | 'onHandAsc' | 'onHandDesc'
-type PartInventoryHealth = 'healthy' | 'attention' | 'out'
+type PartWorkflowFilter = 'all' | 'ready' | 'needsDetails' | 'noVendor'
+type PartSortMode = 'workflow' | 'partNumber' | 'name' | 'vendor'
+type PartCatalogReadiness = 'ready' | 'needsDetails' | 'noVendor'
 
-const partQuantityOnHand = (part: PartDto) => Number(part.quantityOnHand ?? 0)
-const partReorderThreshold = (part: PartDto) => Number(part.reorderThreshold ?? 0)
-const partInventoryHealth = (part: PartDto): PartInventoryHealth => {
-  const quantityOnHand = partQuantityOnHand(part)
-  const reorderThreshold = partReorderThreshold(part)
-  if (quantityOnHand <= 0) return 'out'
-  if (reorderThreshold > 0 && quantityOnHand <= reorderThreshold) return 'attention'
-  return 'healthy'
+const partCatalogReadiness = (part: PartDto): PartCatalogReadiness => {
+  if (!part.vendorId) return 'noVendor'
+  if (!part.description?.trim()) return 'needsDetails'
+  return 'ready'
 }
-const partInventoryHealthLabel = (part: PartDto) => {
-  const health = partInventoryHealth(part)
-  if (health === 'out') return 'Out of stock'
-  if (health === 'attention') return 'Needs reorder'
-  return 'Healthy stock'
+const partCatalogReadinessLabel = (part: PartDto) => {
+  const readiness = partCatalogReadiness(part)
+  if (readiness === 'noVendor') return 'Missing vendor link'
+  if (readiness === 'needsDetails') return 'Needs part details'
+  return 'Ready for ticket use'
 }
 const partSortPriorityRank = (part: PartDto) => {
-  const health = partInventoryHealth(part)
-  if (health === 'out') return 0
-  if (health === 'attention') return 1
-  return part.vendorId ? 2 : 3
+  const readiness = partCatalogReadiness(part)
+  if (readiness === 'noVendor') return 0
+  if (readiness === 'needsDetails') return 1
+  return 2
 }
 const partMatchesWorkflowFilter = (part: PartDto, workflowFilter: PartWorkflowFilter) => {
-  if (workflowFilter === 'attention') {
-    const health = partInventoryHealth(part)
-    return health === 'out' || health === 'attention'
-  }
-  if (workflowFilter === 'out') return partInventoryHealth(part) === 'out'
+  if (workflowFilter === 'ready') return partCatalogReadiness(part) === 'ready'
+  if (workflowFilter === 'needsDetails') return partCatalogReadiness(part) === 'needsDetails'
   if (workflowFilter === 'noVendor') return !part.vendorId
   return true
 }
@@ -786,7 +779,7 @@ export function PartsPage() {
   const [partCategoryFilter, setPartCategoryFilter] = useState('')
   const [partVendorFilter, setPartVendorFilter] = useState('')
   const [partWorkflowFilter, setPartWorkflowFilter] = useState<PartWorkflowFilter>('all')
-  const [partSortMode, setPartSortMode] = useState<PartSortMode>('priority')
+  const [partSortMode, setPartSortMode] = useState<PartSortMode>('workflow')
   const [vendorSearch, setVendorSearch] = useState('')
   const [vendorArchiveFilter, setVendorArchiveFilter] = useState<ArchiveFilter>('all')
   const [categorySearch, setCategorySearch] = useState('')
@@ -828,39 +821,31 @@ export function PartsPage() {
     const scopedParts = filteredPartsBeforeWorkflow.filter((part) => partMatchesWorkflowFilter(part, partWorkflowFilter))
     return [...scopedParts].sort((left, right) => {
       if (partSortMode === 'partNumber') return left.partNumber.localeCompare(right.partNumber)
-      if (partSortMode === 'onHandAsc') return partQuantityOnHand(left) - partQuantityOnHand(right)
-      if (partSortMode === 'onHandDesc') return partQuantityOnHand(right) - partQuantityOnHand(left)
+      if (partSortMode === 'name') return left.name.localeCompare(right.name)
+      if (partSortMode === 'vendor') return vendorNameById(vendors, left.vendorId).localeCompare(vendorNameById(vendors, right.vendorId))
 
       const priorityDifference = partSortPriorityRank(left) - partSortPriorityRank(right)
       if (priorityDifference !== 0) return priorityDifference
 
-      if (partSortPriorityRank(left) <= 1) {
-        const thresholdGapDifference = (partQuantityOnHand(left) - partReorderThreshold(left)) - (partQuantityOnHand(right) - partReorderThreshold(right))
-        if (thresholdGapDifference !== 0) return thresholdGapDifference
-      }
-
       return left.partNumber.localeCompare(right.partNumber)
     })
-  }, [filteredPartsBeforeWorkflow, partWorkflowFilter, partSortMode])
+  }, [filteredPartsBeforeWorkflow, partWorkflowFilter, partSortMode, vendors])
   const partWorkflowCounts = useMemo(() => {
-    let healthy = 0
-    let attention = 0
-    let out = 0
+    let ready = 0
+    let needsDetails = 0
     let noVendor = 0
 
     for (const part of filteredPartsBeforeWorkflow) {
-      const health = partInventoryHealth(part)
-      if (health === 'healthy') healthy += 1
-      else if (health === 'attention') attention += 1
-      else out += 1
+      const readiness = partCatalogReadiness(part)
+      if (readiness === 'ready') ready += 1
+      else if (readiness === 'needsDetails') needsDetails += 1
       if (!part.vendorId) noVendor += 1
     }
 
     return {
       total: filteredPartsBeforeWorkflow.length,
-      healthy,
-      attention,
-      out,
+      ready,
+      needsDetails,
       noVendor
     }
   }, [filteredPartsBeforeWorkflow])
@@ -1067,41 +1052,41 @@ export function PartsPage() {
             </form>
 
             <div className="stack" hidden={editorOpen}>
-              <div className="supply-v2-kpi-grid" aria-label="parts inventory health summary">
+              <div className="supply-v2-kpi-grid" aria-label="parts catalog readiness summary">
                 <div className="supply-v2-kpi-card">
-                  <span className="muted">Healthy stock</span>
-                  <strong>{partWorkflowCounts.healthy}</strong>
+                  <span className="muted">Ready for ticket use</span>
+                  <strong>{partWorkflowCounts.ready}</strong>
                 </div>
                 <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
-                  <span className="muted">Needs attention</span>
-                  <strong>{partWorkflowCounts.attention}</strong>
-                </div>
-                <div className="supply-v2-kpi-card supply-v2-kpi-card-alert">
-                  <span className="muted">Out of stock</span>
-                  <strong>{partWorkflowCounts.out}</strong>
+                  <span className="muted">Needs details</span>
+                  <strong>{partWorkflowCounts.needsDetails}</strong>
                 </div>
                 <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
                   <span className="muted">Missing vendor</span>
                   <strong>{partWorkflowCounts.noVendor}</strong>
                 </div>
+                <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
+                  <span className="muted">Optional order requests</span>
+                  <strong>Enabled</strong>
+                </div>
               </div>
               <div className="parts-workflow-panel" aria-label="parts workflow">
                 <div className="parts-workflow-chips" role="group" aria-label="parts focus filters">
                   <button type="button" className={partWorkflowFilter === 'all' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setPartWorkflowFilter('all')}>All visible ({partWorkflowCounts.total})</button>
-                  <button type="button" className={partWorkflowFilter === 'attention' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setPartWorkflowFilter('attention')}>Needs attention ({partWorkflowCounts.attention + partWorkflowCounts.out})</button>
-                  <button type="button" className={partWorkflowFilter === 'out' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setPartWorkflowFilter('out')}>Out of stock ({partWorkflowCounts.out})</button>
+                  <button type="button" className={partWorkflowFilter === 'ready' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setPartWorkflowFilter('ready')}>Ready for ticket use ({partWorkflowCounts.ready})</button>
+                  <button type="button" className={partWorkflowFilter === 'needsDetails' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setPartWorkflowFilter('needsDetails')}>Needs details ({partWorkflowCounts.needsDetails})</button>
                   <button type="button" className={partWorkflowFilter === 'noVendor' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setPartWorkflowFilter('noVendor')}>Unassigned vendor ({partWorkflowCounts.noVendor})</button>
                 </div>
                 <label className="parts-workflow-sort">Sort by
                   <select value={partSortMode} onChange={(event) => setPartSortMode(event.target.value as PartSortMode)}>
-                    <option value="priority">Workflow priority</option>
+                    <option value="workflow">Workflow priority</option>
                     <option value="partNumber">Part number (A-Z)</option>
-                    <option value="onHandAsc">On hand (low to high)</option>
-                    <option value="onHandDesc">On hand (high to low)</option>
+                    <option value="name">Name (A-Z)</option>
+                    <option value="vendor">Vendor (A-Z)</option>
                   </select>
                 </label>
               </div>
-              <MasterDataFilters label="parts" search={partSearch} searchPlaceholder="Search by part number, name, category, vendor, or description" archiveFilter={partArchiveFilter} onSearchChange={setPartSearch} onArchiveFilterChange={setPartArchiveFilter} onReset={() => { setPartSearch(''); setPartArchiveFilter('all'); setPartCategoryFilter(''); setPartVendorFilter(''); setPartWorkflowFilter('all'); setPartSortMode('priority') }}>
+              <MasterDataFilters label="parts" search={partSearch} searchPlaceholder="Search by part number, name, category, vendor, or description" archiveFilter={partArchiveFilter} onSearchChange={setPartSearch} onArchiveFilterChange={setPartArchiveFilter} onReset={() => { setPartSearch(''); setPartArchiveFilter('all'); setPartCategoryFilter(''); setPartVendorFilter(''); setPartWorkflowFilter('all'); setPartSortMode('workflow') }}>
                 <label>Category<select value={partCategoryFilter} onChange={(event) => setPartCategoryFilter(event.target.value)}><option value="">All categories</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
                 <label>Vendor<select value={partVendorFilter} onChange={(event) => setPartVendorFilter(event.target.value)}><option value="">All vendors</option>{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select></label>
               </MasterDataFilters>
@@ -1114,10 +1099,11 @@ export function PartsPage() {
                     title={`${part.partNumber} - ${part.name}`}
                     statusArchived={part.isArchived}
                     meta={[
-                      <span className={`parts-stock-status-pill parts-stock-status-${partInventoryHealth(part)}`} key="stock-status">Stock status: {partInventoryHealthLabel(part)}</span>,
+                      <span className={`parts-stock-status-pill parts-stock-status-${partCatalogReadiness(part)}`} key="stock-status">Catalog status: {partCatalogReadinessLabel(part)}</span>,
                       `Category: ${categoryNameById(categories, part.partCategoryId) || 'No category'}`,
                       `Vendor: ${vendorNameById(vendors, part.vendorId) || 'No vendor'}`,
                       part.description ? `Description: ${part.description}` : null,
+                      'Order requests: Optional workflow',
                       `Cost: ${part.unitCost}`,
                       `Price: ${part.unitPrice}`,
                       `On hand: ${part.quantityOnHand ?? 0}`,

@@ -148,7 +148,7 @@ export function PartRequestsPage() {
         <div className="review-heading">
           <div>
             <h2>Parts Request Queue</h2>
-            <p className="muted">Back-office review for ticket parts marked Needs ordered.</p>
+            <p className="muted">Optional back-office review workflow for ticket parts marked Needs ordered.</p>
           </div>
           <div className="supply-v2-kpi-grid" aria-label="parts request summary">
             <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
