@@ -87,8 +87,31 @@ fi
 docker compose --env-file .env.production -f docker-compose.prod.yml build
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 
-curl -fsS --retry 12 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/health
-curl -fsS --retry 12 --retry-delay 2 https://dev.mudbugdigital.com/health
+wait_for_health() {
+	url="$1"
+	name="$2"
+	attempt=1
+	max_attempts=20
+
+	while [ "$attempt" -le "$max_attempts" ]; do
+		if curl -fsS "$url" >/dev/null 2>&1; then
+			echo "$name healthy"
+			curl -fsS "$url"
+			echo
+			return 0
+		fi
+
+		echo "Waiting for $name health ($attempt/$max_attempts)..."
+		sleep 2
+		attempt=$((attempt + 1))
+	done
+
+	echo "$name health check failed after $max_attempts attempts"
+	return 1
+}
+
+wait_for_health "http://127.0.0.1:8080/health" "local"
+wait_for_health "https://dev.mudbugdigital.com/health" "public"
 '@
 
 ($remoteScript -replace "`r", "") | ssh $vpsHost "bash -s"
