@@ -15,6 +15,7 @@ const defaultForm: CreateJobTicketDto = {
   description: null,
   priority: 2,
   status: 1,
+  locationType: 1,
   requestedAtUtc: null,
   scheduledStartAtUtc: null,
   dueAtUtc: null,

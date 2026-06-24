@@ -1104,6 +1104,8 @@ public sealed record CreateJobTicketDto(
     string? BillingContactEmail,
     string? InternalNotes,
     string? CustomerFacingNotes);
+
+public sealed record UpdateJobTicketDto(
     Guid CustomerId,
     Guid ServiceLocationId,
     Guid BillingPartyCustomerId,
@@ -1124,6 +1126,9 @@ public sealed record CreateJobTicketDto(
     string? BillingContactEmail,
     string? InternalNotes,
     string? CustomerFacingNotes);
+
+public sealed record ChangeJobTicketStatusDto(JobTicketStatus Status);
+
 public sealed record ArchiveJobTicketDto(string ArchiveReason);
 
 public sealed record AddJobTicketAssignmentDto(Guid EmployeeId, bool IsLead = false);

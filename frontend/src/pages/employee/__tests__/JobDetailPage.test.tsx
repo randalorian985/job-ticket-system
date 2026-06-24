@@ -78,6 +78,7 @@ const mockJob = (overrides = {}) => {
     description: 'Fix valve leak',
     status: 4,
     priority: 3,
+    locationType: 1,
     customerId: 'customer-1',
     serviceLocationId: 'location-1',
     billingPartyCustomerId: 'customer-1',
@@ -126,6 +127,8 @@ describe('JobDetailPage', () => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
+    localStorage.clear()
+    sessionStorage.clear()
     vi.mocked(partsApi.list).mockResolvedValue([])
   })
 
@@ -336,10 +339,11 @@ describe('JobDetailPage', () => {
 
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Find existing part or enter new part'), 'hyd')
+    await screen.findByRole('option', { name: /HYD-100 - Hydraulic Hose/i })
     await user.selectOptions(screen.getByLabelText('Existing parts match'), 'part-1')
     expect(screen.getByText('Selected existing part: HYD-100 - Hydraulic Hose')).toBeInTheDocument()
-    await user.clear(screen.getByLabelText('Quantity'))
-    await user.type(screen.getByLabelText('Quantity'), '2')
+    await user.clear(screen.getByLabelText('Quantity needed'))
+    await user.type(screen.getByLabelText('Quantity needed'), '2')
     await user.type(screen.getByLabelText('Notes'), 'Need hose at the lift')
     await user.selectOptions(screen.getByLabelText('Urgency'), 'Urgent')
     await user.click(screen.getByRole('button', { name: 'Add / Request Part' }))
@@ -395,6 +399,7 @@ describe('JobDetailPage', () => {
 
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Find existing part or enter new part'), 'hyd')
+    await screen.findByRole('option', { name: /HYD-100 - Hydraulic Hose/i })
     await user.selectOptions(screen.getByLabelText('Existing parts match'), 'part-1')
     expect(screen.getByText('Selected existing part: HYD-100 - Hydraulic Hose')).toBeInTheDocument()
 
@@ -445,6 +450,7 @@ describe('JobDetailPage', () => {
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
 
     const user = userEvent.setup()
+    await user.clear(screen.getByLabelText('Find existing part or enter new part'))
     await user.type(screen.getByLabelText('Find existing part or enter new part'), 'Temporary cap plug')
     await user.click(screen.getByLabelText('Needs ordered'))
     expect(screen.queryByLabelText('Urgency')).not.toBeInTheDocument()

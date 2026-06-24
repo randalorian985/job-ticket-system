@@ -916,6 +916,7 @@ export function JobTicketDetailPage() {
         jobType: job.jobType,
         priority: job.priority,
         status: job.status,
+        locationType: job.locationType,
         requestedAtUtc: job.requestedAtUtc,
         scheduledStartAtUtc: job.scheduledStartAtUtc,
         dueAtUtc: job.dueAtUtc,

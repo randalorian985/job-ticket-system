@@ -339,6 +339,7 @@ public sealed class JobTicketServicesTests
             "Repair",
             JobTicketPriority.Normal,
             JobTicketStatus.Submitted,
+            WorkLocationType.CustomerSite,
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(1),
             DateTime.UtcNow.AddDays(3),
