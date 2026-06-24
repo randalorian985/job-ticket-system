@@ -3595,11 +3595,11 @@ td {
   margin-top: -0.25rem;
 }
 
-/* Manager time approval columns should follow their content without leaving a short table in wide panels. */
+/* Time approval table fills the panel width; columns size to content and the wrapper scrolls horizontally when needed. */
 .time-approval-table {
   min-width: 100%;
   table-layout: auto;
-  width: max-content;
+  width: 100%;
 }
 
 .time-approval-table th,
