@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../api/httpClient'
 import { masterDataApi } from '../../api/masterDataApi'
 import { reportsApi } from '../../api/reportsApi'
@@ -23,6 +23,7 @@ type Props = {
   onCustomerCreated?: (customer: CustomerDto) => void
   onServiceLocationCreated?: (serviceLocation: ServiceLocationDto) => void
   onEquipmentCreated?: (equipment: EquipmentDto) => void
+  scheduleAssignmentPanel?: ReactNode
   submitLabel: string
 }
 
@@ -105,7 +106,7 @@ const ticketEditorSections: Array<{
   { value: 'relationships', label: 'Customer & Service Equipment', description: 'Customer, location, billing party, and the crane/equipment being serviced.' },
   { value: 'scope', label: 'Scope & Notes', description: 'Job description, internal notes, and customer notes.' },
   { value: 'billing', label: 'Billing', description: 'Purchase order and billing contact details.' },
-  { value: 'schedule', label: 'Schedule', description: 'Requested, scheduled, and due dates. Assign technicians after ticket creation.' }
+  { value: 'schedule', label: 'Schedule', description: 'Requested, scheduled, and due dates, with optional technician assignment.' }
 ]
 
 const activeDispatchStatuses = new Set([2, 3, 4, 5, 6])
@@ -316,6 +317,7 @@ export function JobTicketEditorForm({
   onCustomerCreated,
   onServiceLocationCreated,
   onEquipmentCreated,
+  scheduleAssignmentPanel,
   submitLabel
 }: Props) {
   const [form, setForm] = useState<CreateJobTicketDto>(initial)
@@ -1249,13 +1251,13 @@ export function JobTicketEditorForm({
           <div className="section-editor-heading">
             <h3>Schedule</h3>
             <p className="muted">Edit requested, scheduled start, and due dates for work planning.</p>
-            <p className="muted">Technician assignment is completed after ticket creation on the ticket detail page.</p>
           </div>
           <div className="section-editor-grid">
             <label>Requested (UTC)<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
             <label>Scheduled Start (UTC)<input type="datetime-local" value={(form.scheduledStartAtUtc ?? '').slice(0, 16)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
             <label>Due (UTC)<input type="datetime-local" value={(form.dueAtUtc ?? '').slice(0, 16)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
           </div>
+          {scheduleAssignmentPanel}
         </section>
       ) : null}
 

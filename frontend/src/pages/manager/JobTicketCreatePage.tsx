@@ -104,54 +104,60 @@ export function JobTicketCreatePage() {
       <h2>Create Job Ticket</h2>
       {error ? <p className="error">{error}</p> : null}
 
-      <section className="stack" aria-label="optional technician assignment during ticket creation">
-        <h3>Assign Technicians Now (Optional)</h3>
-        <p className="muted">Choose technicians during ticket creation, or leave blank and assign later on the ticket detail page.</p>
-        {assignableEmployees.length === 0 ? (
-          <p className="muted">No assignable technicians are currently available.</p>
-        ) : (
-          <>
-            <div className="stack">
-              {assignableEmployees.map((employee) => {
-                const id = employee.id
-                const displayName = `${employee.firstName} ${employee.lastName}`.trim()
-                return (
-                  <label key={id} className="row">
-                    <input
-                      type="checkbox"
-                      checked={selectedEmployeeIds.includes(id)}
-                      onChange={() => toggleEmployee(id)}
-                    />
-                    <span>{displayName}</span>
-                  </label>
-                )
-              })}
-            </div>
-
-            <label>
-              Lead Technician
-              <select
-                value={leadEmployeeId}
-                onChange={(event) => setLeadEmployeeId(event.target.value)}
-                disabled={selectedEmployeeIds.length === 0}
-              >
-                <option value="">No lead selected</option>
-                {selectedEmployeeIds.map((employeeId) => {
-                  const employee = assignableEmployees.find((item) => item.id === employeeId)
-                  const name = employee ? `${employee.firstName} ${employee.lastName}`.trim() : employeeId
-                  return <option key={employeeId} value={employeeId}>{name}</option>
-                })}
-              </select>
-            </label>
-          </>
-        )}
-      </section>
-
       <JobTicketEditorForm
         initial={defaultForm}
         customers={customers}
         serviceLocations={locations}
         equipment={equipment}
+        scheduleAssignmentPanel={(
+          <section className="quick-add-panel stack" aria-label="optional technician assignment during ticket creation">
+            <h4>Assign Technicians (Optional)</h4>
+            <p className="muted">Set lead and additional technicians now, or leave blank and assign later on the ticket detail page.</p>
+            {selectedEmployeeIds.length ? (
+              <p className="muted">Selected technicians: {selectedEmployeeIds.length}</p>
+            ) : (
+              <p className="muted">No technicians selected yet.</p>
+            )}
+            {assignableEmployees.length === 0 ? (
+              <p className="muted">No assignable technicians are currently available.</p>
+            ) : (
+              <>
+                <div className="stack">
+                  {assignableEmployees.map((employee) => {
+                    const id = employee.id
+                    const displayName = `${employee.firstName} ${employee.lastName}`.trim()
+                    return (
+                      <label key={id} className="row">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmployeeIds.includes(id)}
+                          onChange={() => toggleEmployee(id)}
+                        />
+                        <span>{displayName}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+
+                <label>
+                  Lead Technician
+                  <select
+                    value={leadEmployeeId}
+                    onChange={(event) => setLeadEmployeeId(event.target.value)}
+                    disabled={selectedEmployeeIds.length === 0}
+                  >
+                    <option value="">No lead selected</option>
+                    {selectedEmployeeIds.map((employeeId) => {
+                      const employee = assignableEmployees.find((item) => item.id === employeeId)
+                      const name = employee ? `${employee.firstName} ${employee.lastName}`.trim() : employeeId
+                      return <option key={employeeId} value={employeeId}>{name}</option>
+                    })}
+                  </select>
+                </label>
+              </>
+            )}
+          </section>
+        )}
         onSubmit={onSubmit}
         onServiceLocationCreated={(created) => setLocations((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
         onEquipmentCreated={(created) => setEquipment((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
