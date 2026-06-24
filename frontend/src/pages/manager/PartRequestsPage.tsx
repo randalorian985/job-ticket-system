@@ -48,6 +48,16 @@ export function PartRequestsPage() {
     () => visibleRequests.find((request) => request.id === selectedId) ?? visibleRequests[0] ?? null,
     [visibleRequests, selectedId]
   )
+  const selectedStatusLabel = statusOptions.find((option) => option.value === Number(status))?.label ?? 'Pending'
+  const reviewGuidance = selectedRequest
+    ? Number(status) === JOB_PART_APPROVAL_STATUS.Pending
+      ? 'Pending keeps this request in the active queue until details are finalized.'
+      : Number(status) === JOB_PART_APPROVAL_STATUS.Approved
+        ? partId
+          ? 'Approved with a catalog match. Purchasing and reporting will stay aligned.'
+          : 'Approved without a catalog match. Add one when available for cleaner downstream reporting.'
+        : 'Rejected will close this request from the pending queue while preserving history.'
+    : ''
 
   const focusSummaryLabel =
     focusFilter === 'pending'
@@ -236,6 +246,15 @@ export function PartRequestsPage() {
           <h3>Selected Part Request</h3>
           {selectedRequest ? (
             <>
+              <div className="parts-request-detail-hero" aria-label="selected request review summary">
+                <div>
+                  <p className="parts-request-detail-eyebrow">Now reviewing</p>
+                  <strong>{selectedRequest.partName}</strong>
+                  <span>{selectedRequest.jobTicketTitle}</span>
+                </div>
+                <span className="parts-request-live-status">{selectedStatusLabel}</span>
+              </div>
+              <p className="muted parts-request-guidance">{reviewGuidance}</p>
               <div className="review-grid parts-request-context-grid">
                 <div>
                   <span className="muted">Ticket</span>
@@ -259,49 +278,59 @@ export function PartRequestsPage() {
                 </div>
               </div>
               <form onSubmit={onSubmit} className="stack" aria-label="parts request review form">
-                <label>
-                  Part description
-                  <input value={partDescription} onChange={(event) => setPartDescription(event.target.value)} required />
-                </label>
-                <label>
-                  Catalog part match
-                  <select value={partId} onChange={(event) => setPartId(event.target.value)}>
-                    <option value="">No catalog match yet</option>
-                    {parts.map((part) => (
-                      <option key={part.id} value={part.id}>
-                        {part.partNumber} - {part.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Quantity
-                  <input type="number" min="0.01" step="0.01" value={quantity} onChange={(event) => setQuantity(event.target.value)} required />
-                </label>
-                <label>
-                  Status
-                  <select value={status} onChange={(event) => setStatus(event.target.value)}>
-                    {statusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Internal status notes
-                  <textarea value={internalStatusNotes} onChange={(event) => setInternalStatusNotes(event.target.value)} />
-                </label>
-                <label>
-                  Part cost
-                  <input type="number" min="0" step="0.01" value={unitCostSnapshot} onChange={(event) => setUnitCostSnapshot(event.target.value)} />
-                </label>
-                <label>
-                  Billable price
-                  <input type="number" min="0" step="0.01" value={salePriceSnapshot} onChange={(event) => setSalePriceSnapshot(event.target.value)} />
-                </label>
-                <label className="row supply-inline-checkbox">
-                  <input type="checkbox" checked={isBillable} onChange={(event) => setIsBillable(event.target.checked)} />
-                  Billable after back-office review
-                </label>
+                <section className="parts-request-form-section" aria-label="part matching section">
+                  <h4>Part Matching</h4>
+                  <div className="parts-request-form-grid">
+                    <label className="parts-request-form-span-2">
+                      Part description
+                      <input value={partDescription} onChange={(event) => setPartDescription(event.target.value)} required />
+                    </label>
+                    <label>
+                      Catalog part match
+                      <select value={partId} onChange={(event) => setPartId(event.target.value)}>
+                        <option value="">No catalog match yet</option>
+                        {parts.map((part) => (
+                          <option key={part.id} value={part.id}>
+                            {part.partNumber} - {part.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Quantity
+                      <input type="number" min="0.01" step="0.01" value={quantity} onChange={(event) => setQuantity(event.target.value)} required />
+                    </label>
+                  </div>
+                </section>
+                <section className="parts-request-form-section" aria-label="review decision section">
+                  <h4>Review Decision</h4>
+                  <div className="parts-request-form-grid">
+                    <label>
+                      Status
+                      <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Part cost
+                      <input type="number" min="0" step="0.01" value={unitCostSnapshot} onChange={(event) => setUnitCostSnapshot(event.target.value)} />
+                    </label>
+                    <label>
+                      Billable price
+                      <input type="number" min="0" step="0.01" value={salePriceSnapshot} onChange={(event) => setSalePriceSnapshot(event.target.value)} />
+                    </label>
+                    <label className="row supply-inline-checkbox parts-request-billable-toggle">
+                      <input type="checkbox" checked={isBillable} onChange={(event) => setIsBillable(event.target.checked)} />
+                      Billable after back-office review
+                    </label>
+                    <label className="parts-request-form-span-2">
+                      Internal status notes
+                      <textarea value={internalStatusNotes} onChange={(event) => setInternalStatusNotes(event.target.value)} />
+                    </label>
+                  </div>
+                </section>
                 <div className="parts-request-actions">
                   <p className="muted">Save once details and status are aligned for purchasing or ticket-only handling.</p>
                   <button type="submit" disabled={isSaving}>{isSaving ? 'Saving request...' : 'Save Request Review'}</button>

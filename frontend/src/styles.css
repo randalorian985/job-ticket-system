@@ -2088,6 +2088,100 @@ td {
   border-color: #d8e4f8;
 }
 
+.parts-request-detail-hero {
+  align-items: center;
+  background: linear-gradient(180deg, #f7faff, #eef4ff);
+  border: 1px solid #d8e4fb;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: space-between;
+  padding: 0.75rem;
+}
+
+.parts-request-detail-hero div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.parts-request-detail-hero strong {
+  color: #1d2f64;
+  font-size: 1.03rem;
+}
+
+.parts-request-detail-hero span {
+  color: #475569;
+  overflow-wrap: anywhere;
+}
+
+.parts-request-detail-eyebrow {
+  color: #2d4ca0;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.parts-request-live-status {
+  background: #eaf0ff;
+  border: 1px solid #c8d7fb;
+  border-radius: 999px;
+  color: #20408d;
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 0.45rem 0.65rem;
+}
+
+.parts-request-guidance {
+  margin: 0;
+}
+
+.parts-request-form-section {
+  background: #fbfdff;
+  border: 1px solid #dbe7fa;
+  border-radius: 10px;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem;
+}
+
+.parts-request-form-section h4 {
+  color: #243f85;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.parts-request-form-grid {
+  align-items: start;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.parts-request-form-grid label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.parts-request-form-span-2 {
+  grid-column: span 2;
+}
+
+.parts-request-billable-toggle {
+  align-items: center;
+  background: #f3f7ff;
+  border: 1px solid #d4e0f7;
+  border-radius: 8px;
+  min-height: 2.7rem;
+  padding: 0.4rem 0.55rem;
+}
+
 .parts-request-actions {
   align-items: center;
   background: #f7faff;
@@ -2188,6 +2282,23 @@ td {
   .parts-request-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .parts-request-detail-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .parts-request-live-status {
+    align-self: flex-start;
+  }
+
+  .parts-request-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .parts-request-form-span-2 {
+    grid-column: span 1;
   }
 
   .parts-request-actions button {
