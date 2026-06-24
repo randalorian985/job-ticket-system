@@ -91,7 +91,7 @@ curl -fsS --retry 12 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/h
 curl -fsS --retry 12 --retry-delay 2 https://dev.mudbugdigital.com/health
 '@
 
-$remoteScript | ssh $vpsHost "bash -s"
+($remoteScript -replace "`r", "") | ssh $vpsHost "bash -s"
 if ($LASTEXITCODE -ne 0) {
 	throw "Remote deploy failed."
 }
