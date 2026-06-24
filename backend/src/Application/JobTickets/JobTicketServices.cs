@@ -135,6 +135,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
                 JobType = ValidationHelpers.NullIfWhitespace(request.JobType),
                 Status = request.Status,
                 Priority = request.Priority,
+                LocationType = request.LocationType,
                 RequestedAtUtc = request.RequestedAtUtc,
                 ScheduledStartAtUtc = request.ScheduledStartAtUtc,
                 DueAtUtc = request.DueAtUtc,
@@ -186,6 +187,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         entity.JobType = ValidationHelpers.NullIfWhitespace(request.JobType);
         entity.Status = request.Status;
         entity.Priority = request.Priority;
+        entity.LocationType = request.LocationType;
         entity.RequestedAtUtc = request.RequestedAtUtc;
         entity.ScheduledStartAtUtc = request.ScheduledStartAtUtc;
         entity.DueAtUtc = request.DueAtUtc;
@@ -963,6 +965,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         x.JobType,
         x.Priority,
         x.Status,
+        x.LocationType,
         x.RequestedAtUtc,
         x.ScheduledStartAtUtc,
         x.DueAtUtc,
@@ -1060,6 +1063,7 @@ public sealed record JobTicketDto(
     string? JobType,
     JobTicketPriority Priority,
     JobTicketStatus Status,
+    WorkLocationType LocationType,
     DateTime? RequestedAtUtc,
     DateTime? ScheduledStartAtUtc,
     DateTime? DueAtUtc,
@@ -1089,6 +1093,7 @@ public sealed record CreateJobTicketDto(
     string? JobType,
     JobTicketPriority Priority,
     JobTicketStatus Status,
+    WorkLocationType LocationType,
     DateTime? RequestedAtUtc,
     DateTime? ScheduledStartAtUtc,
     DateTime? DueAtUtc,
@@ -1099,8 +1104,6 @@ public sealed record CreateJobTicketDto(
     string? BillingContactEmail,
     string? InternalNotes,
     string? CustomerFacingNotes);
-
-public sealed record UpdateJobTicketDto(
     Guid CustomerId,
     Guid ServiceLocationId,
     Guid BillingPartyCustomerId,
@@ -1110,6 +1113,7 @@ public sealed record UpdateJobTicketDto(
     string? JobType,
     JobTicketPriority Priority,
     JobTicketStatus Status,
+    WorkLocationType LocationType,
     DateTime? RequestedAtUtc,
     DateTime? ScheduledStartAtUtc,
     DateTime? DueAtUtc,
@@ -1120,8 +1124,6 @@ public sealed record UpdateJobTicketDto(
     string? BillingContactEmail,
     string? InternalNotes,
     string? CustomerFacingNotes);
-
-public sealed record ChangeJobTicketStatusDto(JobTicketStatus Status);
 public sealed record ArchiveJobTicketDto(string ArchiveReason);
 
 public sealed record AddJobTicketAssignmentDto(Guid EmployeeId, bool IsLead = false);

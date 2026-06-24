@@ -8,7 +8,7 @@ import { partsApi } from '../../api/partsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { useAuth } from '../../features/auth/AuthContext'
 import type { JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, PartLookupDto, TimeEntryDto } from '../../types'
-import { getJobTicketPriorityLabel, getJobTicketStatusLabel } from './jobDisplay'
+import { getJobTicketPriorityLabel, getJobTicketStatusLabel, getWorkLocationTypeLabel } from './jobDisplay'
 
 const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
 const activeFieldWorkStatuses = new Set([2, 3, 4, 5, 6])
@@ -569,6 +569,7 @@ export function JobDetailPage() {
           <div><span>Service location</span><strong>{displayRelatedName(job.serviceLocationName, 'Service location unavailable')}</strong></div>
           <div><span>Equipment Being Serviced</span><strong>{job.equipmentId ? displayRelatedName(job.equipmentName, 'Equipment unavailable') : 'See job instructions'}</strong></div>
           <div><span>Priority</span><strong>{getJobTicketPriorityLabel(job.priority)}</strong></div>
+          <div><span>Work Location</span><strong>{getWorkLocationTypeLabel(job.locationType || 1)}</strong></div>
         </div>
         <p className="employee-job-description">{job.description ?? 'No description provided.'}</p>
       </section>
@@ -747,7 +748,7 @@ export function JobDetailPage() {
                 <p className="muted">No match selected; the typed value will be submitted as a new/unlisted part.</p>
               )}
               <label>
-                Quantity
+                Quantity needed
                 <input
                   type="number"
                   min="0.01"
@@ -755,9 +756,11 @@ export function JobDetailPage() {
                   value={partRequestQuantity}
                   onChange={(event) => setPartRequestQuantity(event.target.value)}
                   required
+                  placeholder="Enter quantity (e.g., 2)"
                   disabled={!isClockedIntoThisJob}
                 />
               </label>
+              <p id="quantity-help" className="field-help">How many of this part do you need? You can add the same part multiple times if you need different quantities or want to note them separately.</p>
               <label>
                 Notes
                 <input

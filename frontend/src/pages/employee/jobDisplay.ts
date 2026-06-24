@@ -18,10 +18,20 @@ const jobTicketPriorityLabels: Record<number, string> = {
   4: 'Urgent'
 }
 
+const workLocationTypeLabels: Record<number, string> = {
+  1: 'Customer Site',
+  2: 'Company Shop',
+  3: 'Mixed/Both'
+}
+
 export function getJobTicketStatusLabel(status: number) {
   return jobTicketStatusLabels[status] ?? 'Unknown status'
 }
 
 export function getJobTicketPriorityLabel(priority: number) {
   return jobTicketPriorityLabels[priority] ?? 'Unknown priority'
+}
+
+export function getWorkLocationTypeLabel(locationType: number) {
+  return workLocationTypeLabels[locationType] ?? 'Unknown location type'
 }

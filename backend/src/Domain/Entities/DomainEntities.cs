@@ -227,6 +227,7 @@ public sealed class JobTicket : SoftDeletableEntity
     public string? JobType { get; set; }
     public JobTicketStatus Status { get; set; } = JobTicketStatus.Draft;
     public JobTicketPriority Priority { get; set; } = JobTicketPriority.Normal;
+    public WorkLocationType LocationType { get; set; } = WorkLocationType.CustomerSite;
     public DateTime? RequestedAtUtc { get; set; }
     public DateTime? ScheduledStartAtUtc { get; set; }
     public DateTime? ScheduledEndAtUtc { get; set; }

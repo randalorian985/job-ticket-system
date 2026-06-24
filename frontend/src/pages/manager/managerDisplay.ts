@@ -57,3 +57,9 @@ export const priorityOptions = numberedOptions([
   'High',
   'Urgent'
 ])
+
+export const workLocationTypeOptions = [
+  { value: 1, label: 'Customer Site' },
+  { value: 2, label: 'Company Shop' },
+  { value: 3, label: 'Mixed/Both' }
+]

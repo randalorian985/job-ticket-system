@@ -12,7 +12,7 @@ import type {
   ReportServiceHistoryItemDto,
   ServiceLocationDto
 } from '../../types'
-import { priorityOptions, jobStatusOptions } from './managerDisplay'
+import { priorityOptions, jobStatusOptions, workLocationTypeOptions } from './managerDisplay'
 
 type Props = {
   initial: CreateJobTicketDto
@@ -1018,6 +1018,7 @@ export function JobTicketEditorForm({
           <div className="section-editor-grid">
             <label>Priority<select value={form.priority} onChange={(e) => update('priority', Number(e.target.value))}>{priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
             <label>Status<select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>{jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
+            <label>Work Location<select value={form.locationType || 1} onChange={(e) => update('locationType', Number(e.target.value))}>{workLocationTypeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
           </div>
         </section>
       ) : null}

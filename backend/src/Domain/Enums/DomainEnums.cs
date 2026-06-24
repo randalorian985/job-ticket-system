@@ -135,3 +135,10 @@ public enum InventoryTransactionType
     Receipt = 1,
     ManualAdjustment = 2
 }
+
+public enum WorkLocationType
+{
+    CustomerSite = 1,
+    CompanyShop = 2,
+    Mixed = 3
+}

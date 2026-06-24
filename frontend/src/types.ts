@@ -125,6 +125,7 @@ export type JobTicketDto = {
   jobType?: string | null
   priority: number
   status: number
+  locationType: number
   requestedAtUtc?: string | null
   scheduledStartAtUtc?: string | null
   dueAtUtc?: string | null
@@ -157,6 +158,7 @@ export type CreateJobTicketDto = {
   jobType?: string | null
   priority: number
   status: number
+  locationType: number
   requestedAtUtc?: string | null
   scheduledStartAtUtc?: string | null
   dueAtUtc?: string | null

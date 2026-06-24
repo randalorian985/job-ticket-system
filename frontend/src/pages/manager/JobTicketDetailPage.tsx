@@ -27,6 +27,7 @@ import type {
 import {
   getJobTicketPriorityLabel,
   getJobTicketStatusLabel,
+  getWorkLocationTypeLabel,
 } from "../employee/jobDisplay";
 import {
   formatDate,
@@ -1558,6 +1559,10 @@ export function JobTicketDetailPage() {
                   <div>
                     <span>Priority</span>
                     <strong>{getJobTicketPriorityLabel(job.priority)}</strong>
+                  </div>
+                  <div>
+                    <span>Work Location</span>
+                    <strong>{getWorkLocationTypeLabel(job.locationType || 1)}</strong>
                   </div>
                   <div>
                     <span>Work Readiness</span>
