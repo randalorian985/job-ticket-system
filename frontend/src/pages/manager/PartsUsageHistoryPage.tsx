@@ -16,6 +16,9 @@ export function PartsUsageHistoryPage() {
 
   const activeEquipment = useMemo(() => equipment.filter((item) => !item.isArchived), [equipment])
   const activeParts = useMemo(() => parts.filter((item) => !item.isArchived), [parts])
+  const approvedCount = useMemo(() => history.filter((item) => item.approvalStatus === 2).length, [history])
+  const pendingCount = useMemo(() => history.filter((item) => item.approvalStatus === 1).length, [history])
+  const evidenceTagCount = useMemo(() => history.reduce((sum, item) => sum + item.evidenceTags.length, 0), [history])
 
   const load = async (filters = { equipmentId, partId }) => {
     setIsLoading(true)
@@ -51,13 +54,31 @@ export function PartsUsageHistoryPage() {
   }
 
   return (
-    <section className="stack">
-      <div className="card stack">
+    <section className="stack supply-v2-screen">
+      <div className="card stack supply-v2-card">
         <div>
           <h2>Parts Usage History</h2>
           <p className="muted">
             Visibility-only history for Manager/Admin review. Entries use cautious wording and are not compatibility guarantees or automatic recommendations.
           </p>
+        </div>
+        <div className="supply-v2-kpi-grid" aria-label="parts usage history summary">
+          <div className="supply-v2-kpi-card">
+            <span className="muted">Visible records</span>
+            <strong>{history.length}</strong>
+          </div>
+          <div className="supply-v2-kpi-card supply-v2-kpi-card-ready">
+            <span className="muted">Approved installs</span>
+            <strong>{approvedCount}</strong>
+          </div>
+          <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
+            <span className="muted">Pending review</span>
+            <strong>{pendingCount}</strong>
+          </div>
+          <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
+            <span className="muted">Evidence tags</span>
+            <strong>{evidenceTagCount}</strong>
+          </div>
         </div>
         <form className="row" onSubmit={onSubmit} aria-label="parts usage history filters">
           <label>
@@ -86,18 +107,18 @@ export function PartsUsageHistoryPage() {
       {isLoading ? <p className="muted" role="status">Loading parts usage history…</p> : null}
       {error ? <p className="error">{error}</p> : null}
 
-      <article className="card stack">
+      <article className="card stack supply-v2-card">
         <h3>Historical usage</h3>
         {history.length ? (
-          <ul className="stack">
+          <ul className="stack supply-history-list">
             {history.map((item) => (
-              <li key={item.jobTicketPartId} className="card stack">
-                <div>
+              <li key={item.jobTicketPartId} className="card stack supply-history-item">
+                <div className="supply-history-item-heading">
                   <strong>{item.partNumber} · {item.partName}</strong>
                   <p className="muted">{item.ticketNumber} · Qty {item.quantity} · {getApprovalLabel(item.approvalStatus)} · {formatDate(item.installedAtUtc ?? item.addedAtUtc)}</p>
                   <p className="muted">Equipment: {item.equipmentName ?? (item.equipmentId ? 'Equipment unavailable' : '—')}{item.modelNumber ? ` · Model ${item.modelNumber}` : ''}</p>
                 </div>
-                <div className="inline-links" aria-label={`evidence for ${item.partNumber}`}>
+                <div className="inline-links supply-history-tags" aria-label={`evidence for ${item.partNumber}`}>
                   {item.evidenceTags.map((tag) => <span className="badge" key={tag}>{tag}</span>)}
                 </div>
                 {item.componentCategory ? <p>Component: {item.componentCategory}</p> : null}

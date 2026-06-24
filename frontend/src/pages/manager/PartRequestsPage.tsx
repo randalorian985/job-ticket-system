@@ -22,6 +22,7 @@ export function PartRequestsPage() {
   const [jobTicketId, setJobTicketId] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<number | ''>('')
+  const [focusFilter, setFocusFilter] = useState<'all' | 'pending' | 'unlisted'>('all')
   const [search, setSearch] = useState('')
   const [partDescription, setPartDescription] = useState('')
   const [quantity, setQuantity] = useState('1')
@@ -36,13 +37,17 @@ export function PartRequestsPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
-  const selectedRequest = useMemo(
-    () => requests.find((request) => request.id === selectedId) ?? requests[0] ?? null,
-    [requests, selectedId]
-  )
-
   const openRequests = requests.filter((request) => request.status === JOB_PART_APPROVAL_STATUS.Pending)
   const unlistedRequests = requests.filter((request) => !request.partId)
+  const visibleRequests = useMemo(() => {
+    if (focusFilter === 'pending') return requests.filter((request) => request.status === JOB_PART_APPROVAL_STATUS.Pending)
+    if (focusFilter === 'unlisted') return requests.filter((request) => !request.partId)
+    return requests
+  }, [focusFilter, requests])
+  const selectedRequest = useMemo(
+    () => visibleRequests.find((request) => request.id === selectedId) ?? visibleRequests[0] ?? null,
+    [visibleRequests, selectedId]
+  )
 
   const load = async () => {
     setIsLoading(true)
@@ -138,26 +143,33 @@ export function PartRequestsPage() {
   }
 
   return (
-    <section className="stack">
-      <article className="card stack">
+    <section className="stack supply-v2-screen">
+      <article className="card stack supply-v2-card">
         <div className="review-heading">
           <div>
             <h2>Parts Request Queue</h2>
             <p className="muted">Back-office review for ticket parts marked Needs ordered.</p>
           </div>
-          <div className="review-grid" aria-label="parts request summary">
-            <div>
+          <div className="supply-v2-kpi-grid" aria-label="parts request summary">
+            <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
               <span className="muted">Open Requests</span>
               <strong>{openRequests.length}</strong>
             </div>
-            <div>
+            <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
               <span className="muted">Unlisted Requests</span>
               <strong>{unlistedRequests.length}</strong>
             </div>
-            <div>
+            <div className="supply-v2-kpi-card">
               <span className="muted">Visible Requests</span>
               <strong>{requests.length}</strong>
             </div>
+          </div>
+        </div>
+        <div className="parts-workflow-panel" aria-label="parts queue focus">
+          <div className="parts-workflow-chips" role="group" aria-label="parts request focus filters">
+            <button type="button" className={focusFilter === 'all' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setFocusFilter('all')}>All requests ({requests.length})</button>
+            <button type="button" className={focusFilter === 'pending' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setFocusFilter('pending')}>Pending only ({openRequests.length})</button>
+            <button type="button" className={focusFilter === 'unlisted' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setFocusFilter('unlisted')}>Unlisted only ({unlistedRequests.length})</button>
           </div>
         </div>
         <form onSubmit={onFilterSubmit} className="review-grid" aria-label="parts request queue filters">
@@ -191,21 +203,22 @@ export function PartRequestsPage() {
         {message ? <p>{message}</p> : null}
       </article>
 
-      <div className="manager-workspace-grid">
-        <article className="card stack">
+      <div className="manager-workspace-grid supply-v2-workspace-grid">
+        <article className="card stack supply-v2-card">
           <h3>Requests Awaiting Review</h3>
-          {requests.length ? (
-            <ul>
-              {requests.map((request) => (
-                <li key={request.id}>
+          {visibleRequests.length ? (
+            <ul className="supply-queue-list">
+              {visibleRequests.map((request) => (
+                <li key={request.id} className="supply-queue-list-item">
                   <button
                     type="button"
-                    className={selectedRequest?.id === request.id ? 'secondary-button active-nav-link' : 'secondary-button'}
+                    className={selectedRequest?.id === request.id ? 'secondary-button active-nav-link supply-queue-button' : 'secondary-button supply-queue-button'}
                     onClick={() => setSelectedId(request.id)}
                   >
-                    {request.jobTicketNumber} · {request.partName} · {getApprovalLabel(request.status)}
+                    <span>{request.jobTicketNumber} · {request.partName}</span>
+                    <span className="supply-queue-status">{getApprovalLabel(request.status)}</span>
                   </button>
-                  <div className="muted">Qty {request.quantity} · Needs ordered · Requested {formatDate(request.requestedAtUtc)}</div>
+                  <div className="muted supply-queue-meta">Qty {request.quantity} · Needs ordered · Requested {formatDate(request.requestedAtUtc)}</div>
                 </li>
               ))}
             </ul>
@@ -214,11 +227,11 @@ export function PartRequestsPage() {
           )}
         </article>
 
-        <article className="card stack">
+        <article className="card stack supply-v2-card">
           <h3>Selected Part Request</h3>
           {selectedRequest ? (
             <>
-              <div className="review-grid">
+              <div className="review-grid supply-review-grid">
                 <div>
                   <span className="muted">Ticket</span>
                   <strong>{selectedRequest.jobTicketNumber}</strong>
@@ -280,7 +293,7 @@ export function PartRequestsPage() {
                   Billable price
                   <input type="number" min="0" step="0.01" value={salePriceSnapshot} onChange={(event) => setSalePriceSnapshot(event.target.value)} />
                 </label>
-                <label className="row">
+                <label className="row supply-inline-checkbox">
                   <input type="checkbox" checked={isBillable} onChange={(event) => setIsBillable(event.target.checked)} />
                   Billable after back-office review
                 </label>

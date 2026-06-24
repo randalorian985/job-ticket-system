@@ -990,7 +990,7 @@ export function PartsPage() {
   const activeTitle = activeScreen === 'parts' ? 'Parts' : activeScreen === 'vendors' ? 'Vendors' : 'Part Categories'
 
   return (
-    <section className="stack">
+    <section className="stack supply-v2-screen">
       <nav className="master-data-screen-tabs" aria-label="parts master-data screens">
         <div role="tablist" aria-label="parts workspace">
           {([
@@ -1012,7 +1012,7 @@ export function PartsPage() {
         </div>
       </nav>
 
-      <article className="card stack">
+      <article className="card stack supply-v2-card">
         <div className="report-results-heading">
           <div>
             <h2>{activeTitle}</h2>
@@ -1067,6 +1067,24 @@ export function PartsPage() {
             </form>
 
             <div className="stack" hidden={editorOpen}>
+              <div className="supply-v2-kpi-grid" aria-label="parts inventory health summary">
+                <div className="supply-v2-kpi-card">
+                  <span className="muted">Healthy stock</span>
+                  <strong>{partWorkflowCounts.healthy}</strong>
+                </div>
+                <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
+                  <span className="muted">Needs attention</span>
+                  <strong>{partWorkflowCounts.attention}</strong>
+                </div>
+                <div className="supply-v2-kpi-card supply-v2-kpi-card-alert">
+                  <span className="muted">Out of stock</span>
+                  <strong>{partWorkflowCounts.out}</strong>
+                </div>
+                <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
+                  <span className="muted">Missing vendor</span>
+                  <strong>{partWorkflowCounts.noVendor}</strong>
+                </div>
+              </div>
               <div className="parts-workflow-panel" aria-label="parts workflow">
                 <div className="parts-workflow-chips" role="group" aria-label="parts focus filters">
                   <button type="button" className={partWorkflowFilter === 'all' ? 'parts-workflow-chip-active' : 'secondary-button'} onClick={() => setPartWorkflowFilter('all')}>All visible ({partWorkflowCounts.total})</button>
@@ -1096,7 +1114,7 @@ export function PartsPage() {
                     title={`${part.partNumber} - ${part.name}`}
                     statusArchived={part.isArchived}
                     meta={[
-                      `Stock status: ${partInventoryHealthLabel(part)}`,
+                      <span className={`parts-stock-status-pill parts-stock-status-${partInventoryHealth(part)}`} key="stock-status">Stock status: {partInventoryHealthLabel(part)}</span>,
                       `Category: ${categoryNameById(categories, part.partCategoryId) || 'No category'}`,
                       `Vendor: ${vendorNameById(vendors, part.vendorId) || 'No vendor'}`,
                       part.description ? `Description: ${part.description}` : null,

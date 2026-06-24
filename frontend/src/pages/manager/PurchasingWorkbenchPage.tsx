@@ -89,6 +89,9 @@ export function PurchasingWorkbenchPage() {
   const activeVendors = useMemo(() => vendors.filter((vendor) => !vendor.isArchived), [vendors])
   const activeParts = useMemo(() => parts.filter((part) => !part.isArchived), [parts])
   const selectedPart = activeParts.find((part) => part.id === form.partId)
+  const submittedOrReceivingCount = useMemo(() => purchaseOrders.filter((order) => order.status === 2 || order.status === 3).length, [purchaseOrders])
+  const draftCount = useMemo(() => purchaseOrders.filter((order) => order.status === 1).length, [purchaseOrders])
+  const archivedCount = useMemo(() => purchaseOrders.filter((order) => order.isArchived).length, [purchaseOrders])
 
   const reorderCandidates = useMemo(() => activeParts
     .filter((part) => part.quantityOnHand <= part.reorderThreshold)
@@ -276,15 +279,33 @@ export function PurchasingWorkbenchPage() {
   if (isLoading) return <section className="card"><p>Loading purchasing workflow…</p></section>
 
   return (
-    <section className="stack">
-      <article className="card">
+    <section className="stack supply-v2-screen">
+      <article className="card supply-v2-card">
         <h2>Purchasing Workbench</h2>
         <p className="muted">Manager/Admin workflow for purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording. Inventory remains hidden until that workflow is completed.</p>
+        <div className="supply-v2-kpi-grid" aria-label="purchasing summary">
+          <div className="supply-v2-kpi-card">
+            <span className="muted">Visible POs</span>
+            <strong>{purchaseOrders.length}</strong>
+          </div>
+          <div className="supply-v2-kpi-card supply-v2-kpi-card-review">
+            <span className="muted">Needs receiving</span>
+            <strong>{submittedOrReceivingCount}</strong>
+          </div>
+          <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
+            <span className="muted">Draft POs</span>
+            <strong>{draftCount}</strong>
+          </div>
+          <div className="supply-v2-kpi-card supply-v2-kpi-card-muted">
+            <span className="muted">Archived POs</span>
+            <strong>{archivedCount}</strong>
+          </div>
+        </div>
         {message ? <p role="status" className="success">{message}</p> : null}
         {error ? <p role="alert" className="error">{error}</p> : null}
       </article>
 
-      <article className="card">
+      <article className="card supply-v2-card">
         <h3>Create purchase order</h3>
         <form className="form-grid" onSubmit={submitCreate}>
           <label>Vendor
@@ -322,7 +343,7 @@ export function PurchasingWorkbenchPage() {
         {selectedPart ? <p className="muted">Selected part status: {getStockStatus(selectedPart)} · on hand {quantityFormatter.format(selectedPart.quantityOnHand)} · reorder threshold {quantityFormatter.format(selectedPart.reorderThreshold)}</p> : null}
       </article>
 
-      <article className="card">
+      <article className="card supply-v2-card">
         <h3>Purchase orders</h3>
         <div className="table-wrapper">
           <table>
@@ -345,7 +366,7 @@ export function PurchasingWorkbenchPage() {
       </article>
 
       {selectedOrder ? (
-        <article className="card">
+        <article className="card supply-v2-card">
           <h3>Review {selectedOrder.purchaseOrderNumber}</h3>
           <p><strong>{selectedOrder.vendorName}</strong> · {purchaseOrderStatusLabels[selectedOrder.status]} · Invoice {invoiceStatusLabels[selectedOrder.invoiceStatus]}</p>
           <div className="table-wrapper">
@@ -400,11 +421,11 @@ export function PurchasingWorkbenchPage() {
         </article>
       ) : null}
 
-      <article className="card">
+      <article className="card supply-v2-card">
         <h3>Parts Below Reorder Point</h3>
         <p className="muted">Reference list only; no replenishment automation or recommendation scoring is performed.</p>
-        <ul>
-          {reorderCandidates.map((part) => <li key={part.id}>{part.partNumber} · {part.name}: {part.statusLabel}, manual reorder quantity {quantityFormatter.format(part.manualReorderQuantity)}</li>)}
+        <ul className="supply-reorder-list">
+          {reorderCandidates.map((part) => <li key={part.id} className="supply-reorder-item">{part.partNumber} · {part.name}: {part.statusLabel}, manual reorder quantity {quantityFormatter.format(part.manualReorderQuantity)}</li>)}
         </ul>
       </article>
     </section>
