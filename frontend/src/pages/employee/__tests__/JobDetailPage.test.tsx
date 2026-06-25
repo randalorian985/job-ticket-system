@@ -83,7 +83,6 @@ const mockJob = (overrides = {}) => {
     serviceLocationId: 'location-1',
     billingPartyCustomerId: 'customer-1',
     equipmentId: 'equipment-1',
-    locationType: 1,
     customerName: 'Acme Manufacturing',
     serviceLocationName: 'North Plant',
     billingPartyCustomerName: 'Acme Billing',

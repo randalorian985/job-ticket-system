@@ -31,7 +31,6 @@ const baseTicket: CreateJobTicketDto = {
   jobType: 'Repair',
   priority: 2,
   status: 3,
-  locationType: 1,
   requestedAtUtc: '2026-04-01T08:00:00.000Z',
   scheduledStartAtUtc: '2026-04-02T09:30:00.000Z',
   dueAtUtc: '2026-04-03T17:00:00.000Z',
