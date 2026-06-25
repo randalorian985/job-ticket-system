@@ -14,6 +14,8 @@ const statusOptions = [
 ]
 
 const moneyValue = (value?: number | null) => (Number.isFinite(value) ? String(value) : '0')
+const getCatalogCoverageLabel = (request: PartRequestDto) => (request.partId ? 'Catalog matched' : 'Unlisted part')
+const getOrderModeLabel = (request: PartRequestDto) => (request.needsOrdered ? 'Needs ordered' : 'Ticket part only')
 
 export function PartRequestsPage() {
   const [requests, setRequests] = useState<PartRequestDto[]>([])
@@ -212,7 +214,7 @@ export function PartRequestsPage() {
         </form>
         {isLoading ? <p className="muted" role="status">Loading part requests...</p> : null}
         {error ? <p className="error">{error}</p> : null}
-        {message ? <p>{message}</p> : null}
+        {message ? <p className="success">{message}</p> : null}
       </article>
 
       <div className="manager-workspace-grid parts-request-workspace">
@@ -234,6 +236,10 @@ export function PartRequestsPage() {
                     <span className="supply-queue-status">{getApprovalLabel(request.status)}</span>
                   </button>
                   <div className="muted supply-queue-meta">Qty {request.quantity} · Needs ordered · Requested {formatDate(request.requestedAtUtc)}</div>
+                  <div className="parts-request-queue-tags" aria-label={`${request.jobTicketNumber} request attributes`}>
+                    <span className="parts-request-chip">{getOrderModeLabel(request)}</span>
+                    <span className="parts-request-chip">{getCatalogCoverageLabel(request)}</span>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -257,6 +263,7 @@ export function PartRequestsPage() {
               <div className="parts-request-review-strip" aria-label="selected request details">
                 <span><strong>Status</strong>{getApprovalLabel(selectedRequest.status)}</span>
                 <span><strong>Type</strong>{selectedRequest.needsOrdered ? 'Needs ordered' : 'Ticket part only'}</span>
+                <span><strong>Catalog</strong>{selectedRequest.partId ? 'Catalog matched' : 'Unlisted part'}</span>
                 <span><strong>Qty</strong>{selectedRequest.quantity}</span>
               </div>
               <div className="parts-request-technician-note">

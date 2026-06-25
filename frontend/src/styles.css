@@ -2286,6 +2286,27 @@ td {
   padding: 0 0.2rem;
 }
 
+.parts-request-queue-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.parts-request-chip {
+  align-items: center;
+  background: #f4f7ff;
+  border: 1px solid #d6e1f7;
+  border-radius: 999px;
+  color: #294178;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1;
+  min-height: 1.4rem;
+  padding: 0.18rem 0.48rem;
+}
+
 .parts-request-detail-hero {
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
@@ -2440,6 +2461,36 @@ td {
   margin: 0;
 }
 
+.parts-history-page {
+  gap: 0.85rem;
+}
+
+.parts-history-topbar .review-heading {
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.parts-history-filter-grid {
+  align-items: end;
+}
+
+.parts-history-filter-actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.parts-history-filter-actions p {
+  margin: 0;
+}
+
+.parts-history-results .supply-history-item {
+  border-left: 4px solid #9eb3dd;
+}
+
+.parts-history-open-ticket {
+  width: fit-content;
+}
+
 @media (max-width: 720px) {
   .desktop-shell,
   .mobile-shell {
@@ -2524,6 +2575,14 @@ td {
   .parts-request-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .parts-history-filter-actions {
+    align-items: stretch;
+  }
+
+  .parts-history-filter-actions button {
+    width: 100%;
   }
 
   .parts-request-detail-hero {

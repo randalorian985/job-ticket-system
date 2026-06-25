@@ -145,6 +145,72 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.employee-part-request-form {
+  gap: 0.55rem;
+}
+
+.employee-part-match-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.employee-part-match-pill {
+  align-items: center;
+  background: #f3f7ff;
+  border: 1px solid #cfddf5;
+  border-radius: 999px;
+  color: #264073;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1;
+  min-height: 1.45rem;
+  padding: 0.24rem 0.5rem;
+}
+
+.employee-part-match-selected,
+.employee-part-match-unlisted {
+  margin: 0;
+}
+
+.employee-part-order-toggle {
+  background: var(--surface-panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+}
+
+.employee-parts-used-card {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.employee-parts-used-summary {
+  margin: 0;
+}
+
+.employee-parts-used-list {
+  display: grid;
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.employee-parts-used-item {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-left: 4px solid #7e95cb;
+  border-radius: 8px;
+  padding: 0.6rem 0.65rem;
+}
+
+.employee-parts-used-line {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .employee-action-strip .button-link {
   justify-content: center;
   min-height: 2.55rem;
@@ -364,6 +430,12 @@
   .employee-action-strip,
   .compact-ticket-row {
     grid-template-columns: 1fr;
+  }
+
+  .employee-part-order-toggle {
+    align-items: center;
+    display: flex;
+    gap: 0.4rem;
   }
 
   .compact-ticket-list-header {

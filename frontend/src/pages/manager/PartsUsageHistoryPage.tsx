@@ -54,16 +54,23 @@ export function PartsUsageHistoryPage() {
   }
 
   return (
-    <section className="stack">
-      <div className="card stack">
-        <div>
-          <h2>Parts Usage History</h2>
-          <p className="muted">
-            Visibility-only history for Manager/Admin review. Entries use cautious wording and are not compatibility guarantees or automatic recommendations.
-          </p>
+    <section className="stack parts-history-page">
+      <div className="card stack parts-history-topbar">
+        <div className="review-heading">
+          <div>
+            <h2>Parts Usage History</h2>
+            <p className="muted">
+              Visibility-only history for Manager/Admin review. Entries use cautious wording and are not compatibility guarantees or automatic recommendations.
+            </p>
+          </div>
+          <div className="parts-request-summary-badges" aria-label="parts history summary">
+            <span>{history.length} visible</span>
+            <span>{approvedCount} approved installs</span>
+            <span>{pendingCount} pending review</span>
+            <span>{evidenceTagCount} evidence tags</span>
+          </div>
         </div>
-        <p className="muted">{history.length} visible · {approvedCount} approved installs · {pendingCount} pending review · {evidenceTagCount} evidence tags</p>
-        <form className="row" onSubmit={onSubmit} aria-label="parts usage history filters">
+        <form className="review-grid parts-history-filter-grid" onSubmit={onSubmit} aria-label="parts usage history filters">
           <label>
             Equipment
             <select aria-label="Equipment" value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)}>
@@ -82,7 +89,10 @@ export function PartsUsageHistoryPage() {
               ))}
             </select>
           </label>
-          <button type="submit">Review History</button>
+          <div className="parts-history-filter-actions">
+            <button type="submit">Review History</button>
+            <p className="muted">Use equipment + part together to narrow down repeat repairs before approving new requests.</p>
+          </div>
         </form>
         <p className="muted">Deferred: AI/scoring logic, automatic recommendations, confidence scores, purchasing, vendor cost tracking, and advanced inventory.</p>
       </div>
@@ -90,7 +100,7 @@ export function PartsUsageHistoryPage() {
       {isLoading ? <p className="muted" role="status">Loading parts usage history…</p> : null}
       {error ? <p className="error">{error}</p> : null}
 
-      <article className="card stack">
+      <article className="card stack parts-history-results">
         <h3>Historical usage</h3>
         {history.length ? (
           <ul className="stack supply-history-list">
@@ -108,7 +118,7 @@ export function PartsUsageHistoryPage() {
                 {item.repairDescription ? <p>Repair notes: {item.repairDescription}</p> : null}
                 {item.technicianNotes ? <p>Technician notes: {item.technicianNotes}</p> : null}
                 {item.compatibilityNotes ? <p>Verification notes: {item.compatibilityNotes}</p> : null}
-                <Link to={`/manage/job-tickets/${item.jobTicketId}`}>Open job ticket</Link>
+                <Link className="button-link secondary-link parts-history-open-ticket" to={`/manage/job-tickets/${item.jobTicketId}`}>Open job ticket</Link>
               </li>
             ))}
           </ul>

@@ -713,7 +713,7 @@ export function JobDetailPage() {
           <section id="part-request-panel" className="card stack">
             <h2>Add / Request Part</h2>
             {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
-            <form onSubmit={onSubmitPartRequest} className="stack">
+            <form onSubmit={onSubmitPartRequest} className="stack employee-part-request-form">
               <label>
                 Find existing part or enter new part
                 <input
@@ -742,10 +742,14 @@ export function JobDetailPage() {
                 </select>
               </label>
               <p id="part-match-help" className="field-help">Changing the typed search clears the selected match so the submitted part stays intentional.</p>
+              <div className="employee-part-match-summary" aria-label="part matching context">
+                <span className="employee-part-match-pill">{partLookupMatches.length} suggested matches</span>
+                <span className="employee-part-match-pill">{partsUsed.length} parts already on this ticket</span>
+              </div>
               {selectedPart ? (
-                <p className="muted">Selected existing part: {selectedPart.partNumber} - {selectedPart.name}</p>
+                <p className="muted employee-part-match-selected">Selected existing part: {selectedPart.partNumber} - {selectedPart.name}</p>
               ) : (
-                <p className="muted">No match selected; the typed value will be submitted as a new/unlisted part.</p>
+                <p className="muted employee-part-match-unlisted">No match selected; the typed value will be submitted as a new/unlisted part.</p>
               )}
               <label>
                 Quantity needed
@@ -769,7 +773,7 @@ export function JobDetailPage() {
                   disabled={!isClockedIntoThisJob}
                 />
               </label>
-              <label className="row">
+              <label className="row employee-part-order-toggle">
                 <input type="checkbox" checked={partNeedsOrdered} onChange={(event) => setPartNeedsOrdered(event.target.checked)} disabled={!isClockedIntoThisJob} />
                 Needs ordered
               </label>
@@ -845,17 +849,24 @@ export function JobDetailPage() {
             </ul>
           </section>
 
-          <section className="card">
+          <section className="card employee-parts-used-card">
             <h2>Parts Requests & Usage</h2>
-            <ul>
-              {partsUsed.map((part) => (
-                <li key={part.id}>
-                  {getPartUsedDisplay(part)}
-                  {part.isUnlistedPart ? ' (unlisted)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'} - {getPartRequestContext(part)}
-                  {part.officeOrderRequested && part.officeOrderNotes ? `: ${part.officeOrderNotes}` : ''}
-                </li>
-              ))}
-            </ul>
+            <p className="muted employee-parts-used-summary">{partsUsed.length} part entries linked to this ticket.</p>
+            {partsUsed.length ? (
+              <ul className="employee-parts-used-list">
+                {partsUsed.map((part) => (
+                  <li key={part.id} className="employee-parts-used-item">
+                    <p className="employee-parts-used-line">
+                      {getPartUsedDisplay(part)}
+                      {part.isUnlistedPart ? ' (unlisted)' : ''} - Qty {part.quantity} - {part.notes ?? 'No notes'} - {getPartRequestContext(part)}
+                      {part.officeOrderRequested && part.officeOrderNotes ? `: ${part.officeOrderNotes}` : ''}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">No parts have been added yet.</p>
+            )}
           </section>
 
           <section className="card">
