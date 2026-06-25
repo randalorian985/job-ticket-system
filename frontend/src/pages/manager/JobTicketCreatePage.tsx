@@ -12,6 +12,7 @@ const defaultForm: CreateJobTicketDto = {
   serviceLocationId: '',
   billingPartyCustomerId: '',
   equipmentId: null,
+  locationType: 1,
   title: '',
   description: null,
   priority: 2,

@@ -911,6 +911,7 @@ export function JobTicketDetailPage() {
         serviceLocationId: job.serviceLocationId,
         billingPartyCustomerId: job.billingPartyCustomerId,
         equipmentId: job.equipmentId,
+        locationType: job.locationType ?? 1,
         title: job.title,
         description: job.description,
         jobType: job.jobType,

@@ -25,6 +25,7 @@ const baseTicket: CreateJobTicketDto = {
   serviceLocationId: 's1',
   billingPartyCustomerId: 'c1',
   equipmentId: 'eq1',
+  locationType: 1,
   title: 'Repair pump',
   description: 'Replace seal and test restart.',
   jobType: 'Repair',

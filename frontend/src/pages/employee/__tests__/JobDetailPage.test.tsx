@@ -83,6 +83,7 @@ const mockJob = (overrides = {}) => {
     serviceLocationId: 'location-1',
     billingPartyCustomerId: 'customer-1',
     equipmentId: 'equipment-1',
+    locationType: 1,
     customerName: 'Acme Manufacturing',
     serviceLocationName: 'North Plant',
     billingPartyCustomerName: 'Acme Billing',
@@ -130,6 +131,21 @@ describe('JobDetailPage', () => {
     localStorage.clear()
     sessionStorage.clear()
     vi.mocked(partsApi.list).mockResolvedValue([])
+  })
+
+  it('renders responsive layout hooks for tablet and desktop shells', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    mockNoOpenEntry()
+
+    renderJobDetail()
+
+    expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+    expect(screen.getByRole('main')).toHaveClass('employee-shell', 'employee-detail-page')
+    expect(screen.getByRole('heading', { name: 'JT-2026-000101' }).closest('section')).toHaveClass('employee-job-overview-card')
   })
 
   it('renders ticket details, work entries, parts, files, and ready job requirements', async () => {
@@ -182,6 +198,8 @@ describe('JobDetailPage', () => {
     renderJobDetail()
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
+    expect(screen.getByRole('main')).toHaveClass('employee-shell', 'employee-detail-page')
+    expect(screen.getByRole('heading', { name: 'JT-2026-000101' }).closest('section')).toHaveClass('employee-job-overview-card')
     expect(screen.getByRole('link', { name: 'Back to My Jobs' })).toHaveAttribute('href', '/jobs')
     expect(screen.getByText('In Progress')).toBeInTheDocument()
     expect(screen.getByText('High')).toBeInTheDocument()

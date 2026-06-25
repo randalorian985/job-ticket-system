@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { MyJobsPage } from '../MyJobsPage'
@@ -17,6 +17,42 @@ vi.mock('../../../features/auth/AuthContext', () => ({
 }))
 
 describe('MyJobsPage', () => {
+  beforeEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  it('renders responsive layout hooks for tablet and desktop shells', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: {
+        employeeId: 'employee-1',
+        username: 'employee',
+        firstName: 'Casey',
+        lastName: 'Tech',
+        role: 'Employee',
+        email: 'employee@example.com'
+      },
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn()
+    })
+
+    vi.mocked(jobTicketsApi.listMine).mockResolvedValue([])
+
+    render(
+      <MemoryRouter future={routerFuture}>
+        <MyJobsPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(jobTicketsApi.listMine).toHaveBeenCalledTimes(1)
+    })
+
+    expect(screen.getByRole('main')).toHaveClass('employee-shell', 'employee-workspace', 'employee-my-jobs-page')
+    expect(screen.getByLabelText('assigned job list')).toHaveClass('assigned-job-list')
+  })
+
   it('maps known status and priority values and falls back to safe labels for unknown values', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: {
@@ -98,6 +134,8 @@ describe('MyJobsPage', () => {
     )
 
     expect(await screen.findByText('JT-2026-000101')).toBeInTheDocument()
+    expect(screen.getByRole('main')).toHaveClass('employee-shell', 'employee-workspace', 'employee-my-jobs-page')
+    expect(screen.getByLabelText('assigned job list')).toHaveClass('assigned-job-list')
     expect(screen.queryByLabelText('assigned jobs summary')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('next assigned job')).not.toBeInTheDocument()
     expect(screen.getByText('Mapped Values')).toBeInTheDocument()

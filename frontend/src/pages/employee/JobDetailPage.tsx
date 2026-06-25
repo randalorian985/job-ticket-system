@@ -550,13 +550,13 @@ export function JobDetailPage() {
   }
 
   return (
-    <main className="mobile-shell">
+    <main className="mobile-shell employee-shell employee-detail-page">
       <p>
         <Link to="/jobs">Back to My Jobs</Link>
       </p>
       {error ? <p className="error">{error}</p> : null}
 
-      <section className="card">
+      <section className="card employee-job-overview-card">
         <div className="employee-job-heading">
           <div>
             <h1>{job.ticketNumber}</h1>

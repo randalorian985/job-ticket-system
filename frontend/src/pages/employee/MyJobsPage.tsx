@@ -97,7 +97,7 @@ export function MyJobsPage() {
   )
 
   return (
-    <main className="mobile-shell employee-workspace">
+    <main className="mobile-shell employee-shell employee-workspace employee-my-jobs-page">
       <header className="card employee-work-header">
         <div>
           <p className="muted employee-eyebrow">Assigned work</p>
@@ -112,7 +112,7 @@ export function MyJobsPage() {
       {isLoading ? <p className="muted" role="status">Loading assigned jobs...</p> : null}
       {error ? <p className="error">{error}</p> : null}
 
-      <section className="stack" aria-label="assigned job list">
+      <section className="stack assigned-job-list" aria-label="assigned job list">
         {jobSummaries.map(({ job, readiness }) => {
           const readinessClass = readiness.openItems ? 'readiness-review' : 'readiness-ready'
           const statusLabel = getJobTicketStatusLabel(job.status)
