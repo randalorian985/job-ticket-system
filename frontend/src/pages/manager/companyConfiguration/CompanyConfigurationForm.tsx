@@ -8,11 +8,11 @@ type CompanyConfigurationFormProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }
 
-const textFields: Array<{ name: keyof UpdateCompanyConfigurationDto, label: string, type?: string, required?: boolean }> = [
+const textFields: Array<{ name: keyof UpdateCompanyConfigurationDto, label: string, type?: string, required?: boolean, note?: string }> = [
   { name: 'companyName', label: 'Company name', required: true },
   { name: 'legalName', label: 'Legal name' },
   { name: 'contactName', label: 'Primary contact' },
-  { name: 'email', label: 'Email', type: 'email' },
+  { name: 'email', label: 'Part order requests email', type: 'email', note: 'Used when office-order parts are requested from a ticket or the back-office queue.' },
   { name: 'phone', label: 'Phone' },
   { name: 'website', label: 'Website', type: 'url' },
   { name: 'addressLine1', label: 'Address line 1' },
@@ -53,6 +53,7 @@ export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit }
                 onChange={updateField(field.name)}
                 required={field.required}
               />
+              {field.note ? <span className="company-config-field-note">{field.note}</span> : null}
             </label>
           ))}
         </div>

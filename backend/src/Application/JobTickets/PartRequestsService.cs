@@ -17,9 +17,10 @@ public interface IPartRequestsService
     Task<PartRequestDto?> UpdateBackOfficeAsync(Guid partRequestId, UpdatePartRequestDto request, CancellationToken cancellationToken = default);
 }
 
-public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : IPartRequestsService
+public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext, JobTicketSystem.Application.Notifications.IPartOrderRequestNotificationService? notificationService = null) : IPartRequestsService
 {
     private static readonly Guid SystemUserId = Guid.Empty;
+    private readonly JobTicketSystem.Application.Notifications.IPartOrderRequestNotificationService partOrderRequestNotificationService = notificationService ?? new NoOpPartOrderRequestNotificationService();
 
     public async Task<PartRequestDto> CreateForJobTicketAsync(Guid jobTicketId, CreatePartRequestDto request, CancellationToken cancellationToken = default)
     {
@@ -89,6 +90,10 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        if (entry.OfficeOrderRequested)
+        {
+            await partOrderRequestNotificationService.NotifyRequestedAsync(entry.Id, cancellationToken);
+        }
         return await MapPartRequestQuery(queueOnly: false).SingleAsync(x => x.Id == entry.Id, cancellationToken);
     }
 
@@ -330,6 +335,11 @@ public sealed class PartRequestsService(ApplicationDbContext dbContext, ICurrent
 
         var value = builder.ToString().Trim();
         return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private sealed class NoOpPartOrderRequestNotificationService : JobTicketSystem.Application.Notifications.IPartOrderRequestNotificationService
+    {
+        public Task NotifyRequestedAsync(Guid jobTicketPartId, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }
 

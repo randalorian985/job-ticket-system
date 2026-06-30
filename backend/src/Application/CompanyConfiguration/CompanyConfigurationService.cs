@@ -153,6 +153,7 @@ public sealed class CompanyConfigurationService(ApplicationDbContext dbContext, 
         entity.LegalName = OptionalText(request.LegalName, nameof(request.LegalName), 200);
         entity.ContactName = OptionalText(request.ContactName, nameof(request.ContactName), 200);
         entity.Email = OptionalText(request.Email, nameof(request.Email), 320);
+        entity.PartOrderRequestsEmail = OptionalText(request.PartOrderRequestsEmail, nameof(request.PartOrderRequestsEmail), 320);
         entity.Phone = OptionalText(request.Phone, nameof(request.Phone), 50);
         entity.Website = OptionalText(request.Website, nameof(request.Website), 300);
         entity.AddressLine1 = OptionalText(request.AddressLine1, nameof(request.AddressLine1), 200);
@@ -367,6 +368,7 @@ public sealed class CompanyConfigurationService(ApplicationDbContext dbContext, 
         null,
         null,
         null,
+        null,
         CompanyConfigurationDefaults.PrimaryColor,
         CompanyConfigurationDefaults.SecondaryColor,
         CompanyConfigurationDefaults.AccentColor,
@@ -384,6 +386,7 @@ public sealed class CompanyConfigurationService(ApplicationDbContext dbContext, 
         entity.LegalName,
         entity.ContactName,
         entity.Email,
+        entity.PartOrderRequestsEmail,
         entity.Phone,
         entity.Website,
         entity.AddressLine1,
@@ -417,6 +420,7 @@ public sealed record UpdateCompanyConfigurationDto(
     string? LegalName,
     string? ContactName,
     string? Email,
+    string? PartOrderRequestsEmail,
     string? Phone,
     string? Website,
     string? AddressLine1,
@@ -441,6 +445,7 @@ public sealed record CompanyConfigurationDto(
     string? LegalName,
     string? ContactName,
     string? Email,
+    string? PartOrderRequestsEmail,
     string? Phone,
     string? Website,
     string? AddressLine1,

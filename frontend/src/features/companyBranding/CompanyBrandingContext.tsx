@@ -17,6 +17,7 @@ export const defaultCompanyConfiguration: CompanyConfigurationDto = {
   legalName: null,
   contactName: null,
   email: null,
+  partOrderRequestsEmail: null,
   phone: null,
   website: null,
   addressLine1: null,

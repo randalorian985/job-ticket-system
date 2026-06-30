@@ -1,59 +1,39 @@
 import { useEffect, useMemo, useState } from 'react'
+import { masterDataApi } from '../../../api/masterDataApi'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
-import type { JobTicketListItemDto, JobTicketPartDto } from '../../../types'
+import type { JobTicketListItemDto, JobTicketPartDto, PartDto } from '../../../types'
 import { Errorable } from '../common/Errorable'
 import { JobTicketCombobox } from '../common/JobTicketCombobox'
+import { PartCombobox } from '../common/PartCombobox'
 import { getApprovalLabel } from '../managerDisplay'
 
-const approvalStatusOptions = [
-  { value: '', label: 'All statuses' },
-  { value: 1, label: 'Pending' },
-  { value: 2, label: 'Approved' },
-  { value: 3, label: 'Rejected' },
-  { value: 4, label: 'Invoiced' }
-] as const
-
 const formatMoney = (value?: number | null) => value == null ? 'Not set' : `$${value.toFixed(2)}`
-const normalizeText = (value: string) => value.trim().toLowerCase()
-
-const matchesPartSearch = (part: JobTicketPartDto, search: string) => {
-  const query = normalizeText(search)
-
-  if (!query) {
-    return true
-  }
-
-  return [
-    part.partNumber,
-    part.partName,
-    part.notes ?? '',
-    part.officeOrderNotes ?? '',
-    part.technicianNotes ?? '',
-    part.rejectionReason ?? '',
-    part.isUnlistedPart ? 'unlisted' : 'catalog',
-    part.officeOrderRequested ? 'office order requested' : ''
-  ]
-    .join(' ')
-    .toLowerCase()
-    .includes(query)
-}
 
 export function PartsApprovalPage() {
   const [jobId, setJobId] = useState('')
   const [jobTickets, setJobTickets] = useState<JobTicketListItemDto[]>([])
   const [parts, setParts] = useState<JobTicketPartDto[]>([])
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<number | ''>('')
+  const [catalogParts, setCatalogParts] = useState<PartDto[]>([])
+  const [selectedPartFilterId, setSelectedPartFilterId] = useState('')
   const [selectedPartId, setSelectedPartId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [activePartId, setActivePartId] = useState<string | null>(null)
 
   const selectedJobTicket = jobTickets.find((ticket) => ticket.id === jobId) ?? null
+  const selectedCatalogPart = catalogParts.find((part) => part.id === selectedPartFilterId) ?? null
 
   const visibleParts = useMemo(
-    () => parts.filter((part) => (statusFilter === '' || part.approvalStatus === statusFilter) && matchesPartSearch(part, search)),
-    [parts, search, statusFilter]
+    () => parts.filter((part) => {
+      if (!selectedCatalogPart) {
+        return true
+      }
+
+      return part.partId === selectedCatalogPart.id
+        || part.partNumber.toLowerCase() === selectedCatalogPart.partNumber.toLowerCase()
+        || part.partName.toLowerCase() === selectedCatalogPart.name.toLowerCase()
+    }),
+    [parts, selectedCatalogPart]
   )
 
   const selectedPart = visibleParts.find((part) => part.id === selectedPartId) ?? visibleParts[0] ?? null
@@ -71,6 +51,10 @@ export function PartsApprovalPage() {
     jobTicketsApi.listAll()
       .then(setJobTickets)
       .catch(() => setError('Unable to load job ticket choices.'))
+
+    masterDataApi.listParts()
+      .then(setCatalogParts)
+      .catch(() => setCatalogParts([]))
   }, [])
 
   const load = async () => {
@@ -154,22 +138,17 @@ export function PartsApprovalPage() {
 
       <div className="approval-control-bar" aria-label="Parts approval filters">
         <label>
-          Search parts
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Part number, name, notes, or source"
+          Catalog part filter
+          <PartCombobox
+            parts={catalogParts}
+            selectedPartId={selectedPartFilterId}
+            onSelect={(part) => {
+              setSelectedPartFilterId(part?.id ?? '')
+              setSelectedPartId(null)
+            }}
           />
         </label>
-        <label>
-          Status filter
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value ? Number(event.target.value) : '')}>
-            {approvalStatusOptions.map((option) => (
-              <option key={option.label} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </label>
-        <p className="muted approval-control-note">Use search to narrow to a single part, then open its details before approving or rejecting.</p>
+        <p className="muted approval-control-note">Pick a catalog part to focus the loaded job parts. Load Job Parts stays separate so you can switch jobs without losing the filter intent.</p>
       </div>
 
       <Errorable error={error} />
@@ -179,7 +158,7 @@ export function PartsApprovalPage() {
       <div className="approval-workbench">
         <div className="approval-workbench-list">
           {jobId && !isLoading && parts.length > 0 && visibleParts.length === 0 ? (
-            <p className="muted empty-state">No parts match the current filters.</p>
+            <p className="muted empty-state">No loaded parts match the current catalog filter.</p>
           ) : null}
 
           <ul className="approval-review-list">

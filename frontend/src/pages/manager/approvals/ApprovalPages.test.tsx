@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { renderWithRouter } from '../../../test/renderWithRouter'
+import { masterDataApi } from '../../../api/masterDataApi'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { timeEntriesApi } from '../../../api/timeEntriesApi'
 import { usersApi } from '../../../api/usersApi'
@@ -8,6 +9,7 @@ import { TimeApprovalPage } from './TimeApprovalPage'
 import { PartsApprovalPage } from './ApprovalPages'
 
 vi.mock('../../../api/jobTicketsApi', () => ({ jobTicketsApi: { listAll: vi.fn(), listParts: vi.fn(), approvePart: vi.fn(), rejectPart: vi.fn() } }))
+vi.mock('../../../api/masterDataApi', () => ({ masterDataApi: { listParts: vi.fn() } }))
 vi.mock('../../../api/timeEntriesApi', () => ({
   timeEntriesApi: {
     listByJob: vi.fn(), listForReview: vi.fn(), approve: vi.fn(), bulkApprove: vi.fn(), editAndApprove: vi.fn(),
@@ -38,6 +40,10 @@ beforeEach(() => {
       customerId: 'customer-1', serviceLocationId: 'location-1'
     }
   ])
+  vi.mocked(masterDataApi.listParts).mockResolvedValue([
+    { id: 'catalog-1', partNumber: 'PILOT-FILTER-001', name: 'Compressor intake filter' },
+    { id: 'catalog-2', partNumber: 'PILOT-SEAL-004', name: 'Cylinder seal kit' }
+  ] as any)
   vi.mocked(timeEntriesApi.listForReview).mockResolvedValue([pendingEntry])
 })
 
@@ -250,11 +256,12 @@ describe('PartsApprovalPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Load Job Parts' }))
 
     await waitFor(() => expect(jobTicketsApi.listParts).toHaveBeenCalledWith('job-1'))
-    fireEvent.click(screen.getByRole('button', { name: /Compressor intake filter/ }))
+    fireEvent.focus(screen.getByLabelText('Catalog part filter'))
+    fireEvent.change(screen.getByLabelText('Catalog part filter'), { target: { value: 'filter' } })
+    fireEvent.click(screen.getByRole('option', { name: 'PILOT-FILTER-001 - Compressor intake filter' }))
     expect(screen.getByLabelText('Selected part details')).toHaveTextContent('Compressor intake filter')
     expect(screen.getByLabelText('Selected part details')).toHaveTextContent('Need by Friday')
 
-    fireEvent.change(screen.getByLabelText('Search parts'), { target: { value: 'filter' } })
     expect(screen.queryByText('Cylinder seal kit')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Parts approval summary')).toHaveTextContent('1 visible')
   })

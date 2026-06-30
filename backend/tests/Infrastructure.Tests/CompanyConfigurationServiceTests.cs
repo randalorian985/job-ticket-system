@@ -129,6 +129,7 @@ public sealed class CompanyConfigurationServiceTests
         "Crane Company LLC",
         "Dispatch",
         "dispatch@example.com",
+        "parts-orders@example.com",
         "555-0100",
         "https://example.com",
         "100 Lift Way",

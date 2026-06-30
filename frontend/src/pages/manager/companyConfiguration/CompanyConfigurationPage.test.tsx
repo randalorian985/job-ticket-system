@@ -19,7 +19,7 @@ const configuration: CompanyConfigurationDto = {
   companyName: 'Bayou Crane Service',
   legalName: 'Bayou Crane Service LLC',
   contactName: 'Dispatch',
-  email: 'dispatch@example.com',
+  email: 'parts@example.com',
   phone: '555-0100',
   website: 'https://example.com',
   addressLine1: '100 Lift Way',
@@ -81,6 +81,7 @@ describe('CompanyConfigurationPage', () => {
       primaryColor: '#AA5500'
     })))
     expect(await screen.findByText('Company profile saved.')).toBeInTheDocument()
+    expect(screen.getByText('Part order requests email')).toBeInTheDocument()
   })
 
   it('uploads a company logo file', async () => {

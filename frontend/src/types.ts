@@ -12,6 +12,7 @@ export type CompanyConfigurationDto = {
   legalName?: string | null
   contactName?: string | null
   email?: string | null
+  partOrderRequestsEmail?: string | null
   phone?: string | null
   website?: string | null
   addressLine1?: string | null
@@ -37,6 +38,7 @@ export type UpdateCompanyConfigurationDto = {
   legalName?: string | null
   contactName?: string | null
   email?: string | null
+  partOrderRequestsEmail?: string | null
   phone?: string | null
   website?: string | null
   addressLine1?: string | null

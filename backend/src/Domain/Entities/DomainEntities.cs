@@ -9,6 +9,7 @@ public sealed class CompanyConfiguration : AuditableEntity
     public string? LegalName { get; set; }
     public string? ContactName { get; set; }
     public string? Email { get; set; }
+    public string? PartOrderRequestsEmail { get; set; }
     public string? Phone { get; set; }
     public string? Website { get; set; }
     public string? AddressLine1 { get; set; }
