@@ -202,11 +202,60 @@ describe('PartsApprovalPage', () => {
 
     await waitFor(() => expect(jobTicketsApi.listParts).toHaveBeenCalledWith('job-1'))
     expect(screen.queryByPlaceholderText(/job ticket id/i)).not.toBeInTheDocument()
-    expect(screen.getByText('Cylinder seal kit')).toBeInTheDocument()
-    expect(screen.getByText('$34.00')).toBeInTheDocument()
+    const selectedDetails = screen.getByLabelText('Selected part details')
+    expect(within(selectedDetails).getByText('Cylinder seal kit')).toBeInTheDocument()
+    expect(within(selectedDetails).getByText('$34.00')).toBeInTheDocument()
     expect(screen.getByLabelText('Parts approval summary')).toHaveTextContent('2 loaded')
     expect(screen.getByLabelText('Parts approval summary')).toHaveTextContent('1 pending')
     expect(screen.getAllByRole('button', { name: 'Approve' })).toHaveLength(1)
     expect(screen.getAllByRole('button', { name: 'Reject' })).toHaveLength(1)
+  })
+
+  it('filters the review queue and updates the selected part details panel', async () => {
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([
+      {
+        id: 'part-pending',
+        jobTicketId: 'job-1',
+        partNumber: 'PILOT-SEAL-004',
+        partName: 'Cylinder seal kit',
+        quantity: 1,
+        unitCostSnapshot: 34,
+        salePriceSnapshot: 78,
+        approvalStatus: 1,
+        isUnlistedPart: false,
+        officeOrderRequested: false,
+        notes: 'Install with new gasket'
+      },
+      {
+        id: 'part-approved',
+        jobTicketId: 'job-1',
+        partNumber: 'PILOT-FILTER-001',
+        partName: 'Compressor intake filter',
+        quantity: 1,
+        unitCostSnapshot: 42,
+        salePriceSnapshot: 85,
+        approvalStatus: 2,
+        isUnlistedPart: false,
+        officeOrderRequested: true,
+        officeOrderNotes: 'Need by Friday'
+      }
+    ] as any)
+
+    renderWithRouter(<PartsApprovalPage />)
+
+    await waitFor(() => expect(jobTicketsApi.listAll).toHaveBeenCalled())
+    fireEvent.focus(screen.getByLabelText('Parts approval job ticket'))
+    fireEvent.change(screen.getByLabelText('Parts approval job ticket'), { target: { value: 'Hydraulic' } })
+    fireEvent.click(screen.getByRole('option', { name: 'JT-1042 - Hydraulic repair' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Load Job Parts' }))
+
+    await waitFor(() => expect(jobTicketsApi.listParts).toHaveBeenCalledWith('job-1'))
+    fireEvent.click(screen.getByRole('button', { name: /Compressor intake filter/ }))
+    expect(screen.getByLabelText('Selected part details')).toHaveTextContent('Compressor intake filter')
+    expect(screen.getByLabelText('Selected part details')).toHaveTextContent('Need by Friday')
+
+    fireEvent.change(screen.getByLabelText('Search parts'), { target: { value: 'filter' } })
+    expect(screen.queryByText('Cylinder seal kit')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Parts approval summary')).toHaveTextContent('1 visible')
   })
 })
