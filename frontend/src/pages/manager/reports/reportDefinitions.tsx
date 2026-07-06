@@ -117,7 +117,7 @@ export const reportFilterFields: Record<ReportMode, FilterField[]> = {
   laborEmployee: ['dateRange', 'customer', 'employee', 'jobStatus', 'paging'],
   partsJob: ['dateRange', 'customer', 'serviceLocation', 'jobStatus', 'paging'],
   customerHistory: ['dateRange', 'jobStatus', 'paging'],
-  equipmentHistory: ['dateRange', 'jobStatus', 'paging']
+  equipmentHistory: ['dateRange', 'customer', 'jobStatus', 'paging']
 }
 
 export const reportBrandName = 'Job Ticket System'

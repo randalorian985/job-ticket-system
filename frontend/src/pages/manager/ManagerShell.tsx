@@ -61,6 +61,7 @@ const navGroups: ManagerNavGroup[] = [
     label: 'Admin',
     items: [
       { label: 'Company Configuration', to: '/manage/company-configuration', adminOnly: true },
+      { label: 'Alerts & Notifications', to: '/manage/alerts', adminOnly: true },
       { label: 'Ticket Filters', to: '/manage/ticket-status-filters', adminOnly: true },
       { label: 'Users', to: '/manage/users', adminOnly: true }
     ]

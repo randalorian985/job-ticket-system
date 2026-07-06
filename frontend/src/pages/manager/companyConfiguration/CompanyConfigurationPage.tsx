@@ -8,12 +8,9 @@ import {
   useCompanyBranding
 } from '../../../features/companyBranding/CompanyBrandingContext'
 import type {
-  AddNewTicketNotificationRecipientDto,
   CompanyConfigurationDto,
-  NewTicketNotificationRecipientDto,
   UpdateCompanyConfigurationDto
 } from '../../../types'
-import { AlertsConfigurationPanel } from './AlertsConfigurationPanel'
 import { CompanyConfigurationForm } from './CompanyConfigurationForm'
 import { CompanyConfigurationPreview } from './CompanyConfigurationPreview'
 import './CompanyConfigurationPage.css'
@@ -68,12 +65,6 @@ export function CompanyConfigurationPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
-  const [recipients, setRecipients] = useState<NewTicketNotificationRecipientDto[]>([])
-  const [isLoadingRecipients, setIsLoadingRecipients] = useState(true)
-  const [recipientError, setRecipientError] = useState<string | null>(null)
-  const [isAddingRecipient, setIsAddingRecipient] = useState(false)
-  const [removingId, setRemovingId] = useState<string | null>(null)
-
   useEffect(() => {
     let isMounted = true
 
@@ -89,18 +80,6 @@ export function CompanyConfigurationPage() {
       })
       .finally(() => {
         if (isMounted) setIsLoading(false)
-      })
-
-    companyConfigurationApi
-      .getNotificationRecipients()
-      .then((loaded) => {
-        if (isMounted) setRecipients(loaded)
-      })
-      .catch(() => {
-        if (isMounted) setRecipientError('Notification recipients could not be loaded.')
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingRecipients(false)
       })
 
     return () => {
@@ -164,49 +143,6 @@ export function CompanyConfigurationPage() {
     }
   }
 
-  const onAddRecipient = async (dto: AddNewTicketNotificationRecipientDto) => {
-    setIsAddingRecipient(true)
-    setRecipientError(null)
-
-    try {
-      const created = await companyConfigurationApi.addNotificationRecipient(dto)
-      setRecipients((prev) => [...prev, created])
-    } catch (addError) {
-      setRecipientError(messageForError(addError, 'Could not add notification recipient.'))
-      throw addError
-    } finally {
-      setIsAddingRecipient(false)
-    }
-  }
-
-  const onRemoveRecipient = async (id: string) => {
-    setRemovingId(id)
-    setRecipientError(null)
-
-    try {
-      await companyConfigurationApi.removeNotificationRecipient(id)
-      setRecipients((prev) => prev.filter((r) => r.id !== id))
-    } catch (removeError) {
-      setRecipientError(messageForError(removeError, 'Could not remove notification recipient.'))
-    } finally {
-      setRemovingId(null)
-    }
-  }
-
-  const alertsPanel = (
-    <AlertsConfigurationPanel
-      form={form}
-      onFormChange={(updates) => setForm((prev) => ({ ...prev, ...updates }))}
-      recipients={recipients}
-      isLoadingRecipients={isLoadingRecipients}
-      recipientError={recipientError}
-      isAddingRecipient={isAddingRecipient}
-      removingId={removingId}
-      onAddRecipient={onAddRecipient}
-      onRemoveRecipient={onRemoveRecipient}
-    />
-  )
-
   return (
     <section className="company-config-page stack" aria-busy={isLoading || isSaving || isUploading}>
       <header className="dashboard-hero-strip company-config-hero">
@@ -246,7 +182,7 @@ export function CompanyConfigurationPage() {
             <p className="muted">PNG, JPG, or WebP up to 2 MB.</p>
           </section>
 
-          <CompanyConfigurationForm value={form} isSaving={isSaving} onChange={setForm} onSubmit={onSave} alertsPanel={alertsPanel} />
+          <CompanyConfigurationForm value={form} isSaving={isSaving} onChange={setForm} onSubmit={onSave} />
         </div>
 
         <CompanyConfigurationPreview

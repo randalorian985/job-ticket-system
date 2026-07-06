@@ -1,4 +1,4 @@
-import type { ChangeEvent, FormEvent, ReactNode } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import type { UpdateCompanyConfigurationDto } from '../../../types'
 
 type FieldDef = {
@@ -35,7 +35,6 @@ type CompanyConfigurationFormProps = {
   isSaving: boolean
   onChange: (value: UpdateCompanyConfigurationDto) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
-  alertsPanel?: ReactNode
 }
 
 export function CompanyConfigurationForm({
@@ -43,7 +42,6 @@ export function CompanyConfigurationForm({
   isSaving,
   onChange,
   onSubmit,
-  alertsPanel,
 }: CompanyConfigurationFormProps) {
   const updateField =
     (name: keyof UpdateCompanyConfigurationDto) =>
@@ -102,8 +100,6 @@ export function CompanyConfigurationForm({
           ))}
         </div>
       </section>
-
-      {alertsPanel}
 
       <div className="company-config-actions">
         <button type="submit" disabled={isSaving}>

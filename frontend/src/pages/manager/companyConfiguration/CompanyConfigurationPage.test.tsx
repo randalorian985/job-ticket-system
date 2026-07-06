@@ -62,7 +62,6 @@ describe('CompanyConfigurationPage', () => {
       logoFileSizeBytes: 12,
       logoUploadedAtUtc: '2026-06-22T02:00:00Z'
     })
-    vi.mocked(companyConfigurationApi.getNotificationRecipients).mockResolvedValue([])
   })
 
   afterEach(() => {
@@ -87,7 +86,6 @@ describe('CompanyConfigurationPage', () => {
       primaryColor: '#AA5500'
     })))
     expect(await screen.findByText('Company profile saved.')).toBeInTheDocument()
-    expect(screen.getByText('Part order requests email')).toBeInTheDocument()
   })
 
   it('uploads a company logo file', async () => {

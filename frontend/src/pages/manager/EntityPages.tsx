@@ -9,6 +9,7 @@ export { UnauthorizedPage } from './users/UnauthorizedPage'
 export { UsersPage } from './users/UsersPage'
 export { SystemWikiPage } from './wiki/SystemWikiPage'
 export { CompanyConfigurationPage } from './companyConfiguration/CompanyConfigurationPage'
+export { AlertsConfigurationPage } from './companyConfiguration/AlertsConfigurationPage'
 export { TicketStatusFiltersPage } from './ticketStatusFilters/TicketStatusFiltersPage'
 
 export { InventoryPage } from './InventoryPage'

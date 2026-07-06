@@ -6,6 +6,7 @@ import { LoginPage } from '../pages/employee/LoginPage'
 import { MyJobsPage } from '../pages/employee/MyJobsPage'
 import {
   CompanyConfigurationPage,
+  AlertsConfigurationPage,
   CustomersPage,
   EquipmentHistoryPage,
   EquipmentPage,
@@ -80,6 +81,7 @@ export function AppRouter() {
           <Route path="wiki" element={<SystemWikiPage />} />
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
             <Route path="company-configuration" element={<CompanyConfigurationPage />} />
+            <Route path="alerts" element={<AlertsConfigurationPage />} />
             <Route path="ticket-status-filters" element={<TicketStatusFiltersPage />} />
             <Route path="users" element={<UsersPage />} />
           </Route>
