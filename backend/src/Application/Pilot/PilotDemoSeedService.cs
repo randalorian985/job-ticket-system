@@ -4,6 +4,7 @@ using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
 using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using DomainCompanyConfiguration = JobTicketSystem.Domain.Entities.CompanyConfiguration;
 
 namespace JobTicketSystem.Application.Pilot;
 
@@ -37,6 +38,22 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
         var manager = CreateUser("Morgan", "Manager", ManagerUserName, "pilot.manager@example.local", SystemRoles.Manager, 75m, 55m, 125m);
         var technician = CreateUser("Taylor", "Technician", EmployeeUserName, "pilot.tech@example.local", SystemRoles.Employee, 65m, 42m, 110m);
         var secondTechnician = CreateUser("Riley", "Technician", "pilot.tech.backup", "pilot.tech.backup@example.local", SystemRoles.Employee, 62m, 40m, 105m);
+
+        var companyConfiguration = new DomainCompanyConfiguration
+        {
+            CompanyName = "Phase 4A Field Service",
+            LegalName = "Phase 4A Field Service LLC",
+            ContactName = "Avery Admin",
+            Email = "service@example.local",
+            PartOrderRequestsEmail = "parts-requests@example.local",
+            Phone = "555-0100",
+            Website = "https://pilot.example.local",
+            AddressLine1 = "100 Pilot Way",
+            City = "Austin",
+            State = "TX",
+            PostalCode = "78701",
+            Country = "USA"
+        };
 
         var customer = new Customer
         {
@@ -171,10 +188,25 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             Phone = "555-0143"
         };
 
+        var controlsVendor = new Vendor
+        {
+            Name = "Northern Controls Supply",
+            AccountNumber = "PILOT-VENDOR-2",
+            ContactName = "Sam Relay",
+            Email = "controls@example.local",
+            Phone = "555-0153"
+        };
+
         var category = new PartCategory
         {
             Name = "Pilot Maintenance Parts",
             Description = "Small demo part catalog for local pilot walkthroughs."
+        };
+
+        var controlsCategory = new PartCategory
+        {
+            Name = "Pilot Electrical Controls",
+            Description = "Demo control-room and electrical parts for purchase-order and autocomplete walkthroughs."
         };
 
         var filter = new Part
@@ -228,6 +260,119 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             QuantityOnHand = 8m,
             ReorderThreshold = 2m
         };
+
+        var pressureSwitch = new Part
+        {
+            PartCategory = controlsCategory,
+            Vendor = controlsVendor,
+            PartNumber = "PILOT-SWITCH-005",
+            Name = "Pressure switch",
+            Description = "Demo control switch used for autocomplete and purchasing review.",
+            UnitCost = 31m,
+            UnitPrice = 69m,
+            QuantityOnHand = 14m,
+            ReorderThreshold = 4m
+        };
+
+        var relay = new Part
+        {
+            PartCategory = controlsCategory,
+            Vendor = controlsVendor,
+            PartNumber = "PILOT-RELAY-006",
+            Name = "Control relay",
+            Description = "Demo relay part for purchasing and master-data search tests.",
+            UnitCost = 18m,
+            UnitPrice = 42m,
+            QuantityOnHand = 20m,
+            ReorderThreshold = 6m
+        };
+
+        var fuseKit = new Part
+        {
+            PartCategory = controlsCategory,
+            Vendor = controlsVendor,
+            PartNumber = "PILOT-FUSE-007",
+            Name = "Motor fuse kit",
+            Description = "Demo fuse kit that gives the part search another close match.",
+            UnitCost = 12m,
+            UnitPrice = 28m,
+            QuantityOnHand = 22m,
+            ReorderThreshold = 6m
+        };
+
+        var panelGasket = new Part
+        {
+            PartCategory = controlsCategory,
+            Vendor = controlsVendor,
+            PartNumber = "PILOT-GASKET-008",
+            Name = "Control panel gasket",
+            Description = "Demo gasket part used to round out the purchase-order line examples.",
+            UnitCost = 9m,
+            UnitPrice = 24m,
+            QuantityOnHand = 18m,
+            ReorderThreshold = 5m
+        };
+
+        var draftPurchaseOrder = new PurchaseOrder
+        {
+            Vendor = vendor,
+            PurchaseOrderNumber = "PO-PILOT-1001",
+            Status = PurchaseOrderStatus.Draft,
+            OrderedAtUtc = now.AddDays(-4),
+            ExpectedAtUtc = now.AddDays(2),
+            InvoiceStatus = VendorInvoiceStatus.Pending,
+            Notes = "Seed draft purchase order for submit and receive walkthroughs."
+        };
+        draftPurchaseOrder.Lines.Add(new PurchaseOrderLine
+        {
+            Part = belt,
+            QuantityOrdered = 4m,
+            QuantityReceived = 0m,
+            UnitCost = belt.UnitCost,
+            Notes = "Reserved for waiting-on-parts jobs."
+        });
+        draftPurchaseOrder.Lines.Add(new PurchaseOrderLine
+        {
+            Part = relay,
+            QuantityOrdered = 6m,
+            QuantityReceived = 0m,
+            UnitCost = relay.UnitCost,
+            Notes = "Control-relay demo line for search and receiving tests."
+        });
+
+        var receivedPurchaseOrder = new PurchaseOrder
+        {
+            Vendor = controlsVendor,
+            PurchaseOrderNumber = "PO-PILOT-1002",
+            Status = PurchaseOrderStatus.Received,
+            OrderedAtUtc = now.AddDays(-8),
+            ExpectedAtUtc = now.AddDays(-3),
+            ReceivedAtUtc = now.AddDays(-2),
+            VendorInvoiceNumber = "INV-PILOT-778",
+            VendorInvoiceDateUtc = now.AddDays(-2),
+            InvoiceStatus = VendorInvoiceStatus.Matched,
+            FreightCost = 18m,
+            TaxAmount = 12m,
+            OtherLandedCost = 5m,
+            LandedCostNotes = "Demo landed-cost record for close review.",
+            Notes = "Seed received purchase order for vendor invoice and closeout walkthroughs."
+        };
+        receivedPurchaseOrder.Lines.Add(new PurchaseOrderLine
+        {
+            Part = pressureSwitch,
+            QuantityOrdered = 3m,
+            QuantityReceived = 3m,
+            UnitCost = pressureSwitch.UnitCost,
+            Notes = "All quantities received."
+        });
+        receivedPurchaseOrder.Lines.Add(new PurchaseOrderLine
+        {
+            Part = panelGasket,
+            QuantityOrdered = 5m,
+            QuantityReceived = 5m,
+            UnitCost = panelGasket.UnitCost,
+            Notes = "Used to test landed-cost totals."
+        });
 
         var completedTicket = BuildTicket("PILOT-READY-001", customer, billingCustomer, serviceLocation, equipment, manager, JobTicketStatus.Completed, JobTicketPriority.High, now.AddDays(-5), now.AddDays(-2), now.AddDays(-1), "Completed compressor PM ready for invoice review");
         completedTicket.CompletedAtUtc = now.AddDays(-1);
@@ -453,7 +598,39 @@ public sealed class PilotDemoSeedService(ApplicationDbContext dbContext, IAuthSe
             PerformedAtUtc = now.AddHours(-6)
         });
 
-        dbContext.AddRange(admin, manager, technician, secondTechnician, customer, billingCustomer, portCustomer, serviceLocation, portLocation, equipment, portCrane, vendor, category, filter, belt, hose, sealKit, completedTicket, assignedTicket, waitingTicket, unscheduledTicket, needsLeadTicket, todayTicket);
+        dbContext.AddRange(
+            admin,
+            manager,
+            technician,
+            secondTechnician,
+            companyConfiguration,
+            customer,
+            billingCustomer,
+            portCustomer,
+            serviceLocation,
+            portLocation,
+            equipment,
+            portCrane,
+            vendor,
+            controlsVendor,
+            category,
+            controlsCategory,
+            filter,
+            belt,
+            hose,
+            sealKit,
+            pressureSwitch,
+            relay,
+            fuseKit,
+            panelGasket,
+            draftPurchaseOrder,
+            receivedPurchaseOrder,
+            completedTicket,
+            assignedTicket,
+            waitingTicket,
+            unscheduledTicket,
+            needsLeadTicket,
+            todayTicket);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await BuildSummaryAsync(true, cancellationToken);
