@@ -952,6 +952,21 @@ export type EquipmentCompatiblePartsDto = {
   history: EquipmentPartHistoryDto[]
 }
 
+export type EquipmentPartsHistoryItemDto = {
+  partId?: string | null
+  partNumber: string
+  partName: string
+  quantity: number
+  jobTicketId: string
+  jobTicketNumber: string
+  jobTicketTitle: string
+  vendorName?: string | null
+  installedAtUtc?: string | null
+  addedAtUtc: string
+  status: string
+  approvalStatus: string
+}
+
 export type AddEquipmentCompatiblePartDto = {
   partId: string
   notes?: string | null

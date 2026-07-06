@@ -11,12 +11,18 @@ public interface IEquipmentCompatiblePartsService
     Task<EquipmentCompatiblePartDto> AddAsync(Guid equipmentId, AddEquipmentCompatiblePartDto request, Guid addedByUserId, CancellationToken cancellationToken = default);
     Task<bool> RemoveAsync(Guid equipmentId, Guid partId, CancellationToken cancellationToken = default);
     Task<bool> UpdateNotesAsync(Guid equipmentId, Guid partId, UpdateEquipmentCompatiblePartDto request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<EquipmentPartsHistoryItemDto>> GetPartsUsageHistoryAsync(Guid equipmentId, CancellationToken cancellationToken = default);
 }
 
 public sealed class EquipmentCompatiblePartsService(ApplicationDbContext dbContext) : IEquipmentCompatiblePartsService
 {
     public async Task<EquipmentCompatiblePartsDto> GetForEquipmentAsync(Guid equipmentId, CancellationToken cancellationToken = default)
     {
+        var equipmentName = await dbContext.Equipment
+            .Where(x => x.Id == equipmentId && !x.IsDeleted)
+            .Select(x => x.Name)
+            .FirstOrDefaultAsync(cancellationToken) ?? string.Empty;
+
         var compatible = await dbContext.EquipmentCompatibleParts
             .Where(x => x.EquipmentId == equipmentId)
             .Include(x => x.Part).ThenInclude(p => p.PartCategory)
@@ -36,29 +42,54 @@ public sealed class EquipmentCompatiblePartsService(ApplicationDbContext dbConte
                 x.AddedAtUtc))
             .ToListAsync(cancellationToken);
 
-        // Part usage history: parts used on any ticket tied to this equipment
-        var history = await dbContext.JobTicketParts
+        // Part usage history: aggregated by distinct part
+        var rawHistory = await dbContext.JobTicketParts
             .Where(x => x.EquipmentId == equipmentId && !x.IsDeleted)
-            .Include(x => x.JobTicket)
-            .Include(x => x.Part).ThenInclude(p => p!.Vendor)
-            .OrderByDescending(x => x.AddedAtUtc)
+            .GroupBy(x => new { x.PartId, x.PartNumberSnapshot, x.PartNameSnapshot })
+            .Select(g => new
+            {
+                g.Key.PartId,
+                g.Key.PartNumberSnapshot,
+                g.Key.PartNameSnapshot,
+                UsageCount = g.Count(),
+                LastInstalled = (DateTime?)g.Max(x => x.InstalledAtUtc),
+                LastAdded = g.Max(x => (DateTime)x.AddedAtUtc)
+            })
+            .ToListAsync(cancellationToken);
+
+        var history = rawHistory
             .Select(x => new EquipmentPartHistoryDto(
                 x.PartId,
                 x.PartNumberSnapshot,
                 x.PartNameSnapshot,
+                x.UsageCount,
+                x.LastInstalled ?? x.LastAdded))
+            .OrderByDescending(x => x.LastUsedAtUtc)
+            .ToList();
+
+        return new EquipmentCompatiblePartsDto(equipmentId, equipmentName, compatible, history);
+    }
+
+    public async Task<IReadOnlyList<EquipmentPartsHistoryItemDto>> GetPartsUsageHistoryAsync(Guid equipmentId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.JobTicketParts
+            .Where(x => x.EquipmentId == equipmentId && !x.IsDeleted)
+            .OrderByDescending(x => x.AddedAtUtc)
+            .Select(x => new EquipmentPartsHistoryItemDto(
+                x.PartId,
+                x.PartNumberSnapshot,
+                x.PartNameSnapshot,
                 x.Quantity,
-                x.UnitCostSnapshot,
                 x.JobTicketId,
+                x.JobTicket.TicketNumber,
                 x.JobTicket.Title,
                 x.Part != null && x.Part.Vendor != null ? x.Part.Vendor.Name : null,
                 x.InstalledAtUtc,
                 x.AddedAtUtc,
                 x.Status.ToString(),
                 x.ApprovalStatus.ToString()))
-            .Take(100)
+            .Take(200)
             .ToListAsync(cancellationToken);
-
-        return new EquipmentCompatiblePartsDto(compatible, history);
     }
 
     public async Task<IReadOnlyList<EquipmentCompatiblePartFieldDto>> GetCatalogForFieldAsync(Guid equipmentId, CancellationToken cancellationToken = default)
@@ -140,6 +171,8 @@ public sealed class EquipmentCompatiblePartsService(ApplicationDbContext dbConte
 // ── DTOs ──────────────────────────────────────────────────────────────────────
 
 public sealed record EquipmentCompatiblePartsDto(
+    Guid EquipmentId,
+    string EquipmentName,
     IReadOnlyList<EquipmentCompatiblePartDto> Catalog,
     IReadOnlyList<EquipmentPartHistoryDto> History);
 
@@ -165,13 +198,22 @@ public sealed record EquipmentCompatiblePartFieldDto(
     string? Notes,
     bool IsRecommendedForPM);
 
+/// <summary>Aggregated per-part summary for the compatible-parts endpoint.</summary>
 public sealed record EquipmentPartHistoryDto(
     Guid? PartId,
     string PartNumber,
     string PartName,
+    int UsageCount,
+    DateTime? LastUsedAtUtc);
+
+/// <summary>Detailed per-ticket part usage record for the parts history endpoint.</summary>
+public sealed record EquipmentPartsHistoryItemDto(
+    Guid? PartId,
+    string PartNumber,
+    string PartName,
     decimal Quantity,
-    decimal UnitCost,
     Guid JobTicketId,
+    string JobTicketNumber,
     string JobTicketTitle,
     string? VendorName,
     DateTime? InstalledAtUtc,

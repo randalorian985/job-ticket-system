@@ -1,6 +1,7 @@
 import type {
   AddEquipmentCompatiblePartDto,
   CreateCustomerDto,
+  EquipmentPartsHistoryItemDto,
   CreateEquipmentDto,
   CreatePartCategoryDto,
   CreatePartDto,
@@ -65,6 +66,7 @@ export const masterDataApi = {
   unarchivePart: (id: string) => apiRequest<void>(`/api/parts/${id}/unarchive`, { method: 'POST' }),
 
   getEquipmentCompatibleParts: (equipmentId: string) => apiRequest<EquipmentCompatiblePartsDto>(`/api/equipment/${equipmentId}/compatible-parts`),
+  getEquipmentPartsHistory: (equipmentId: string) => apiRequest<EquipmentPartsHistoryItemDto[]>(`/api/equipment/${equipmentId}/parts-history`),
   getEquipmentCompatiblePartsForField: (equipmentId: string) => apiRequest<EquipmentCompatiblePartFieldDto[]>(`/api/equipment/${equipmentId}/compatible-parts/for-field`),
   addEquipmentCompatiblePart: (equipmentId: string, payload: AddEquipmentCompatiblePartDto) => apiRequest<void>(`/api/equipment/${equipmentId}/compatible-parts`, { method: 'POST', body: JSON.stringify(payload) }),
   removeEquipmentCompatiblePart: (equipmentId: string, partId: string) => apiRequest<void>(`/api/equipment/${equipmentId}/compatible-parts/${partId}`, { method: 'DELETE' }),

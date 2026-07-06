@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../../api/masterDataApi'
+import { renderWithRouter } from '../../../test/renderWithRouter'
 import { EquipmentPage } from './MasterDataPages'
 
 vi.mock('../../../api/masterDataApi', () => ({
@@ -29,7 +30,7 @@ describe('MasterData equipment customer/location validation', () => {
   })
 
   it('limits equipment service-location choices to the selected customer', async () => {
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
 
     const equipmentForm = screen.getByRole('form', { name: 'equipment form' })
     const customerSelect = await within(equipmentForm).findByLabelText('Primary customer')
@@ -52,7 +53,7 @@ describe('MasterData equipment customer/location validation', () => {
       { id: 'eq1', customerId: 'c1', serviceLocationId: 'loc2', name: 'Pump', isArchived: false }
     ] as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
 
     const pumpItem = await screen.findByText('Pump')
     const equipmentItem = pumpItem.closest('li')
@@ -77,7 +78,7 @@ describe('MasterData equipment customer/location validation', () => {
     ] as any)
     vi.mocked(masterDataApi.updateEquipment).mockResolvedValue({ id: 'eq1' } as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
 
     const pumpItem = await screen.findByText('Pump')
     const equipmentItem = pumpItem.closest('li')
@@ -104,7 +105,7 @@ describe('MasterData equipment customer/location validation', () => {
       { id: 'eq1', customerId: 'c1', serviceLocationId: 'loc-missing', name: 'Pump', isArchived: false }
     ] as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
 
     const pumpItem = await screen.findByText('Pump')
     const equipmentItem = pumpItem.closest('li')
@@ -123,3 +124,4 @@ describe('MasterData equipment customer/location validation', () => {
     expect(masterDataApi.updateEquipment).not.toHaveBeenCalled()
   })
 })
+

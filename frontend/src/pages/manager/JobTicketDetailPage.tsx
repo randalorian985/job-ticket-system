@@ -20,6 +20,7 @@ import type {
   JobTicketPartDto,
   JobWorkEntryDto,
   PartDto,
+  ReportServiceHistoryItemDto,
   ServiceLocationDto,
   TicketTimelineItemDto,
   TimeEntryDto,
@@ -118,6 +119,8 @@ export function JobTicketDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [equipmentServiceHistory, setEquipmentServiceHistory] = useState<ReportServiceHistoryItemDto[]>([]);
+  const [isLoadingEquipmentHistory, setIsLoadingEquipmentHistory] = useState(false);
 
   const canShow = useMemo(() => Boolean(jobTicketId), [jobTicketId]);
   const customersById = useMemo(
@@ -636,6 +639,19 @@ export function JobTicketDetailPage() {
   useEffect(() => {
     load();
   }, [jobTicketId]);
+
+  useEffect(() => {
+    const equipmentId = job?.equipmentId;
+    if (!equipmentId) {
+      setEquipmentServiceHistory([]);
+      return;
+    }
+    setIsLoadingEquipmentHistory(true);
+    reportsApi.getEquipmentHistory(equipmentId, { offset: 0, limit: 3 })
+      .then((items) => setEquipmentServiceHistory(items))
+      .catch(() => setEquipmentServiceHistory([]))
+      .finally(() => setIsLoadingEquipmentHistory(false));
+  }, [job?.equipmentId]);
 
   const toggleDrawer = (drawer: WorkbenchDrawer) => {
     setActiveDrawer((current) => (current === drawer ? null : drawer));
@@ -1429,8 +1445,42 @@ export function JobTicketDetailPage() {
                     <p>{displayValue(selectedEquipment?.equipmentType)} {displayValue(selectedEquipment?.manufacturer)} {displayValue(selectedEquipment?.modelNumber)}</p>
                     {!selectedEquipment && job.equipmentNumber ? <p className="muted">Equipment {job.equipmentNumber}</p> : null}
                     <p className="muted">Unit {displayValue(selectedEquipment?.unitNumber)} | Serial {displayValue(selectedEquipment?.serialNumber)}</p>
+                    {job.equipmentId && (
+                      <p className="muted">
+                        <Link to={`/manage/equipment/${job.equipmentId}/history`}>View Full Equipment History</Link>
+                      </p>
+                    )}
                   </section>
                 </div>
+
+                {job.equipmentId && (
+                  <section aria-label="recent equipment service history" className="stack">
+                    <h4>Recent Equipment Service History</h4>
+                    {isLoadingEquipmentHistory && <p className="muted">Loading…</p>}
+                    {!isLoadingEquipmentHistory && equipmentServiceHistory.length === 0 && (
+                      <p className="muted">No prior service tickets for this equipment.</p>
+                    )}
+                    {equipmentServiceHistory.length > 0 && (
+                      <>
+                        <ul className="record-list" aria-label="recent tickets for equipment">
+                          {equipmentServiceHistory.map((item) => (
+                            <li className="record-row" key={item.jobTicketId}>
+                              <div>
+                                <strong>
+                                  <Link to={`/manage/job-tickets/${item.jobTicketId}`}>{item.jobTicketNumber} — {item.title}</Link>
+                                </strong>
+                                <span className="muted">{getJobTicketStatusLabel(item.jobStatus)} · {formatDate(item.createdAtUtc)}</span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="muted">
+                          <Link to={`/manage/equipment/${job.equipmentId}/history`}>View all service history →</Link>
+                        </p>
+                      </>
+                    )}
+                  </section>
+                )}
 
                 <div className="fact-grid" aria-label="job assignment and schedule details">
                   <div>

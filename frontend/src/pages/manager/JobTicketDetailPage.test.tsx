@@ -20,7 +20,7 @@ vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn(), listAssignable
 vi.mock('../../api/partRequestsApi', () => ({ partRequestsApi: { createForJobTicket: vi.fn() } }))
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn(), addWorkEntry: vi.fn(), getTimeline: vi.fn() } }))
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
-vi.mock('../../api/reportsApi', () => ({ reportsApi: { getInvoiceReadySummary: vi.fn() } }))
+vi.mock('../../api/reportsApi', () => ({ reportsApi: { getInvoiceReadySummary: vi.fn(), getEquipmentHistory: vi.fn() } }))
 
 describe('JobTicketDetailPage', () => {
   const setupBaseMocks = () => {
@@ -105,6 +105,7 @@ describe('JobTicketDetailPage', () => {
     ] as any)
     vi.mocked(partRequestsApi.createForJobTicket).mockResolvedValue({ id: 'request-1' } as any)
     vi.mocked(jobTicketsApi.getTimeline).mockResolvedValue([])
+    vi.mocked(reportsApi.getEquipmentHistory).mockResolvedValue([])
     vi.mocked(reportsApi.getInvoiceReadySummary).mockResolvedValue({
       jobTicketId: 'j1',
       jobTicketNumber: 'JT-1',

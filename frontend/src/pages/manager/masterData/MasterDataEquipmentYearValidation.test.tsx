@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../../api/masterDataApi'
+import { renderWithRouter } from '../../../test/renderWithRouter'
 import { EquipmentPage } from './MasterDataPages'
 
 vi.mock('../../../api/masterDataApi', () => ({
@@ -21,7 +22,7 @@ describe('MasterData equipment year validation', () => {
   })
 
   it('keeps out-of-range or fractional equipment years from submitting', async () => {
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
 
     const equipmentForm = screen.getByRole('form', { name: 'equipment form' })
     fireEvent.change(await within(equipmentForm).findByLabelText('Primary customer'), { target: { value: 'c1' } })
@@ -41,3 +42,4 @@ describe('MasterData equipment year validation', () => {
     await waitFor(() => expect(masterDataApi.listEquipment).toHaveBeenCalled())
   })
 })
+

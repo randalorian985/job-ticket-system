@@ -7,6 +7,7 @@ import { MyJobsPage } from '../pages/employee/MyJobsPage'
 import {
   CompanyConfigurationPage,
   CustomersPage,
+  EquipmentHistoryPage,
   EquipmentPage,
   PartRequestsPage,
   PartsApprovalPage,
@@ -65,6 +66,7 @@ export function AppRouter() {
           <Route path="customers" element={<CustomersPage />} />
           <Route path="service-locations" element={<ServiceLocationsPage />} />
           <Route path="equipment" element={<EquipmentPage />} />
+          <Route path="equipment/:id/history" element={<EquipmentHistoryPage />} />
           <Route path="parts" element={<PartsPage />} />
           <Route path="part-requests" element={<PartRequestsPage />} />
           <Route path="inventory" element={<Navigate to="/manage" replace />} />

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { masterDataApi } from '../../../api/masterDataApi'
+import { renderWithRouter } from '../../../test/renderWithRouter'
 import { EquipmentPage, PartsPage, ServiceLocationsPage } from './MasterDataPages'
 
 vi.mock('../../../api/masterDataApi', () => ({
@@ -122,7 +123,7 @@ describe('Manager/Admin master-data filter defaults', () => {
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.createEquipment).mockResolvedValue({ id: 'e-new', name: 'Motor' } as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     fireEvent.change(await screen.findByLabelText('Customer'), { target: { value: 'c2' } })
     await waitFor(() => expect(screen.getByLabelText('Primary customer')).toHaveValue('c2'))
     fireEvent.change(screen.getByLabelText('Service location'), { target: { value: 'l2' } })
@@ -144,7 +145,7 @@ describe('Manager/Admin master-data filter defaults', () => {
       { id: 'e2', name: 'Motor', customerId: 'c2', serviceLocationId: 'l2', isArchived: false }
     ] as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     fireEvent.click(await screen.findAllByRole('button', { name: 'Edit' }).then((buttons) => buttons[0]))
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c2' } })
 
@@ -166,7 +167,7 @@ describe('Manager/Admin master-data filter defaults', () => {
       { id: 'e1', name: 'Pump', customerId: 'c-archived', serviceLocationId: 'l-archived', isArchived: false }
     ] as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     const equipmentForm = screen.getByRole('form', { name: 'equipment form' })
     const customerSelect = await within(equipmentForm).findByLabelText('Primary customer')
     const locationSelect = within(equipmentForm).getByLabelText('Service location')
@@ -193,7 +194,7 @@ describe('Manager/Admin master-data filter defaults', () => {
     ] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     fireEvent.change(await screen.findByLabelText('Customer'), { target: { value: 'c-archived' } })
 
     await waitFor(() => expect(screen.getByLabelText('Primary customer')).toHaveValue(''))
@@ -213,7 +214,7 @@ describe('Manager/Admin master-data filter defaults', () => {
       { id: 'e1', name: 'Pump', customerId: 'c1', serviceLocationId: 'l1', isArchived: false }
     ] as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     fireEvent.change(await screen.findByLabelText('Customer'), { target: { value: 'c-archived' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create Equipment' }))
 
@@ -346,3 +347,4 @@ describe('Manager/Admin master-data filter defaults', () => {
     expect(within(vendorSelect).queryByRole('option', { name: 'Archived Vendor' })).not.toBeInTheDocument()
   })
 })
+

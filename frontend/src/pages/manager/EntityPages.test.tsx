@@ -390,7 +390,7 @@ describe('EquipmentPage', () => {
       { id: 'e2', name: 'Motor', customerId: 'c2', serviceLocationId: 'l2', serialNumber: 'SN-2', isArchived: true }
     ] as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     expect(await screen.findByText(/Pump/)).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'c2' } })
     expect(screen.queryByText(/Pump/)).not.toBeInTheDocument()
@@ -410,7 +410,7 @@ describe('EquipmentPage', () => {
     vi.mocked(masterDataApi.archiveEquipment).mockResolvedValue(undefined as any)
     vi.mocked(masterDataApi.unarchiveEquipment).mockRejectedValueOnce(new Error('bad request'))
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     fireEvent.click(await screen.findByRole('button', { name: 'Archive' }))
     await waitFor(() => expect(masterDataApi.archiveEquipment).toHaveBeenCalledWith('e1'))
     fireEvent.click(await screen.findByRole('button', { name: 'Unarchive' }))
@@ -424,7 +424,7 @@ describe('EquipmentPage', () => {
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.createEquipment).mockResolvedValue({ id: 'e-new', name: 'Pump' } as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     fireEvent.change(await screen.findByLabelText('Primary customer'), { target: { value: 'c1' } })
     fireEvent.change(screen.getByLabelText('Service location'), { target: { value: 'l1' } })
     fireEvent.change(screen.getByLabelText('Owner customer'), { target: { value: 'c1' } })
@@ -460,7 +460,7 @@ describe('EquipmentPage', () => {
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 'l1', customerId: 'c1', locationName: 'HQ' }] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
 
-    render(<EquipmentPage />)
+    renderWithRouter(<EquipmentPage />)
     fireEvent.change(await screen.findByLabelText('Primary customer'), { target: { value: 'c1' } })
     fireEvent.change(screen.getByLabelText('Service location'), { target: { value: 'l1' } })
     fireEvent.change(screen.getByLabelText('Equipment name'), { target: { value: '   ' } })

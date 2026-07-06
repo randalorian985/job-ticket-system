@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { masterDataApi } from '../../../api/masterDataApi'
 import type {
   AddEquipmentCompatiblePartDto,
@@ -925,6 +926,7 @@ export function EquipmentPage() {
                   equipment.year ? `Year: ${equipment.year}` : null
                 ], 'No model details', 'equipment-model')}
                 <div className="master-data-actions compact-list-actions">
+                  <Link to={`/manage/equipment/${equipment.id}/history`} className="secondary-button">View History</Link>
                   <button type="button" onClick={() => startEdit(equipment)}>Edit</button>
                   <button type="button" onClick={async () => {
                     if (!confirmArchiveAction('equipment', equipment.name, equipment.isArchived)) return
