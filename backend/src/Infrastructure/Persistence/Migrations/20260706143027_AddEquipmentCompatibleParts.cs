@@ -11,19 +11,6 @@ namespace Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "LocationType",
-                table: "JobTickets",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<string>(
-                name: "PartOrderRequestsEmail",
-                table: "CompanyConfigurations",
-                type: "nvarchar(max)",
-                nullable: true);
-
             migrationBuilder.CreateTable(
                 name: "EquipmentCompatibleParts",
                 columns: table => new
@@ -68,14 +55,6 @@ namespace Infrastructure.Persistence.Migrations
         {
             migrationBuilder.DropTable(
                 name: "EquipmentCompatibleParts");
-
-            migrationBuilder.DropColumn(
-                name: "LocationType",
-                table: "JobTickets");
-
-            migrationBuilder.DropColumn(
-                name: "PartOrderRequestsEmail",
-                table: "CompanyConfigurations");
         }
     }
 }
