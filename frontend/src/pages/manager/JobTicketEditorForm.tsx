@@ -501,13 +501,6 @@ export function JobTicketEditorForm({
       detail: form.purchaseOrderNumber?.trim() ? `PO: ${form.purchaseOrderNumber.trim()}` : 'Optional — PO and billing contact'
     },
     {
-      value: 'schedule',
-      label: 'Schedule',
-      section: 'schedule',
-      isReady: Boolean(form.requestedAtUtc),
-      detail: form.requestedAtUtc ? 'Requested date set' : 'Set requested date'
-    },
-    {
       value: 'review',
       label: 'Review & Submit',
       section: 'scope',
@@ -977,7 +970,7 @@ export function JobTicketEditorForm({
         <section className="section-editor-panel stack" aria-label="Basics edit section">
           <div className="section-editor-heading">
             <h3>Basics</h3>
-            <p className="muted">Edit the ticket's title, type, priority, and current status.</p>
+            <p className="muted">{isCreate ? 'Give the ticket a title, type, and priority. Scheduling happens separately after creation.' : 'Edit the ticket\'s title, type, priority, and current status.'}</p>
           </div>
           <label>Title<input value={form.title} onChange={(e) => update('title', e.target.value)} /></label>
           <div className="field-with-action">
@@ -1014,6 +1007,12 @@ export function JobTicketEditorForm({
             </label>
             <label>Work Location<select value={form.locationType || 1} onChange={(e) => update('locationType', Number(e.target.value))}>{workLocationTypeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
           </div>
+          {isCreate ? (
+            <label>Date / Time Reported
+              <input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} />
+              <small className="field-char-count">When the customer reported the issue. Defaults to now.</small>
+            </label>
+          ) : null}
         </section>
       ) : null}
 
@@ -1250,7 +1249,7 @@ export function JobTicketEditorForm({
         </section>
       ) : null}
 
-      {activeEditorSection === 'schedule' ? (
+      {!isCreate && activeEditorSection === 'schedule' ? (
         <section className="section-editor-panel stack" aria-label="Schedule edit section">
           <div className="section-editor-heading">
             <h3>Schedule</h3>
