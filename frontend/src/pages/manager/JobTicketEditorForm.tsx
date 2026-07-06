@@ -1079,11 +1079,11 @@ export function JobTicketEditorForm({
                     ))
                 }
               </select>
-              {isCreate ? <small className="field-char-count">New tickets start as Draft or Submitted.</small> : null}
               {!isCreate && form.status === 9 ? <small className="field-char-count">Invoiced tickets cannot be changed from this form.</small> : null}
             </label>
             <label>Work Location<select value={form.locationType || 1} onChange={(e) => update('locationType', Number(e.target.value))}>{workLocationTypeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
           </div>
+          {isCreate ? <small className="muted">New tickets start as Draft or Submitted.</small> : null}
           {isCreate ? (
             <label>Date / Time Reported
               <input type="datetime-local" value={toDatetimeLocalValue(form.requestedAtUtc)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} />
