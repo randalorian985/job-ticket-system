@@ -12,6 +12,7 @@ import type {
   CustomerDto,
   EquipmentDto,
   JobTicketListItemDto,
+  ReportQueryFilters,
   ServiceLocationDto
 } from '../../../types'
 import { Errorable } from '../common/Errorable'
