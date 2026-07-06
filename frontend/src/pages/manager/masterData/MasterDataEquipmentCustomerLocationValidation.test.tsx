@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../../api/masterDataApi'
 import { renderWithRouter } from '../../../test/renderWithRouter'
-import { EquipmentPage } from './MasterDataPages'
+import { EquipmentPage } from './EquipmentPage'
 
 vi.mock('../../../api/masterDataApi', () => ({
   masterDataApi: {

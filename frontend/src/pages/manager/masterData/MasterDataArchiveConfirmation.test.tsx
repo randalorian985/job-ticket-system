@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { masterDataApi } from '../../../api/masterDataApi'
-import { CustomersPage } from './MasterDataPages'
+import { CustomersPage } from './CustomersPage'
 
 vi.mock('../../../api/masterDataApi', () => ({
   masterDataApi: {

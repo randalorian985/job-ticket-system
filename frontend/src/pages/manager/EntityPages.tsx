@@ -1,4 +1,7 @@
-export { CustomersPage, EquipmentPage, PartsPage, ServiceLocationsPage } from './masterData/MasterDataPages'
+export { CustomersPage } from './masterData/CustomersPage'
+export { ServiceLocationsPage } from './masterData/ServiceLocationsPage'
+export { EquipmentPage } from './masterData/EquipmentPage'
+export { PartsPage } from './masterData/PartsPage'
 export { PartsApprovalPage } from './approvals/ApprovalPages'
 export { TimeApprovalPage } from './approvals/TimeApprovalPage'
 export { ReportsPage } from './reports/ReportsPage'

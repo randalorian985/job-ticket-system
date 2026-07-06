@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { masterDataApi } from '../../../api/masterDataApi'
 import { renderWithRouter } from '../../../test/renderWithRouter'
-import { EquipmentPage } from './MasterDataPages'
+import { EquipmentPage } from './EquipmentPage'
 
 vi.mock('../../../api/masterDataApi', () => ({
   masterDataApi: {
