@@ -33,36 +33,24 @@ describe('JobTicketCreatePage', () => {
     expect(await screen.findByRole('heading', { name: 'Create Job Ticket' })).toBeInTheDocument()
     expect(screen.getByLabelText('Job Type')).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: 'ticket edit sections' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Schedule' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Billing' }))
     expect(screen.getByLabelText('Purchase Order Number')).toBeInTheDocument()
     expect(screen.getByLabelText('Billing Contact Name')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule' }))
-    expect(screen.getByRole('heading', { name: 'Assign Technicians (Optional)' })).toBeInTheDocument()
-    expect(screen.getByText('No assignable technicians are currently available.')).toBeInTheDocument()
     expect(screen.getByText('Create Ticket')).toBeInTheDocument()
   })
 
-  it('keeps one lead selected when multiple technicians are assigned during schedule setup', async () => {
+  it('does not show the Schedule tab when creating a ticket', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
-    vi.mocked(usersApi.listAssignableEmployees).mockImplementation(async () => createAssignableEmployees())
+    vi.mocked(usersApi.listAssignableEmployees).mockResolvedValue([] as any)
 
     render(<MemoryRouter future={routerFuture}><JobTicketCreatePage /></MemoryRouter>)
-
     await screen.findByRole('heading', { name: 'Create Job Ticket' })
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule' }))
 
-    const technicianChecks = await screen.findAllByRole('checkbox')
-    fireEvent.click(technicianChecks[0])
-    fireEvent.click(technicianChecks[1])
-
-    expect(screen.getByText('Selected technicians: Alex Rivera, Jamie Chen')).toBeInTheDocument()
-    expect(screen.getByText('Lead')).toBeInTheDocument()
-
-    fireEvent.click(technicianChecks[0])
-
-    const leadSelect = screen.getByLabelText('Lead Technician') as HTMLSelectElement
-    expect(leadSelect.value).toBe('tech-2')
+    expect(screen.queryByRole('button', { name: 'Schedule' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Basics' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Billing' })).toBeInTheDocument()
   })
 })

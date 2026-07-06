@@ -958,7 +958,7 @@ export function JobTicketEditorForm({
       {copyHelperError ? <p className="error">{copyHelperError}</p> : null}
       <nav className="ticket-create-guide" aria-label="ticket edit sections">
         <div className="ticket-create-step-list">
-          {ticketEditorSections.map((sec) => (
+          {ticketEditorSections.filter((sec) => !isCreate || sec.value !== 'schedule').map((sec) => (
             <button
               type="button"
               key={sec.value}
@@ -1312,7 +1312,7 @@ export function JobTicketEditorForm({
         </section>
       ) : null}
 
-      {activeEditorSection === 'schedule' ? (
+      {!isCreate && activeEditorSection === 'schedule' ? (
         <section className="section-editor-panel stack" aria-label="Schedule edit section">
           <div className="section-editor-heading">
             <h3>Schedule</h3>
