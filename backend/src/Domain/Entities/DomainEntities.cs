@@ -298,8 +298,8 @@ public sealed class TimeEntry : SoftDeletableEntity
     public Guid? ApprovedByUserId { get; set; }
     public DateTime? ApprovedAtUtc { get; set; }
     public string? RejectionReason { get; set; }
-    public decimal ClockInLatitude { get; set; }
-    public decimal ClockInLongitude { get; set; }
+    public decimal? ClockInLatitude { get; set; }
+    public decimal? ClockInLongitude { get; set; }
     public decimal? ClockInAccuracy { get; set; }
     public string? ClockInDeviceMetadata { get; set; }
     public decimal? ClockOutLatitude { get; set; }

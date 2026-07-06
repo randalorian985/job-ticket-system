@@ -50,8 +50,8 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             HourlyRate = 0,
             CostRateSnapshot = employee.CostRate,
             BillRateSnapshot = employee.BillRate ?? employee.LaborRate,
-            ClockInLatitude = request.ClockInLatitude!.Value,
-            ClockInLongitude = request.ClockInLongitude!.Value,
+            ClockInLatitude = request.ClockInLatitude,
+            ClockInLongitude = request.ClockInLongitude,
             ClockInAccuracy = request.ClockInAccuracy,
             ClockInDeviceMetadata = request.DeviceMetadata.Trim(),
             ClockInNote = ValidationHelpers.NullIfWhitespace(request.Note)
@@ -576,15 +576,11 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
 
     private static void ValidateClockIn(ClockInRequestDto request)
     {
-        if (!request.ClockInLatitude.HasValue) throw new ValidationException("ClockInLatitude is required.");
-        if (!request.ClockInLongitude.HasValue) throw new ValidationException("ClockInLongitude is required.");
         ValidationHelpers.ValidateRequired(request.DeviceMetadata, nameof(request.DeviceMetadata));
     }
 
     private static void ValidateClockOut(ClockOutRequestDto request)
     {
-        if (!request.ClockOutLatitude.HasValue) throw new ValidationException("ClockOutLatitude is required.");
-        if (!request.ClockOutLongitude.HasValue) throw new ValidationException("ClockOutLongitude is required.");
         ValidationHelpers.ValidateRequired(request.WorkSummary, nameof(request.WorkSummary));
     }
 }
@@ -641,8 +637,8 @@ public sealed record TimeEntryDto(
     Guid? ApprovedByUserId,
     DateTime? ApprovedAtUtc,
     string? RejectionReason,
-    decimal ClockInLatitude,
-    decimal ClockInLongitude,
+    decimal? ClockInLatitude,
+    decimal? ClockInLongitude,
     decimal? ClockInAccuracy,
     decimal? ClockOutLatitude,
     decimal? ClockOutLongitude,

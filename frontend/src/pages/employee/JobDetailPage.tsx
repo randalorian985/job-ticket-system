@@ -308,28 +308,26 @@ export function JobDetailPage() {
     }
   }, [jobTicketId, user, navigate, logout])
 
-  const getLocation = (): Promise<GeolocationPosition> =>
-    new Promise((resolve, reject) => {
+  const getLocation = (): Promise<GeolocationPosition | null> =>
+    new Promise((resolve) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not available on this device.'))
+        resolve(null)
         return
       }
 
-      navigator.geolocation.getCurrentPosition(resolve, (geoError) => {
-        if (geoError.code === 1) {
-          reject(new Error('Location permission denied. Enable location access in your device settings and try again.'))
-        } else if (geoError.code === 3) {
-          reject(new Error('Location request timed out. Check your signal and try again.'))
-        } else if (geoError.code === 2) {
-          reject(new Error('Location unavailable. Check your signal and try again.'))
-        } else {
-          reject(new Error('Unable to determine location. Check your device settings and try again.'))
-        }
-      }, {
-        enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 0
-      })
+      // First attempt: high accuracy
+      navigator.geolocation.getCurrentPosition(
+        resolve,
+        () => {
+          // Second attempt: low accuracy fallback (faster, works indoors)
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            () => resolve(null), // GPS fully unavailable — proceed without coords
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
+          )
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      )
     })
 
   const onClockIn = async () => {
@@ -345,21 +343,21 @@ export function JobDetailPage() {
       await timeEntriesApi.clockIn({
         jobTicketId,
         employeeId: user.employeeId,
-        clockInLatitude: position.coords.latitude,
-        clockInLongitude: position.coords.longitude,
-        clockInAccuracy: position.coords.accuracy,
+        clockInLatitude: position?.coords.latitude,
+        clockInLongitude: position?.coords.longitude,
+        clockInAccuracy: position?.coords.accuracy,
         deviceMetadata: navigator.userAgent,
         note: clockNote || null
       })
       setClockNote('')
-      await refreshAfterAction('Clock-in saved')
+      await refreshAfterAction(position ? 'Clock-in saved' : 'Clock-in saved (no GPS signal)')
     } catch (clockError) {
       if (clockError instanceof ApiError) {
         setError(clockError.message)
       } else if (clockError instanceof Error) {
         setError(clockError.message)
       } else {
-        setError('Unable to clock in. Check your location settings and try again.')
+        setError('Unable to clock in. Try again.')
       }
     } finally {
       setIsClocking(false)
@@ -389,22 +387,22 @@ export function JobDetailPage() {
       await timeEntriesApi.clockOut({
         timeEntryId: openEntry.id,
         employeeId: user.employeeId,
-        clockOutLatitude: position.coords.latitude,
-        clockOutLongitude: position.coords.longitude,
-        clockOutAccuracy: position.coords.accuracy,
+        clockOutLatitude: position?.coords.latitude,
+        clockOutLongitude: position?.coords.longitude,
+        clockOutAccuracy: position?.coords.accuracy,
         workSummary: clockWorkSummary,
         note: clockNote || null
       })
       setClockWorkSummary('')
       setClockNote('')
-      await refreshAfterAction('Clock-out saved')
+      await refreshAfterAction(position ? 'Clock-out saved' : 'Clock-out saved (no GPS signal)')
     } catch (clockError) {
       if (clockError instanceof ApiError) {
         setError(clockError.message)
       } else if (clockError instanceof Error) {
         setError(clockError.message)
       } else {
-        setError('Unable to clock out. Check your location settings and try again.')
+        setError('Unable to clock out. Try again.')
       }
     } finally {
       setIsClocking(false)

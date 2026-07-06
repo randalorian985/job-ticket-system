@@ -45,6 +45,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false))
   }, [])
 
+  // Session expiry warning: parse JWT exp and warn 5 min before expiry
+  useEffect(() => {
+    const token = authStorage.getToken()
+    if (!token || !user) return
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const expiresAt = payload.exp * 1000 // ms
+      const warnAt5 = expiresAt - 5 * 60 * 1000
+      const warnAt1 = expiresAt - 60 * 1000
+      const now = Date.now()
+
+      const timers: ReturnType<typeof setTimeout>[] = []
+
+      if (warnAt5 > now) {
+        timers.push(setTimeout(() => {
+          notify('Your session expires in 5 minutes. Save any work in progress.', 'warning')
+        }, warnAt5 - now))
+      }
+
+      if (warnAt1 > now) {
+        timers.push(setTimeout(() => {
+          notify('Your session expires in 1 minute. Please sign in again to continue.', 'error')
+        }, warnAt1 - now))
+      }
+
+      return () => timers.forEach(clearTimeout)
+    } catch {
+      // Malformed token — ignore, 401 handler will catch expiry
+    }
+  }, [user, notify])
+
   const login = async (payload: AuthLoginRequestDto) => {
     const response = await authApi.login(payload)
     authStorage.setToken(response.accessToken)

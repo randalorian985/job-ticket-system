@@ -299,8 +299,8 @@ public sealed class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntry>
         builder.Property(x => x.HourlyRate).HasPrecision(18, 2);
         builder.Property(x => x.CostRateSnapshot).HasPrecision(18, 2);
         builder.Property(x => x.BillRateSnapshot).HasPrecision(18, 2);
-        builder.Property(x => x.ClockInLatitude).HasPrecision(9, 6).IsRequired();
-        builder.Property(x => x.ClockInLongitude).HasPrecision(9, 6).IsRequired();
+        builder.Property(x => x.ClockInLatitude).HasPrecision(9, 6);
+        builder.Property(x => x.ClockInLongitude).HasPrecision(9, 6);
         builder.Property(x => x.ClockOutLatitude).HasPrecision(9, 6);
         builder.Property(x => x.ClockOutLongitude).HasPrecision(9, 6);
         builder.Property(x => x.ClockInAccuracy).HasPrecision(9, 3);
