@@ -227,6 +227,19 @@ const normalizeStatusFilterOptions = (options: TicketStatusFilterOptionDto[]) =>
     .filter((option) => option.isActive && Number.isInteger(option.status) && option.status >= 1 && option.status <= 10)
     .sort((left, right) => left.displayOrder - right.displayOrder || left.displayLabel.localeCompare(right.displayLabel))
 
+/** Returns days old + a CSS class for visual urgency based on priority and age. */
+const getTicketAgeInfo = (job: JobTicketListItemDto) => {
+  const dateStr = job.requestedAtUtc
+  if (!dateStr) return null
+  const created = new Date(dateStr)
+  const days = Math.floor((Date.now() - created.getTime()) / 86400000)
+  // Response-target thresholds by priority (4=Urgent, 3=High, 2=Normal, 1=Low)
+  const warnDays = job.priority === 4 ? 1 : job.priority === 3 ? 2 : job.priority === 2 ? 5 : 14
+  const critDays = job.priority === 4 ? 2 : job.priority === 3 ? 4 : job.priority === 2 ? 10 : 30
+  const cls = days >= critDays ? 'age-critical' : days >= warnDays ? 'age-warn' : 'age-ok'
+  return { days, cls }
+}
+
 export function JobTicketListPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
   const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
@@ -721,7 +734,10 @@ export function JobTicketListPage() {
                       <div className="ticket-title">{job.title}</div>
                       <div className="muted">{getJobTicketStatusLabel(job.status)} · {getJobTicketPriorityLabel(job.priority)}</div>
                     </div>
-                    <span className={`status-pill readiness-pill ${readinessClass}`}>{readiness.label}</span>
+                    <div className="ticket-list-pills">
+                      {(() => { const age = getTicketAgeInfo(job); return age && activeStatusValues.has(job.status) ? <span className={`status-pill ticket-age-pill ${age.cls}`}>{age.days}d old</span> : null })()}
+                      <span className={`status-pill readiness-pill ${readinessClass}`}>{readiness.label}</span>
+                    </div>
                   </div>
                   <div className="ticket-meta-grid">
                     <div><strong>Customer</strong><span>{customer?.name ?? job.customerName ?? 'Customer unavailable'}</span></div>

@@ -21,6 +21,7 @@ import type {
   JobWorkEntryDto,
   PartDto,
   ServiceLocationDto,
+  TicketTimelineItemDto,
   TimeEntryDto,
   AssignableEmployeeDto,
 } from "../../types";
@@ -86,6 +87,7 @@ export function JobTicketDetailPage() {
   const [parts, setParts] = useState<JobTicketPartDto[]>([]);
   const [catalogParts, setCatalogParts] = useState<PartDto[]>([]);
   const [files, setFiles] = useState<JobTicketFileDto[]>([]);
+  const [timeline, setTimeline] = useState<TicketTimelineItemDto[]>([]);
   const [invoiceSummary, setInvoiceSummary] = useState<InvoiceReadySummaryDto | null>(null);
   const [invoiceSummaryError, setInvoiceSummaryError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<CustomerDto[]>([]);
@@ -613,6 +615,7 @@ export function JobTicketDetailPage() {
 
       if (user?.role === "Admin" || user?.role === "Manager") {
         setEmployees(await usersApi.listAssignableEmployees().catch(() => []));
+        setTimeline(await jobTicketsApi.getTimeline(jobTicketId).catch(() => []))
       }
 
       setError(null);
@@ -1841,6 +1844,21 @@ export function JobTicketDetailPage() {
                 ) : (
                   <p className="muted">No ticket activity has been recorded yet.</p>
                 )}
+                {timeline.length > 0 ? (
+                  <details className="ticket-audit-trail">
+                    <summary>Full audit trail ({timeline.length} events)</summary>
+                    <ol className="ticket-audit-list">
+                      {timeline.map((item) => (
+                        <li key={item.id} className="ticket-audit-item">
+                          <span className="ticket-audit-description">{item.description}</span>
+                          <span className="ticket-audit-meta">
+                            {item.actorName ? `${item.actorName} — ` : ''}{new Date(item.occurredAtUtc).toLocaleString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                ) : null}
               </article>
 
               <article {...getWorkflowPanelProps("closeout", "closeout")} aria-label="invoice review">

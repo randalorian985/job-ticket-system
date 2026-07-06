@@ -29,6 +29,7 @@ public interface IJobTicketsService
     Task<JobTicketPartDto?> ApprovePartAsync(Guid jobTicketId, Guid jobTicketPartId, ApproveJobTicketPartDto request, CancellationToken cancellationToken = default);
     Task<JobTicketPartDto?> RejectPartAsync(Guid jobTicketId, Guid jobTicketPartId, RejectJobTicketPartDto request, CancellationToken cancellationToken = default);
     Task<JobTicketPartDto?> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TicketTimelineItemDto>> GetTimelineAsync(Guid jobTicketId, CancellationToken cancellationToken = default);
 }
 
 public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : IJobTicketsService
@@ -927,6 +928,116 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         return JsonSerializer.Serialize(values.ToDictionary(x => x.Name, x => x.Value));
     }
 
+    public async Task<IReadOnlyList<TicketTimelineItemDto>> GetTimelineAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
+    {
+        var logs = await dbContext.AuditLogs
+            .Where(x => x.EntityId == jobTicketId)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .Take(200)
+            .ToListAsync(cancellationToken);
+
+        // Build actor name lookup for any non-null UserId in this batch
+        var actorIds = logs
+            .Where(x => x.UserId.HasValue && x.UserId.Value != Guid.Empty)
+            .Select(x => x.UserId!.Value)
+            .Distinct()
+            .ToList();
+
+        var actorNames = actorIds.Count > 0
+            ? await dbContext.Employees
+                .Where(x => actorIds.Contains(x.Id))
+                .Select(x => new { x.Id, Name = x.FirstName + " " + x.LastName })
+                .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken)
+            : new Dictionary<Guid, string>();
+
+        return logs
+            .Select(log => new TicketTimelineItemDto(
+                log.Id,
+                log.CreatedAtUtc,
+                log.ActionType.ToString(),
+                log.EntityName,
+                FormatTimelineEvent(log),
+                log.UserId.HasValue && actorNames.TryGetValue(log.UserId.Value, out var name) ? name : null,
+                log.OldValuesJson,
+                log.NewValuesJson))
+            .ToList();
+    }
+
+    private static string FormatTimelineEvent(AuditLog log)
+    {
+        var newVals = ParseJson(log.NewValuesJson);
+        var oldVals = ParseJson(log.OldValuesJson);
+
+        return (log.EntityName, log.ActionType) switch
+        {
+            (nameof(JobTicket), AuditActionType.Create) =>
+                $"Ticket created" + (newVals.TryGetValue("TicketNumber", out var tn) ? $" ({tn})" : ""),
+            (nameof(JobTicket), AuditActionType.StatusChange) =>
+                $"Status changed from {FriendlyStatus(oldVals.GetValueOrDefault("Status"))} to {FriendlyStatus(newVals.GetValueOrDefault("Status"))}",
+            (nameof(JobTicket), AuditActionType.Update) =>
+                "Ticket details updated",
+            (nameof(JobTicket), AuditActionType.Delete) =>
+                "Ticket archived" + (newVals.TryGetValue("ArchiveReason", out var reason) ? $": {reason}" : ""),
+            (nameof(JobTicketEmployee), AuditActionType.Assignment) =>
+                newVals.GetValueOrDefault("Operation") == "Add"
+                    ? "Technician assigned to ticket"
+                    : "Technician removed from ticket",
+            (nameof(JobWorkEntry), AuditActionType.Create) =>
+                $"Work note added ({FriendlyEntryType(newVals.GetValueOrDefault("EntryType"))})",
+            (nameof(JobTicketPart), AuditActionType.Create) =>
+                newVals.GetValueOrDefault("OfficeOrderRequested") == "true" || newVals.GetValueOrDefault("OfficeOrderRequested") == "True"
+                    ? $"Part order requested: {newVals.GetValueOrDefault("PartNumber") ?? "unlisted part"}"
+                    : $"Part added: {newVals.GetValueOrDefault("PartNumber") ?? newVals.GetValueOrDefault("PartId") ?? "part"}",
+            (nameof(JobTicketPart), AuditActionType.Update) =>
+                "Part record updated",
+            (nameof(JobTicketPart), AuditActionType.Approval) =>
+                $"Part {newVals.GetValueOrDefault("ApprovalStatus")?.ToString()?.ToLowerInvariant() ?? "reviewed"}",
+            (nameof(JobTicketPart), AuditActionType.Delete) =>
+                "Part removed from ticket",
+            _ => $"{log.EntityName} {log.ActionType}"
+        };
+    }
+
+    private static Dictionary<string, string> ParseJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new();
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json)
+                       ?.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
+                   ?? new();
+        }
+        catch
+        {
+            return new();
+        }
+    }
+
+    private static string FriendlyStatus(string? raw) => raw switch
+    {
+        "Draft" => "Draft",
+        "Submitted" => "Submitted",
+        "Assigned" => "Assigned",
+        "InProgress" => "In Progress",
+        "WaitingOnParts" => "Waiting on Parts",
+        "WaitingOnCustomer" => "Waiting on Customer",
+        "Completed" => "Completed",
+        "Cancelled" => "Cancelled",
+        "Invoiced" => "Invoiced",
+        "Reviewed" => "Reviewed",
+        _ => raw ?? "Unknown"
+    };
+
+    private static string FriendlyEntryType(string? raw) => raw switch
+    {
+        "WorkNote" => "work note",
+        "ClockIn" => "clock-in",
+        "ClockOut" => "clock-out",
+        "TravelStart" => "travel start",
+        "ArrivalOnSite" => "arrival on site",
+        _ => raw?.ToLowerInvariant() ?? "note"
+    };
+
     private void AddAudit(Guid entityId, string entityName, AuditActionType actionType, string? oldValues, string? newValues)
     {
         dbContext.AuditLogs.Add(new AuditLog
@@ -934,7 +1045,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
             EntityName = entityName,
             EntityId = entityId,
             ActionType = actionType,
-            UserId = SystemUserId,
+            UserId = currentUserContext.UserId != Guid.Empty ? currentUserContext.UserId : null,
             OldValuesJson = oldValues,
             NewValuesJson = newValues
         });
@@ -1053,6 +1164,16 @@ public sealed record JobTicketListItemDto(
     string ServiceLocationName,
     Guid? EquipmentId,
     string? EquipmentName);
+
+public sealed record TicketTimelineItemDto(
+    Guid Id,
+    DateTime OccurredAtUtc,
+    string ActionType,
+    string EntityName,
+    string Description,
+    string? ActorName,
+    string? OldValuesJson,
+    string? NewValuesJson);
 
 public sealed record JobTicketDto(
     Guid Id,

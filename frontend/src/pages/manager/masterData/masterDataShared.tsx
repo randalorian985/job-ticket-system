@@ -4,14 +4,18 @@ import type { CustomerDto, PartCategoryDto, ServiceLocationDto, VendorDto } from
 
 export type ArchiveFilter = 'all' | 'active' | 'archived'
 
-/** When `error` becomes non-null, scroll the first visible error message into view. */
-export function useScrollToError(error: string | null) {
+/** When `error` becomes non-null OR when any inline field error appears, scroll the first error into view. */
+export function useScrollToError(error: string | null, fieldErrors?: Record<string, string>) {
+  const hasFieldError = fieldErrors ? Object.values(fieldErrors).some(Boolean) : false
   useEffect(() => {
     if (error) {
       const el = document.querySelector<HTMLElement>('.error')
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    } else if (hasFieldError) {
+      const el = document.querySelector<HTMLElement>('.field-error')
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-  }, [error])
+  }, [error, hasFieldError])
 }
 
 const normalizeSearchValue = (value?: string | number | null) => String(value ?? '').toLowerCase()

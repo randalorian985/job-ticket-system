@@ -115,6 +115,17 @@ export type JobTicketListItemDto = {
   equipmentName?: string | null
 }
 
+export type TicketTimelineItemDto = {
+  id: string
+  occurredAtUtc: string
+  actionType: string
+  entityName: string
+  description: string
+  actorName?: string | null
+  oldValuesJson?: string | null
+  newValuesJson?: string | null
+}
+
 export type JobTicketDto = {
   id: string
   ticketNumber: string

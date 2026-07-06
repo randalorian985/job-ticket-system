@@ -352,6 +352,7 @@ export function ServiceLocationsPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [search, setSearch] = useState('')
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('all')
   const [customerFilter, setCustomerFilter] = useState('')
@@ -372,7 +373,7 @@ export function ServiceLocationsPage() {
   }, [customerFilter, editId])
   const customerOptions = useMemo(() => activeOrSelected(customers, [draft.customerId]), [customers, draft.customerId])
   const selectedCustomer = useMemo(() => customers.find((customer) => customer.id === draft.customerId), [customers, draft.customerId])
-  useScrollToError(error)
+  useScrollToError(error, fieldErrors)
   const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [
     x.locationName,
     x.companyName,
@@ -394,22 +395,24 @@ export function ServiceLocationsPage() {
   ])), [items, customers, search, archiveFilter, customerFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
-    const requiredFields: Array<[boolean, string]> = [
-      [!hasRequiredText(draft.locationName), 'Location Name'],
-      [!hasRequiredText(draft.companyName), 'Company Name'],
-      [!hasRequiredText(draft.addressLine1), 'Address'],
-      [!hasRequiredText(draft.city), 'City'],
-      [!hasRequiredText(draft.state), 'State'],
-      [!hasRequiredText(draft.postalCode), 'Postal Code / ZIP'],
-      [!hasRequiredText(draft.country), 'Country'],
-    ]
-    const missingField = requiredFields.find(([missing]) => missing)
-    if (missingField) { setSuccess(null); return setError(`${missingField[1]} is required.`) }
+    const newFieldErrors: Record<string, string> = {
+      locationName: !hasRequiredText(draft.locationName) ? 'Location Name is required.' : '',
+      companyName: !hasRequiredText(draft.companyName) ? 'Company Name is required.' : '',
+      addressLine1: !hasRequiredText(draft.addressLine1) ? 'Address is required.' : '',
+      city: !hasRequiredText(draft.city) ? 'City is required.' : '',
+      state: !hasRequiredText(draft.state) ? 'State is required.' : '',
+      postalCode: !hasRequiredText(draft.postalCode) ? 'Postal Code / ZIP is required.' : '',
+      country: !hasRequiredText(draft.country) ? 'Country is required.' : '',
+    }
+    const hasErrors = Object.values(newFieldErrors).some(Boolean)
+    setFieldErrors(newFieldErrors)
+    if (hasErrors) { setSuccess(null); return }
     try {
       const action = editId ? 'updated' : 'created'
       const locationName = draft.locationName.trim()
       setError(null)
       setSuccess(null)
+      setFieldErrors({})
       setIsSaving(true)
       if (editId) await masterDataApi.updateServiceLocation(editId, draft)
       else await masterDataApi.createServiceLocation(draft)
@@ -428,6 +431,7 @@ export function ServiceLocationsPage() {
     setEditId(null)
     setError(null)
     setSuccess(null)
+    setFieldErrors({})
     setEditorOpen(false)
   }
   const startEdit = (location: ServiceLocationDto) => {
@@ -435,6 +439,7 @@ export function ServiceLocationsPage() {
     setEditId(location.id)
     setError(null)
     setSuccess(null)
+    setFieldErrors({})
     setEditorOpen(true)
   }
   const useCustomerAddress = () => {
@@ -483,25 +488,39 @@ export function ServiceLocationsPage() {
         <div className="copy-helper-row">
           <button type="button" className="secondary-button" onClick={useCustomerAddress} disabled={!selectedCustomer}>Use customer address</button>
         </div>
-        <label>Company<input placeholder="Company" value={draft.companyName} onChange={(e) => setDraft({ ...draft, companyName: e.target.value })} /></label>
-        <label>Location name<input placeholder="Location Name" value={draft.locationName} onChange={(e) => setDraft({ ...draft, locationName: e.target.value })} /></label>
+        <label>Company<input placeholder="Company" value={draft.companyName} onChange={(e) => { setDraft({ ...draft, companyName: e.target.value }); setFieldErrors((fe) => ({ ...fe, companyName: '' })) }} />
+          {fieldErrors.companyName ? <small className="field-error">{fieldErrors.companyName}</small> : null}
+        </label>
+        <label>Location name<input placeholder="Location Name" value={draft.locationName} onChange={(e) => { setDraft({ ...draft, locationName: e.target.value }); setFieldErrors((fe) => ({ ...fe, locationName: '' })) }} />
+          {fieldErrors.locationName ? <small className="field-error">{fieldErrors.locationName}</small> : null}
+        </label>
         <div className="row">
           <label>On-site contact<input placeholder="On-site contact" value={draft.onSiteContactName ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactName: e.target.value })} /></label>
           <label>On-site phone<input placeholder="On-site phone" value={draft.onSiteContactPhone ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactPhone: e.target.value })} /></label>
           <label>On-site email<input placeholder="On-site email" value={draft.onSiteContactEmail ?? ''} onChange={(e) => setDraft({ ...draft, onSiteContactEmail: e.target.value })} /></label>
         </div>
         <div className="row">
-          <label>Address<input placeholder="Address" value={draft.addressLine1} onChange={(e) => setDraft({ ...draft, addressLine1: e.target.value })} /></label>
+          <label>Address<input placeholder="Address" value={draft.addressLine1} onChange={(e) => { setDraft({ ...draft, addressLine1: e.target.value }); setFieldErrors((fe) => ({ ...fe, addressLine1: '' })) }} />
+            {fieldErrors.addressLine1 ? <small className="field-error">{fieldErrors.addressLine1}</small> : null}
+          </label>
           <label>Address line 2<input placeholder="Address line 2" value={draft.addressLine2 ?? ''} onChange={(e) => setDraft({ ...draft, addressLine2: e.target.value })} /></label>
         </div>
         <div className="row">
-          <label>City<input placeholder="City" value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} /></label>
-          <label>State<input placeholder="State" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })} /></label>
+          <label>City<input placeholder="City" value={draft.city} onChange={(e) => { setDraft({ ...draft, city: e.target.value }); setFieldErrors((fe) => ({ ...fe, city: '' })) }} />
+            {fieldErrors.city ? <small className="field-error">{fieldErrors.city}</small> : null}
+          </label>
+          <label>State<input placeholder="State" value={draft.state} onChange={(e) => { setDraft({ ...draft, state: e.target.value }); setFieldErrors((fe) => ({ ...fe, state: '' })) }} />
+            {fieldErrors.state ? <small className="field-error">{fieldErrors.state}</small> : null}
+          </label>
         </div>
         <div className="row">
-          <label>Postal code<input placeholder="Postal" value={draft.postalCode} onChange={(e) => setDraft({ ...draft, postalCode: e.target.value })} /></label>
+          <label>Postal code<input placeholder="Postal" value={draft.postalCode} onChange={(e) => { setDraft({ ...draft, postalCode: e.target.value }); setFieldErrors((fe) => ({ ...fe, postalCode: '' })) }} />
+            {fieldErrors.postalCode ? <small className="field-error">{fieldErrors.postalCode}</small> : null}
+          </label>
           <label>Parish / county<input placeholder="Parish / county" value={draft.parishCounty ?? ''} onChange={(e) => setDraft({ ...draft, parishCounty: e.target.value })} /></label>
-          <label>Country<input placeholder="Country" value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })} /></label>
+          <label>Country<input placeholder="Country" value={draft.country} onChange={(e) => { setDraft({ ...draft, country: e.target.value }); setFieldErrors((fe) => ({ ...fe, country: '' })) }} />
+            {fieldErrors.country ? <small className="field-error">{fieldErrors.country}</small> : null}
+          </label>
         </div>
         <div className="row">
           <label>Gate code<input placeholder="Gate code" value={draft.gateCode ?? ''} onChange={(e) => setDraft({ ...draft, gateCode: e.target.value })} /></label>

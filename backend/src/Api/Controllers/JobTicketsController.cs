@@ -34,6 +34,11 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
         return ticket is null ? NotFound() : Ok(ticket);
     }
 
+    [HttpGet("{id:guid}/timeline")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult<IReadOnlyList<TicketTimelineItemDto>>> GetTimelineAsync(Guid id, CancellationToken cancellationToken = default)
+        => Ok(await service.GetTimelineAsync(id, cancellationToken));
+
     [HttpPost]
     [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<JobTicketDto>> CreateAsync([FromBody] CreateJobTicketDto request, CancellationToken cancellationToken = default)

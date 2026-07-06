@@ -130,6 +130,86 @@ textarea:focus-visible {
   border-radius: 8px;
 }
 
+/* Inline field-level validation error — appears below the specific input */
+.field-error {
+  color: #b91c1c;
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.2rem;
+}
+
+label:has(.field-error) input,
+label:has(.field-error) select,
+label:has(.field-error) textarea {
+  border-color: #b91c1c;
+  outline-color: #b91c1c;
+}
+
+/* Ticket audit trail collapsible section */
+.ticket-audit-trail {
+  border-top: 1px solid var(--line, #e5e7eb);
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+}
+
+.ticket-audit-trail summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0;
+}
+
+.ticket-audit-list {
+  display: grid;
+  gap: 0.3rem;
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.ticket-audit-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ticket-audit-description {
+  font-size: 0.82rem;
+}
+
+.ticket-audit-meta {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.72rem;
+}
+
+/* Ticket age pills on the manager ticket list */
+.ticket-list-pills {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.ticket-age-pill.age-ok {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+
+.ticket-age-pill.age-warn {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.ticket-age-pill.age-critical {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  font-weight: 700;
+}
+
 .success {
   color: #047857;
   background: #dcfce7;

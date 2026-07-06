@@ -43,6 +43,35 @@ export const jobTicketStatusLabels = [
 
 export const jobStatusOptions = numberedOptions(jobTicketStatusLabels)
 
+/**
+ * Returns the set of valid status values a manager can transition a ticket to
+ * from its current status. Prevents skipping steps or jumping to Invoiced early.
+ */
+export function getValidStatusTransitions(currentStatus: number): number[] {
+  // Draft
+  if (currentStatus === 1) return [1, 2, 8]
+  // Submitted
+  if (currentStatus === 2) return [1, 2, 3, 5, 6, 8]
+  // Assigned
+  if (currentStatus === 3) return [2, 3, 4, 5, 6, 8]
+  // In Progress
+  if (currentStatus === 4) return [3, 4, 5, 6, 7, 8]
+  // Waiting on Parts
+  if (currentStatus === 5) return [3, 4, 5, 6, 8]
+  // Waiting on Customer
+  if (currentStatus === 6) return [3, 4, 5, 6, 8]
+  // Completed
+  if (currentStatus === 7) return [4, 7, 8, 10]
+  // Cancelled
+  if (currentStatus === 8) return [2, 8]
+  // Invoiced (read-only, no forward transition from UI)
+  if (currentStatus === 9) return [9]
+  // Reviewed → Ready for Invoice
+  if (currentStatus === 10) return [7, 9, 10]
+  // Unknown / fallback — allow editing status freely
+  return jobStatusOptions.map((o) => o.value)
+}
+
 export const defaultTicketStatusFilterOptions: TicketStatusFilterOptionDto[] = [
   { id: 'default-submitted', displayLabel: 'Submitted', status: 2, displayOrder: 10, isActive: true },
   { id: 'default-assigned', displayLabel: 'Assigned', status: 3, displayOrder: 20, isActive: true },

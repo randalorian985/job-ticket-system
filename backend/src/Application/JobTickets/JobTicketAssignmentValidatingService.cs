@@ -101,4 +101,7 @@ public sealed class JobTicketAssignmentValidatingService(ApplicationDbContext db
 
     public Task<JobTicketPartDto?> ArchivePartAsync(Guid jobTicketId, Guid jobTicketPartId, ArchiveJobTicketPartDto request, CancellationToken cancellationToken = default)
         => inner.ArchivePartAsync(jobTicketId, jobTicketPartId, request, cancellationToken);
+
+    public Task<IReadOnlyList<TicketTimelineItemDto>> GetTimelineAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
+        => inner.GetTimelineAsync(jobTicketId, cancellationToken);
 }

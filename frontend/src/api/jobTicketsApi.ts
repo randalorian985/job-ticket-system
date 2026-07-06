@@ -12,6 +12,7 @@ import type {
   JobWorkEntryDto,
   QuickAddJobTicketPartDto,
   RejectJobTicketPartDto,
+  TicketTimelineItemDto,
   UpdateJobTicketDto
 } from '../types'
 import { apiRequest } from './httpClient'
@@ -19,6 +20,7 @@ import { apiRequest } from './httpClient'
 export const jobTicketsApi = {
   listMine: () => apiRequest<JobTicketListItemDto[]>('/api/job-tickets?offset=0&limit=100'),
   listAll: () => apiRequest<JobTicketListItemDto[]>('/api/job-tickets?offset=0&limit=100'),
+  listByCustomer: (customerId: string) => apiRequest<JobTicketListItemDto[]>(`/api/job-tickets?customerId=${customerId}&offset=0&limit=50`),
   get: (jobTicketId: string) => apiRequest<JobTicketDto>(`/api/job-tickets/${jobTicketId}`),
   create: (payload: CreateJobTicketDto) =>
     apiRequest<JobTicketDto>('/api/job-tickets', {
@@ -85,5 +87,6 @@ export const jobTicketsApi = {
     apiRequest<JobTicketPartDto>(`/api/job-tickets/${jobTicketId}/parts/${jobTicketPartId}/reject`, {
       method: 'POST',
       body: JSON.stringify(payload)
-    })
+    }),
+  getTimeline: (jobTicketId: string) => apiRequest<TicketTimelineItemDto[]>(`/api/job-tickets/${jobTicketId}/timeline`)
 }

@@ -1,5 +1,6 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../api/httpClient'
+import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
 import { reportsApi } from '../../api/reportsApi'
 import type {
@@ -12,7 +13,7 @@ import type {
   ReportServiceHistoryItemDto,
   ServiceLocationDto
 } from '../../types'
-import { priorityOptions, jobStatusOptions, workLocationTypeOptions } from './managerDisplay'
+import { priorityOptions, jobStatusOptions, getValidStatusTransitions, workLocationTypeOptions } from './managerDisplay'
 
 /** Convert a UTC ISO string to the value expected by a datetime-local input (local time). */
 function toDatetimeLocalValue(utcIso: string | null | undefined): string {
@@ -369,7 +370,26 @@ export function JobTicketEditorForm({
   const [isAddingServiceLocation, setIsAddingServiceLocation] = useState(false)
   const [isAddingEquipment, setIsAddingEquipment] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
   const [equipmentHistory, setEquipmentHistory] = useState<ReportServiceHistoryItemDto[]>([])
+
+  // Duplicate detection: check for open tickets against the same customer+equipment when creating.
+  useEffect(() => {
+    if (!isCreate || !form.customerId || !form.equipmentId) {
+      setDuplicateWarning(null)
+      return
+    }
+    jobTicketsApi.listByCustomer(form.customerId)
+      .then((tickets) => {
+        const open = tickets.filter((t) => t.equipmentId === form.equipmentId && t.status < 7)
+        if (open.length) {
+          setDuplicateWarning(`There ${open.length === 1 ? 'is' : 'are'} already ${open.length} open ticket${open.length === 1 ? '' : 's'} for this equipment. Review before creating a duplicate.`)
+        } else {
+          setDuplicateWarning(null)
+        }
+      })
+      .catch(() => setDuplicateWarning(null))
+  }, [isCreate, form.customerId, form.equipmentId])
   const [equipmentHistoryError, setEquipmentHistoryError] = useState<string | null>(null)
   const [isLoadingEquipmentHistory, setIsLoadingEquipmentHistory] = useState(false)
 
@@ -1026,11 +1046,19 @@ export function JobTicketEditorForm({
             <label>Priority<select value={form.priority} onChange={(e) => update('priority', Number(e.target.value))}>{priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
             <label>Status
               <select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>
-                {(isCreate ? jobStatusOptions.filter((item) => item.value <= 2) : jobStatusOptions).map((item) => (
-                  <option key={item.value} value={item.value}>{item.label}</option>
-                ))}
+                {isCreate
+                  ? jobStatusOptions.filter((item) => item.value <= 2).map((item) => (
+                    <option key={item.value} value={item.value}>{item.label}</option>
+                  ))
+                  : jobStatusOptions
+                    .filter((item) => getValidStatusTransitions(form.status).includes(item.value))
+                    .map((item) => (
+                      <option key={item.value} value={item.value}>{item.label}</option>
+                    ))
+                }
               </select>
               {isCreate ? <small className="field-char-count">New tickets start as Draft or Submitted.</small> : null}
+              {!isCreate && form.status === 9 ? <small className="field-char-count">Invoiced tickets cannot be changed from this form.</small> : null}
             </label>
             <label>Work Location<select value={form.locationType || 1} onChange={(e) => update('locationType', Number(e.target.value))}>{workLocationTypeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
           </div>
@@ -1181,6 +1209,11 @@ export function JobTicketEditorForm({
             </button>
           </div>
           <p className="muted">Choose the customer's crane or equipment this ticket is for. For component-only work, describe the part in Job Title and Service Instructions.</p>
+          {duplicateWarning ? (
+            <div className="warning duplicate-ticket-warning" role="alert">
+              <strong>Possible duplicate:</strong> {duplicateWarning}
+            </div>
+          ) : null}
           {equipmentQuickAddMessage ? <p className="success" role="status">{equipmentQuickAddMessage}</p> : null}
           {equipmentQuickAddError ? <p className="error">{equipmentQuickAddError}</p> : null}
           {equipmentQuickAddOpen ? (
