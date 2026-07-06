@@ -1,4 +1,4 @@
-import type { ChangeEvent, FormEvent } from 'react'
+import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { UpdateCompanyConfigurationDto } from '../../../types'
 
 type CompanyConfigurationFormProps = {
@@ -6,6 +6,7 @@ type CompanyConfigurationFormProps = {
   isSaving: boolean
   onChange: (value: UpdateCompanyConfigurationDto) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  notificationsPanel?: ReactNode
 }
 
 const textFields: Array<{ name: keyof UpdateCompanyConfigurationDto, label: string, type?: string, required?: boolean, note?: string }> = [
@@ -29,7 +30,7 @@ const colorFields: Array<{ name: keyof UpdateCompanyConfigurationDto, label: str
   { name: 'accentColor', label: 'Accent color' }
 ]
 
-export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit }: CompanyConfigurationFormProps) {
+export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit, notificationsPanel }: CompanyConfigurationFormProps) {
   const updateField = (name: keyof UpdateCompanyConfigurationDto) => (event: ChangeEvent<HTMLInputElement>) => {
     onChange({ ...value, [name]: event.target.value })
   }
@@ -78,40 +79,7 @@ export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit }
         </div>
       </section>
 
-      <section className="company-config-panel stack" aria-label="new ticket notifications">
-        <div className="company-config-section-heading">
-          <div>
-            <p className="eyebrow">Notifications</p>
-            <h3>New ticket alerts</h3>
-          </div>
-        </div>
-        <div className="company-config-grid">
-          <label>
-            Enable new ticket notifications
-            <select
-              value={value.newTicketNotificationsEnabled ? 'true' : 'false'}
-              onChange={(e) => onChange({ ...value, newTicketNotificationsEnabled: e.target.value === 'true' })}
-            >
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
-            </select>
-          </label>
-          <label>
-            Minimum priority to notify
-            <select
-              value={value.newTicketNotificationMinimumPriority}
-              onChange={(e) => onChange({ ...value, newTicketNotificationMinimumPriority: Number(e.target.value) })}
-              disabled={!value.newTicketNotificationsEnabled}
-            >
-              <option value={1}>Low — notify on all tickets</option>
-              <option value={2}>Normal and above</option>
-              <option value={3}>High and above</option>
-              <option value={4}>Urgent only</option>
-            </select>
-            <span className="company-config-field-note">Recipients are configured in the Notification Recipients section below.</span>
-          </label>
-        </div>
-      </section>
+      {notificationsPanel}
 
       <div className="company-config-actions">
         <button type="submit" disabled={isSaving}>
