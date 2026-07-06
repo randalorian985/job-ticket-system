@@ -44,6 +44,11 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
             history = history.Where(x => x.PartId == normalized.PartId.Value);
         }
 
+        if (normalized.CustomerId.HasValue)
+        {
+            history = history.Where(x => x.JobTicket.CustomerId == normalized.CustomerId.Value);
+        }
+
         if (requestedEquipment is not null)
         {
             var modelNumber = requestedEquipment.ModelNumber;
@@ -68,6 +73,8 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
                 x.Id,
                 x.JobTicketId,
                 x.JobTicket.TicketNumber,
+                x.JobTicket.Customer.Id,
+                x.JobTicket.Customer.Name,
                 x.PartId,
                 x.PartNumberSnapshot,
                 x.PartNameSnapshot,
@@ -135,6 +142,8 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
             row.JobTicketPartId,
             row.JobTicketId,
             row.TicketNumber,
+            row.CustomerId,
+            row.CustomerName,
             row.PartId,
             row.PartNumber,
             row.PartName,
@@ -163,6 +172,8 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
         Guid JobTicketPartId,
         Guid JobTicketId,
         string TicketNumber,
+        Guid CustomerId,
+        string CustomerName,
         Guid? PartId,
         string PartNumber,
         string PartName,
@@ -184,7 +195,7 @@ public sealed class PartsUsageHistoryService(ApplicationDbContext dbContext, ICu
         JobPartApprovalStatus ApprovalStatus);
 }
 
-public sealed record PartsUsageHistoryQuery(Guid? EquipmentId, Guid? PartId, int Offset = 0, int Limit = 50)
+public sealed record PartsUsageHistoryQuery(Guid? EquipmentId, Guid? PartId, Guid? CustomerId = null, int Offset = 0, int Limit = 50)
 {
     public PartsUsageHistoryQuery Normalized() => this with
     {
@@ -197,6 +208,8 @@ public sealed record PartsUsageHistoryItemDto(
     Guid JobTicketPartId,
     Guid JobTicketId,
     string TicketNumber,
+    Guid? CustomerId,
+    string? CustomerName,
     Guid? PartId,
     string PartNumber,
     string PartName,

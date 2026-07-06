@@ -38,6 +38,32 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
         }
     }
 
+    [HttpPost("travel-start")]
+    public async Task<ActionResult<TimeEntryDto>> StartTravelAsync([FromBody] TravelStartRequestDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Ok(await service.StartTravelAsync(request, cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpPost("travel-end")]
+    public async Task<ActionResult<TimeEntryDto>> EndTravelAsync([FromBody] TravelEndRequestDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Ok(await service.EndTravelAsync(request, cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
     [HttpGet("open")]
     public async Task<ActionResult<TimeEntryDto>> GetOpenAsync([FromQuery] Guid employeeId, CancellationToken cancellationToken = default)
     {
@@ -61,11 +87,12 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
         [FromQuery] DateTime? dateFromUtc,
         [FromQuery] DateTime? dateToUtc,
         [FromQuery] string? search,
+        [FromQuery] TimeEntryType? entryType,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var filters = new TimeEntryReviewFilters(jobTicketId, employeeId, approvalStatus, dateFromUtc, dateToUtc, search);
+            var filters = new TimeEntryReviewFilters(jobTicketId, employeeId, approvalStatus, dateFromUtc, dateToUtc, search, entryType);
             return Ok(await service.ListForReviewAsync(filters, cancellationToken));
         }
         catch (Exception exception)

@@ -9,7 +9,8 @@ import { PartsUsageHistoryPage } from './PartsUsageHistoryPage'
 vi.mock('../../api/masterDataApi', () => ({
   masterDataApi: {
     listEquipment: vi.fn(),
-    listParts: vi.fn()
+    listParts: vi.fn(),
+    listCustomers: vi.fn()
   }
 }))
 
@@ -26,6 +27,7 @@ beforeEach(() => {
 
 describe('PartsUsageHistoryPage', () => {
   it('renders cautious parts usage history evidence without recommendation language', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Crane A', isArchived: false }] as any)
     vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'SEAL-1', name: 'Seal Kit', isArchived: false }] as any)
     vi.mocked(partsUsageHistoryApi.list).mockResolvedValue([
@@ -61,6 +63,7 @@ describe('PartsUsageHistoryPage', () => {
   })
 
   it('passes selected equipment and part filters to history API', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Crane A', isArchived: false }] as any)
     vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'SEAL-1', name: 'Seal Kit', isArchived: false }] as any)
     vi.mocked(partsUsageHistoryApi.list).mockResolvedValue([] as any)

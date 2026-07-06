@@ -50,6 +50,12 @@ public enum TimeEntryApprovalStatus
     Rejected = 3
 }
 
+public enum TimeEntryType
+{
+    Job = 1,
+    Travel = 2
+}
+
 public enum AdjustmentType
 {
     Add = 1,

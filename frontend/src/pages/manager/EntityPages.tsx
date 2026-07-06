@@ -11,6 +11,7 @@ export { TicketStatusFiltersPage } from './ticketStatusFilters/TicketStatusFilte
 export { InventoryPage } from './InventoryPage'
 export { PartRequestsPage } from './PartRequestsPage'
 export { PartsUsageHistoryPage } from './PartsUsageHistoryPage'
+export { TravelTimeReportPage } from './TravelTimeReportPage'
 export { EquipmentHistoryPage } from './EquipmentHistoryPage'
 export { PurchasingWorkbenchPage } from './PurchasingWorkbenchPage'
 export { SchedulePage } from './SchedulePage'

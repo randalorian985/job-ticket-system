@@ -20,6 +20,7 @@ import {
   SystemWikiPage,
   TicketStatusFiltersPage,
   TimeApprovalPage,
+  TravelTimeReportPage,
   UnauthorizedPage,
   UsersPage
 } from '../pages/manager/EntityPages'
@@ -72,6 +73,7 @@ export function AppRouter() {
           <Route path="inventory" element={<Navigate to="/manage" replace />} />
           <Route path="purchasing" element={<PurchasingWorkbenchPage />} />
           <Route path="parts-usage-history" element={<PartsUsageHistoryPage />} />
+          <Route path="travel-time" element={<TravelTimeReportPage />} />
           <Route path="time-approval" element={<TimeApprovalPage />} />
           <Route path="parts-approval" element={<PartsApprovalPage />} />
           <Route path="reports" element={<ReportsPage />} />

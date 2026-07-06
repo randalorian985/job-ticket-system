@@ -319,6 +319,7 @@ public sealed class TimeEntry : SoftDeletableEntity
     public string? ClockInNote { get; set; }
     public string? ClockOutNote { get; set; }
     public string? Notes { get; set; }
+    public TimeEntryType EntryType { get; set; } = TimeEntryType.Job;
     public ICollection<TimeEntryAdjustment> Adjustments { get; set; } = new List<TimeEntryAdjustment>();
 }
 

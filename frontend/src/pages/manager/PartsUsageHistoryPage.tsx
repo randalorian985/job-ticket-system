@@ -2,36 +2,42 @@ import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { partsUsageHistoryApi } from '../../api/partsUsageHistoryApi'
 import { masterDataApi } from '../../api/masterDataApi'
-import type { EquipmentDto, PartDto, PartsUsageHistoryItemDto } from '../../types'
+import type { CustomerDto, EquipmentDto, PartDto, PartsUsageHistoryItemDto } from '../../types'
 import { formatDate, getApprovalLabel } from './managerDisplay'
 
 export function PartsUsageHistoryPage() {
+  const [customers, setCustomers] = useState<CustomerDto[]>([])
   const [equipment, setEquipment] = useState<EquipmentDto[]>([])
   const [parts, setParts] = useState<PartDto[]>([])
   const [history, setHistory] = useState<PartsUsageHistoryItemDto[]>([])
+  const [customerId, setCustomerId] = useState('')
   const [equipmentId, setEquipmentId] = useState('')
   const [partId, setPartId] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const activeCustomers = useMemo(() => customers.filter((c) => !c.isArchived), [customers])
   const activeEquipment = useMemo(() => equipment.filter((item) => !item.isArchived), [equipment])
   const activeParts = useMemo(() => parts.filter((item) => !item.isArchived), [parts])
   const approvedCount = useMemo(() => history.filter((item) => item.approvalStatus === 2).length, [history])
   const pendingCount = useMemo(() => history.filter((item) => item.approvalStatus === 1).length, [history])
   const evidenceTagCount = useMemo(() => history.reduce((sum, item) => sum + item.evidenceTags.length, 0), [history])
 
-  const load = async (filters = { equipmentId, partId }) => {
+  const load = async (filters = { customerId, equipmentId, partId }) => {
     setIsLoading(true)
-    const [historyResponse, equipmentResponse, partsResponse] = await Promise.all([
+    const [historyResponse, customersResponse, equipmentResponse, partsResponse] = await Promise.all([
       partsUsageHistoryApi.list({
+        customerId: filters.customerId || undefined,
         equipmentId: filters.equipmentId || undefined,
         partId: filters.partId || undefined,
         limit: 50
       }),
+      masterDataApi.listCustomers(),
       masterDataApi.listEquipment(),
       masterDataApi.listParts()
     ])
     setHistory(historyResponse)
+    setCustomers(customersResponse)
     setEquipment(equipmentResponse)
     setParts(partsResponse)
     setError(null)
@@ -47,7 +53,7 @@ export function PartsUsageHistoryPage() {
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault()
-    load({ equipmentId, partId }).catch(() => {
+    load({ customerId, equipmentId, partId }).catch(() => {
       setError('Unable to load parts usage history.')
       setIsLoading(false)
     })
@@ -71,6 +77,15 @@ export function PartsUsageHistoryPage() {
           </div>
         </div>
         <form className="review-grid parts-history-filter-grid" onSubmit={onSubmit} aria-label="parts usage history filters">
+          <label>
+            Customer
+            <select aria-label="Customer" value={customerId} onChange={(event) => setCustomerId(event.target.value)}>
+              <option value="">All customers</option>
+              {activeCustomers.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </label>
           <label>
             Equipment
             <select aria-label="Equipment" value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)}>
@@ -109,6 +124,7 @@ export function PartsUsageHistoryPage() {
                 <div className="supply-history-item-heading">
                   <strong>{item.partNumber} · {item.partName}</strong>
                   <p className="muted">{item.ticketNumber} · Qty {item.quantity} · {getApprovalLabel(item.approvalStatus)} · {formatDate(item.installedAtUtc ?? item.addedAtUtc)}</p>
+                  {item.customerName ? <p className="muted">Customer: {item.customerName}</p> : null}
                   <p className="muted">Equipment: {item.equipmentName ?? (item.equipmentId ? 'Equipment unavailable' : '—')}{item.modelNumber ? ` · Model ${item.modelNumber}` : ''}</p>
                 </div>
                 <div className="inline-links supply-history-tags" aria-label={`evidence for ${item.partNumber}`}>

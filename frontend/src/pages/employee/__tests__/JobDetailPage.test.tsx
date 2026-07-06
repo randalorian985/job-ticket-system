@@ -242,7 +242,7 @@ describe('JobDetailPage', () => {
     renderJobDetail()
 
     expect(await screen.findByRole('heading', { name: 'JT-2026-000101' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Clock In' })).toBeEnabled()
     expect(screen.getByLabelText('Clock note (optional)')).toBeEnabled()
     const nextAction = screen.getByLabelText('next job action')
     expect(within(nextAction).getByText('Clock in when you are ready to work')).toBeInTheDocument()
@@ -309,8 +309,8 @@ describe('JobDetailPage', () => {
     expect(within(nextAction).getByText('Finish the active ticket first')).toBeInTheDocument()
     expect(within(nextAction).getByRole('link', { name: 'Go to Active Ticket' })).toHaveAttribute('href', '/jobs/job-2')
     expect(screen.getByRole('link', { name: 'Open active ticket' })).toHaveAttribute('href', '/jobs/job-2')
-    expect(screen.queryByRole('button', { name: 'Clock Out with GPS' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Clock In with GPS' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Clock Out' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Clock In' })).toBeDisabled()
   })
 
   it('lets technicians select an existing part from the ticket and mark it needs ordered without pricing fields', async () => {
@@ -539,7 +539,7 @@ describe('JobDetailPage', () => {
     renderJobDetail()
 
     expect(await screen.findByText(/Open entry: Started/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Clock Out with GPS' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Clock Out' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Upload Photo / File' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument()
     expect(screen.queryByLabelText('Invoice attachment')).not.toBeInTheDocument()
@@ -645,7 +645,7 @@ describe('JobDetailPage — GPS fallback on clock-in and clock-out', () => {
     renderJobDetail()
 
     const user = userEvent.setup()
-    const clockInBtn = await screen.findByRole('button', { name: 'Clock In with GPS' })
+    const clockInBtn = await screen.findByRole('button', { name: 'Clock In' })
     await user.click(clockInBtn)
 
     await waitFor(() => {
@@ -703,7 +703,7 @@ describe('JobDetailPage — GPS fallback on clock-in and clock-out', () => {
     renderJobDetail()
 
     const user = userEvent.setup()
-    const clockInBtn = await screen.findByRole('button', { name: 'Clock In with GPS' })
+    const clockInBtn = await screen.findByRole('button', { name: 'Clock In' })
     await user.click(clockInBtn)
 
     await waitFor(() => {

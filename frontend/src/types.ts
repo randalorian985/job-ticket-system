@@ -352,6 +352,26 @@ export type TimeEntryDto = {
   clockInNote?: string | null
   clockOutNote?: string | null
   clockInDeviceMetadata?: string | null
+  entryType?: number | null
+}
+
+export type TravelStartRequestDto = {
+  jobTicketId: string
+  employeeId: string
+  clockInLatitude?: number
+  clockInLongitude?: number
+  clockInAccuracy?: number
+  deviceMetadata?: string | null
+  note?: string | null
+}
+
+export type TravelEndRequestDto = {
+  timeEntryId: string
+  employeeId: string
+  clockOutLatitude?: number
+  clockOutLongitude?: number
+  clockOutAccuracy?: number
+  note?: string | null
 }
 
 export type ClockInRequestDto = {
@@ -397,6 +417,7 @@ export type TimeApprovalQueueItemDto = {
   siteName: string
   locationName: string
   locationAddress: string
+  entryType?: number | null
 }
 
 export type RejectTimeEntryRequestDto = {
@@ -443,6 +464,8 @@ export type PartsUsageHistoryItemDto = {
   jobTicketPartId: string
   jobTicketId: string
   ticketNumber: string
+  customerId?: string | null
+  customerName?: string | null
   partId?: string | null
   partNumber: string
   partName: string
@@ -468,6 +491,7 @@ export type PartsUsageHistoryItemDto = {
 export type PartsUsageHistoryQuery = {
   equipmentId?: string
   partId?: string
+  customerId?: string
   offset?: number
   limit?: number
 }

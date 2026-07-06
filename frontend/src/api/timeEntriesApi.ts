@@ -5,7 +5,9 @@ import type {
   ClockOutRequestDto,
   RejectTimeEntryRequestDto,
   TimeApprovalQueueItemDto,
-  TimeEntryDto
+  TimeEntryDto,
+  TravelEndRequestDto,
+  TravelStartRequestDto
 } from '../types'
 import { apiRequest } from './httpClient'
 
@@ -16,6 +18,7 @@ export type TimeEntryReviewFilters = {
   dateFromUtc?: string
   dateToUtc?: string
   search?: string
+  entryType?: number
 }
 
 const reviewQuery = (filters: TimeEntryReviewFilters) => {
@@ -26,6 +29,7 @@ const reviewQuery = (filters: TimeEntryReviewFilters) => {
   if (filters.dateFromUtc) query.set('dateFromUtc', filters.dateFromUtc)
   if (filters.dateToUtc) query.set('dateToUtc', filters.dateToUtc)
   if (filters.search) query.set('search', filters.search)
+  if (filters.entryType) query.set('entryType', String(filters.entryType))
   return query.toString()
 }
 
@@ -37,6 +41,16 @@ export const timeEntriesApi = {
     }),
   clockOut: (payload: ClockOutRequestDto) =>
     apiRequest<TimeEntryDto>('/api/time-entries/clock-out', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  startTravel: (payload: TravelStartRequestDto) =>
+    apiRequest<TimeEntryDto>('/api/time-entries/travel-start', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  endTravel: (payload: TravelEndRequestDto) =>
+    apiRequest<TimeEntryDto>('/api/time-entries/travel-end', {
       method: 'POST',
       body: JSON.stringify(payload)
     }),

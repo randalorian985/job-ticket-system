@@ -8,7 +8,7 @@ import { partRequestsApi } from '../../api/partRequestsApi'
 import { partsApi } from '../../api/partsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { useAuth } from '../../features/auth/AuthContext'
-import type { EquipmentCompatiblePartFieldDto, JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, PartLookupDto, TimeEntryDto } from '../../types'
+import type { EquipmentCompatiblePartFieldDto, JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, PartLookupDto, TimeEntryDto, TravelEndRequestDto, TravelStartRequestDto } from '../../types'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel, getWorkLocationTypeLabel } from './jobDisplay'
 
 const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
@@ -207,7 +207,8 @@ export function JobDetailPage() {
         : 'The job requirements are complete for assigned work.'
     }
   }, [job])
-  const isClockedIntoThisJob = Boolean(openEntry && openEntry.jobTicketId === jobTicketId)
+  const isClockedIntoThisJob = Boolean(openEntry && openEntry.jobTicketId === jobTicketId && openEntry.entryType !== 2)
+  const isTravelingToThisJob = Boolean(openEntry && openEntry.jobTicketId === jobTicketId && openEntry.entryType === 2)
   const isClockedIntoAnotherJob = Boolean(openEntry && openEntry.jobTicketId !== jobTicketId)
   const fieldRecordGateMessage = isClockedIntoAnotherJob
     ? 'You are clocked into another job. Open that ticket or clock out before recording field work here.'
@@ -215,18 +216,22 @@ export function JobDetailPage() {
   const canUseActiveJobTools = isClockedIntoThisJob
   const nextActionTitle = isClockedIntoAnotherJob
     ? 'Finish the active ticket first'
-    : isClockedIntoThisJob
-      ? 'Capture one field update at a time'
-      : employeeJobReadiness.warnings.length
-        ? 'Review setup before clock-in'
-        : 'Clock in when you are ready to work'
+    : isTravelingToThisJob
+      ? 'Traveling to job site'
+      : isClockedIntoThisJob
+        ? 'Capture one field update at a time'
+        : employeeJobReadiness.warnings.length
+          ? 'Review setup before clock-in'
+          : 'Clock in when you are ready to work'
   const nextActionBody = isClockedIntoAnotherJob
     ? 'This ticket stays locked so notes, parts, and photos do not land on the wrong time entry.'
-    : isClockedIntoThisJob
-      ? 'Use one shortcut, save the update, then return here for the next step. These tools are tied to this ticket and time entry.'
-      : employeeJobReadiness.warnings.length
-        ? 'The ticket can still be opened, but the missing setup items should be reviewed with a Manager/Admin before starting work.'
-        : 'Clock in first. Notes, parts, and photos appear after this ticket is the active time entry.'
+    : isTravelingToThisJob
+      ? 'Tap Arrive to end travel and clock in when you reach the job site.'
+      : isClockedIntoThisJob
+        ? 'Use one shortcut, save the update, then return here for the next step. These tools are tied to this ticket and time entry.'
+        : employeeJobReadiness.warnings.length
+          ? 'The ticket can still be opened, but the missing setup items should be reviewed with a Manager/Admin before starting work.'
+          : 'Clock in first. Notes, parts, and photos appear after this ticket is the active time entry.'
 
   const refreshDetails = async () => {
     if (!jobTicketId || !user) {
@@ -417,6 +422,55 @@ export function JobDetailPage() {
       } else {
         setError('Unable to clock out. Try again.')
       }
+    } finally {
+      setIsClocking(false)
+    }
+  }
+
+  const onStartTravel = async () => {
+    if (!jobTicketId || !user) return
+    setIsClocking(true)
+    setError(null)
+    try {
+      const position = await getLocation()
+      const payload: TravelStartRequestDto = {
+        jobTicketId,
+        employeeId: user.employeeId,
+        clockInLatitude: position?.coords.latitude,
+        clockInLongitude: position?.coords.longitude,
+        clockInAccuracy: position?.coords.accuracy,
+        deviceMetadata: navigator.userAgent,
+        note: clockNote || null
+      }
+      await timeEntriesApi.startTravel(payload)
+      setClockNote('')
+      await refreshAfterAction('Travel started')
+    } catch (travelError) {
+      setError(travelError instanceof ApiError ? travelError.message : 'Unable to start travel. Try again.')
+    } finally {
+      setIsClocking(false)
+    }
+  }
+
+  const onEndTravel = async () => {
+    if (!user || !openEntry) return
+    setIsClocking(true)
+    setError(null)
+    try {
+      const position = await getLocation()
+      const payload: TravelEndRequestDto = {
+        timeEntryId: openEntry.id,
+        employeeId: user.employeeId,
+        clockOutLatitude: position?.coords.latitude,
+        clockOutLongitude: position?.coords.longitude,
+        clockOutAccuracy: position?.coords.accuracy,
+        note: clockNote || null
+      }
+      await timeEntriesApi.endTravel(payload)
+      setClockNote('')
+      await refreshAfterAction('Travel ended — ready to clock in')
+    } catch (travelError) {
+      setError(travelError instanceof ApiError ? travelError.message : 'Unable to end travel. Try again.')
     } finally {
       setIsClocking(false)
     }
@@ -630,6 +684,8 @@ export function JobDetailPage() {
             <a className="button-link" href="#photo-upload-panel">Upload Photo</a>
             <a className="button-link secondary-link" href="#clock-card">Clock Out</a>
           </div>
+        ) : isTravelingToThisJob ? (
+          <a className="button-link" href="#clock-card">Arrive — End Travel</a>
         ) : isClockedIntoAnotherJob ? (
           <Link className="button-link" to={`/jobs/${openEntry?.jobTicketId}`}>Go to Active Ticket</Link>
         ) : (
@@ -638,10 +694,10 @@ export function JobDetailPage() {
       </section>
 
       <section id="clock-card" className="card stack employee-clock-card">
-        <h2>{isClockedIntoThisJob ? 'Active Job Time' : 'Clock In to Start Job'}</h2>
+        <h2>{isClockedIntoThisJob ? 'Active Job Time' : isTravelingToThisJob ? 'Traveling to Job' : 'Clock In to Start Job'}</h2>
         <p className="muted">
           Open entry: {openEntry
-            ? isClockedIntoThisJob
+            ? isClockedIntoThisJob || isTravelingToThisJob
               ? `Started ${new Date(openEntry.startedAtUtc).toLocaleString()} for this ticket`
               : `Started ${new Date(openEntry.startedAtUtc).toLocaleString()} on another ticket`
             : 'No open entry'}
@@ -679,13 +735,25 @@ export function JobDetailPage() {
             </label>
             <p id="clock-work-summary-help" className="field-help">Summarize the work completed before clocking out.</p>
             <button onClick={onClockOut} disabled={isClocking}>
-              {isClocking ? 'Clocking out...' : 'Clock Out with GPS'}
+              {isClocking ? 'Clocking out...' : 'Clock Out'}
+            </button>
+          </>
+        ) : isTravelingToThisJob ? (
+          <>
+            <p className="muted">You started travel at {new Date(openEntry!.startedAtUtc).toLocaleTimeString()}. Tap when you arrive on site.</p>
+            <button onClick={onEndTravel} disabled={isClocking}>
+              {isClocking ? 'Ending travel...' : 'Arrive — End Travel'}
             </button>
           </>
         ) : (
-          <button onClick={onClockIn} disabled={isClocking || isClockedIntoAnotherJob}>
-            {isClocking ? 'Clocking in...' : 'Clock In with GPS'}
-          </button>
+          <div className="employee-clock-actions">
+            <button onClick={onClockIn} disabled={isClocking || isClockedIntoAnotherJob}>
+              {isClocking ? 'Clocking in...' : 'Clock In'}
+            </button>
+            <button className="secondary-button" onClick={onStartTravel} disabled={isClocking || isClockedIntoAnotherJob}>
+              {isClocking ? 'Starting travel...' : 'Start Travel'}
+            </button>
+          </div>
         )}
       </section>
 
