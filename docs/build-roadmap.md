@@ -149,6 +149,29 @@ Manager/Admin Phase 3D Admin user-management closeout is merged and protected on
 - focused Admin user-management regression tests cover filtering and existing account actions;
 - no auth weakening, role expansion, backend API, schema, migration, enum, hard-delete, or deferred-domain behavior was added.
 
+Manager/Admin Phase 3B master-data management polish is merged and protected on `main`:
+- expanded Manager/Admin master-data create/edit forms now expose current DTO fields for customer contact/account/billing details, service-location address/contact/site-context details, equipment ownership/billing/model/serial/type details, vendor contact/account details, part category descriptions, and part description/stock/reorder values;
+- required text fields are blocked from submitting whitespace-only values;
+- archive/unarchive actions on customer, service location, equipment, vendor, part, and part-category records require Manager/Admin confirmation before the action is sent to the API;
+- edit-mode forms have explicit cancel-edit controls so users can leave a form without committing changes;
+- part forms block negative cost, billable price, quantity-on-hand, and reorder-threshold values;
+- equipment year validation keeps values between 1900 and 2100;
+- equipment customer and service-location selectors stay aligned so a mismatched customer/location relationship cannot be submitted;
+- list filters prefill blank create forms for service-location customer, equipment customer, part category, and preferred vendor where active non-archived filters are present;
+- archived relationship records are excluded from blank create-form selectors while preserved during edit mode;
+- no backend API, schema, migration, enum, auth, hard-delete, purchasing expansion, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior was added.
+
+Global notification banner, 401 handler, GPS fallback, session timeout warning, compatible parts catalog, and dedicated scheduling module are merged and protected on `main` as of July 6, 2026:
+- a global sticky notification banner receives `success`, `warning`, and `error` messages from any screen; the `NotificationContext` and `NotificationBanner` components are available application-wide and auto-dismiss `success` messages after a few seconds;
+- a 401 handler registered in `AuthContext` clears the token and surfaces a clear session-expired message through the notification banner without an unhandled redirect;
+- a session timeout warning parses the JWT `exp` claim and shows a `warning` notification at 5 minutes before expiry and an `error` notification at 1 minute before expiry, with timers reset on each login;
+- clock-in and clock-out now use a two-step GPS fallback: high-accuracy attempt first (12-second timeout), low-accuracy fallback (8-second timeout, 30-second max age), then proceeds without coordinates if both fail; the confirmation message notes when no GPS signal was available; the backend accepts nullable `ClockInLatitude`/`ClockInLongitude` and no longer rejects clock-in/out requests when coordinates are absent (migration `MakeClockCoordsOptional`);
+- the ticket create wizard no longer includes a separate Schedule step; `requestedAtUtc` is captured in the Basics step at creation time; scheduling fields remain available in edit mode through the Schedule section of the section-based editor;
+- equipment compatible parts catalog adds a `CompatibleParts` tab on the equipment editor; Managers/Admins can maintain a catalog of known-compatible parts per equipment record with optional notes and PM flag; the tab also shows read-only part usage history for that equipment; backend adds the `EquipmentCompatibleParts` table, `EquipmentCompatiblePartsService`, and `GET/POST/DELETE/PATCH /api/equipment/{equipmentId}/compatible-parts` endpoints under `ManagerOrAdmin` authorization (migration `AddEquipmentCompatibleParts`);
+- a dedicated Scheduling screen at `/manage/schedule` provides three views for Managers/Admins: Unscheduled Queue (open tickets without a scheduled start, sorted by priority), By Date (week view with previous/next navigation and a "This week" reset), and By Technician (week view grouped by assigned employee); backend adds `EstimatedDurationMinutes` on job tickets (migration `AddEstimatedDuration`), `SchedulingService`, and `GET /api/scheduling/unscheduled`, `GET /api/scheduling/calendar`, `GET /api/scheduling/by-technician`, and `POST /api/scheduling/{ticketId}/schedule` endpoints under `ManagerOrAdmin` authorization;
+- `/manage/dispatch` continues to redirect to `/manage/job-tickets`; the legacy redirect is separate from the new `/manage/schedule` screen;
+- no auth weakening, enum renumbering, purchasing expansion, inventory expansion, recommendation, AI/scoring, automatic compatibility, automatic approval, or client-portal behavior was added.
+
 Manager/Admin Time Approval workflow polish is merged and protected on `main`:
 - the Time Approval screen is a queue-first Manager/Admin workflow and pending entries load by default;
 - optional filters include date range, employee name, approval status, and broad job/customer/site/location search;
@@ -159,47 +182,19 @@ Manager/Admin Time Approval workflow polish is merged and protected on `main`:
 The post-Time Approval historical regression audit checkpoint is merged and recorded in `docs/historical-bug-regression-audit.md`. This roadmap update names the next planning lane only; it does not start or implement a new feature workflow.
 
 ## Next Selected Planning Lane
-Next feature work should remain a bounded Manager/Admin workflow PR. The recommended lane is Manager/Admin Phase 3B master-data management polish:
-- customers;
-- service locations;
-- equipment;
-- vendors;
-- part categories;
-- parts;
-- create/edit/archive forms;
-- validation and error UX;
-- focused tests and docs.
+The recommended next lane is a stabilization and test-coverage pass across the features added on July 6, 2026:
+- frontend tests for notification banner display, dismiss, and auto-dismiss behavior;
+- frontend tests for 401 handler showing the session-expired message and clearing auth state;
+- frontend tests for session timeout warning timer setup and cleanup;
+- frontend tests for GPS fallback flow on `JobDetailPage` (high accuracy → low accuracy → null);
+- frontend tests for the compatible parts tab on the equipment editor (load, add, edit, remove);
+- frontend tests for the Schedule page (tab switching, unscheduled queue, week navigation);
+- backend integration test coverage for `EquipmentCompatiblePartsController` (GET/POST/DELETE/PATCH);
+- backend integration test coverage for `SchedulingController` (unscheduled, calendar, by-technician, schedule action).
 
-This lane is a Manager/Admin operational workflow improvement. It must not become purchasing expansion, receiving, vendor invoice tracking, landed-cost tracking, warehouse/truck inventory expansion, replenishment, recommendation/scoring/AI, automatic compatibility, or automatic approval work.
-
-Initial Phase 3B implementation now expands the existing Manager/Admin master-data create/edit forms to expose current DTO fields for customer contact/account details, equipment ownership/billing/model/serial/type details, vendor contact/account details, part descriptions, stock/reorder values, and part category descriptions. It keeps the existing master-data APIs, archive/unarchive behavior, route boundaries, schema, migrations, auth, and enum values unchanged.
-
-Phase 3B validation hardening also keeps required customer, service-location, equipment, vendor, part-category, and part text fields from submitting whitespace-only values from the Manager/Admin forms. This is frontend validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, or deferred purchasing/inventory/recommendation domains.
-
-Phase 3B archive workflow hardening now requires Manager/Admin confirmation before customer, service-location, equipment, part, vendor, or part-category archive/unarchive actions are sent to the existing APIs. This is frontend confirmation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, soft-delete/archive semantics, or deferred purchasing/inventory/recommendation domains.
-
-Phase 3B edit-mode UX hardening now gives Manager/Admin master-data forms explicit edit-mode context and cancel-edit controls for customer, service-location, equipment, part, vendor, and part-category forms. This is frontend create/edit workflow polish and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, or deferred purchasing/inventory/recommendation domains.
-
-Phase 3B part numeric validation hardening keeps Manager/Admin part create/edit forms from submitting negative cost, billable price, quantity-on-hand, or reorder-threshold values. This is frontend validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
-
-Phase 3B equipment year validation hardening keeps Manager/Admin equipment create/edit forms from submitting fractional years or years outside 1900 through 2100, matching the existing job-ticket quick-add equipment form boundary. This is frontend validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
-
-Phase 3B equipment customer/location alignment hardening keeps Manager/Admin equipment create/edit forms aligned to the selected primary customer by showing only that customer's service locations and blocking mismatched equipment customer/service-location submissions. This is frontend relationship validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
-
-Phase 3B filter-driven form defaults now let active Manager/Admin master-data list filters prefill blank create forms for service-location customer, equipment primary customer, part category, and preferred vendor while preserving the selected record during edit mode. This is frontend form-flow polish and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
-
-Phase 3B related-record option hardening keeps archived customers, service locations, part categories, and vendors out of blank Manager/Admin master-data create-form relationship selectors while preserving the currently selected archived relationship during edit mode. This is frontend form-flow hardening and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
-
-Phase 3B equipment service-location fallback hardening preserves an equipment record's unchanged customer/location relationship when its current service location is not included in the loaded options, labels that retained relationship as unavailable, and prevents the fallback from being reused for another customer or location. This is frontend relationship validation and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
-
-Phase 3B archived-filter default hardening keeps archived customer, part-category, and vendor list filters available for Manager/Admin review while preventing those archived relationship IDs from seeding blank service-location, equipment, or part create forms. This is frontend form-flow hardening and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
-
-Phase 3B create-button archived-filter hardening now keeps Manager/Admin list filters that point at archived customers, part categories, or vendors from seeding blank create forms when opening the focused service-location, equipment, or part editor from the list screen. This is frontend form-flow hardening and test coverage only; it does not change API contracts, DTO shapes, schema, migrations, authorization, archive behavior, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval.
-
-Acceptable alternatives, if deliberately selected before the next PR starts:
-- Manager/Admin job-ticket management polish for create/edit, assignment management, status/archive confirmation, validation and error UX;
-- Admin user-management polish for create/edit/archive/reset-password, role warnings, access messaging, tests, and docs;
-- a narrow stabilization, validation, security, or audit PR if checks, review feedback, or daily audit findings identify a concrete risk.
+Acceptable alternatives if deliberately selected:
+- compatible parts visibility for technicians: when a technician adds a part to a ticket for a specific piece of equipment, surface the known-compatible parts catalog for that equipment in the safe part lookup; this must preserve the existing technician-safe boundary and not expose cost, billable price, vendor, or catalog-admin fields;
+- a narrow stabilization, validation, security, or audit PR if checks, review feedback, or audit findings identify a concrete risk.
 
 Before selecting another feature lane, run the daily audit guardrails below and confirm the source-of-truth docs still align with `main`. Any next feature task must be explicitly approved by the current roadmap/scope documents and must not pull deferred purchasing expansion, inventory expansion, client portal, payment, notification automation, recommendation, AI/scoring, automatic compatibility, or automatic approval scope forward.
 

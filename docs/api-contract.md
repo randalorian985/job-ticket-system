@@ -22,9 +22,11 @@
 - Assignable employee lookup (`/api/users/assignable-employees`)
 - Master data (`/api/customers`, `/api/service-locations`, `/api/equipment`, `/api/vendors`, `/api/part-categories`, `/api/parts`)
 - Technician-safe part lookup (`/api/parts/lookup`)
+- Equipment compatible parts catalog (`/api/equipment/{equipmentId}/compatible-parts`)
 - Job tickets (`/api/job-tickets/*`)
 - Job-ticket files/photos (`/api/job-tickets/{jobTicketId}/files/*`)
 - Time entries (`/api/time-entries/*`)
+- Scheduling (`/api/scheduling/*`)
 - Reporting (`/api/reports/*`)
 - Parts usage history visibility (`/api/parts/usage-history`)
 - Parts request workflow Phase 2 (`/api/part-requests/*`)
@@ -83,6 +85,39 @@ Endpoints:
 
 The feature adds the `TicketStatusFilterOptions` table and seeds the same default active field-work filters. It does not change backend enum numeric values, job-ticket status labels, job-ticket lifecycle rules, reports, assignment rules, or employee assignments.
 
+## Equipment Compatible Parts Catalog
+The equipment compatible parts catalog lets Managers/Admins maintain a list of known-compatible parts per equipment record with optional notes and a PM (preventative-maintenance) flag. It also surfaces read-only part usage history for that equipment in the same tab.
+
+Authorization: `ManagerOrAdmin`.
+
+Endpoints:
+- `GET /api/equipment/{equipmentId}/compatible-parts`
+  - Returns `EquipmentCompatiblePartsDto` containing the `catalogItems` list and a `partHistory` read-only section.
+- `POST /api/equipment/{equipmentId}/compatible-parts`
+  - Request DTO: `AddEquipmentCompatiblePartDto` with `partId`, optional `notes`, and optional `isPmPart`.
+  - Adds a part to the catalog for the equipment record.
+- `DELETE /api/equipment/{equipmentId}/compatible-parts/{partId}`
+  - Removes a part from the catalog for the equipment record.
+- `PATCH /api/equipment/{equipmentId}/compatible-parts/{partId}`
+  - Request DTO: `UpdateEquipmentCompatiblePartDto` with `notes` and `isPmPart`.
+  - Updates notes and PM flag for an existing catalog entry.
+
+`EquipmentCompatiblePartDto` includes:
+- `partId`
+- `partNumber`
+- `partName`
+- `notes`
+- `isPmPart`
+
+`EquipmentPartHistoryDto` includes:
+- `partId`
+- `partNumber`
+- `partName`
+- `lastUsedOnTicketNumber`
+- `usageCount`
+
+This catalog is a Manager/Admin reference tool. It does not expose part cost, billable price, vendor cost, inventory, or billing controls, and it does not automate compatibility decisions, purchase orders, or approval workflows.
+
 ## Job Ticket Display Fields
 Job-ticket list and detail responses keep relationship IDs for API operations and also include human-readable fields for UI display.
 
@@ -92,6 +127,30 @@ Job-ticket list and detail responses keep relationship IDs for API operations an
 - Employee and Manager/Admin screens display readable labels instead of exposing customer, service-location, equipment, or employee GUIDs.
 - Job-ticket display authorization, existing enum values, and write request DTOs are unchanged. The list response still includes the optional service-equipment ID needed to preserve the customer's crane/equipment selection on the ticket.
 - For Employee users, `GET /api/job-tickets` returns assigned tickets except fully closed statuses (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`). Manager/Admin list views still return those tickets unless a filter excludes them.
+
+## Scheduling Module
+The scheduling module gives Managers/Admins three views for coordinating work without adding a separate dispatch entity or lifecycle.
+
+Authorization: `ManagerOrAdmin`.
+
+Job tickets carry an optional `estimatedDurationMinutes` field that can be set through the existing ticket update endpoint.
+
+Endpoints:
+- `GET /api/scheduling/unscheduled`
+  - Returns `SchedulableTicketDto[]` — open tickets that have no `ScheduledStartUtc`, sorted by priority.
+- `GET /api/scheduling/calendar?startUtc={startUtc}&endUtc={endUtc}`
+  - Returns `SchedulableTicketDto[]` — tickets with a `ScheduledStartUtc` in the requested date window.
+- `GET /api/scheduling/by-technician?startUtc={startUtc}&endUtc={endUtc}`
+  - Returns `TechnicianScheduleDto[]` — scheduled tickets in the date window grouped by assigned employee.
+- `POST /api/scheduling/{ticketId}/schedule`
+  - Request DTO: `ScheduleTicketDto` with `scheduledStartUtc`, optional `estimatedDurationMinutes`, and optional `assignedEmployeeId`.
+  - Sets the scheduled start on an existing ticket and optionally assigns a technician and records estimated duration.
+
+`SchedulableTicketDto` includes `id`, `ticketNumber`, `title`, `status`, `priority`, `customerName`, `serviceLocationName`, `scheduledStartUtc`, `estimatedDurationMinutes`, and `assignedEmployeeName`.
+
+`TechnicianScheduleDto` includes `employeeId`, `employeeName`, and a `tickets` list of `SchedulableTicketDto`.
+
+This module does not add a dispatch-job table, backend dispatch enum, automatic scheduling engine, automatic approval, or invoice-generation behavior.
 
 ## Job Ticket Assignment And Schedule Workflow
 The Manager/Admin Job Tickets screen is the main workflow for creating, assigning, scheduling, and reviewing work. The legacy `/manage/dispatch` route redirects to `/manage/job-tickets`.
@@ -404,6 +463,28 @@ Behavior:
 
 This section documents the existing inventory API foundation only. It does not approve reintroducing the Inventory UI, warehouse/truck inventory expansion, transfer workflows, low-stock alerts, replenishment, average-cost or landed-cost inventory accounting expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval behavior.
 
+## Manager/Admin Navigation Routes
+All routes under `/manage` require Manager or Admin role. Routes under `/manage/users` and `/manage/company-configuration` and `/manage/ticket-status-filters` require Admin role.
+
+- `/manage`: Manager/Admin dashboard.
+- `/manage/job-tickets`: job-ticket queue.
+- `/manage/job-tickets/new`: create job ticket.
+- `/manage/job-tickets/{jobTicketId}`: job-ticket workspace.
+- `/manage/schedule`: dedicated scheduling screen (Unscheduled Queue, By Date, By Technician).
+- `/manage/customers`: customers.
+- `/manage/service-locations`: service locations.
+- `/manage/equipment`: equipment (includes Compatible Parts tab when a record is open).
+- `/manage/parts`: parts, vendors, and part categories.
+- `/manage/part-requests`: parts request queue.
+- `/manage/purchasing`: purchasing support.
+- `/manage/parts-usage-history`: parts usage history visibility.
+- `/manage/time-approval`: time approval queue.
+- `/manage/reports`: reports hub.
+- `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
+- `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
+- `/manage/users`: Admin-only user management.
+- `/manage/dispatch`: legacy redirect to `/manage/job-tickets`.
+
 ## Protected Boundaries
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
@@ -414,6 +495,7 @@ This section documents the existing inventory API foundation only. It does not a
 - Admin user-management list search and role/status filters are frontend-only over the loaded `/api/users` results; they do not add query parameters or new user-management endpoints.
 - No backend enum numeric values are changed.
 - No hard deletes are introduced.
+- `ClockInLatitude` and `ClockInLongitude` are nullable on the `TimeEntry` entity and in the `TimeEntryDto`. Clock-in and clock-out requests that omit coordinates are accepted; the backend does not require GPS data to complete either action.
 - Deferred domains remain deferred unless explicitly selected: purchasing expansion, receiving expansion, vendor invoice expansion, landed cost expansion, warehouse/truck inventory, replenishment, recommendation engine, AI/scoring, automatic compatibility decisions, and automatic approval.
 
 ### Manager-first approval queue contract

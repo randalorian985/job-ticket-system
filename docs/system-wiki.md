@@ -136,15 +136,15 @@ Admin users can:
 - `/manage/job-tickets`: job-ticket queue.
 - `/manage/job-tickets/new`: create job ticket.
 - `/manage/job-tickets/{jobTicketId}`: job-ticket workspace.
+- `/manage/schedule`: dedicated scheduling screen (Unscheduled Queue, By Date, By Technician).
 - `/manage/customers`: customers.
 - `/manage/service-locations`: service locations.
-- `/manage/equipment`: equipment.
+- `/manage/equipment`: equipment (includes Compatible Parts tab when a record is open).
 - `/manage/parts`: parts, vendors, and part categories.
 - `/manage/part-requests`: parts request queue.
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
 - `/manage/time-approval`: time approval queue.
-- `/manage/parts-approval`: parts approval workflow.
 - `/manage/reports`: reports hub.
 - `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
 - `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
@@ -180,6 +180,10 @@ For the Employee clock-in-first and Manager/Admin compact queue update, deploy o
 3. Protected routes require an authenticated user with the correct role.
 4. Unauthorized users are redirected away from restricted screens.
 5. Inactive, archived, or deleted users should not be allowed to continue using protected workflows.
+6. Sessions use JWT tokens with a 2-hour expiry. The application warns users before the token expires:
+   - A **warning** notification appears at 5 minutes before expiry: save any work in progress.
+   - An **error** notification appears at 1 minute before expiry.
+7. If a request is rejected with a 401 (for example, if a token expired mid-session without a visible warning), the application clears the session and surfaces a clear sign-in-again message through the notification banner.
 
 ![Login screen](assets/system-wiki/login.png)
 
@@ -255,26 +259,27 @@ Employees clock in from the job detail screen.
 Clock-in records:
 - job ticket;
 - employee;
-- GPS latitude;
-- GPS longitude;
-- GPS accuracy;
+- GPS latitude (when available);
+- GPS longitude (when available);
+- GPS accuracy (when available);
 - device metadata;
 - optional clock note.
 
-If GPS is unavailable or the request fails, the screen shows an error.
+The system attempts high-accuracy GPS first, then falls back to low-accuracy GPS if the first attempt fails. If both attempts fail (for example, in a facility with no signal), the clock-in proceeds without coordinates and the confirmation message notes that no GPS signal was available. GPS is not required to complete a clock-in.
 
 ### Clock Out
 Employees clock out from the same job detail screen.
 
 Clock-out requires:
 - an open time entry for the same job;
-- a work summary;
-- GPS information.
+- a work summary.
+
+GPS is captured on clock-out using the same fallback approach. If GPS is unavailable, clock-out proceeds without coordinates and the confirmation message notes that no GPS signal was available.
 
 Clock-out records:
-- clock-out GPS latitude;
-- clock-out GPS longitude;
-- GPS accuracy;
+- clock-out GPS latitude (when available);
+- clock-out GPS longitude (when available);
+- GPS accuracy (when available);
 - work summary;
 - optional note.
 
@@ -494,6 +499,17 @@ The ticket view is organized around review first and editing second:
 - the side action rail keeps common Manager/Admin actions visible without taking over the whole screen.
 
 This view is intended to answer "what needs attention?" before asking the user to edit anything.
+
+### Scheduling Screen
+The **Scheduling** screen at `/manage/schedule` is a dedicated view for coordinating work across the queue. It has three tabs:
+
+- **Unscheduled Queue**: open tickets that have no scheduled start date, sorted by priority. Use this list to identify work that needs to be placed on the calendar.
+- **By Date**: a week view showing tickets with a scheduled start in the selected week. Use the previous/next week arrows or **This week** to navigate. Each ticket card links directly to the ticket workspace.
+- **By Technician**: a week view grouping scheduled tickets by their assigned technician. Useful for spotting over-assigned or under-assigned staff across a week.
+
+From the Scheduling screen, Managers/Admins can review ticket priority, customer, service location, and scheduled start. Editing a ticket's schedule or assignment is done through the existing **Assignment & Schedule** tab in the ticket workspace.
+
+The Scheduling screen is a Manager/Admin-only view. It does not add a separate dispatch entity, dispatch lifecycle, automatic scheduling engine, or automatic assignment behavior.
 
 ### Assignment And Schedule Workflow
 **Plain-language rule:** there is one work record: the job ticket. The system does not have a separate Dispatch module or a separate dispatcher workflow. Managers/Admins create a job ticket, assign technicians, set schedule and due dates, and review the ticket as work moves forward.
@@ -892,6 +908,20 @@ Managers/Admins can:
 - filter and review equipment.
 
 Equipment create/edit workflows guard against mismatched customer and service-location relationships where the UI has enough data to validate.
+
+### Equipment Compatible Parts
+Each equipment record has a **Compatible Parts** tab that lets Managers/Admins maintain a catalog of known-compatible parts for that piece of equipment.
+
+Managers/Admins can:
+- add a catalog part to the equipment's compatible list;
+- record optional notes (for example, fitment details or torque specs);
+- mark a part as a **PM part** (used for preventative-maintenance intervals);
+- edit notes and PM flag on existing entries;
+- remove a part from the catalog.
+
+The tab also shows a read-only **Part Usage History** section that lists parts previously used on tickets for that equipment.
+
+The compatible parts catalog is a Manager/Admin reference tool. It does not expose part cost, billable price, vendor cost, or inventory controls. It does not automate compatibility decisions, purchase orders, or approval workflows. Technicians do not have direct access to this catalog.
 
 ### Vendors
 Vendor records support existing purchasing and part workflows.
@@ -1300,6 +1330,7 @@ Use this checklist when introducing the system to a client team.
 - Use quick views without letting the page become a wall of shortcuts.
 - Confirm the service equipment, then set schedule and optional lead/additional technicians during ticket creation.
 - Use ticket-workspace **Assignment & Schedule** when assignment or dates need updates after create.
+- Use the **Scheduling** screen to review unscheduled work, see the week calendar, and review by-technician load.
 - Review completed tickets in the ticket workspace and billing-ready work in Reports.
 - Filter job-ticket queues.
 - Create a job ticket.
@@ -1312,6 +1343,7 @@ Use this checklist when introducing the system to a client team.
 - Review part requests.
 - Use reports and exports.
 - Manage master data.
+- Maintain equipment compatible parts catalog where applicable.
 
 ### Admin Training
 - Create users.
