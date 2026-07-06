@@ -25,6 +25,7 @@ type Props = {
   onEquipmentCreated?: (equipment: EquipmentDto) => void
   scheduleAssignmentPanel?: ReactNode
   submitLabel: string
+  isCreate?: boolean
 }
 
 type DispatchEditCheck = {
@@ -318,7 +319,8 @@ export function JobTicketEditorForm({
   onServiceLocationCreated,
   onEquipmentCreated,
   scheduleAssignmentPanel,
-  submitLabel
+  submitLabel,
+  isCreate = false
 }: Props) {
   const [form, setForm] = useState<CreateJobTicketDto>(initial)
   const [error, setError] = useState<string | null>(null)
@@ -471,48 +473,48 @@ export function JobTicketEditorForm({
   }, [form.dueAtUtc, selectedCustomer, selectedServiceLocation])
   const ticketCreateWizardSteps = useMemo<TicketCreateWizardStep[]>(() => [
     {
+      value: 'basics',
+      label: 'Basics',
+      section: 'identity',
+      isReady: Boolean(form.title.trim()),
+      detail: form.title.trim() ? form.title.trim() : 'Add title, type, and priority'
+    },
+    {
       value: 'customer',
-      label: 'Customer',
+      label: 'Customer & Equipment',
       section: 'relationships',
-      isReady: Boolean(form.customerId),
-      detail: selectedCustomer?.name ?? 'Select customer'
+      isReady: Boolean(form.customerId && form.serviceLocationId && form.billingPartyCustomerId),
+      detail: selectedCustomer?.name ?? 'Select customer, location, and billing party'
     },
     {
-      value: 'billing-party',
-      label: 'Billing party',
-      section: 'relationships',
-      isReady: Boolean(form.billingPartyCustomerId),
-      detail: selectedBillingParty?.name ?? 'Select billing party'
-    },
-    {
-      value: 'job-location',
-      label: 'Job location',
-      section: 'relationships',
-      isReady: Boolean(form.serviceLocationId),
-      detail: selectedServiceLocation?.locationName ?? 'Select job location'
-    },
-    {
-      value: 'equipment',
-      label: 'Equipment',
-      section: 'relationships',
+      value: 'scope',
+      label: 'Scope & Notes',
+      section: 'scope',
       isReady: true,
-      detail: form.equipmentId ? 'Equipment selected' : 'Optional'
+      detail: form.description?.trim() ? 'Description added' : 'Optional — add job description'
+    },
+    {
+      value: 'billing',
+      label: 'Billing',
+      section: 'billing',
+      isReady: true,
+      detail: form.purchaseOrderNumber?.trim() ? `PO: ${form.purchaseOrderNumber.trim()}` : 'Optional — PO and billing contact'
     },
     {
       value: 'schedule',
       label: 'Schedule',
       section: 'schedule',
-      isReady: Boolean(form.scheduledStartAtUtc && form.dueAtUtc),
-      detail: form.scheduledStartAtUtc && form.dueAtUtc ? 'Schedule ready' : 'Set schedule and due date'
+      isReady: Boolean(form.requestedAtUtc),
+      detail: form.requestedAtUtc ? 'Requested date set' : 'Set requested date'
     },
     {
       value: 'review',
-      label: 'Review and create',
+      label: 'Review & Submit',
       section: 'scope',
       isReady: Boolean(form.title.trim() && form.customerId && form.serviceLocationId && form.billingPartyCustomerId),
-      detail: dataQualityWarnings.length ? `${dataQualityWarnings.length} cleanup item${dataQualityWarnings.length === 1 ? '' : 's'}` : 'Ready for review'
+      detail: dataQualityWarnings.length ? `${dataQualityWarnings.length} cleanup item${dataQualityWarnings.length === 1 ? '' : 's'}` : 'Ready to submit'
     }
-  ], [dataQualityWarnings.length, form.billingPartyCustomerId, form.customerId, form.dueAtUtc, form.equipmentId, form.scheduledStartAtUtc, form.serviceLocationId, form.title, selectedBillingParty, selectedCustomer, selectedServiceLocation])
+  ], [dataQualityWarnings.length, form.billingPartyCustomerId, form.customerId, form.description, form.purchaseOrderNumber, form.requestedAtUtc, form.serviceLocationId, form.title, selectedCustomer])
   const equipmentQuickAddDuplicateWarnings = useMemo(() => {
     if (!form.customerId || !form.serviceLocationId) {
       return []
@@ -971,23 +973,6 @@ export function JobTicketEditorForm({
         ) : null}
       </section>
 
-      <nav className="section-editor-nav" aria-label="ticket edit sections">
-        {ticketEditorSections.map((section) => (
-          <button
-            type="button"
-            key={section.value}
-            className={activeEditorSection === section.value ? 'section-editor-nav-active' : undefined}
-            aria-pressed={activeEditorSection === section.value}
-            aria-label={section.label}
-            title={section.description}
-            onClick={() => setActiveEditorSection(section.value)}
-          >
-            <span>{section.label}</span>
-            <small>{section.description}</small>
-          </button>
-        ))}
-      </nav>
-
       {activeEditorSection === 'identity' ? (
         <section className="section-editor-panel stack" aria-label="Basics edit section">
           <div className="section-editor-heading">
@@ -1019,7 +1004,14 @@ export function JobTicketEditorForm({
           ) : null}
           <div className="section-editor-grid">
             <label>Priority<select value={form.priority} onChange={(e) => update('priority', Number(e.target.value))}>{priorityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-            <label>Status<select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>{jobStatusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
+            <label>Status
+              <select value={form.status} onChange={(e) => update('status', Number(e.target.value))}>
+                {(isCreate ? jobStatusOptions.filter((item) => item.value <= 2) : jobStatusOptions).map((item) => (
+                  <option key={item.value} value={item.value}>{item.label}</option>
+                ))}
+              </select>
+              {isCreate ? <small className="field-char-count">New tickets start as Draft or Submitted.</small> : null}
+            </label>
             <label>Work Location<select value={form.locationType || 1} onChange={(e) => update('locationType', Number(e.target.value))}>{workLocationTypeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
           </div>
         </section>
@@ -1100,9 +1092,21 @@ export function JobTicketEditorForm({
                 <label>Parish / County<input value={serviceLocationDraft.parishCounty} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, parishCounty: e.target.value }))} /></label>
                 <label>Country<input value={serviceLocationDraft.country} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, country: e.target.value }))} /></label>
                 <label>Gate Code<input value={serviceLocationDraft.gateCode} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, gateCode: e.target.value }))} /></label>
-                <label>Access Instructions<input value={serviceLocationDraft.accessInstructions} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, accessInstructions: e.target.value }))} /></label>
-                <label>Safety Requirements<input value={serviceLocationDraft.safetyRequirements} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, safetyRequirements: e.target.value }))} /></label>
-                <label>Site Notes<input value={serviceLocationDraft.siteNotes} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, siteNotes: e.target.value }))} /></label>
+                <label>
+                  Access Instructions
+                  <textarea rows={2} maxLength={2000} value={serviceLocationDraft.accessInstructions} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, accessInstructions: e.target.value }))} />
+                  <span className={`field-char-count${serviceLocationDraft.accessInstructions.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.accessInstructions.length} / 2,000</span>
+                </label>
+                <label>
+                  Safety Requirements
+                  <textarea rows={2} maxLength={2000} value={serviceLocationDraft.safetyRequirements} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, safetyRequirements: e.target.value }))} />
+                  <span className={`field-char-count${serviceLocationDraft.safetyRequirements.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.safetyRequirements.length} / 2,000</span>
+                </label>
+                <label>
+                  Site Notes
+                  <textarea rows={3} maxLength={4000} value={serviceLocationDraft.siteNotes} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, siteNotes: e.target.value }))} />
+                  <span className={`field-char-count${serviceLocationDraft.siteNotes.length > 3600 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.siteNotes.length} / 4,000</span>
+                </label>
               </div>
               <div className="row">
                 <button type="button" onClick={addServiceLocation} disabled={isAddingServiceLocation}>
@@ -1250,12 +1254,16 @@ export function JobTicketEditorForm({
         <section className="section-editor-panel stack" aria-label="Schedule edit section">
           <div className="section-editor-heading">
             <h3>Schedule</h3>
-            <p className="muted">Edit requested, scheduled start, and due dates for work planning.</p>
+            <p className="muted">{isCreate ? 'When did the customer report this issue? Scheduling and assignment happen separately after the ticket is created.' : 'Edit requested, scheduled start, and due dates for work planning.'}</p>
           </div>
           <div className="section-editor-grid">
-            <label>Requested (UTC)<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-            <label>Scheduled Start (UTC)<input type="datetime-local" value={(form.scheduledStartAtUtc ?? '').slice(0, 16)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-            <label>Due (UTC)<input type="datetime-local" value={(form.dueAtUtc ?? '').slice(0, 16)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+            <label>Requested Date / Time<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+            {!isCreate ? (
+              <>
+                <label>Scheduled Start<input type="datetime-local" value={(form.scheduledStartAtUtc ?? '').slice(0, 16)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+                <label>Due Date<input type="datetime-local" value={(form.dueAtUtc ?? '').slice(0, 16)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+              </>
+            ) : null}
           </div>
           {scheduleAssignmentPanel}
         </section>

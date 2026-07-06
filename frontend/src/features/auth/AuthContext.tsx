@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { authApi } from '../../api/authApi'
-import { authStorage, ApiError } from '../../api/httpClient'
+import { authStorage, ApiError, registerUnauthorizedHandler, clearUnauthorizedHandler } from '../../api/httpClient'
+import { useNotification } from '../notifications/NotificationContext'
 import type { AuthLoginRequestDto, AuthMeDto } from '../../types'
 
 type AuthContextValue = {
@@ -15,6 +16,17 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthMeDto | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { notify } = useNotification()
+
+  // Register a 401 handler so mid-session token expiry shows a clear message
+  useEffect(() => {
+    registerUnauthorizedHandler(() => {
+      authStorage.clearToken()
+      setUser(null)
+      notify('Your session expired. Please sign in again.', 'warning')
+    })
+    return () => clearUnauthorizedHandler()
+  }, [notify])
 
   useEffect(() => {
     const token = authStorage.getToken()

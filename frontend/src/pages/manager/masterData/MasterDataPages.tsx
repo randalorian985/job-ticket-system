@@ -481,10 +481,22 @@ export function ServiceLocationsPage() {
         </div>
         <div className="row">
           <label>Gate code<input placeholder="Gate code" value={draft.gateCode ?? ''} onChange={(e) => setDraft({ ...draft, gateCode: e.target.value })} /></label>
-          <label>Access instructions<input placeholder="Access instructions" value={draft.accessInstructions ?? ''} onChange={(e) => setDraft({ ...draft, accessInstructions: e.target.value })} /></label>
         </div>
-        <label>Safety requirements<textarea placeholder="Safety requirements" value={draft.safetyRequirements ?? ''} onChange={(e) => setDraft({ ...draft, safetyRequirements: e.target.value })} /></label>
-        <label>Site notes<textarea placeholder="Site notes" value={draft.siteNotes ?? ''} onChange={(e) => setDraft({ ...draft, siteNotes: e.target.value })} /></label>
+        <label>
+          Access instructions
+          <textarea rows={3} maxLength={2000} placeholder="Access instructions" value={draft.accessInstructions ?? ''} onChange={(e) => setDraft({ ...draft, accessInstructions: e.target.value })} />
+          <span className={`field-char-count${(draft.accessInstructions?.length ?? 0) > 1800 ? ' field-char-count--warn' : ''}`}>{draft.accessInstructions?.length ?? 0} / 2,000</span>
+        </label>
+        <label>
+          Safety requirements
+          <textarea rows={3} maxLength={2000} placeholder="Safety requirements" value={draft.safetyRequirements ?? ''} onChange={(e) => setDraft({ ...draft, safetyRequirements: e.target.value })} />
+          <span className={`field-char-count${(draft.safetyRequirements?.length ?? 0) > 1800 ? ' field-char-count--warn' : ''}`}>{draft.safetyRequirements?.length ?? 0} / 2,000</span>
+        </label>
+        <label>
+          Site notes
+          <textarea rows={4} maxLength={4000} placeholder="Site notes" value={draft.siteNotes ?? ''} onChange={(e) => setDraft({ ...draft, siteNotes: e.target.value })} />
+          <span className={`field-char-count${(draft.siteNotes?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{draft.siteNotes?.length ?? 0} / 4,000</span>
+        </label>
         <label><input type="checkbox" checked={draft.isActive ?? true} onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })} /> Active</label>
         {editId ? <p className="muted">Editing service location. Save changes or return to the location list.</p> : null}
         <div className="row">

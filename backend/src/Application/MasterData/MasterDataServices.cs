@@ -169,7 +169,8 @@ public sealed class ServiceLocationsService(ApplicationDbContext dbContext) : IS
 
     public async Task<ServiceLocationDto> CreateAsync(CreateServiceLocationDto request, CancellationToken cancellationToken = default)
     {
-        ValidationHelpers.ValidateServiceLocation(request.CompanyName, request.LocationName, request.AddressLine1, request.City, request.State, request.PostalCode, request.Country);
+        ValidationHelpers.ValidateServiceLocation(request.CompanyName, request.LocationName, request.AddressLine1, request.City, request.State, request.PostalCode, request.Country,
+            request.AccessInstructions, request.SafetyRequirements, request.SiteNotes);
         await EnsureCustomerExists(request.CustomerId, cancellationToken);
 
         var entity = new ServiceLocation
@@ -201,7 +202,8 @@ public sealed class ServiceLocationsService(ApplicationDbContext dbContext) : IS
 
     public async Task<ServiceLocationDto?> UpdateAsync(Guid id, UpdateServiceLocationDto request, CancellationToken cancellationToken = default)
     {
-        ValidationHelpers.ValidateServiceLocation(request.CompanyName, request.LocationName, request.AddressLine1, request.City, request.State, request.PostalCode, request.Country);
+        ValidationHelpers.ValidateServiceLocation(request.CompanyName, request.LocationName, request.AddressLine1, request.City, request.State, request.PostalCode, request.Country,
+            request.AccessInstructions, request.SafetyRequirements, request.SiteNotes);
         await EnsureCustomerExists(request.CustomerId, cancellationToken);
 
         var entity = await dbContext.ServiceLocations.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -694,7 +696,8 @@ internal static class ValidationHelpers
         if (string.IsNullOrWhiteSpace(value)) throw new ValidationException($"{fieldName} is required.");
     }
 
-    internal static void ValidateServiceLocation(string companyName, string locationName, string addressLine1, string city, string state, string postalCode, string country)
+    internal static void ValidateServiceLocation(string companyName, string locationName, string addressLine1, string city, string state, string postalCode, string country,
+        string? accessInstructions = null, string? safetyRequirements = null, string? siteNotes = null)
     {
         ValidateRequired(companyName, nameof(companyName));
         ValidateRequired(locationName, nameof(locationName));
@@ -703,6 +706,13 @@ internal static class ValidationHelpers
         ValidateRequired(state, nameof(state));
         ValidateRequired(postalCode, nameof(postalCode));
         ValidateRequired(country, nameof(country));
+
+        if (accessInstructions?.Length > 2000)
+            throw new ValidationException("Access Instructions cannot exceed 2,000 characters. Please shorten the text and try again.");
+        if (safetyRequirements?.Length > 2000)
+            throw new ValidationException("Safety Requirements cannot exceed 2,000 characters. Please shorten the text and try again.");
+        if (siteNotes?.Length > 4000)
+            throw new ValidationException("Site Notes cannot exceed 4,000 characters. Please shorten the text and try again.");
     }
 
     internal static void ValidatePart(Guid partCategoryId, string partNumber, string name)

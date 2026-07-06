@@ -3,6 +3,15 @@ import type { ApiValidationError } from '../types'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 const TOKEN_KEY = 'jobTicket.accessToken'
 
+// Registered by AuthContext so the module-level API layer can trigger session expiry
+let unauthorizedHandler: (() => void) | null = null
+export function registerUnauthorizedHandler(handler: () => void) {
+  unauthorizedHandler = handler
+}
+export function clearUnauthorizedHandler() {
+  unauthorizedHandler = null
+}
+
 export class ApiError extends Error {
   status: number
   payload?: ApiValidationError
@@ -51,6 +60,9 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   })
 
   if (!response.ok) {
+    if (response.status === 401) {
+      unauthorizedHandler?.()
+    }
     throw await parseError(response)
   }
 

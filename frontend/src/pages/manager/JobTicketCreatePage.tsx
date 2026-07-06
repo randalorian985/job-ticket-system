@@ -17,7 +17,7 @@ const defaultForm: CreateJobTicketDto = {
   description: null,
   priority: 2,
   status: 1,
-  requestedAtUtc: null,
+  requestedAtUtc: new Date().toISOString(),
   scheduledStartAtUtc: null,
   dueAtUtc: null,
   internalNotes: null,
@@ -175,6 +175,7 @@ export function JobTicketCreatePage() {
         onServiceLocationCreated={(created) => setLocations((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
         onEquipmentCreated={(created) => setEquipment((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
         submitLabel="Create Ticket"
+        isCreate
       />
     </section>
   )
