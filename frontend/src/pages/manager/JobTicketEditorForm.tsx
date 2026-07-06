@@ -956,28 +956,6 @@ export function JobTicketEditorForm({
       {error ? <p className="error">{error}</p> : null}
       {copyHelperMessage ? <p className="success action-feedback-panel" role="status">{copyHelperMessage}</p> : null}
       {copyHelperError ? <p className="error">{copyHelperError}</p> : null}
-      {isCreate ? (
-      <section className="ticket-create-guide ticket-create-guide--progress" aria-label="ticket create wizard">
-        <div className="ticket-create-guide-heading">
-          <h3>Ticket Create Wizard</h3>
-          <span className="muted">{ticketCreateWizardSteps.filter((step) => step.isReady).length} / {ticketCreateWizardSteps.length} ready</span>
-        </div>
-        <div className="ticket-create-step-list">
-          {ticketCreateWizardSteps.map((step, index) => (
-            <button
-              type="button"
-              key={step.value}
-              className={activeEditorSection === step.section ? 'ticket-create-step ticket-create-step-active' : 'ticket-create-step'}
-              aria-pressed={activeEditorSection === step.section}
-              onClick={() => setActiveEditorSection(step.section)}
-            >
-              <span>{index + 1}. {step.label}</span>
-              <small aria-hidden>{step.detail}</small>
-            </button>
-          ))}
-        </div>
-      </section>
-      ) : null}
       <nav className="ticket-create-guide" aria-label="ticket edit sections">
         <div className="ticket-create-step-list">
           {ticketEditorSections.map((sec) => (
