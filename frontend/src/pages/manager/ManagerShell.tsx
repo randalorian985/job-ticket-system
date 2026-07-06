@@ -22,6 +22,7 @@ const navGroups: ManagerNavGroup[] = [
     items: [
       { label: 'Dashboard', to: '/manage', end: true },
       { label: 'Job Tickets', to: '/manage/job-tickets' },
+      { label: 'Scheduling', to: '/manage/schedule' },
       { label: 'Reports', to: '/manage/reports' }
     ]
   },

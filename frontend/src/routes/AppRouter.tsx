@@ -14,6 +14,7 @@ import {
   PartsUsageHistoryPage,
   PurchasingWorkbenchPage,
   ReportsPage,
+  SchedulePage,
   ServiceLocationsPage,
   SystemWikiPage,
   TicketStatusFiltersPage,
@@ -56,7 +57,8 @@ export function AppRouter() {
       <Route element={<ProtectedRoute allowedRoles={['Manager', 'Admin']} />}>
         <Route path="/manage" element={<ManagerShell />}>
           <Route index element={<ManagerDashboardPage />} />
-          <Route path="dispatch" element={<Navigate to="/manage/job-tickets" replace />} />
+          <Route path="dispatch" element={<Navigate to="/manage/schedule" replace />} />
+          <Route path="schedule" element={<SchedulePage />} />
           <Route path="job-tickets" element={<JobTicketListPage />} />
           <Route path="job-tickets/new" element={<JobTicketCreatePage />} />
           <Route path="job-tickets/:jobTicketId" element={<JobTicketDetailPage />} />

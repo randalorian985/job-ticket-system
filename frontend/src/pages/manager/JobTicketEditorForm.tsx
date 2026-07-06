@@ -1264,6 +1264,18 @@ export function JobTicketEditorForm({
                 <label>Due Date<input type="datetime-local" value={(form.dueAtUtc ?? '').slice(0, 16)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
               </>
             ) : null}
+            <label>Estimated Duration
+              <select value={form.estimatedDurationMinutes ?? ''} onChange={(e) => update('estimatedDurationMinutes', e.target.value ? Number(e.target.value) : null)}>
+                <option value="">Unknown</option>
+                <option value="30">30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+                <option value="180">3 hours</option>
+                <option value="240">4 hours</option>
+                <option value="480">Full day (8 hrs)</option>
+              </select>
+            </label>
           </div>
           {scheduleAssignmentPanel}
         </section>

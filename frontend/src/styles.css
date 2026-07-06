@@ -5331,8 +5331,7 @@ body:has(.notification-banner) #root > *:first-child {
 .submit-btn[data-state="error"]   { background: var(--alert); }
 
 /* ── Compatible-parts tab nav ── */
-.compat-parts-tab-nav {
-  display: flex;
+.compat-parts-tab-nav {  display: flex;
   gap: 0;
   border-bottom: 2px solid var(--border);
   margin-bottom: 0.75rem;
@@ -5354,3 +5353,91 @@ body:has(.notification-banner) #root > *:first-child {
   border-bottom-color: var(--primary, #2563eb);
   font-weight: 600;
 }
+
+/* ── Schedule page ── */
+.schedule-view-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1rem;
+}
+.schedule-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.schedule-week-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.schedule-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+.schedule-day-col {
+  min-width: 120px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+.schedule-day-today { border-color: var(--primary, #2563eb); background: var(--primary-subtle, #eff6ff); }
+.schedule-day-header {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.schedule-day-count {
+  background: var(--primary, #2563eb);
+  color: white;
+  border-radius: 99px;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.7rem;
+}
+.schedule-day-empty { font-size: 0.78rem; }
+.schedule-ticket-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.schedule-ticket-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: var(--surface, white);
+}
+.schedule-ticket-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.schedule-ticket-number { font-size: 0.8rem; font-weight: 600; color: var(--primary, #2563eb); }
+.schedule-ticket-title { font-size: 0.88rem; }
+.schedule-ticket-meta { font-size: 0.78rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
+.schedule-ticket-dates { font-size: 0.78rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.schedule-tech-section { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+.schedule-tech-name { margin: 0 0 0.75rem; font-size: 1rem; }
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  background: var(--primary, #2563eb);
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.button-link:hover { opacity: 0.9; }

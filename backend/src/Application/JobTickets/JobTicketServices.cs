@@ -139,6 +139,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
                 RequestedAtUtc = request.RequestedAtUtc,
                 ScheduledStartAtUtc = request.ScheduledStartAtUtc,
                 DueAtUtc = request.DueAtUtc,
+                EstimatedDurationMinutes = request.EstimatedDurationMinutes,
                 AssignedManagerEmployeeId = request.AssignedManagerEmployeeId,
                 PurchaseOrderNumber = ValidationHelpers.NullIfWhitespace(request.PurchaseOrderNumber),
                 BillingContactName = ValidationHelpers.NullIfWhitespace(request.BillingContactName),
@@ -191,6 +192,7 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         entity.RequestedAtUtc = request.RequestedAtUtc;
         entity.ScheduledStartAtUtc = request.ScheduledStartAtUtc;
         entity.DueAtUtc = request.DueAtUtc;
+        entity.EstimatedDurationMinutes = request.EstimatedDurationMinutes;
         entity.AssignedManagerEmployeeId = request.AssignedManagerEmployeeId;
         entity.PurchaseOrderNumber = ValidationHelpers.NullIfWhitespace(request.PurchaseOrderNumber);
         entity.BillingContactName = ValidationHelpers.NullIfWhitespace(request.BillingContactName);
@@ -985,7 +987,8 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
         x.Equipment != null ? x.Equipment.EquipmentNumber : null,
         x.AssignedManagerEmployee != null
             ? x.AssignedManagerEmployee.FirstName + " " + x.AssignedManagerEmployee.LastName
-            : null);
+            : null,
+        x.EstimatedDurationMinutes);
 
     private static System.Linq.Expressions.Expression<Func<JobTicketPart, JobTicketPartDto>> MapJobTicketPart(bool includePricing) => x => new JobTicketPartDto(
         x.Id,
@@ -1081,7 +1084,8 @@ public sealed record JobTicketDto(
     string BillingPartyCustomerName,
     string? EquipmentName,
     string? EquipmentNumber,
-    string? AssignedManagerEmployeeName);
+    string? AssignedManagerEmployeeName,
+    int? EstimatedDurationMinutes);
 
 public sealed record CreateJobTicketDto(
     Guid CustomerId,
@@ -1103,7 +1107,8 @@ public sealed record CreateJobTicketDto(
     string? BillingContactPhone,
     string? BillingContactEmail,
     string? InternalNotes,
-    string? CustomerFacingNotes);
+    string? CustomerFacingNotes,
+    int? EstimatedDurationMinutes = null);
 
 public sealed record UpdateJobTicketDto(
     Guid CustomerId,
@@ -1125,7 +1130,8 @@ public sealed record UpdateJobTicketDto(
     string? BillingContactPhone,
     string? BillingContactEmail,
     string? InternalNotes,
-    string? CustomerFacingNotes);
+    string? CustomerFacingNotes,
+    int? EstimatedDurationMinutes = null);
 
 public sealed record ChangeJobTicketStatusDto(JobTicketStatus Status);
 

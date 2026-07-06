@@ -146,6 +146,7 @@ export type JobTicketDto = {
   equipmentName?: string | null
   equipmentNumber?: string | null
   assignedManagerEmployeeName?: string | null
+  estimatedDurationMinutes?: number | null
 }
 
 
@@ -171,6 +172,7 @@ export type CreateJobTicketDto = {
   billingContactEmail?: string | null
   internalNotes?: string | null
   customerFacingNotes?: string | null
+  estimatedDurationMinutes?: number | null
 }
 
 export type UpdateJobTicketDto = CreateJobTicketDto
@@ -922,4 +924,33 @@ export type AddEquipmentCompatiblePartDto = {
 export type UpdateEquipmentCompatiblePartDto = {
   notes?: string | null
   isRecommendedForPM: boolean
+}
+
+export type SchedulableTicketDto = {
+  id: string
+  ticketNumber: string
+  title: string
+  status: number
+  priority: number
+  customerName: string
+  serviceLocationName: string
+  equipmentName?: string | null
+  requestedAtUtc?: string | null
+  scheduledStartAtUtc?: string | null
+  dueAtUtc?: string | null
+  estimatedDurationMinutes?: number | null
+  assignedManagerEmployeeId?: string | null
+  assignedManagerEmployeeName?: string | null
+}
+
+export type TechnicianScheduleDto = {
+  employeeId: string
+  employeeName: string
+  tickets: SchedulableTicketDto[]
+}
+
+export type ScheduleTicketDto = {
+  scheduledStartAtUtc?: string | null
+  estimatedDurationMinutes?: number | null
+  assignedManagerEmployeeId?: string | null
 }

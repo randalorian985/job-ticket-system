@@ -249,6 +249,7 @@ public sealed class JobTicket : SoftDeletableEntity
     public DateTime? ScheduledEndAtUtc { get; set; }
     public DateTime? DueAtUtc { get; set; }
     public DateTime? CompletedAtUtc { get; set; }
+    public int? EstimatedDurationMinutes { get; set; }
     public Guid? AssignedManagerEmployeeId { get; set; }
     public Employee? AssignedManagerEmployee { get; set; }
     public string? BillingContactName { get; set; }
