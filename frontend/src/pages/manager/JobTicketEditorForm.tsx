@@ -27,7 +27,8 @@ function toDatetimeLocalValue(utcIso: string | null | undefined): string {
 function useScrollToError(error: string | null) {
   useEffect(() => {
     if (error) {
-      document.querySelector<HTMLElement>('.error')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      const el = document.querySelector<HTMLElement>('.error')
+      if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [error])
 }
@@ -955,7 +956,8 @@ export function JobTicketEditorForm({
       {error ? <p className="error">{error}</p> : null}
       {copyHelperMessage ? <p className="success action-feedback-panel" role="status">{copyHelperMessage}</p> : null}
       {copyHelperError ? <p className="error">{copyHelperError}</p> : null}
-      <section className="ticket-create-guide" aria-label="ticket create wizard">
+      {isCreate ? (
+      <section className="ticket-create-guide ticket-create-guide--progress" aria-label="ticket create wizard">
         <div className="ticket-create-guide-heading">
           <h3>Ticket Create Wizard</h3>
           <span className="muted">{ticketCreateWizardSteps.filter((step) => step.isReady).length} / {ticketCreateWizardSteps.length} ready</span>
@@ -970,11 +972,30 @@ export function JobTicketEditorForm({
               onClick={() => setActiveEditorSection(step.section)}
             >
               <span>{index + 1}. {step.label}</span>
-              <small>{step.detail}</small>
+              <small aria-hidden>{step.detail}</small>
             </button>
           ))}
         </div>
       </section>
+      ) : null}
+      <nav className="ticket-create-guide" aria-label="ticket edit sections">
+        <div className="ticket-create-step-list">
+          {ticketEditorSections.map((sec) => (
+            <button
+              type="button"
+              key={sec.value}
+              aria-label={sec.label}
+              className={activeEditorSection === sec.value ? 'ticket-create-step ticket-create-step-active' : 'ticket-create-step'}
+              aria-pressed={activeEditorSection === sec.value}
+              onClick={() => setActiveEditorSection(sec.value)}
+            >
+              <span aria-hidden>{sec.label}</span>
+              <small>{sec.description}</small>
+            </button>
+          ))}
+        </div>
+      </nav>
+      {!isCreate ? (
       <section className="stack section-edit-readiness" aria-label="dispatch readiness requirements review">
         <h3>Dispatch Readiness Requirements</h3>
         <div className="review-grid">
@@ -1009,6 +1030,7 @@ export function JobTicketEditorForm({
           </ul>
         ) : null}
       </section>
+      ) : null}
 
       {activeEditorSection === 'identity' ? (
         <section className="section-editor-panel stack" aria-label="Basics edit section">
@@ -1149,18 +1171,18 @@ export function JobTicketEditorForm({
                 <label>
                   Access Instructions
                   <textarea rows={2} maxLength={2000} value={serviceLocationDraft.accessInstructions} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, accessInstructions: e.target.value }))} />
-                  <span className={`field-char-count${serviceLocationDraft.accessInstructions.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.accessInstructions.length} / 2,000</span>
                 </label>
+                <span className={`field-char-count${serviceLocationDraft.accessInstructions.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.accessInstructions.length} / 2,000</span>
                 <label>
                   Safety Requirements
                   <textarea rows={2} maxLength={2000} value={serviceLocationDraft.safetyRequirements} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, safetyRequirements: e.target.value }))} />
-                  <span className={`field-char-count${serviceLocationDraft.safetyRequirements.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.safetyRequirements.length} / 2,000</span>
                 </label>
+                <span className={`field-char-count${serviceLocationDraft.safetyRequirements.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.safetyRequirements.length} / 2,000</span>
                 <label>
                   Site Notes
                   <textarea rows={3} maxLength={4000} value={serviceLocationDraft.siteNotes} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, siteNotes: e.target.value }))} />
-                  <span className={`field-char-count${serviceLocationDraft.siteNotes.length > 3600 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.siteNotes.length} / 4,000</span>
                 </label>
+                <span className={`field-char-count${serviceLocationDraft.siteNotes.length > 3600 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.siteNotes.length} / 4,000</span>
               </div>
               <div className="row">
                 <button type="button" onClick={addServiceLocation} disabled={isAddingServiceLocation}>
@@ -1280,15 +1302,12 @@ export function JobTicketEditorForm({
             <h3>Scope & Notes</h3>
             <p className="muted">Edit the job description and notes visible to office or customer workflows.</p>
           </div>
-          <label>Description<textarea value={form.description ?? ''} maxLength={4000} rows={4} onChange={(e) => update('description', e.target.value || null)} />
-            <span className={`field-char-count${(form.description?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.description?.length ?? 0} / 4,000</span>
-          </label>
-          <label>Internal Notes<textarea value={form.internalNotes ?? ''} maxLength={4000} rows={4} onChange={(e) => update('internalNotes', e.target.value || null)} />
-            <span className={`field-char-count${(form.internalNotes?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.internalNotes?.length ?? 0} / 4,000</span>
-          </label>
-          <label>Customer Notes<textarea value={form.customerFacingNotes ?? ''} maxLength={4000} rows={4} onChange={(e) => update('customerFacingNotes', e.target.value || null)} />
-            <span className={`field-char-count${(form.customerFacingNotes?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.customerFacingNotes?.length ?? 0} / 4,000</span>
-          </label>
+          <label>Description<textarea value={form.description ?? ''} maxLength={4000} rows={4} onChange={(e) => update('description', e.target.value || null)} /></label>
+          <span className={`field-char-count${(form.description?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.description?.length ?? 0} / 4,000</span>
+          <label>Internal Notes<textarea value={form.internalNotes ?? ''} maxLength={4000} rows={4} onChange={(e) => update('internalNotes', e.target.value || null)} /></label>
+          <span className={`field-char-count${(form.internalNotes?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.internalNotes?.length ?? 0} / 4,000</span>
+          <label>Customer Notes<textarea value={form.customerFacingNotes ?? ''} maxLength={4000} rows={4} onChange={(e) => update('customerFacingNotes', e.target.value || null)} /></label>
+          <span className={`field-char-count${(form.customerFacingNotes?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.customerFacingNotes?.length ?? 0} / 4,000</span>
         </section>
       ) : null}
 
@@ -1315,20 +1334,17 @@ export function JobTicketEditorForm({
         </section>
       ) : null}
 
-      {!isCreate && activeEditorSection === 'schedule' ? (
+      {activeEditorSection === 'schedule' ? (
         <section className="section-editor-panel stack" aria-label="Schedule edit section">
           <div className="section-editor-heading">
             <h3>Schedule</h3>
             <p className="muted">{isCreate ? 'When did the customer report this issue? Scheduling and assignment happen separately after the ticket is created.' : 'Edit requested, scheduled start, and due dates for work planning.'}</p>
           </div>
+          {!isCreate && (
           <div className="section-editor-grid">
             <label>Requested Date / Time<input type="datetime-local" value={toDatetimeLocalValue(form.requestedAtUtc)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-            {!isCreate ? (
-              <>
-                <label>Scheduled Start<input type="datetime-local" value={toDatetimeLocalValue(form.scheduledStartAtUtc)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-                <label>Due Date<input type="datetime-local" value={toDatetimeLocalValue(form.dueAtUtc)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-              </>
-            ) : null}
+            <label>Scheduled Start<input type="datetime-local" value={toDatetimeLocalValue(form.scheduledStartAtUtc)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+            <label>Due Date<input type="datetime-local" value={toDatetimeLocalValue(form.dueAtUtc)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
             <label>Estimated Duration
               <select value={form.estimatedDurationMinutes ?? ''} onChange={(e) => update('estimatedDurationMinutes', e.target.value ? Number(e.target.value) : null)}>
                 <option value="">Unknown</option>
@@ -1342,12 +1358,13 @@ export function JobTicketEditorForm({
               </select>
             </label>
           </div>
+          )}
           {scheduleAssignmentPanel}
         </section>
       ) : null}
 
       <div className="section-editor-save-row">
-        <span className="muted">Changes save through the existing ticket update workflow.</span>
+        {!isCreate ? <span className="muted">Changes save through the existing ticket update workflow.</span> : null}
         <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : submitLabel}</button>
       </div>
     </form>

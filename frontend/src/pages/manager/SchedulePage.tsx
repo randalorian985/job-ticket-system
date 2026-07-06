@@ -72,6 +72,8 @@ function UnscheduledView() {
   const [tickets, setTickets] = useState<SchedulableTicketDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [priorityFilter, setPriorityFilter] = useState<number | 'all'>('all')
+  const [durationFilter, setDurationFilter] = useState<'all' | 'none' | 'short' | 'half' | 'full'>('all')
 
   useEffect(() => {
     schedulingApi.getUnscheduled()
@@ -80,14 +82,57 @@ function UnscheduledView() {
       .finally(() => setLoading(false))
   }, [])
 
+  const filtered = useMemo(() => {
+    let result = tickets
+    if (priorityFilter !== 'all') {
+      result = result.filter((t) => t.priority === priorityFilter)
+    }
+    if (durationFilter === 'none') {
+      result = result.filter((t) => !t.estimatedDurationMinutes)
+    } else if (durationFilter === 'short') {
+      result = result.filter((t) => t.estimatedDurationMinutes && t.estimatedDurationMinutes <= 120)
+    } else if (durationFilter === 'half') {
+      result = result.filter((t) => t.estimatedDurationMinutes && t.estimatedDurationMinutes > 120 && t.estimatedDurationMinutes <= 240)
+    } else if (durationFilter === 'full') {
+      result = result.filter((t) => t.estimatedDurationMinutes && t.estimatedDurationMinutes > 240)
+    }
+    return result
+  }, [tickets, priorityFilter, durationFilter])
+
   if (loading) return <p className="muted">Loading…</p>
   if (error) return <p className="error-message">{error}</p>
-  if (tickets.length === 0) return <p className="muted">No unscheduled open tickets. All caught up!</p>
 
   return (
-    <ul className="schedule-ticket-list">
-      {tickets.map((t) => <TicketCard key={t.id} ticket={t} />)}
-    </ul>
+    <div className="stack">
+      <div className="schedule-filter-bar">
+        <label className="schedule-filter-label">Priority
+          <select value={String(priorityFilter)} onChange={(e) => setPriorityFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}>
+            <option value="all">All priorities</option>
+            <option value="4">Urgent</option>
+            <option value="3">High</option>
+            <option value="2">Normal</option>
+            <option value="1">Low</option>
+          </select>
+        </label>
+        <label className="schedule-filter-label">Est. Duration
+          <select value={durationFilter} onChange={(e) => setDurationFilter(e.target.value as typeof durationFilter)}>
+            <option value="all">All</option>
+            <option value="none">No estimate</option>
+            <option value="short">Under 2 hrs</option>
+            <option value="half">2 – 4 hrs</option>
+            <option value="full">Over 4 hrs</option>
+          </select>
+        </label>
+        {tickets.length > 0 && (
+          <span className="muted schedule-filter-count">
+            {filtered.length === tickets.length ? `${tickets.length} ticket${tickets.length === 1 ? '' : 's'}` : `${filtered.length} of ${tickets.length}`}
+          </span>
+        )}
+      </div>
+      {filtered.length === 0
+        ? <p className="muted">{tickets.length === 0 ? 'No unscheduled open tickets. All caught up!' : 'No tickets match the selected filters.'}</p>
+        : <ul className="schedule-ticket-list">{filtered.map((t) => <TicketCard key={t.id} ticket={t} />)}</ul>}
+    </div>
   )
 }
 

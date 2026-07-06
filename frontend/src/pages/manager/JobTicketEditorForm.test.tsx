@@ -150,10 +150,10 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     expect(screen.getByText('Job instructions: Add job instructions or notes for the technician.')).toBeInTheDocument()
 
     openEditSection('Schedule')
-    fireEvent.change(screen.getByLabelText('Scheduled Start (UTC)'), { target: { value: '2026-04-02T09:30' } })
+    fireEvent.change(screen.getByLabelText('Scheduled Start'), { target: { value: '2026-04-02T09:30' } })
     expect(screen.getByText('Next required update: Add a due date for timing expectations.')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText('Due (UTC)'), { target: { value: '2026-04-03T17:00' } })
+    fireEvent.change(screen.getByLabelText('Due Date'), { target: { value: '2026-04-03T17:00' } })
     expect(screen.getByText('Next required update: Add job instructions or notes for the technician.')).toBeInTheDocument()
 
     openEditSection('Scope & Notes')

@@ -359,7 +359,7 @@ it('validates required service-location fields before create', async () => {
   render(<ServiceLocationsPage />)
   fireEvent.click(await screen.findByRole('button', { name: 'Create Location' }))
 
-  expect(await screen.findByText('All address fields are required.')).toBeInTheDocument()
+  expect(await screen.findByText('Location Name is required.')).toBeInTheDocument()
   expect(masterDataApi.createServiceLocation).not.toHaveBeenCalled()
 })
 
@@ -377,7 +377,7 @@ it('validates whitespace-only service-location fields before create', async () =
   fireEvent.change(screen.getByPlaceholderText('Country'), { target: { value: 'US' } })
   fireEvent.click(screen.getByRole('button', { name: 'Create Location' }))
 
-  expect(await screen.findByText('All address fields are required.')).toBeInTheDocument()
+  expect(await screen.findByText('Company Name is required.')).toBeInTheDocument()
   expect(masterDataApi.createServiceLocation).not.toHaveBeenCalled()
 })
 

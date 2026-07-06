@@ -423,8 +423,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Job Tickets' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Create Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
+    expect(await screen.findByRole('heading', { name: 'Scheduling' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Dispatch Board' })).not.toBeInTheDocument()
   })
 

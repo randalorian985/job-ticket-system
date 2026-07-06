@@ -593,3 +593,124 @@ describe('JobDetailPage', () => {
     expect(screen.getByText('Job setup needs manager review before starting new work.')).toBeInTheDocument()
   })
 })
+
+describe('JobDetailPage — GPS fallback on clock-in and clock-out', () => {
+  beforeEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+    localStorage.clear()
+    vi.mocked(partsApi.list).mockResolvedValue([])
+  })
+
+  it('clock-in succeeds without coordinates when GPS is fully unavailable', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+    mockNoOpenEntry()
+
+    // Simulate GPS being unavailable
+    Object.defineProperty(navigator, 'geolocation', {
+      value: undefined,
+      configurable: true,
+      writable: true
+    })
+
+    vi.mocked(timeEntriesApi.clockIn).mockResolvedValue({
+      id: 'time-new',
+      jobTicketId: 'job-1',
+      employeeId: 'employee-1',
+      startedAtUtc: new Date().toISOString(),
+      laborHours: 0,
+      billableHours: 0,
+      approvalStatus: 1,
+      clockInLatitude: null,
+      clockInLongitude: null
+    } as any)
+
+    // After clock-in, getOpen returns the new entry
+    vi.mocked(timeEntriesApi.getOpen).mockResolvedValueOnce(undefined as any).mockResolvedValue({
+      id: 'time-new',
+      jobTicketId: 'job-1',
+      employeeId: 'employee-1',
+      startedAtUtc: new Date().toISOString(),
+      laborHours: 0,
+      billableHours: 0,
+      approvalStatus: 1,
+      clockInLatitude: null,
+      clockInLongitude: null
+    } as any)
+
+    renderJobDetail()
+
+    const user = userEvent.setup()
+    const clockInBtn = await screen.findByRole('button', { name: 'Clock In with GPS' })
+    await user.click(clockInBtn)
+
+    await waitFor(() => {
+      expect(timeEntriesApi.clockIn).toHaveBeenCalledWith(expect.objectContaining({
+        jobTicketId: 'job-1',
+        clockInLatitude: undefined,
+        clockInLongitude: undefined
+      }))
+    })
+  })
+
+  it('clock-in passes coordinates when GPS succeeds on high-accuracy attempt', async () => {
+    mockEmployeeAuth()
+    mockJob()
+    vi.mocked(jobTicketsApi.listWorkEntries).mockResolvedValue([])
+    vi.mocked(jobTicketsApi.listParts).mockResolvedValue([])
+    vi.mocked(filesApi.list).mockResolvedValue([])
+
+    const mockPosition = { coords: { latitude: 29.95, longitude: -90.07 } } as GeolocationPosition
+    Object.defineProperty(navigator, 'geolocation', {
+      value: {
+        getCurrentPosition: vi.fn().mockImplementation((success: PositionCallback) => success(mockPosition))
+      },
+      configurable: true,
+      writable: true
+    })
+
+    // Initially no open entry; after clock-in return the new entry
+    vi.mocked(timeEntriesApi.getOpen)
+      .mockRejectedValueOnce(new ApiError('No open time entry.', 404))
+      .mockResolvedValue({
+        id: 'time-gps',
+        jobTicketId: 'job-1',
+        employeeId: 'employee-1',
+        startedAtUtc: new Date().toISOString(),
+        laborHours: 0,
+        billableHours: 0,
+        approvalStatus: 1,
+        clockInLatitude: 29.95,
+        clockInLongitude: -90.07
+      } as any)
+
+    vi.mocked(timeEntriesApi.clockIn).mockResolvedValue({
+      id: 'time-gps',
+      jobTicketId: 'job-1',
+      employeeId: 'employee-1',
+      startedAtUtc: new Date().toISOString(),
+      laborHours: 0,
+      billableHours: 0,
+      approvalStatus: 1,
+      clockInLatitude: 29.95,
+      clockInLongitude: -90.07
+    } as any)
+
+    renderJobDetail()
+
+    const user = userEvent.setup()
+    const clockInBtn = await screen.findByRole('button', { name: 'Clock In with GPS' })
+    await user.click(clockInBtn)
+
+    await waitFor(() => {
+      expect(timeEntriesApi.clockIn).toHaveBeenCalledWith(expect.objectContaining({
+        clockInLatitude: 29.95,
+        clockInLongitude: -90.07
+      }))
+    })
+  })
+})

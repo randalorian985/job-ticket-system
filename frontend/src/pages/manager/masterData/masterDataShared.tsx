@@ -10,10 +10,10 @@ export function useScrollToError(error: string | null, fieldErrors?: Record<stri
   useEffect(() => {
     if (error) {
       const el = document.querySelector<HTMLElement>('.error')
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     } else if (hasFieldError) {
       const el = document.querySelector<HTMLElement>('.field-error')
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [error, hasFieldError])
 }
