@@ -97,6 +97,7 @@ builder.Services.AddScoped<ITestEnvironmentBootstrapService, TestEnvironmentBoot
 builder.Services.AddScoped<ICustomersService, CustomersService>();
 builder.Services.AddScoped<IServiceLocationsService, ServiceLocationsService>();
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
+builder.Services.AddScoped<IEquipmentCompatiblePartsService, EquipmentCompatiblePartsService>();
 builder.Services.AddScoped<IVendorsService, VendorsService>();
 builder.Services.AddScoped<IPartCategoriesService, PartCategoriesService>();
 builder.Services.AddScoped<IPartsService, PartsService>();

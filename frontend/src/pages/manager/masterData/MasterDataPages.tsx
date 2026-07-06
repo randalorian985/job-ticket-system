@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { masterDataApi } from '../../../api/masterDataApi'
 import type {
+  AddEquipmentCompatiblePartDto,
   CreateCustomerDto,
   CreateEquipmentDto,
   CreatePartCategoryDto,
@@ -8,10 +9,12 @@ import type {
   CreateServiceLocationDto,
   CreateVendorDto,
   CustomerDto,
+  EquipmentCompatiblePartsDto,
   EquipmentDto,
   PartCategoryDto,
   PartDto,
   ServiceLocationDto,
+  UpdateEquipmentCompatiblePartDto,
   VendorDto
 } from '../../../types'
 import { Errorable } from '../common/Errorable'
@@ -640,6 +643,40 @@ export function EquipmentPage() {
     setEditorOpen(true)
   }
 
+  const [activeEquipmentTab, setActiveEquipmentTab] = useState<'details' | 'parts'>('details')
+  const [allParts, setAllParts] = useState<PartDto[]>([])
+  const [compatiblePartsData, setCompatiblePartsData] = useState<EquipmentCompatiblePartsDto | null>(null)
+  const [partsTabLoading, setPartsTabLoading] = useState(false)
+  const [partsTabError, setPartsTabError] = useState<string | null>(null)
+  const [addPartDraft, setAddPartDraft] = useState<AddEquipmentCompatiblePartDto & { partId: string }>({ partId: '', notes: '', isRecommendedForPM: false })
+  const [addPartError, setAddPartError] = useState<string | null>(null)
+  const [editingCompatPartId, setEditingCompatPartId] = useState<string | null>(null)
+  const [editCompatDraft, setEditCompatDraft] = useState<UpdateEquipmentCompatiblePartDto>({ notes: '', isRecommendedForPM: false })
+
+  useEffect(() => {
+    setActiveEquipmentTab('details')
+    setCompatiblePartsData(null)
+    setAddPartDraft({ partId: '', notes: '', isRecommendedForPM: false })
+    setAddPartError(null)
+    setEditingCompatPartId(null)
+  }, [editId])
+
+  useEffect(() => {
+    if (activeEquipmentTab !== 'parts' || !editId) return
+    setPartsTabLoading(true)
+    setPartsTabError(null)
+    Promise.all([
+      masterDataApi.getEquipmentCompatibleParts(editId),
+      masterDataApi.listParts()
+    ])
+      .then(([catalog, partsList]) => {
+        setCompatiblePartsData(catalog)
+        setAllParts(partsList)
+      })
+      .catch(() => setPartsTabError('Unable to load compatible parts.'))
+      .finally(() => setPartsTabLoading(false))
+  }, [activeEquipmentTab, editId])
+
   return (
     <section className="card stack">
       <div className="report-results-heading">
@@ -652,7 +689,14 @@ export function EquipmentPage() {
       <Errorable error={error} />
       {success ? <p className="success action-feedback-panel">{success}</p> : null}
 
-      <form onSubmit={save} className="stack" aria-label="equipment form" hidden={!editorOpen}>
+      {editorOpen && editId && (
+        <div className="compat-parts-tab-nav">
+          <button type="button" className={`tab-btn${activeEquipmentTab === 'details' ? ' tab-btn--active' : ''}`} onClick={() => setActiveEquipmentTab('details')}>Equipment Details</button>
+          <button type="button" className={`tab-btn${activeEquipmentTab === 'parts' ? ' tab-btn--active' : ''}`} onClick={() => setActiveEquipmentTab('parts')}>Compatible Parts</button>
+        </div>
+      )}
+
+      <form onSubmit={save} className="stack" aria-label="equipment form" hidden={!editorOpen || activeEquipmentTab !== 'details'}>
         <div className="row">
           <label>Primary customer<select value={draft.customerId} onChange={(e) => setDraft({ ...draft, customerId: e.target.value, serviceLocationId: '' })}><option value="">Customer</option>{customerOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
           <label>Service location<select value={draft.serviceLocationId} onChange={(e) => setDraft({ ...draft, serviceLocationId: e.target.value })}><option value="">Service location</option>{unavailableCurrentServiceLocationId ? <option value={unavailableCurrentServiceLocationId}>Current service location (unavailable)</option> : null}{availableServiceLocations.map((location) => <option key={location.id} value={location.id}>{location.locationName}</option>)}</select></label>
@@ -681,6 +725,125 @@ export function EquipmentPage() {
           <button type="button" className="secondary-button" onClick={closeEditor}>{editId ? 'Cancel equipment edit' : 'Back to equipment'}</button>
         </div>
       </form>
+
+      {editorOpen && editId && activeEquipmentTab === 'parts' && (
+        <div className="stack">
+          {partsTabLoading && <p className="muted">Loading compatible parts…</p>}
+          {partsTabError && <p className="error-message">{partsTabError}</p>}
+          {compatiblePartsData && (
+            <>
+              <div className="stack">
+                <h3>Catalog</h3>
+                <p className="muted">Parts assigned as compatible with this equipment.</p>
+                {compatiblePartsData.catalog.length === 0
+                  ? <p className="muted">No compatible parts added yet.</p>
+                  : (
+                    <ul className="master-data-list compact-master-list">
+                      {compatiblePartsData.catalog.map((entry) => (
+                        <li key={entry.partId} className="master-data-item compact-master-list-item">
+                          <div className="compact-list-primary">
+                            <div className="master-data-title-row">
+                              <strong className="master-data-title">{entry.partNumber} — {entry.partName}</strong>
+                              {entry.isRecommendedForPM && <span className="status-pill active">PM Part</span>}
+                            </div>
+                            {entry.partDescription && <span className="compact-list-subtext">{entry.partDescription}</span>}
+                          </div>
+                          {editingCompatPartId === entry.partId ? (
+                            <div className="stack">
+                              <label>Notes<textarea rows={2} maxLength={1000} value={editCompatDraft.notes ?? ''} onChange={(e) => setEditCompatDraft({ ...editCompatDraft, notes: e.target.value })} /></label>
+                              <label><input type="checkbox" checked={editCompatDraft.isRecommendedForPM} onChange={(e) => setEditCompatDraft({ ...editCompatDraft, isRecommendedForPM: e.target.checked })} /> Recommended for PM</label>
+                              <div className="row">
+                                <button type="button" onClick={async () => {
+                                  try {
+                                    await masterDataApi.updateEquipmentCompatiblePart(editId, entry.partId, editCompatDraft)
+                                    setEditingCompatPartId(null)
+                                    const updated = await masterDataApi.getEquipmentCompatibleParts(editId)
+                                    setCompatiblePartsData(updated)
+                                  } catch {
+                                    setPartsTabError('Unable to update compatible part.')
+                                  }
+                                }}>Save</button>
+                                <button type="button" className="secondary-button" onClick={() => setEditingCompatPartId(null)}>Cancel</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {entry.notes ? compactListField('Notes', entry.notes) : null}
+                              {compactListField('Added by', `${entry.addedByUserName} on ${new Date(entry.addedAtUtc).toLocaleDateString()}`)}
+                              <div className="master-data-actions compact-list-actions">
+                                <button type="button" onClick={() => { setEditingCompatPartId(entry.partId); setEditCompatDraft({ notes: entry.notes ?? '', isRecommendedForPM: entry.isRecommendedForPM }) }}>Edit</button>
+                                <button type="button" onClick={async () => {
+                                  if (!window.confirm(`Remove ${entry.partNumber} from compatible parts?`)) return
+                                  try {
+                                    await masterDataApi.removeEquipmentCompatiblePart(editId, entry.partId)
+                                    const updated = await masterDataApi.getEquipmentCompatibleParts(editId)
+                                    setCompatiblePartsData(updated)
+                                  } catch {
+                                    setPartsTabError('Unable to remove compatible part.')
+                                  }
+                                }}>Remove</button>
+                              </div>
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+              </div>
+
+              <div className="stack">
+                <h4>Add Compatible Part</h4>
+                {addPartError && <p className="error-message">{addPartError}</p>}
+                <label>Part
+                  <select value={addPartDraft.partId} onChange={(e) => setAddPartDraft({ ...addPartDraft, partId: e.target.value })}>
+                    <option value="">Select a part</option>
+                    {allParts.filter((p) => !p.isArchived && !compatiblePartsData.catalog.some((c) => c.partId === p.id)).map((p) => (
+                      <option key={p.id} value={p.id}>{p.partNumber} — {p.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>Notes (optional)<textarea rows={2} maxLength={1000} placeholder="Notes about this part for this equipment" value={addPartDraft.notes ?? ''} onChange={(e) => setAddPartDraft({ ...addPartDraft, notes: e.target.value })} /></label>
+                <label><input type="checkbox" checked={addPartDraft.isRecommendedForPM} onChange={(e) => setAddPartDraft({ ...addPartDraft, isRecommendedForPM: e.target.checked })} /> Recommended for PM (preventive maintenance)</label>
+                <div className="row">
+                  <button type="button" onClick={async () => {
+                    if (!addPartDraft.partId) { setAddPartError('Select a part to add.'); return }
+                    setAddPartError(null)
+                    try {
+                      await masterDataApi.addEquipmentCompatiblePart(editId, { partId: addPartDraft.partId, notes: addPartDraft.notes || null, isRecommendedForPM: addPartDraft.isRecommendedForPM })
+                      setAddPartDraft({ partId: '', notes: '', isRecommendedForPM: false })
+                      const updated = await masterDataApi.getEquipmentCompatibleParts(editId)
+                      setCompatiblePartsData(updated)
+                    } catch (addErr) {
+                      setAddPartError(masterDataRequestErrorMessage(addErr, 'Unable to add compatible part.'))
+                    }
+                  }}>Add Part</button>
+                </div>
+              </div>
+
+              {compatiblePartsData.history.length > 0 && (
+                <div className="stack">
+                  <h4>Parts Used on Past Tickets</h4>
+                  <p className="muted">Parts that have been used on service tickets for this equipment (read-only).</p>
+                  <ul className="master-data-list compact-master-list">
+                    {compatiblePartsData.history.map((h) => (
+                      <li key={h.partId} className="master-data-item compact-master-list-item">
+                        <div className="compact-list-primary">
+                          <strong className="master-data-title">{h.partNumber} — {h.partName}</strong>
+                        </div>
+                        {compactListField('Times used', String(h.usageCount))}
+                        {h.lastUsedAtUtc ? compactListField('Last used', new Date(h.lastUsedAtUtc).toLocaleDateString()) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+          <div className="row" style={{ marginTop: '1rem' }}>
+            <button type="button" className="secondary-button" onClick={closeEditor}>Back to equipment</button>
+          </div>
+        </div>
+      )}
 
       <div className="stack" hidden={editorOpen}>
         <MasterDataFilters label="equipment" search={search} searchPlaceholder="Search by name, unit, serial, model, customer, or location" archiveFilter={archiveFilter} onSearchChange={setSearch} onArchiveFilterChange={setArchiveFilter} onReset={() => { setSearch(''); setArchiveFilter('all'); setCustomerFilter('') }}>

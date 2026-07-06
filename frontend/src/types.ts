@@ -886,3 +886,40 @@ export type ReceivePurchaseOrderDto = {
   receivedAtUtc?: string | null
   lines: { lineId: string; receivedQuantity: number }[]
 }
+
+export type EquipmentCompatiblePartDto = {
+  partId: string
+  partNumber: string
+  partName: string
+  partDescription?: string | null
+  notes?: string | null
+  isRecommendedForPM: boolean
+  addedByUserName: string
+  addedAtUtc: string
+}
+
+export type EquipmentPartHistoryDto = {
+  partId: string
+  partNumber: string
+  partName: string
+  usageCount: number
+  lastUsedAtUtc?: string | null
+}
+
+export type EquipmentCompatiblePartsDto = {
+  equipmentId: string
+  equipmentName: string
+  catalog: EquipmentCompatiblePartDto[]
+  history: EquipmentPartHistoryDto[]
+}
+
+export type AddEquipmentCompatiblePartDto = {
+  partId: string
+  notes?: string | null
+  isRecommendedForPM: boolean
+}
+
+export type UpdateEquipmentCompatiblePartDto = {
+  notes?: string | null
+  isRecommendedForPM: boolean
+}

@@ -110,6 +110,18 @@ public sealed class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
     }
 }
 
+public sealed class EquipmentCompatiblePartConfiguration : IEntityTypeConfiguration<EquipmentCompatiblePart>
+{
+    public void Configure(EntityTypeBuilder<EquipmentCompatiblePart> builder)
+    {
+        builder.HasKey(x => new { x.EquipmentId, x.PartId });
+        builder.Property(x => x.Notes).HasMaxLength(1000);
+        builder.HasOne(x => x.Equipment).WithMany(x => x.CompatibleParts).HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.Part).WithMany(x => x.EquipmentCompatibleParts).HasForeignKey(x => x.PartId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(x => x.EquipmentId);
+    }
+}
+
 public sealed class ServiceLocationConfiguration : IEntityTypeConfiguration<ServiceLocation>
 {
     public void Configure(EntityTypeBuilder<ServiceLocation> builder)

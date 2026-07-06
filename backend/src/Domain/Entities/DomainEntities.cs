@@ -116,6 +116,20 @@ public sealed class Equipment : SoftDeletableEntity
     public decimal? Longitude { get; set; }
     public EquipmentStatus Status { get; set; } = EquipmentStatus.Active;
     public ICollection<JobTicket> JobTickets { get; set; } = new List<JobTicket>();
+    public ICollection<EquipmentCompatiblePart> CompatibleParts { get; set; } = new List<EquipmentCompatiblePart>();
+}
+
+/// <summary>Manager-defined catalog of parts compatible with a specific piece of equipment.</summary>
+public sealed class EquipmentCompatiblePart
+{
+    public Guid EquipmentId { get; set; }
+    public Equipment Equipment { get; set; } = null!;
+    public Guid PartId { get; set; }
+    public Part Part { get; set; } = null!;
+    public string? Notes { get; set; }
+    public bool IsRecommendedForPM { get; set; }
+    public Guid AddedByUserId { get; set; }
+    public DateTime AddedAtUtc { get; set; } = DateTime.UtcNow;
 }
 
 public sealed class ServiceLocation : SoftDeletableEntity
@@ -178,6 +192,7 @@ public sealed class Part : SoftDeletableEntity
     public decimal ReorderThreshold { get; set; }
     public ICollection<JobTicketPart> JobTicketParts { get; set; } = new List<JobTicketPart>();
     public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = new List<PurchaseOrderLine>();
+    public ICollection<EquipmentCompatiblePart> EquipmentCompatibleParts { get; set; } = new List<EquipmentCompatiblePart>();
 }
 
 public sealed class PurchaseOrder : SoftDeletableEntity

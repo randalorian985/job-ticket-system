@@ -1,4 +1,5 @@
 import type {
+  AddEquipmentCompatiblePartDto,
   CreateCustomerDto,
   CreateEquipmentDto,
   CreatePartCategoryDto,
@@ -6,11 +7,13 @@ import type {
   CreateServiceLocationDto,
   CreateVendorDto,
   CustomerDto,
+  EquipmentCompatiblePartsDto,
   EquipmentDto,
   PartCategoryDto,
   PartDto,
   ServiceLocationDto,
   UpdateCustomerDto,
+  UpdateEquipmentCompatiblePartDto,
   UpdateEquipmentDto,
   UpdatePartCategoryDto,
   UpdatePartDto,
@@ -58,5 +61,10 @@ export const masterDataApi = {
   createPart: (payload: CreatePartDto) => apiRequest<PartDto>('/api/parts', { method: 'POST', body: JSON.stringify(payload) }),
   updatePart: (id: string, payload: UpdatePartDto) => apiRequest<PartDto>(`/api/parts/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   archivePart: (id: string) => apiRequest<void>(`/api/parts/${id}/archive`, { method: 'POST' }),
-  unarchivePart: (id: string) => apiRequest<void>(`/api/parts/${id}/unarchive`, { method: 'POST' })
+  unarchivePart: (id: string) => apiRequest<void>(`/api/parts/${id}/unarchive`, { method: 'POST' }),
+
+  getEquipmentCompatibleParts: (equipmentId: string) => apiRequest<EquipmentCompatiblePartsDto>(`/api/equipment/${equipmentId}/compatible-parts`),
+  addEquipmentCompatiblePart: (equipmentId: string, payload: AddEquipmentCompatiblePartDto) => apiRequest<void>(`/api/equipment/${equipmentId}/compatible-parts`, { method: 'POST', body: JSON.stringify(payload) }),
+  removeEquipmentCompatiblePart: (equipmentId: string, partId: string) => apiRequest<void>(`/api/equipment/${equipmentId}/compatible-parts/${partId}`, { method: 'DELETE' }),
+  updateEquipmentCompatiblePart: (equipmentId: string, partId: string, payload: UpdateEquipmentCompatiblePartDto) => apiRequest<void>(`/api/equipment/${equipmentId}/compatible-parts/${partId}`, { method: 'PATCH', body: JSON.stringify(payload) })
 }
