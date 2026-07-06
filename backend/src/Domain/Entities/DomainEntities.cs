@@ -28,6 +28,16 @@ public sealed class CompanyConfiguration : AuditableEntity
     public long? LogoFileSizeBytes { get; set; }
     public DateTime? LogoUploadedAtUtc { get; set; }
     public Guid? UpdatedByUserId { get; set; }
+    public bool NewTicketNotificationsEnabled { get; set; } = true;
+    public int NewTicketNotificationMinimumPriority { get; set; } = 1; // 1 = Low = notify on all tickets
+}
+
+public sealed class NewTicketNotificationRecipient : AuditableEntity
+{
+    public string Label { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+    public Guid? AddedByUserId { get; set; }
 }
 
 public sealed class TicketStatusFilterOption : AuditableEntity

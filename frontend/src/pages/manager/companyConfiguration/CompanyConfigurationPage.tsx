@@ -7,7 +7,12 @@ import {
   defaultCompanyConfiguration,
   useCompanyBranding
 } from '../../../features/companyBranding/CompanyBrandingContext'
-import type { CompanyConfigurationDto, UpdateCompanyConfigurationDto } from '../../../types'
+import type {
+  AddNewTicketNotificationRecipientDto,
+  CompanyConfigurationDto,
+  NewTicketNotificationRecipientDto,
+  UpdateCompanyConfigurationDto
+} from '../../../types'
 import { CompanyConfigurationForm } from './CompanyConfigurationForm'
 import { CompanyConfigurationPreview } from './CompanyConfigurationPreview'
 import './CompanyConfigurationPage.css'
@@ -28,7 +33,9 @@ const toFormValue = (configuration: CompanyConfigurationDto): UpdateCompanyConfi
   country: configuration.country ?? '',
   primaryColor: configuration.primaryColor,
   secondaryColor: configuration.secondaryColor,
-  accentColor: configuration.accentColor
+  accentColor: configuration.accentColor,
+  newTicketNotificationsEnabled: configuration.newTicketNotificationsEnabled,
+  newTicketNotificationMinimumPriority: configuration.newTicketNotificationMinimumPriority
 })
 
 const normalizeOptionalFields = (form: UpdateCompanyConfigurationDto): UpdateCompanyConfigurationDto => ({
@@ -60,6 +67,13 @@ export function CompanyConfigurationPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
+  const [recipients, setRecipients] = useState<NewTicketNotificationRecipientDto[]>([])
+  const [isLoadingRecipients, setIsLoadingRecipients] = useState(true)
+  const [recipientError, setRecipientError] = useState<string | null>(null)
+  const [addForm, setAddForm] = useState<AddNewTicketNotificationRecipientDto>({ label: '', email: '' })
+  const [isAddingRecipient, setIsAddingRecipient] = useState(false)
+  const [removingId, setRemovingId] = useState<string | null>(null)
+
   useEffect(() => {
     let isMounted = true
 
@@ -75,6 +89,18 @@ export function CompanyConfigurationPage() {
       })
       .finally(() => {
         if (isMounted) setIsLoading(false)
+      })
+
+    companyConfigurationApi
+      .getNotificationRecipients()
+      .then((loaded) => {
+        if (isMounted) setRecipients(loaded)
+      })
+      .catch(() => {
+        if (isMounted) setRecipientError('Notification recipients could not be loaded.')
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingRecipients(false)
       })
 
     return () => {
@@ -138,6 +164,40 @@ export function CompanyConfigurationPage() {
     }
   }
 
+  const onAddRecipient = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!addForm.label.trim() || !addForm.email.trim()) return
+    setIsAddingRecipient(true)
+    setRecipientError(null)
+
+    try {
+      const created = await companyConfigurationApi.addNotificationRecipient({
+        label: addForm.label.trim(),
+        email: addForm.email.trim()
+      })
+      setRecipients((prev) => [...prev, created])
+      setAddForm({ label: '', email: '' })
+    } catch (addError) {
+      setRecipientError(messageForError(addError, 'Could not add notification recipient.'))
+    } finally {
+      setIsAddingRecipient(false)
+    }
+  }
+
+  const onRemoveRecipient = async (id: string) => {
+    setRemovingId(id)
+    setRecipientError(null)
+
+    try {
+      await companyConfigurationApi.removeNotificationRecipient(id)
+      setRecipients((prev) => prev.filter((r) => r.id !== id))
+    } catch (removeError) {
+      setRecipientError(messageForError(removeError, 'Could not remove notification recipient.'))
+    } finally {
+      setRemovingId(null)
+    }
+  }
+
   return (
     <section className="company-config-page stack" aria-busy={isLoading || isSaving || isUploading}>
       <header className="dashboard-hero-strip company-config-hero">
@@ -187,6 +247,74 @@ export function CompanyConfigurationPage() {
           addressLines={companyAddressLines(previewConfiguration)}
         />
       </div>
+
+      <section className="company-config-panel stack" aria-label="notification recipients">
+        <div className="company-config-section-heading">
+          <div>
+            <p className="eyebrow">Notifications</p>
+            <h3>New ticket notification recipients</h3>
+            <p className="muted">Email addresses that receive a notification when a new ticket is created.</p>
+          </div>
+        </div>
+
+        {recipientError ? <p className="error" role="alert">{recipientError}</p> : null}
+        {isLoadingRecipients ? <p className="muted">Loading recipients...</p> : null}
+
+        {recipients.length > 0 ? (
+          <ul className="notification-recipients-list">
+            {recipients.map((r) => (
+              <li key={r.id} className="notification-recipient-item">
+                <span className="notification-recipient-label">{r.label}</span>
+                <span className="notification-recipient-email muted">{r.email}</span>
+                <button
+                  type="button"
+                  className="secondary-button danger-button"
+                  onClick={() => onRemoveRecipient(r.id)}
+                  disabled={removingId === r.id}
+                  aria-label={`Remove ${r.label}`}
+                >
+                  {removingId === r.id ? 'Removing...' : 'Remove'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          !isLoadingRecipients ? <p className="muted">No notification recipients configured.</p> : null
+        )}
+
+        <form className="notification-recipient-add-form" onSubmit={onAddRecipient}>
+          <p className="eyebrow">Add recipient</p>
+          <div className="company-config-grid">
+            <label>
+              Label
+              <input
+                type="text"
+                placeholder="e.g. Office Manager"
+                value={addForm.label}
+                onChange={(e) => setAddForm((prev) => ({ ...prev, label: e.target.value }))}
+                maxLength={200}
+                required
+              />
+            </label>
+            <label>
+              Email address
+              <input
+                type="email"
+                placeholder="e.g. manager@example.com"
+                value={addForm.email}
+                onChange={(e) => setAddForm((prev) => ({ ...prev, email: e.target.value }))}
+                maxLength={320}
+                required
+              />
+            </label>
+          </div>
+          <div className="company-config-actions">
+            <button type="submit" disabled={isAddingRecipient || !addForm.label.trim() || !addForm.email.trim()}>
+              {isAddingRecipient ? 'Adding...' : 'Add recipient'}
+            </button>
+          </div>
+        </form>
+      </section>
     </section>
   )
 }

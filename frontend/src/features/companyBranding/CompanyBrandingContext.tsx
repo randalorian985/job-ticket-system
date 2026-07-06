@@ -35,7 +35,9 @@ export const defaultCompanyConfiguration: CompanyConfigurationDto = {
   logoFileSizeBytes: null,
   logoUploadedAtUtc: null,
   createdAtUtc: null,
-  updatedAtUtc: null
+  updatedAtUtc: null,
+  newTicketNotificationsEnabled: true,
+  newTicketNotificationMinimumPriority: 1
 }
 
 const CompanyBrandingContext = createContext<CompanyBrandingContextValue | undefined>(undefined)

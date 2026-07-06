@@ -92,6 +92,8 @@ builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<ICompanyConfigurationService, CompanyConfigurationService>();
 builder.Services.Configure<SmtpEmailSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IPartOrderRequestNotificationService, PartOrderRequestNotificationService>();
+builder.Services.AddScoped<INewTicketNotificationService, NewTicketNotificationService>();
+builder.Services.AddScoped<INewTicketNotificationRecipientsService, NewTicketNotificationRecipientsService>();
 builder.Services.AddScoped<ITicketStatusFilterConfigurationService, TicketStatusFilterConfigurationService>();
 builder.Services.AddScoped<ITestEnvironmentBootstrapService, TestEnvironmentBootstrapService>();
 builder.Services.AddScoped<ICustomersService, CustomersService>();

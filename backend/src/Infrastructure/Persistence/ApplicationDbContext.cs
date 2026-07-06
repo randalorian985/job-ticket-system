@@ -12,6 +12,7 @@ public sealed class ApplicationDbContext : DbContext
     }
 
     public DbSet<CompanyConfiguration> CompanyConfigurations => Set<CompanyConfiguration>();
+    public DbSet<NewTicketNotificationRecipient> NewTicketNotificationRecipients => Set<NewTicketNotificationRecipient>();
     public DbSet<TicketStatusFilterOption> TicketStatusFilterOptions => Set<TicketStatusFilterOption>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Employee> Employees => Set<Employee>();

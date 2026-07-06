@@ -1,3 +1,4 @@
+using JobTicketSystem.Application.Notifications;
 using JobTicketSystem.Application.Security;
 
 namespace JobTicketSystem.Infrastructure.Tests;
@@ -11,4 +12,9 @@ internal sealed class TestCurrentUserContext(Guid employeeId, string role, bool 
     public bool IsAdmin => string.Equals(role, SystemRoles.Admin, StringComparison.OrdinalIgnoreCase);
     public bool IsManager => IsAdmin || string.Equals(role, SystemRoles.Manager, StringComparison.OrdinalIgnoreCase);
     public bool IsEmployee => IsManager || string.Equals(role, SystemRoles.Employee, StringComparison.OrdinalIgnoreCase);
+}
+
+internal sealed class NoOpNewTicketNotificationService : INewTicketNotificationService
+{
+    public Task NotifyAsync(Guid jobTicketId, CancellationToken cancellationToken = default) => Task.CompletedTask;
 }

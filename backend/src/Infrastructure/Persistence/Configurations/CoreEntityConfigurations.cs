@@ -28,7 +28,21 @@ public sealed class CompanyConfigurationEntityConfiguration : IEntityTypeConfigu
         builder.Property(x => x.LogoOriginalFileName).HasMaxLength(255);
         builder.Property(x => x.LogoContentType).HasMaxLength(150);
         builder.Property(x => x.LogoFileExtension).HasMaxLength(20);
+        builder.Property(x => x.NewTicketNotificationsEnabled).HasDefaultValue(true).IsRequired();
+        builder.Property(x => x.NewTicketNotificationMinimumPriority).HasDefaultValue(1).IsRequired();
         builder.HasIndex(x => x.UpdatedAtUtc);
+    }
+}
+
+public sealed class NewTicketNotificationRecipientEntityConfiguration : IEntityTypeConfiguration<NewTicketNotificationRecipient>
+{
+    public void Configure(EntityTypeBuilder<NewTicketNotificationRecipient> builder)
+    {
+        builder.ConfigureAuditableEntity();
+        builder.Property(x => x.Label).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Email).HasMaxLength(320).IsRequired();
+        builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
+        builder.HasIndex(x => x.IsActive);
     }
 }
 

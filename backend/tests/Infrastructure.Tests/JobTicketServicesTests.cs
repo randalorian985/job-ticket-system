@@ -286,7 +286,7 @@ public sealed class JobTicketServicesTests
         var managerService = CreateService(context);
         var ticket = await managerService.CreateAsync(BuildCreateRequest(refs));
         await managerService.AddAssignmentAsync(ticket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id, true));
-        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, SystemRoles.Employee));
+        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, SystemRoles.Employee), new NoOpNewTicketNotificationService());
 
         var exception = await Assert.ThrowsAsync<ValidationException>(() => employeeService.AddWorkEntryAsync(
             ticket.Id,
@@ -305,7 +305,7 @@ public sealed class JobTicketServicesTests
         await managerService.AddAssignmentAsync(ticket.Id, new AddJobTicketAssignmentDto(refs.Employee.Id, true));
         SeedOpenTimeEntry(context, ticket.Id, refs.Employee.Id);
         await context.SaveChangesAsync();
-        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, SystemRoles.Employee));
+        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, SystemRoles.Employee), new NoOpNewTicketNotificationService());
 
         var entry = await employeeService.AddWorkEntryAsync(ticket.Id, new AddJobWorkEntryDto(refs.Employee.Id, WorkEntryType.Note, "Started diagnostics", null));
 
@@ -326,7 +326,7 @@ public sealed class JobTicketServicesTests
     }
 
     private static IJobTicketsService CreateService(ApplicationDbContext context, Guid? employeeId = null, string role = SystemRoles.Manager)
-        => new JobTicketAssignmentValidatingService(context, new TestCurrentUserContext(employeeId ?? Guid.NewGuid(), role));
+        => new JobTicketAssignmentValidatingService(context, new TestCurrentUserContext(employeeId ?? Guid.NewGuid(), role), new NoOpNewTicketNotificationService());
 
     private static CreateJobTicketDto BuildCreateRequest(SeedRefs refs)
         => new(

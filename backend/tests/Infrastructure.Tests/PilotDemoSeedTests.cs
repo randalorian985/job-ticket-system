@@ -64,7 +64,7 @@ public sealed class PilotDemoSeedTests
         var readyTicket = await context.JobTickets.SingleAsync(x => x.TicketNumber == "PILOT-READY-001");
         var part = await context.Parts.SingleAsync(x => x.PartNumber == "PILOT-FILTER-001");
 
-        var employeeJobs = new JobTicketsService(context, new TestCurrentUserContext(technician.Id, SystemRoles.Employee));
+        var employeeJobs = new JobTicketsService(context, new TestCurrentUserContext(technician.Id, SystemRoles.Employee), new NoOpNewTicketNotificationService());
         var visibleJobs = await employeeJobs.ListAsync(new JobTicketListQuery(null, null, null, null, null));
         Assert.Contains(visibleJobs, x => x.Id == activeTicket.Id);
 
@@ -85,7 +85,7 @@ public sealed class PilotDemoSeedTests
         var approvedTime = await managerTimeEntries.ApproveAsync(clockOut.Id, manager.Id);
         Assert.Equal(TimeEntryApprovalStatus.Approved, approvedTime!.ApprovalStatus);
 
-        var managerJobs = new JobTicketsService(context, new TestCurrentUserContext(manager.Id, SystemRoles.Manager));
+        var managerJobs = new JobTicketsService(context, new TestCurrentUserContext(manager.Id, SystemRoles.Manager), new NoOpNewTicketNotificationService());
         var approvedPart = await managerJobs.ApprovePartAsync(activeTicket.Id, addedPart.Id, new ApproveJobTicketPartDto(manager.Id));
         Assert.Equal(JobPartApprovalStatus.Approved, approvedPart!.ApprovalStatus);
 

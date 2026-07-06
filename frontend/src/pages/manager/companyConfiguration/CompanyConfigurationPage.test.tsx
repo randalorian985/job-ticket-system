@@ -10,7 +10,10 @@ vi.mock('../../../api/companyConfigurationApi', () => ({
     get: vi.fn(),
     update: vi.fn(),
     uploadLogo: vi.fn(),
-    getLogoUrl: vi.fn((version?: string | null) => `/api/company-configuration/logo${version ? `?v=${version}` : ''}`)
+    getLogoUrl: vi.fn((version?: string | null) => `/api/company-configuration/logo${version ? `?v=${version}` : ''}`),
+    getNotificationRecipients: vi.fn(),
+    addNotificationRecipient: vi.fn(),
+    removeNotificationRecipient: vi.fn()
   }
 }))
 
@@ -37,7 +40,9 @@ const configuration: CompanyConfigurationDto = {
   logoFileSizeBytes: null,
   logoUploadedAtUtc: null,
   createdAtUtc: '2026-06-22T00:00:00Z',
-  updatedAtUtc: '2026-06-22T00:00:00Z'
+  updatedAtUtc: '2026-06-22T00:00:00Z',
+  newTicketNotificationsEnabled: true,
+  newTicketNotificationMinimumPriority: 1
 }
 
 describe('CompanyConfigurationPage', () => {
@@ -57,6 +62,7 @@ describe('CompanyConfigurationPage', () => {
       logoFileSizeBytes: 12,
       logoUploadedAtUtc: '2026-06-22T02:00:00Z'
     })
+    vi.mocked(companyConfigurationApi.getNotificationRecipients).mockResolvedValue([])
   })
 
   afterEach(() => {

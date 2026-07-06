@@ -89,4 +89,5 @@ public sealed record SmtpEmailSettings(
     bool EnableSsl,
     string? Username,
     string? Password,
-    string? FromAddress);
+    string? FromAddress,
+    string? AppBaseUrl);

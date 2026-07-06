@@ -1,4 +1,5 @@
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.Notifications;
 using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Enums;
 using JobTicketSystem.Infrastructure.Persistence;
@@ -6,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobTicketSystem.Application.JobTickets;
 
-public sealed class JobTicketAssignmentValidatingService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : IJobTicketsService
+public sealed class JobTicketAssignmentValidatingService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext, INewTicketNotificationService notificationService) : IJobTicketsService
 {
-    private readonly JobTicketsService inner = new(dbContext, currentUserContext);
+    private readonly JobTicketsService inner = new(dbContext, currentUserContext, notificationService);
 
     public Task<IReadOnlyList<JobTicketListItemDto>> ListAsync(JobTicketListQuery query, CancellationToken cancellationToken = default)
         => inner.ListAsync(query, cancellationToken);

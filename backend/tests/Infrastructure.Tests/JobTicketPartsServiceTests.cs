@@ -15,7 +15,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.AddPartAsync(
             refs.JobTicket.Id,
@@ -33,7 +33,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(Guid.NewGuid(), new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, null, null)));
     }
@@ -43,7 +43,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(Guid.NewGuid(), 1m, null, true, null, null)));
     }
@@ -55,7 +55,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         await Assert.ThrowsAsync<ValidationException>(() => service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, quantity, null, true, null, null)));
     }
@@ -65,7 +65,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
         refs.Part.UnitCost = 999m;
@@ -85,7 +85,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
 
         await Assert.ThrowsAsync<ValidationException>(() => service.UpdatePartAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketPartDto(1m, null, true, (JobPartApprovalStatus)999, null, refs.Manager.Id)));
@@ -98,11 +98,11 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var managerService = new JobTicketsService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var managerService = new JobTicketsService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var managerCreated = await managerService.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
 
-        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee), new NoOpNewTicketNotificationService());
         var employeeListed = await employeeService.ListPartsAsync(refs.JobTicket.Id);
         SeedOpenTimeEntry(context, refs.JobTicket.Id, refs.Employee.Id);
         await context.SaveChangesAsync();
@@ -122,7 +122,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee));
+        var employeeService = new JobTicketsService(context, new TestCurrentUserContext(refs.Employee.Id, JobTicketSystem.Application.Security.SystemRoles.Employee), new NoOpNewTicketNotificationService());
 
         var exception = await Assert.ThrowsAsync<ValidationException>(() => employeeService.QuickAddPartAsync(
             refs.JobTicket.Id,
@@ -136,7 +136,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id));
@@ -151,7 +151,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
 
         var approved = await service.ApprovePartAsync(refs.JobTicket.Id, created.Id, new ApproveJobTicketPartDto(refs.Manager.Id));
@@ -166,7 +166,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
 
         await Assert.ThrowsAsync<ValidationException>(() => service.RejectPartAsync(refs.JobTicket.Id, created.Id, new RejectJobTicketPartDto(" ", refs.Manager.Id)));
@@ -183,7 +183,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, true, refs.Employee.Id, null, AdjustInventory: true));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id, RestoreInventory: true));
@@ -197,7 +197,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, true, refs.Employee.Id, null, AdjustInventory: true));
 
@@ -217,7 +217,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 3m, null, true, refs.Employee.Id, null, AdjustInventory: true));
         await service.ArchivePartAsync(refs.JobTicket.Id, created.Id, new ArchiveJobTicketPartDto(refs.Manager.Id, RestoreInventory: true));
@@ -239,7 +239,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.QuickAddPartAsync(
             refs.JobTicket.Id,
@@ -262,7 +262,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.QuickAddPartAsync(
             refs.JobTicket.Id,
@@ -283,7 +283,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.QuickAddPartAsync(
             refs.JobTicket.Id,
@@ -304,7 +304,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.AddPartAsync(refs.JobTicket.Id, new AddJobTicketPartDto(refs.Part.Id, 1m, null, true, refs.Employee.Id, null));
         await service.UpdatePartAsync(refs.JobTicket.Id, created.Id, new UpdateJobTicketPartDto(2m, "Adjusted", true, null, null, refs.Manager.Id));
@@ -325,7 +325,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
         var installedAtUtc = DateTime.UtcNow.AddHours(-2);
         var removedAtUtc = DateTime.UtcNow.AddHours(-1);
 
@@ -362,7 +362,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var created = await service.AddPartAsync(
             refs.JobTicket.Id,
@@ -376,7 +376,7 @@ public sealed class JobTicketPartsServiceTests
     {
         await using var context = CreateContext();
         var refs = await SeedReferencesAsync(context);
-        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var service = new JobTicketsService(context, new TestCurrentUserContext(Guid.NewGuid(), JobTicketSystem.Application.Security.SystemRoles.Manager), new NoOpNewTicketNotificationService());
 
         var replacementPart = await service.AddPartAsync(
             refs.JobTicket.Id,

@@ -92,6 +92,7 @@ The following improvements are selected based on operational feedback received J
 - 401 mid-session errors show a clear sign-in-again message through the notification banner.
 - GPS fallback allows clock-in/out without coordinates when GPS is unavailable.
 - Phase 3B master data form polish is complete (validation, cancel-edit, archive confirmation, character/type guards on numeric/year fields).
+- New Ticket Notification Workflow: when a ticket is created, email notifications are sent to configured recipients; subject format is `[Priority] New Ticket: [Title] — [Customer / Location]`; recipients are managed in Admin > Company Configuration; minimum priority threshold is configurable; notification failure never blocks ticket creation; a timeline entry is recorded for each successful notification send.
 
 ### Near-term enhancements (not yet started)
 - Compatible parts visibility for technicians: surface known-compatible parts for the ticket's equipment in the technician-safe part lookup (must not expose cost, billing, or catalog-admin fields).

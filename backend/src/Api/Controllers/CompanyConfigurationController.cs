@@ -10,6 +10,7 @@ namespace JobTicketSystem.Api.Controllers;
 [Route("api/company-configuration")]
 public sealed class CompanyConfigurationController(
     ICompanyConfigurationService service,
+    INewTicketNotificationRecipientsService notificationRecipientsService,
     ICurrentUserContext currentUserContext) : ControllerBase
 {
     [HttpGet]
@@ -83,6 +84,39 @@ public sealed class CompanyConfigurationController(
         {
             return HandleValidation(exception);
         }
+    }
+
+    [HttpGet("notification-recipients")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult<IReadOnlyList<NewTicketNotificationRecipientDto>>> GetNotificationRecipientsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return Ok(await notificationRecipientsService.GetRecipientsAsync(cancellationToken));
+    }
+
+    [HttpPost("notification-recipients")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult<NewTicketNotificationRecipientDto>> AddNotificationRecipientAsync(
+        [FromBody] AddNewTicketNotificationRecipientDto request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var created = await notificationRecipientsService.AddRecipientAsync(request, currentUserContext.UserId, cancellationToken);
+            return Ok(created);
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
+    [HttpDelete("notification-recipients/{id:guid}")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult> RemoveNotificationRecipientAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var removed = await notificationRecipientsService.RemoveRecipientAsync(id, cancellationToken);
+        return removed ? NoContent() : NotFound();
     }
 
     private ActionResult HandleValidation(Exception exception)

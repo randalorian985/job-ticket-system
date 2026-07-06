@@ -18,6 +18,13 @@ public interface ICompanyConfigurationService
     Task<CompanyLogoDownloadDto?> GetLogoAsync(CancellationToken cancellationToken = default);
 }
 
+public interface INewTicketNotificationRecipientsService
+{
+    Task<IReadOnlyList<NewTicketNotificationRecipientDto>> GetRecipientsAsync(CancellationToken cancellationToken = default);
+    Task<NewTicketNotificationRecipientDto> AddRecipientAsync(AddNewTicketNotificationRecipientDto request, Guid? addedByUserId, CancellationToken cancellationToken = default);
+    Task<bool> RemoveRecipientAsync(Guid id, CancellationToken cancellationToken = default);
+}
+
 public sealed class CompanyConfigurationService(ApplicationDbContext dbContext, IFileStorageProvider storageProvider) : ICompanyConfigurationService
 {
     public const long MaxLogoFileSizeBytes = 2_000_000;
@@ -165,6 +172,12 @@ public sealed class CompanyConfigurationService(ApplicationDbContext dbContext, 
         entity.PrimaryColor = NormalizeHexColor(request.PrimaryColor, nameof(request.PrimaryColor));
         entity.SecondaryColor = NormalizeHexColor(request.SecondaryColor, nameof(request.SecondaryColor));
         entity.AccentColor = NormalizeHexColor(request.AccentColor, nameof(request.AccentColor));
+        entity.NewTicketNotificationsEnabled = request.NewTicketNotificationsEnabled;
+        if (request.NewTicketNotificationMinimumPriority < 1 || request.NewTicketNotificationMinimumPriority > 4)
+        {
+            throw new ValidationException("NewTicketNotificationMinimumPriority must be between 1 (Low) and 4 (Urgent).");
+        }
+        entity.NewTicketNotificationMinimumPriority = request.NewTicketNotificationMinimumPriority;
     }
 
     private static void ValidateLogoRequest(UploadCompanyLogoDto request)
@@ -378,7 +391,9 @@ public sealed class CompanyConfigurationService(ApplicationDbContext dbContext, 
         null,
         null,
         null,
-        null);
+        null,
+        true,
+        1);
 
     private static CompanyConfigurationDto MapDto(DomainCompanyConfiguration entity) => new(
         entity.Id,
@@ -404,7 +419,9 @@ public sealed class CompanyConfigurationService(ApplicationDbContext dbContext, 
         entity.LogoFileSizeBytes,
         entity.LogoUploadedAtUtc,
         entity.CreatedAtUtc,
-        entity.UpdatedAtUtc);
+        entity.UpdatedAtUtc,
+        entity.NewTicketNotificationsEnabled,
+        entity.NewTicketNotificationMinimumPriority);
 }
 
 public static class CompanyConfigurationDefaults
@@ -431,7 +448,19 @@ public sealed record UpdateCompanyConfigurationDto(
     string? Country,
     string PrimaryColor,
     string SecondaryColor,
-    string AccentColor);
+    string AccentColor,
+    bool NewTicketNotificationsEnabled = true,
+    int NewTicketNotificationMinimumPriority = 1);
+
+public sealed record NewTicketNotificationRecipientDto(
+    Guid Id,
+    string Label,
+    string Email,
+    bool IsActive);
+
+public sealed record AddNewTicketNotificationRecipientDto(
+    string Label,
+    string Email);
 
 public sealed record UploadCompanyLogoDto(
     string OriginalFileName,
@@ -463,9 +492,65 @@ public sealed record CompanyConfigurationDto(
     long? LogoFileSizeBytes,
     DateTime? LogoUploadedAtUtc,
     DateTime? CreatedAtUtc,
-    DateTime? UpdatedAtUtc);
+    DateTime? UpdatedAtUtc,
+    bool NewTicketNotificationsEnabled,
+    int NewTicketNotificationMinimumPriority);
 
 public sealed record CompanyLogoDownloadDto(
     string OriginalFileName,
     string ContentType,
     Stream ContentStream);
+
+public sealed class NewTicketNotificationRecipientsService(ApplicationDbContext dbContext) : INewTicketNotificationRecipientsService
+{
+    public async Task<IReadOnlyList<NewTicketNotificationRecipientDto>> GetRecipientsAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.NewTicketNotificationRecipients
+            .OrderBy(r => r.CreatedAtUtc)
+            .Select(r => new NewTicketNotificationRecipientDto(r.Id, r.Label, r.Email, r.IsActive))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<NewTicketNotificationRecipientDto> AddRecipientAsync(
+        AddNewTicketNotificationRecipientDto request,
+        Guid? addedByUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var label = request.Label?.Trim();
+        if (string.IsNullOrWhiteSpace(label) || label.Length > 200)
+        {
+            throw new ValidationException("Label is required and must be 200 characters or fewer.");
+        }
+
+        var email = request.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(email) || email.Length > 320)
+        {
+            throw new ValidationException("Email is required and must be 320 characters or fewer.");
+        }
+
+        var entity = new NewTicketNotificationRecipient
+        {
+            Label = label,
+            Email = email,
+            IsActive = true,
+            AddedByUserId = addedByUserId
+        };
+
+        dbContext.NewTicketNotificationRecipients.Add(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return new NewTicketNotificationRecipientDto(entity.Id, entity.Label, entity.Email, entity.IsActive);
+    }
+
+    public async Task<bool> RemoveRecipientAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.NewTicketNotificationRecipients
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
+        if (entity is null) return false;
+
+        dbContext.NewTicketNotificationRecipients.Remove(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+}

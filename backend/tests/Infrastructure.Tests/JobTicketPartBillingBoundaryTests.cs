@@ -18,7 +18,8 @@ public sealed class JobTicketPartBillingBoundaryTests
         var refs = await SeedReferencesAsync(context, isBillable: false);
         var service = new JobTicketAssignmentValidatingService(
             context,
-            new BillingBoundaryCurrentUserContext(refs.Employee.Id, SystemRoles.Employee));
+            new BillingBoundaryCurrentUserContext(refs.Employee.Id, SystemRoles.Employee),
+            new NoOpNewTicketNotificationService());
 
         await Assert.ThrowsAsync<ValidationException>(() => service.UpdatePartAsync(
             refs.JobTicket.Id,
@@ -36,7 +37,8 @@ public sealed class JobTicketPartBillingBoundaryTests
         var refs = await SeedReferencesAsync(context, isBillable: false);
         var service = new JobTicketAssignmentValidatingService(
             context,
-            new BillingBoundaryCurrentUserContext(refs.Employee.Id, SystemRoles.Employee));
+            new BillingBoundaryCurrentUserContext(refs.Employee.Id, SystemRoles.Employee),
+            new NoOpNewTicketNotificationService());
 
         var updated = await service.UpdatePartAsync(
             refs.JobTicket.Id,
@@ -56,7 +58,8 @@ public sealed class JobTicketPartBillingBoundaryTests
         var refs = await SeedReferencesAsync(context, isBillable: false);
         var service = new JobTicketAssignmentValidatingService(
             context,
-            new BillingBoundaryCurrentUserContext(refs.Manager.Id, SystemRoles.Manager));
+            new BillingBoundaryCurrentUserContext(refs.Manager.Id, SystemRoles.Manager),
+            new NoOpNewTicketNotificationService());
 
         var updated = await service.UpdatePartAsync(
             refs.JobTicket.Id,

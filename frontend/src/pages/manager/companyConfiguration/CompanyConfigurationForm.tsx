@@ -78,6 +78,41 @@ export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit }
         </div>
       </section>
 
+      <section className="company-config-panel stack" aria-label="new ticket notifications">
+        <div className="company-config-section-heading">
+          <div>
+            <p className="eyebrow">Notifications</p>
+            <h3>New ticket alerts</h3>
+          </div>
+        </div>
+        <div className="company-config-grid">
+          <label>
+            Enable new ticket notifications
+            <select
+              value={value.newTicketNotificationsEnabled ? 'true' : 'false'}
+              onChange={(e) => onChange({ ...value, newTicketNotificationsEnabled: e.target.value === 'true' })}
+            >
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+          </label>
+          <label>
+            Minimum priority to notify
+            <select
+              value={value.newTicketNotificationMinimumPriority}
+              onChange={(e) => onChange({ ...value, newTicketNotificationMinimumPriority: Number(e.target.value) })}
+              disabled={!value.newTicketNotificationsEnabled}
+            >
+              <option value={1}>Low — notify on all tickets</option>
+              <option value={2}>Normal and above</option>
+              <option value={3}>High and above</option>
+              <option value={4}>Urgent only</option>
+            </select>
+            <span className="company-config-field-note">Recipients are configured in the Notification Recipients section below.</span>
+          </label>
+        </div>
+      </section>
+
       <div className="company-config-actions">
         <button type="submit" disabled={isSaving}>
           {isSaving ? 'Saving...' : 'Save company profile'}

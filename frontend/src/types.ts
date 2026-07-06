@@ -31,6 +31,8 @@ export type CompanyConfigurationDto = {
   logoUploadedAtUtc?: string | null
   createdAtUtc?: string | null
   updatedAtUtc?: string | null
+  newTicketNotificationsEnabled: boolean
+  newTicketNotificationMinimumPriority: number
 }
 
 export type UpdateCompanyConfigurationDto = {
@@ -50,6 +52,20 @@ export type UpdateCompanyConfigurationDto = {
   primaryColor: string
   secondaryColor: string
   accentColor: string
+  newTicketNotificationsEnabled: boolean
+  newTicketNotificationMinimumPriority: number
+}
+
+export type NewTicketNotificationRecipientDto = {
+  id: string
+  label: string
+  email: string
+  isActive: boolean
+}
+
+export type AddNewTicketNotificationRecipientDto = {
+  label: string
+  email: string
 }
 
 export type TicketStatusFilterOptionDto = {

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using JobTicketSystem.Application.MasterData;
+using JobTicketSystem.Application.Notifications;
 using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
@@ -32,7 +33,10 @@ public interface IJobTicketsService
     Task<IReadOnlyList<TicketTimelineItemDto>> GetTimelineAsync(Guid jobTicketId, CancellationToken cancellationToken = default);
 }
 
-public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUserContext currentUserContext) : IJobTicketsService
+public sealed class JobTicketsService(
+    ApplicationDbContext dbContext,
+    ICurrentUserContext currentUserContext,
+    INewTicketNotificationService notificationService) : IJobTicketsService
 {
     private static readonly Guid SystemUserId = Guid.Empty;
     private static readonly JobTicketStatus[] EmployeeClosedStatuses =
@@ -163,6 +167,8 @@ public sealed class JobTicketsService(ApplicationDbContext dbContext, ICurrentUs
                 dbContext.Entry(entity).State = EntityState.Detached;
                 continue;
             }
+
+            await notificationService.NotifyAsync(entity.Id, CancellationToken.None);
 
             return await LoadJobTicketAsync(entity.Id, cancellationToken)
                 ?? throw new InvalidOperationException("Created job ticket could not be reloaded.");
