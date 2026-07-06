@@ -20,6 +20,10 @@ dist/
 build/
 coverage/
 
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+
 # TypeScript incremental build info
 frontend/*.tsbuildinfo
 frontend/tsconfig.*.tsbuildinfo

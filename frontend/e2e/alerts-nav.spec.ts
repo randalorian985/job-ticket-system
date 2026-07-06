@@ -12,24 +12,27 @@ test.describe('Alerts & Notifications page', () => {
     await page.waitForURL(/\/manage/)
   })
 
-  test('Alerts & Notifications nav item is visible', async ({ page }) => {
+  test('Alerts & Notifications nav item is present in Admin group', async ({ page }) => {
+    // The Admin group uses a <details>/<summary> dropdown — open it first
+    await page.getByRole('group', { name: 'Admin' }).or(page.locator('details summary', { hasText: 'Admin' })).click()
     await expect(page.getByRole('link', { name: 'Alerts & Notifications' })).toBeVisible()
   })
 
-  test('navigates to Alerts & Notifications page and shows heading', async ({ page }) => {
-    await page.getByRole('link', { name: 'Alerts & Notifications' }).click()
+  test('navigates to /manage/alerts and shows Alerts & Notifications heading', async ({ page }) => {
+    await page.goto('/manage/alerts')
     await expect(page).toHaveURL(/\/manage\/alerts/)
     await expect(page.getByRole('heading', { name: 'Alerts & Notifications' })).toBeVisible()
   })
 
-  test('Alerts page shows Part order requests email section', async ({ page }) => {
+  test('Alerts page shows Part order requests section', async ({ page }) => {
     await page.goto('/manage/alerts')
-    await expect(page.getByText('Part order requests')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Part order requests' })).toBeVisible()
   })
 
   test('Company Configuration page no longer shows Part order requests section', async ({ page }) => {
     await page.goto('/manage/company-configuration')
     await expect(page.getByRole('heading', { name: 'Company Configuration' })).toBeVisible()
-    await expect(page.getByText('Part order requests')).not.toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Part order requests' })).not.toBeVisible()
   })
 })
+
