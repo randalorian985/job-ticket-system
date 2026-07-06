@@ -56,13 +56,57 @@ Core scope:
 - A dedicated Scheduling screen at `/manage/schedule` is available to Managers/Admins with three views: Unscheduled Queue (open tickets without a scheduled start, sorted by priority), By Date (week view with navigation), and By Technician (week view grouped by assigned employee); job tickets carry an optional `EstimatedDurationMinutes` field; backend `SchedulingService` and `GET /api/scheduling/unscheduled`, `GET /api/scheduling/calendar`, `GET /api/scheduling/by-technician`, and `POST /api/scheduling/{ticketId}/schedule` endpoints are under `ManagerOrAdmin` authorization.
 
 ## Current Planning Direction
-The next feature work should remain a bounded stabilization and test-coverage pass or a narrowly scoped workflow improvement.
+The following improvements are selected based on operational feedback received July 6, 2026. They represent the highest-priority usability, validation, and workflow fixes before the system is demonstrated as a serious operational tool.
 
-Recommended next lane: stabilization and test coverage for features added July 6, 2026 (notification banner, GPS fallback, compatible parts catalog, scheduling module).
+### Selected for immediate implementation
 
-Acceptable alternate lanes if deliberately selected:
-- compatible parts visibility for technicians — surface the equipment's known-compatible parts catalog in the technician-safe part lookup when the ticket has an equipment record; must not expose cost, billable price, vendor, catalog-admin, or billing controls;
-- a narrow stabilization, validation, security, or audit PR if checks, review feedback, or audit findings identify a concrete risk.
+**UX and validation polish (all forms):**
+- Validation messages must appear near the field that caused the error, not only in the top notification banner.
+- When a form submission fails, the page must auto-scroll to the first invalid field.
+- Submit buttons must show loading state ("Saving…"), success, and failure feedback near the button itself.
+- Error messages must be specific and actionable — not generic "something went wrong" text.
+
+**Service location and master data form improvements:**
+- Access Instructions, Safety Requirements, and Site Notes must use multi-line textarea controls instead of single-line inputs.
+- All fields with a server-enforced character limit must display a live character counter and block submission when the limit is exceeded.
+- Validation errors must identify the specific field and describe what needs to be corrected.
+
+**Date and time handling:**
+- Users must never be required to enter or convert UTC manually.
+- All date/time inputs must display and accept values in local time.
+- Labels on date inputs must not say "UTC" to the user.
+- The system stores UTC internally; that is invisible to the user.
+- Requested date/time fields should default to the current local date and time on new ticket creation.
+
+**Ticket status restrictions:**
+- The status selector on new ticket creation must limit choices to statuses that make sense for a newly submitted ticket.
+- Status transitions must follow business workflow rules rather than allowing any status to be selected at any time.
+
+**User creation error handling:**
+- User creation failures must return specific, actionable messages (for example, duplicate username, email already in use, password requirements not met).
+
+### Already implemented (confirmed on main as of July 6, 2026)
+- Scheduling is separate from ticket creation; the dedicated `/manage/schedule` screen provides Unscheduled Queue, By Date, and By Technician views.
+- Equipment compatible parts catalog is implemented; Managers/Admins can maintain known-compatible parts per equipment record with usage history.
+- Session timeout warning notifies users at 5 minutes and 1 minute before expiry.
+- 401 mid-session errors show a clear sign-in-again message through the notification banner.
+- GPS fallback allows clock-in/out without coordinates when GPS is unavailable.
+- Phase 3B master data form polish is complete (validation, cancel-edit, archive confirmation, character/type guards on numeric/year fields).
+
+### Near-term enhancements (not yet started)
+- Compatible parts visibility for technicians: surface known-compatible parts for the ticket's equipment in the technician-safe part lookup (must not expose cost, billing, or catalog-admin fields).
+- Test coverage pass for notification banner, GPS fallback, compatible parts, and scheduling module.
+- Scheduling additional filter views: by priority, by estimated duration.
+
+### Deferred until explicitly re-approved
+- Technician skill and certification tracking.
+- Customer portal and customer-created tickets.
+- Customer ticket status self-service.
+- Preventative maintenance scheduling automation.
+- Parts received/installed lifecycle tracking beyond the current parts request workflow.
+- New purchasing expansion beyond the existing baseline.
+- Inventory workflow reintroduction.
+- AI/scoring, automatic compatibility, automatic approval.
 
 This planning direction does not approve purchasing expansion, receiving, vendor invoice tracking, landed cost, advanced inventory, recommendations, AI/scoring, automatic compatibility decisions, automatic approval, auth weakening, enum renumbering, hard deletes, or historical migration edits.
 

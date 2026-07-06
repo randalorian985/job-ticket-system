@@ -160,6 +160,7 @@ export function CustomersPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [search, setSearch] = useState('')
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('all')
   const billingPartyOptions = useMemo(() => activeOrSelected(items, [draft.billingPartyCustomerId]), [items, draft.billingPartyCustomerId])
@@ -198,6 +199,7 @@ export function CustomersPage() {
       const customerName = draft.name.trim()
       setError(null)
       setSuccess(null)
+      setIsSaving(true)
       if (editId) await masterDataApi.updateCustomer(editId, draft)
       else await masterDataApi.createCustomer(draft)
       setDraft(emptyCustomerDraft); setEditId(null); await load()
@@ -206,6 +208,8 @@ export function CustomersPage() {
     } catch (requestError) {
       setSuccess(null)
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save customer.'))
+    } finally {
+      setIsSaving(false)
     }
   }
   const closeEditor = () => {
@@ -279,7 +283,7 @@ export function CustomersPage() {
         ) : null}
         {editId ? <p className="muted">Editing customer. Save changes or return to the customer list.</p> : null}
         <div className="row">
-          <button type="submit">{editId ? 'Save Customer' : 'Create Customer'}</button>
+          <button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : (editId ? 'Save Customer' : 'Create Customer')}</button>
           <button type="button" className="secondary-button" onClick={closeEditor}>{editId ? 'Cancel customer edit' : 'Back to customers'}</button>
         </div>
       </form>
@@ -345,6 +349,7 @@ export function ServiceLocationsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [search, setSearch] = useState('')
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('all')
   const [customerFilter, setCustomerFilter] = useState('')
@@ -386,12 +391,23 @@ export function ServiceLocationsPage() {
   ])), [items, customers, search, archiveFilter, customerFilter])
   const save = async (event: FormEvent) => {
     event.preventDefault()
-    if (!hasRequiredTexts(draft.companyName, draft.locationName, draft.addressLine1, draft.city, draft.state, draft.postalCode, draft.country)) { setSuccess(null); return setError('All address fields are required.') }
+    const requiredFields: Array<[boolean, string]> = [
+      [!hasRequiredText(draft.locationName), 'Location Name'],
+      [!hasRequiredText(draft.companyName), 'Company Name'],
+      [!hasRequiredText(draft.addressLine1), 'Address'],
+      [!hasRequiredText(draft.city), 'City'],
+      [!hasRequiredText(draft.state), 'State'],
+      [!hasRequiredText(draft.postalCode), 'Postal Code / ZIP'],
+      [!hasRequiredText(draft.country), 'Country'],
+    ]
+    const missingField = requiredFields.find(([missing]) => missing)
+    if (missingField) { setSuccess(null); return setError(`${missingField[1]} is required.`) }
     try {
       const action = editId ? 'updated' : 'created'
       const locationName = draft.locationName.trim()
       setError(null)
       setSuccess(null)
+      setIsSaving(true)
       if (editId) await masterDataApi.updateServiceLocation(editId, draft)
       else await masterDataApi.createServiceLocation(draft)
       setDraft(serviceLocationDraftFromFilter(customers, customerFilter)); setEditId(null); await load()
@@ -400,6 +416,8 @@ export function ServiceLocationsPage() {
     } catch (requestError) {
       setSuccess(null)
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save service location.'))
+    } finally {
+      setIsSaving(false)
     }
   }
   const closeEditor = () => {
@@ -503,7 +521,7 @@ export function ServiceLocationsPage() {
         <label><input type="checkbox" checked={draft.isActive ?? true} onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })} /> Active</label>
         {editId ? <p className="muted">Editing service location. Save changes or return to the location list.</p> : null}
         <div className="row">
-          <button type="submit">{editId ? 'Save Location' : 'Create Location'}</button>
+          <button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : (editId ? 'Save Location' : 'Create Location')}</button>
           <button type="button" className="secondary-button" onClick={closeEditor}>{editId ? 'Cancel service-location edit' : 'Back to service locations'}</button>
         </div>
       </form>
@@ -577,6 +595,7 @@ export function EquipmentPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [search, setSearch] = useState('')
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('all')
   const [customerFilter, setCustomerFilter] = useState('')
@@ -616,6 +635,7 @@ export function EquipmentPage() {
       const equipmentName = draft.name.trim()
       setError(null)
       setSuccess(null)
+      setIsSaving(true)
       if (editId) await masterDataApi.updateEquipment(editId, draft)
       else await masterDataApi.createEquipment(draft)
       setDraft(equipmentDraftFromFilter(customers, customerFilter))
@@ -626,6 +646,8 @@ export function EquipmentPage() {
     } catch (requestError) {
       setSuccess(null)
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save equipment.'))
+    } finally {
+      setIsSaving(false)
     }
   }
   const closeEditor = () => {
@@ -952,6 +974,9 @@ export function PartsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isPartSaving, setIsPartSaving] = useState(false)
+  const [isVendorSaving, setIsVendorSaving] = useState(false)
+  const [isCategorySaving, setIsCategorySaving] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [partSearch, setPartSearch] = useState('')
   const [partArchiveFilter, setPartArchiveFilter] = useState<ArchiveFilter>('all')
@@ -1091,6 +1116,7 @@ export function PartsPage() {
       const partName = `${draft.partNumber.trim()} - ${draft.name.trim()}`
       setError(null)
       setSuccess(null)
+      setIsPartSaving(true)
       if (editId) await masterDataApi.updatePart(editId, draft)
       else await masterDataApi.createPart(draft)
       setDraft(partDraftFromFilters(categories, partCategoryFilter, vendors, partVendorFilter))
@@ -1102,6 +1128,8 @@ export function PartsPage() {
     } catch (requestError) {
       setSuccess(null)
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save part.'))
+    } finally {
+      setIsPartSaving(false)
     }
   }
 
@@ -1117,6 +1145,7 @@ export function PartsPage() {
       const vendorName = vendorDraft.name.trim()
       setError(null)
       setSuccess(null)
+      setIsVendorSaving(true)
       if (vendorEditId) await masterDataApi.updateVendor(vendorEditId, vendorDraft)
       else await masterDataApi.createVendor(vendorDraft)
       setVendorDraft(emptyVendorDraft)
@@ -1127,6 +1156,8 @@ export function PartsPage() {
     } catch (requestError) {
       setSuccess(null)
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save vendor.'))
+    } finally {
+      setIsVendorSaving(false)
     }
   }
 
@@ -1142,6 +1173,7 @@ export function PartsPage() {
       const categoryName = categoryDraft.name.trim()
       setError(null)
       setSuccess(null)
+      setIsCategorySaving(true)
       if (categoryEditId) await masterDataApi.updatePartCategory(categoryEditId, categoryDraft)
       else await masterDataApi.createPartCategory(categoryDraft)
       setCategoryDraft(emptyPartCategoryDraft)
@@ -1152,6 +1184,8 @@ export function PartsPage() {
     } catch (requestError) {
       setSuccess(null)
       setError(masterDataRequestErrorMessage(requestError, 'Unable to save part category.'))
+    } finally {
+      setIsCategorySaving(false)
     }
   }
 
@@ -1230,7 +1264,7 @@ export function PartsPage() {
               </div>
               {editId ? <p className="muted">Editing part. Save changes or return to the parts list.</p> : null}
               <div className="row">
-                <button type="submit">{editId ? 'Save Part' : 'Create Part'}</button>
+                <button type="submit" disabled={isPartSaving}>{isPartSaving ? 'Saving...' : (editId ? 'Save Part' : 'Create Part')}</button>
                 <button type="button" className="secondary-button" onClick={closeEditor}>{editId ? 'Cancel part edit' : 'Back to parts'}</button>
               </div>
             </form>
@@ -1310,7 +1344,7 @@ export function PartsPage() {
               </div>
               {vendorEditId ? <p className="muted">Editing vendor. Save changes or return to the vendor list.</p> : null}
               <div className="row">
-                <button type="submit">{vendorEditId ? 'Save Vendor' : 'Create Vendor'}</button>
+                <button type="submit" disabled={isVendorSaving}>{isVendorSaving ? 'Saving...' : (vendorEditId ? 'Save Vendor' : 'Create Vendor')}</button>
                 <button type="button" className="secondary-button" onClick={closeEditor}>{vendorEditId ? 'Cancel vendor edit' : 'Back to vendors'}</button>
               </div>
             </form>
@@ -1364,7 +1398,7 @@ export function PartsPage() {
               </div>
               {categoryEditId ? <p className="muted">Editing part category. Save changes or return to the category list.</p> : null}
               <div className="row">
-                <button type="submit">{categoryEditId ? 'Save Category' : 'Create Category'}</button>
+                <button type="submit" disabled={isCategorySaving}>{isCategorySaving ? 'Saving...' : (categoryEditId ? 'Save Category' : 'Create Category')}</button>
                 <button type="button" className="secondary-button" onClick={closeEditor}>{categoryEditId ? 'Cancel category edit' : 'Back to categories'}</button>
               </div>
             </form>

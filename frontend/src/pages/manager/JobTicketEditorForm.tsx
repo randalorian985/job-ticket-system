@@ -14,6 +14,14 @@ import type {
 } from '../../types'
 import { priorityOptions, jobStatusOptions, workLocationTypeOptions } from './managerDisplay'
 
+/** Convert a UTC ISO string to the value expected by a datetime-local input (local time). */
+function toDatetimeLocalValue(utcIso: string | null | undefined): string {
+  if (!utcIso) return ''
+  const d = new Date(utcIso)
+  const offsetMs = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - offsetMs).toISOString().slice(0, 16)
+}
+
 type Props = {
   initial: CreateJobTicketDto
   customers: CustomerDto[]
@@ -350,6 +358,7 @@ export function JobTicketEditorForm({
   const [isAddingCustomer, setIsAddingCustomer] = useState(false)
   const [isAddingServiceLocation, setIsAddingServiceLocation] = useState(false)
   const [isAddingEquipment, setIsAddingEquipment] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [equipmentHistory, setEquipmentHistory] = useState<ReportServiceHistoryItemDto[]>([])
   const [equipmentHistoryError, setEquipmentHistoryError] = useState<string | null>(null)
   const [isLoadingEquipmentHistory, setIsLoadingEquipmentHistory] = useState(false)
@@ -903,7 +912,12 @@ export function JobTicketEditorForm({
     }
 
     setError(null)
-    await onSubmit({ ...form, title: form.title.trim() })
+    setIsSubmitting(true)
+    try {
+      await onSubmit({ ...form, title: form.title.trim() })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -1009,7 +1023,7 @@ export function JobTicketEditorForm({
           </div>
           {isCreate ? (
             <label>Date / Time Reported
-              <input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} />
+              <input type="datetime-local" value={toDatetimeLocalValue(form.requestedAtUtc)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} />
               <small className="field-char-count">When the customer reported the issue. Defaults to now.</small>
             </label>
           ) : null}
@@ -1256,11 +1270,11 @@ export function JobTicketEditorForm({
             <p className="muted">{isCreate ? 'When did the customer report this issue? Scheduling and assignment happen separately after the ticket is created.' : 'Edit requested, scheduled start, and due dates for work planning.'}</p>
           </div>
           <div className="section-editor-grid">
-            <label>Requested Date / Time<input type="datetime-local" value={(form.requestedAtUtc ?? '').slice(0, 16)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+            <label>Requested Date / Time<input type="datetime-local" value={toDatetimeLocalValue(form.requestedAtUtc)} onChange={(e) => update('requestedAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
             {!isCreate ? (
               <>
-                <label>Scheduled Start<input type="datetime-local" value={(form.scheduledStartAtUtc ?? '').slice(0, 16)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
-                <label>Due Date<input type="datetime-local" value={(form.dueAtUtc ?? '').slice(0, 16)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+                <label>Scheduled Start<input type="datetime-local" value={toDatetimeLocalValue(form.scheduledStartAtUtc)} onChange={(e) => update('scheduledStartAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
+                <label>Due Date<input type="datetime-local" value={toDatetimeLocalValue(form.dueAtUtc)} onChange={(e) => update('dueAtUtc', e.target.value ? new Date(e.target.value).toISOString() : null)} /></label>
               </>
             ) : null}
             <label>Estimated Duration
@@ -1282,7 +1296,7 @@ export function JobTicketEditorForm({
 
       <div className="section-editor-save-row">
         <span className="muted">Changes save through the existing ticket update workflow.</span>
-        <button type="submit">{submitLabel}</button>
+        <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : submitLabel}</button>
       </div>
     </form>
   )
