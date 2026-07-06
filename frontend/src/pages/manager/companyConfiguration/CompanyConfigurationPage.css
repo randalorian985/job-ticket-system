@@ -20,7 +20,7 @@
   border: 1px solid #d9e2ef;
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(23, 32, 51, 0.04);
-  padding: 0.85rem;
+  padding: 1.25rem;
 }
 
 .company-config-section-heading {
@@ -29,7 +29,7 @@
   display: flex;
   gap: 0.8rem;
   justify-content: space-between;
-  padding-bottom: 0.65rem;
+  padding-bottom: 0.75rem;
 }
 
 .company-config-section-heading h3 {
@@ -38,8 +38,18 @@
 
 .company-config-grid {
   display: grid;
-  gap: 0.7rem;
+  gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.company-config-grid-single {
+  max-width: 28rem;
+}
+
+.company-config-field {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
 }
 
 .company-logo-upload {
@@ -51,7 +61,7 @@
 
 .company-color-grid {
   display: grid;
-  gap: 0.7rem;
+  gap: 1rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -73,6 +83,63 @@
 .company-config-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+/* Character count indicators */
+.char-count {
+  color: #94a3b8;
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 0.2rem;
+  text-align: right;
+}
+
+.char-count-warn {
+  color: #b45309;
+}
+
+.char-count-limit {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+/* Alert recipient list */
+.alert-recipients-list {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.alert-recipient-item {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e5eaf1;
+  border-radius: 7px;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+}
+
+.alert-recipient-label {
+  font-weight: 600;
+  min-width: 0;
+}
+
+.alert-recipient-email {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alert-recipient-add-form {
+  border-top: 1px solid #e5eaf1;
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
 }
 
 .company-config-preview {

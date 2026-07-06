@@ -1,39 +1,55 @@
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { UpdateCompanyConfigurationDto } from '../../../types'
 
+type FieldDef = {
+  name: keyof UpdateCompanyConfigurationDto
+  label: string
+  type?: string
+  required?: boolean
+  maxLength?: number
+}
+
+const textFields: FieldDef[] = [
+  { name: 'companyName',   label: 'Company name',    required: true, maxLength: 200 },
+  { name: 'legalName',     label: 'Legal name',                      maxLength: 200 },
+  { name: 'contactName',   label: 'Primary contact',                 maxLength: 200 },
+  { name: 'email',         label: 'Contact email',   type: 'email',  maxLength: 320 },
+  { name: 'phone',         label: 'Phone',                           maxLength: 50  },
+  { name: 'website',       label: 'Website',         type: 'url',    maxLength: 300 },
+  { name: 'addressLine1',  label: 'Address line 1',                  maxLength: 200 },
+  { name: 'addressLine2',  label: 'Address line 2',                  maxLength: 200 },
+  { name: 'city',          label: 'City',                            maxLength: 100 },
+  { name: 'state',         label: 'State',                           maxLength: 100 },
+  { name: 'postalCode',    label: 'Postal code',                     maxLength: 20  },
+  { name: 'country',       label: 'Country',                         maxLength: 100 },
+]
+
+const colorFields: Array<{ name: keyof UpdateCompanyConfigurationDto; label: string }> = [
+  { name: 'primaryColor',   label: 'Primary color'   },
+  { name: 'secondaryColor', label: 'Secondary color' },
+  { name: 'accentColor',    label: 'Accent color'    },
+]
+
 type CompanyConfigurationFormProps = {
   value: UpdateCompanyConfigurationDto
   isSaving: boolean
   onChange: (value: UpdateCompanyConfigurationDto) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
-  notificationsPanel?: ReactNode
+  alertsPanel?: ReactNode
 }
 
-const textFields: Array<{ name: keyof UpdateCompanyConfigurationDto, label: string, type?: string, required?: boolean, note?: string }> = [
-  { name: 'companyName', label: 'Company name', required: true },
-  { name: 'legalName', label: 'Legal name' },
-  { name: 'contactName', label: 'Primary contact' },
-  { name: 'email', label: 'Part order requests email', type: 'email', note: 'Used when office-order parts are requested from a ticket or the back-office queue.' },
-  { name: 'phone', label: 'Phone' },
-  { name: 'website', label: 'Website', type: 'url' },
-  { name: 'addressLine1', label: 'Address line 1' },
-  { name: 'addressLine2', label: 'Address line 2' },
-  { name: 'city', label: 'City' },
-  { name: 'state', label: 'State' },
-  { name: 'postalCode', label: 'Postal code' },
-  { name: 'country', label: 'Country' }
-]
-
-const colorFields: Array<{ name: keyof UpdateCompanyConfigurationDto, label: string }> = [
-  { name: 'primaryColor', label: 'Primary color' },
-  { name: 'secondaryColor', label: 'Secondary color' },
-  { name: 'accentColor', label: 'Accent color' }
-]
-
-export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit, notificationsPanel }: CompanyConfigurationFormProps) {
-  const updateField = (name: keyof UpdateCompanyConfigurationDto) => (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...value, [name]: event.target.value })
-  }
+export function CompanyConfigurationForm({
+  value,
+  isSaving,
+  onChange,
+  onSubmit,
+  alertsPanel,
+}: CompanyConfigurationFormProps) {
+  const updateField =
+    (name: keyof UpdateCompanyConfigurationDto) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onChange({ ...value, [name]: event.target.value })
+    }
 
   return (
     <form className="company-config-form stack" onSubmit={onSubmit}>
@@ -45,18 +61,26 @@ export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit, 
           </div>
         </div>
         <div className="company-config-grid">
-          {textFields.map((field) => (
-            <label key={field.name}>
-              {field.label}
-              <input
-                type={field.type ?? 'text'}
-                value={String(value[field.name] ?? '')}
-                onChange={updateField(field.name)}
-                required={field.required}
-              />
-              {field.note ? <span className="company-config-field-note">{field.note}</span> : null}
-            </label>
-          ))}
+          {textFields.map((field) => {
+            const fieldId = `cc-${field.name}`
+            const strVal = String(value[field.name] ?? '')
+            return (
+              <div key={field.name} className="company-config-field">
+                <label htmlFor={fieldId}>{field.label}</label>
+                <input
+                  id={fieldId}
+                  type={field.type ?? 'text'}
+                  value={strVal}
+                  onChange={updateField(field.name)}
+                  required={field.required}
+                  maxLength={field.maxLength}
+                />
+                {field.maxLength != null ? (
+                  <CharCount value={strVal} max={field.maxLength} />
+                ) : null}
+              </div>
+            )
+          })}
         </div>
       </section>
 
@@ -79,7 +103,7 @@ export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit, 
         </div>
       </section>
 
-      {notificationsPanel}
+      {alertsPanel}
 
       <div className="company-config-actions">
         <button type="submit" disabled={isSaving}>
@@ -90,9 +114,25 @@ export function CompanyConfigurationForm({ value, isSaving, onChange, onSubmit, 
   )
 }
 
-function ColorField({ label, value, onChange }: { label: string, value: string, onChange: (event: ChangeEvent<HTMLInputElement>) => void }) {
-  const colorValue = /^#[0-9a-fA-F]{6}$/.test(value) ? value : '#3157C8'
+function CharCount({ value, max }: { value: string; max: number }) {
+  const len = value.length
+  const className =
+    len >= max ? 'char-count char-count-limit' :
+    len > max * 0.85 ? 'char-count char-count-warn' :
+    'char-count'
+  return <span className={className}>{len} / {max}</span>
+}
 
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void
+}) {
+  const colorValue = /^#[0-9a-fA-F]{6}$/.test(value) ? value : '#3157C8'
   return (
     <label className="company-color-field">
       {label}
