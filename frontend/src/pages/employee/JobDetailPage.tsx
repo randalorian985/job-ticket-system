@@ -3,11 +3,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { filesApi } from '../../api/filesApi'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
+import { masterDataApi } from '../../api/masterDataApi'
 import { partRequestsApi } from '../../api/partRequestsApi'
 import { partsApi } from '../../api/partsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { useAuth } from '../../features/auth/AuthContext'
-import type { JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, PartLookupDto, TimeEntryDto } from '../../types'
+import type { EquipmentCompatiblePartFieldDto, JobTicketDto, JobTicketFileDto, JobTicketPartDto, JobWorkEntryDto, PartLookupDto, TimeEntryDto } from '../../types'
 import { getJobTicketPriorityLabel, getJobTicketStatusLabel, getWorkLocationTypeLabel } from './jobDisplay'
 
 const allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
@@ -57,6 +58,7 @@ export function JobDetailPage() {
   const [workEntries, setWorkEntries] = useState<JobWorkEntryDto[]>([])
   const [partsUsed, setPartsUsed] = useState<JobTicketPartDto[]>([])
   const [partLookupItems, setPartLookupItems] = useState<PartLookupDto[]>([])
+  const [compatibleParts, setCompatibleParts] = useState<EquipmentCompatiblePartFieldDto[]>([])
   const [files, setFiles] = useState<JobTicketFileDto[]>([])
   const [openEntry, setOpenEntry] = useState<TimeEntryDto | null>(null)
 
@@ -307,6 +309,17 @@ export function JobDetailPage() {
       isMounted = false
     }
   }, [jobTicketId, user, navigate, logout])
+
+  // Load compatible parts catalog whenever the ticket's equipment changes.
+  useEffect(() => {
+    if (!job?.equipmentId) {
+      setCompatibleParts([])
+      return
+    }
+    masterDataApi.getEquipmentCompatiblePartsForField(job.equipmentId)
+      .then(setCompatibleParts)
+      .catch(() => setCompatibleParts([]))
+  }, [job?.equipmentId])
 
   const getLocation = (): Promise<GeolocationPosition | null> =>
     new Promise((resolve) => {
@@ -711,6 +724,36 @@ export function JobDetailPage() {
           <section id="part-request-panel" className="card stack">
             <h2>Add / Request Part</h2>
             {!isClockedIntoThisJob ? <p className="muted">{fieldRecordGateMessage}</p> : null}
+            {compatibleParts.length > 0 ? (
+              <div className="compatible-parts-hint">
+                <p className="compatible-parts-hint-title">Known-compatible parts for this equipment</p>
+                <ul className="compatible-parts-list">
+                  {compatibleParts.map((cp) => (
+                    <li key={cp.partId} className={`compatible-parts-item${cp.isRecommendedForPM ? ' compatible-parts-item--pm' : ''}`}>
+                      <button
+                        type="button"
+                        className="compatible-parts-select-btn"
+                        disabled={!isClockedIntoThisJob}
+                        onClick={() => {
+                          const match = partLookupItems.find((p) => p.id === cp.partId)
+                          if (match) {
+                            setSelectedPartId(match.id)
+                            setPartRequestDescription(`${match.partNumber} - ${match.name}`)
+                          } else {
+                            setPartRequestDescription(`${cp.partNumber} - ${cp.partName}`)
+                          }
+                        }}
+                      >
+                        {cp.partNumber} — {cp.partName}
+                        {cp.isRecommendedForPM ? <span className="pm-badge">PM</span> : null}
+                      </button>
+                      {cp.notes ? <span className="compatible-parts-notes">{cp.notes}</span> : null}
+                    </li>
+                  ))}
+                </ul>
+                <p className="muted compatible-parts-hint-footer">Tap a part to pre-fill the search. Confirm or adjust the quantity below.</p>
+              </div>
+            ) : null}
             <form onSubmit={onSubmitPartRequest} className="stack employee-part-request-form">
               <label>
                 Find existing part or enter new part

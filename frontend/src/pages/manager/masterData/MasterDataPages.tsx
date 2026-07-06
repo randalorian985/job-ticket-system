@@ -30,6 +30,7 @@ import {
   masterDataRequestErrorMessage,
   matchesArchiveFilter,
   matchesTextSearch,
+  useScrollToError,
   vendorNameById,
   type ArchiveFilter
 } from './masterDataShared'
@@ -167,6 +168,7 @@ export function CustomersPage() {
   const billingPartySummary = draft.billingPartyCustomerId
     ? customerNameById(items, draft.billingPartyCustomerId) || 'Billing party unavailable'
     : 'Bills directly to this customer'
+  useScrollToError(error)
   const load = () => {
     setIsLoading(true)
     return masterDataApi.listCustomers()
@@ -370,6 +372,7 @@ export function ServiceLocationsPage() {
   }, [customerFilter, editId])
   const customerOptions = useMemo(() => activeOrSelected(customers, [draft.customerId]), [customers, draft.customerId])
   const selectedCustomer = useMemo(() => customers.find((customer) => customer.id === draft.customerId), [customers, draft.customerId])
+  useScrollToError(error)
   const filteredItems = useMemo(() => items.filter((x) => matchesArchiveFilter(archiveFilter, x.isArchived) && (!customerFilter || x.customerId === customerFilter) && matchesTextSearch(search, [
     x.locationName,
     x.companyName,
@@ -625,6 +628,7 @@ export function EquipmentPage() {
     && !locations.some((location) => location.id === draft.serviceLocationId)
     ? draft.serviceLocationId
     : null
+  useScrollToError(error)
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!draft.customerId || !draft.serviceLocationId || !hasRequiredText(draft.name)) { setSuccess(null); return setError('Customer, location, and equipment name are required.') }
@@ -1190,6 +1194,7 @@ export function PartsPage() {
   }
 
   const activeTitle = activeScreen === 'parts' ? 'Parts' : activeScreen === 'vendors' ? 'Vendors' : 'Part Categories'
+  useScrollToError(error)
 
   return (
     <section className="stack supply-v2-screen">

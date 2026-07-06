@@ -22,6 +22,15 @@ function toDatetimeLocalValue(utcIso: string | null | undefined): string {
   return new Date(d.getTime() - offsetMs).toISOString().slice(0, 16)
 }
 
+/** Scroll the first visible .error element into view when error becomes non-null. */
+function useScrollToError(error: string | null) {
+  useEffect(() => {
+    if (error) {
+      document.querySelector<HTMLElement>('.error')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [error])
+}
+
 type Props = {
   initial: CreateJobTicketDto
   customers: CustomerDto[]
@@ -332,6 +341,7 @@ export function JobTicketEditorForm({
 }: Props) {
   const [form, setForm] = useState<CreateJobTicketDto>(initial)
   const [error, setError] = useState<string | null>(null)
+  useScrollToError(error)
   const [createdCustomers, setCreatedCustomers] = useState<CustomerDto[]>([])
   const [createdServiceLocations, setCreatedServiceLocations] = useState<ServiceLocationDto[]>([])
   const [createdEquipment, setCreatedEquipment] = useState<EquipmentDto[]>([])
@@ -986,7 +996,10 @@ export function JobTicketEditorForm({
             <h3>Basics</h3>
             <p className="muted">{isCreate ? 'Give the ticket a title, type, and priority. Scheduling happens separately after creation.' : 'Edit the ticket\'s title, type, priority, and current status.'}</p>
           </div>
-          <label>Title<input value={form.title} onChange={(e) => update('title', e.target.value)} /></label>
+          <label>Title
+            <input value={form.title} maxLength={200} onChange={(e) => update('title', e.target.value)} />
+            <span className={`field-char-count${form.title.length > 180 ? ' field-char-count--warn' : ''}`}>{form.title.length} / 200</span>
+          </label>
           <div className="field-with-action">
             <label>Job Type
               <select value={form.jobType ?? ''} onChange={(e) => update('jobType', e.target.value || null)}>
@@ -1234,9 +1247,15 @@ export function JobTicketEditorForm({
             <h3>Scope & Notes</h3>
             <p className="muted">Edit the job description and notes visible to office or customer workflows.</p>
           </div>
-          <label>Description<textarea value={form.description ?? ''} onChange={(e) => update('description', e.target.value || null)} /></label>
-          <label>Internal Notes<textarea value={form.internalNotes ?? ''} onChange={(e) => update('internalNotes', e.target.value || null)} /></label>
-          <label>Customer Notes<textarea value={form.customerFacingNotes ?? ''} onChange={(e) => update('customerFacingNotes', e.target.value || null)} /></label>
+          <label>Description<textarea value={form.description ?? ''} maxLength={4000} rows={4} onChange={(e) => update('description', e.target.value || null)} />
+            <span className={`field-char-count${(form.description?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.description?.length ?? 0} / 4,000</span>
+          </label>
+          <label>Internal Notes<textarea value={form.internalNotes ?? ''} maxLength={4000} rows={4} onChange={(e) => update('internalNotes', e.target.value || null)} />
+            <span className={`field-char-count${(form.internalNotes?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.internalNotes?.length ?? 0} / 4,000</span>
+          </label>
+          <label>Customer Notes<textarea value={form.customerFacingNotes ?? ''} maxLength={4000} rows={4} onChange={(e) => update('customerFacingNotes', e.target.value || null)} />
+            <span className={`field-char-count${(form.customerFacingNotes?.length ?? 0) > 3600 ? ' field-char-count--warn' : ''}`}>{form.customerFacingNotes?.length ?? 0} / 4,000</span>
+          </label>
         </section>
       ) : null}
 

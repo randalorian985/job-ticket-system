@@ -155,6 +155,87 @@
   gap: 0.35rem;
 }
 
+/* Compatible parts hint block */
+.compatible-parts-hint {
+  background: #f0f6ff;
+  border: 1px solid #cce0ff;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.75rem;
+}
+
+.compatible-parts-hint-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.compatible-parts-list {
+  display: grid;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.compatible-parts-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.compatible-parts-select-btn {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #bad2f5;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.82rem;
+  font-weight: 600;
+  gap: 0.4rem;
+  padding: 0.35rem 0.55rem;
+  text-align: left;
+  width: 100%;
+}
+
+.compatible-parts-select-btn:hover:not(:disabled) {
+  background: #e8f0ff;
+  border-color: #7aabee;
+}
+
+.compatible-parts-select-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.compatible-parts-item--pm .compatible-parts-select-btn {
+  background: #f0fff4;
+  border-color: #99ddbb;
+}
+
+.pm-badge {
+  background: #2e7d50;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+}
+
+.compatible-parts-notes {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.73rem;
+  padding-left: 0.55rem;
+}
+
+.compatible-parts-hint-footer {
+  font-size: 0.73rem;
+  margin: 0;
+}
+
 .employee-part-match-pill {
   align-items: center;
   background: #f3f7ff;

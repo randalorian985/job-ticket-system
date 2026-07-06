@@ -7,6 +7,7 @@ namespace JobTicketSystem.Application.MasterData;
 public interface IEquipmentCompatiblePartsService
 {
     Task<EquipmentCompatiblePartsDto> GetForEquipmentAsync(Guid equipmentId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<EquipmentCompatiblePartFieldDto>> GetCatalogForFieldAsync(Guid equipmentId, CancellationToken cancellationToken = default);
     Task<EquipmentCompatiblePartDto> AddAsync(Guid equipmentId, AddEquipmentCompatiblePartDto request, Guid addedByUserId, CancellationToken cancellationToken = default);
     Task<bool> RemoveAsync(Guid equipmentId, Guid partId, CancellationToken cancellationToken = default);
     Task<bool> UpdateNotesAsync(Guid equipmentId, Guid partId, UpdateEquipmentCompatiblePartDto request, CancellationToken cancellationToken = default);
@@ -58,6 +59,23 @@ public sealed class EquipmentCompatiblePartsService(ApplicationDbContext dbConte
             .ToListAsync(cancellationToken);
 
         return new EquipmentCompatiblePartsDto(compatible, history);
+    }
+
+    public async Task<IReadOnlyList<EquipmentCompatiblePartFieldDto>> GetCatalogForFieldAsync(Guid equipmentId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.EquipmentCompatibleParts
+            .Where(x => x.EquipmentId == equipmentId)
+            .Include(x => x.Part)
+            .OrderBy(x => x.IsRecommendedForPM ? 0 : 1)
+            .ThenBy(x => x.Part.Name)
+            .Select(x => new EquipmentCompatiblePartFieldDto(
+                x.PartId,
+                x.Part.PartNumber,
+                x.Part.Name,
+                x.Part.Description,
+                x.Notes,
+                x.IsRecommendedForPM))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<EquipmentCompatiblePartDto> AddAsync(Guid equipmentId, AddEquipmentCompatiblePartDto request, Guid addedByUserId, CancellationToken cancellationToken = default)
@@ -137,6 +155,15 @@ public sealed record EquipmentCompatiblePartDto(
     bool IsRecommendedForPM,
     Guid AddedByUserId,
     DateTime AddedAtUtc);
+
+/// <summary>Safe catalog view returned to field technicians; excludes cost, vendor, and audit fields.</summary>
+public sealed record EquipmentCompatiblePartFieldDto(
+    Guid PartId,
+    string PartNumber,
+    string PartName,
+    string? Description,
+    string? Notes,
+    bool IsRecommendedForPM);
 
 public sealed record EquipmentPartHistoryDto(
     Guid? PartId,

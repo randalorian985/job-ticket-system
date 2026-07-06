@@ -900,6 +900,16 @@ export type EquipmentCompatiblePartDto = {
   addedAtUtc: string
 }
 
+/** Safe catalog view returned to field technicians — excludes cost, vendor, and audit fields. */
+export type EquipmentCompatiblePartFieldDto = {
+  partId: string
+  partNumber: string
+  partName: string
+  description?: string | null
+  notes?: string | null
+  isRecommendedForPM: boolean
+}
+
 export type EquipmentPartHistoryDto = {
   partId: string
   partNumber: string

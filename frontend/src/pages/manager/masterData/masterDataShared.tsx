@@ -1,7 +1,18 @@
+import { useEffect } from 'react'
 import { ApiError } from '../../../api/httpClient'
 import type { CustomerDto, PartCategoryDto, ServiceLocationDto, VendorDto } from '../../../types'
 
 export type ArchiveFilter = 'all' | 'active' | 'archived'
+
+/** When `error` becomes non-null, scroll the first visible error message into view. */
+export function useScrollToError(error: string | null) {
+  useEffect(() => {
+    if (error) {
+      const el = document.querySelector<HTMLElement>('.error')
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [error])
+}
 
 const normalizeSearchValue = (value?: string | number | null) => String(value ?? '').toLowerCase()
 export const matchesTextSearch = (query: string, values: Array<string | number | null | undefined>) => {

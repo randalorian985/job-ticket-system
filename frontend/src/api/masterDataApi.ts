@@ -7,6 +7,7 @@ import type {
   CreateServiceLocationDto,
   CreateVendorDto,
   CustomerDto,
+  EquipmentCompatiblePartFieldDto,
   EquipmentCompatiblePartsDto,
   EquipmentDto,
   PartCategoryDto,
@@ -64,6 +65,7 @@ export const masterDataApi = {
   unarchivePart: (id: string) => apiRequest<void>(`/api/parts/${id}/unarchive`, { method: 'POST' }),
 
   getEquipmentCompatibleParts: (equipmentId: string) => apiRequest<EquipmentCompatiblePartsDto>(`/api/equipment/${equipmentId}/compatible-parts`),
+  getEquipmentCompatiblePartsForField: (equipmentId: string) => apiRequest<EquipmentCompatiblePartFieldDto[]>(`/api/equipment/${equipmentId}/compatible-parts/for-field`),
   addEquipmentCompatiblePart: (equipmentId: string, payload: AddEquipmentCompatiblePartDto) => apiRequest<void>(`/api/equipment/${equipmentId}/compatible-parts`, { method: 'POST', body: JSON.stringify(payload) }),
   removeEquipmentCompatiblePart: (equipmentId: string, partId: string) => apiRequest<void>(`/api/equipment/${equipmentId}/compatible-parts/${partId}`, { method: 'DELETE' }),
   updateEquipmentCompatiblePart: (equipmentId: string, partId: string, payload: UpdateEquipmentCompatiblePartDto) => apiRequest<void>(`/api/equipment/${equipmentId}/compatible-parts/${partId}`, { method: 'PATCH', body: JSON.stringify(payload) })

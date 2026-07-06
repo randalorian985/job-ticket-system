@@ -16,6 +16,11 @@ public sealed class EquipmentCompatiblePartsController(
     public async Task<ActionResult<EquipmentCompatiblePartsDto>> GetAsync(Guid equipmentId, CancellationToken cancellationToken)
         => Ok(await service.GetForEquipmentAsync(equipmentId, cancellationToken));
 
+    [HttpGet("for-field")]
+    [Authorize(Policy = "EmployeeOrAbove")]
+    public async Task<ActionResult<IReadOnlyList<EquipmentCompatiblePartFieldDto>>> GetForFieldAsync(Guid equipmentId, CancellationToken cancellationToken)
+        => Ok(await service.GetCatalogForFieldAsync(equipmentId, cancellationToken));
+
     [HttpPost]
     public async Task<ActionResult<EquipmentCompatiblePartDto>> AddAsync(Guid equipmentId, [FromBody] AddEquipmentCompatiblePartDto request, CancellationToken cancellationToken)
     {
