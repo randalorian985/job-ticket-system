@@ -46,6 +46,24 @@ const invoiceStatusLabels: Record<number, string> = {
   5: 'Void'
 }
 
+const purchaseOrderStatusClasses: Record<number, string> = {
+  1: 'po-status-draft',
+  2: 'po-status-submitted',
+  3: 'po-status-partial',
+  4: 'po-status-received',
+  5: 'po-status-invoiced',
+  6: 'po-status-closed',
+  7: 'po-status-cancelled'
+}
+
+const invoiceStatusClasses: Record<number, string> = {
+  1: 'invoice-status-pending',
+  2: 'invoice-status-matched',
+  3: 'invoice-status-approved',
+  4: 'invoice-status-paid',
+  5: 'invoice-status-void'
+}
+
 function toDateInputValue(value?: string | null) {
   return value ? value.slice(0, 10) : ''
 }
@@ -282,10 +300,32 @@ export function PurchasingWorkbenchPage() {
       <article className="card">
         <h2>Purchasing Workbench</h2>
         <p className="muted">Manager/Admin workflow for purchase orders, receiving, close review, vendor invoice tracking, and landed-cost recording. Techs can add parts directly to tickets; order requests remain optional.</p>
-        <p className="muted">{purchaseOrders.length} visible POs · {submittedOrReceivingCount} need receiving · {draftCount} drafts · {archivedCount} archived</p>
         {message ? <p role="status" className="success">{message}</p> : null}
         {error ? <p role="alert" className="error">{error}</p> : null}
       </article>
+
+      <div className="purchasing-kpi-grid">
+        <div className="queue-kpi-card">
+          <span>Visible POs</span>
+          <strong>{purchaseOrders.length}</strong>
+          <p className="muted">Purchase orders in this list</p>
+        </div>
+        <div className={submittedOrReceivingCount > 0 ? 'queue-kpi-card queue-kpi-card-review' : 'queue-kpi-card'}>
+          <span>Need receiving</span>
+          <strong>{submittedOrReceivingCount}</strong>
+          <p className="muted">Submitted or partially received</p>
+        </div>
+        <div className="queue-kpi-card">
+          <span>Drafts</span>
+          <strong>{draftCount}</strong>
+          <p className="muted">Waiting to be submitted</p>
+        </div>
+        <div className="queue-kpi-card">
+          <span>Archived</span>
+          <strong>{archivedCount}</strong>
+          <p className="muted">Hidden from day-to-day work</p>
+        </div>
+      </div>
 
       <article className="card">
         <h3>Create purchase order</h3>
@@ -327,30 +367,48 @@ export function PurchasingWorkbenchPage() {
 
       <article className="card">
         <h3>Purchase orders</h3>
-        <div className="table-wrapper">
-          <table>
-            <thead><tr><th>PO</th><th>Vendor</th><th>Status</th><th>Received</th><th>Invoice</th><th>Costs</th><th></th></tr></thead>
-            <tbody>
-              {purchaseOrders.map((order) => (
-                <tr key={order.id} className={order.isArchived ? 'muted' : undefined}>
-                  <td>{order.purchaseOrderNumber}{order.isArchived ? ' (archived)' : ''}</td>
-                  <td>{order.vendorName}</td>
-                  <td>{purchaseOrderStatusLabels[order.status]}</td>
-                  <td>{quantityFormatter.format(order.quantityReceived)} / {quantityFormatter.format(order.quantityOrdered)}</td>
-                  <td>{order.vendorInvoiceNumber || 'No invoice'} · {invoiceStatusLabels[order.invoiceStatus]}</td>
-                  <td>{currencyFormatter.format(order.orderedSubtotal)} + {currencyFormatter.format(order.landedCostTotal)} landed</td>
-                  <td><button type="button" onClick={() => loadOrder(order.id)}>Review</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {purchaseOrders.length === 0 ? (
+          <p className="muted">No purchase orders yet. Create your first purchase order above.</p>
+        ) : (
+          <div className="table-wrapper">
+            <table>
+              <thead><tr><th>PO</th><th>Vendor</th><th>Status</th><th>Received</th><th>Invoice</th><th>Costs</th><th></th></tr></thead>
+              <tbody>
+                {purchaseOrders.map((order) => {
+                  const rowClasses = [
+                    order.isArchived ? 'muted' : '',
+                    selectedOrder?.id === order.id ? 'po-row-selected' : ''
+                  ].filter(Boolean).join(' ')
+                  return (
+                    <tr key={order.id} className={rowClasses || undefined}>
+                      <td><strong>{order.purchaseOrderNumber}{order.isArchived ? ' (archived)' : ''}</strong></td>
+                      <td>{order.vendorName}</td>
+                      <td><span className={`status-pill ${purchaseOrderStatusClasses[order.status] ?? ''}`}>{purchaseOrderStatusLabels[order.status]}</span></td>
+                      <td>{quantityFormatter.format(order.quantityReceived)} / {quantityFormatter.format(order.quantityOrdered)}</td>
+                      <td>
+                        {order.vendorInvoiceNumber ? order.vendorInvoiceNumber : <span className="muted">No invoice</span>}
+                        {' '}
+                        <span className={`status-pill ${invoiceStatusClasses[order.invoiceStatus] ?? ''}`}>{invoiceStatusLabels[order.invoiceStatus]}</span>
+                      </td>
+                      <td>{currencyFormatter.format(order.orderedSubtotal)} <span className="muted">+ {currencyFormatter.format(order.landedCostTotal)} landed</span></td>
+                      <td><button type="button" onClick={() => loadOrder(order.id)}>Review</button></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </article>
 
       {selectedOrder ? (
         <article className="card">
           <h3>Review {selectedOrder.purchaseOrderNumber}</h3>
-          <p><strong>{selectedOrder.vendorName}</strong> · {purchaseOrderStatusLabels[selectedOrder.status]} · Invoice {invoiceStatusLabels[selectedOrder.invoiceStatus]}</p>
+          <p className="po-review-summary">
+            <strong>{selectedOrder.vendorName}</strong>
+            <span className={`status-pill ${purchaseOrderStatusClasses[selectedOrder.status] ?? ''}`}>{purchaseOrderStatusLabels[selectedOrder.status]}</span>
+            <span className={`status-pill ${invoiceStatusClasses[selectedOrder.invoiceStatus] ?? ''}`}>Invoice {invoiceStatusLabels[selectedOrder.invoiceStatus]}</span>
+          </p>
           <div className="table-wrapper">
             <table>
               <thead><tr><th>Part</th><th>Ordered</th><th>Received</th><th>Unit cost</th><th>Line subtotal</th></tr></thead>
@@ -406,9 +464,13 @@ export function PurchasingWorkbenchPage() {
       <article className="card">
         <h3>Parts Needing Catalog Cleanup</h3>
         <p className="muted">Reference list only for optional order-request workflow support; no replenishment automation or recommendation scoring is performed.</p>
-        <ul className="supply-reorder-list">
-          {optionalOrderCandidates.map((part) => <li key={part.id} className="supply-reorder-item">{part.partNumber} · {part.name}: {part.statusLabel}</li>)}
-        </ul>
+        {optionalOrderCandidates.length === 0 ? (
+          <p className="muted">All active parts have vendor links and details. Nothing needs cleanup.</p>
+        ) : (
+          <ul className="supply-reorder-list">
+            {optionalOrderCandidates.map((part) => <li key={part.id} className="supply-reorder-item">{part.partNumber} · {part.name}: {part.statusLabel}</li>)}
+          </ul>
+        )}
       </article>
     </section>
   )

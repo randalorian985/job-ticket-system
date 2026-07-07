@@ -1301,6 +1301,84 @@ pre {
   color: #334155;
 }
 
+/* Purchasing workbench */
+.purchasing-kpi-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.po-status-draft {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.po-status-submitted {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.po-status-partial {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.po-status-received {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.po-status-invoiced {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.po-status-closed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.po-status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.invoice-status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.invoice-status-matched {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.invoice-status-approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.invoice-status-paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.invoice-status-void {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.po-row-selected td {
+  background: #eef2ff;
+}
+
+.po-review-summary {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .readiness-panel {
   background: #f8fafc;
   border: 1px solid var(--line);
