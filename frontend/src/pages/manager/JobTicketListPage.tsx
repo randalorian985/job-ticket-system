@@ -623,57 +623,29 @@ export function JobTicketListPage() {
       </section>
 
       {!isLoading && !error && jobs.length ? (
-        <div className="queue-kpi-grid" role="group" aria-label="quick ticket views">
-          <button type="button" aria-pressed={activeKpiCard === 'open-tickets'}
-            className={`queue-kpi-card${activeKpiCard === 'open-tickets' ? ' queue-kpi-card-ready' : ''}`}
-            onClick={() => applySavedQueueView('open-tickets')}>
-            <span>Open Tickets</span>
-            <strong>{triageSummary.activeCount}</strong>
-            <p className="muted">Active &amp; in-progress</p>
+        <div className="queue-kpi-chip-row" role="group" aria-label="quick ticket views">
+          <button type="button" aria-pressed={activeKpiCard === 'open-tickets'} className="queue-kpi-chip" onClick={() => applySavedQueueView('open-tickets')}>
+            <strong>{triageSummary.activeCount}</strong> Open Tickets
           </button>
-          <button type="button" aria-pressed={activeKpiCard === 'today'}
-            className={`queue-kpi-card${activeKpiCard === 'today' ? ' queue-kpi-card-review' : ''}`}
-            onClick={() => applySavedQueueView('today')}>
-            <span>Today</span>
-            <strong>{triageSummary.todayCount}</strong>
-            <p className="muted">Scheduled today</p>
+          <button type="button" aria-pressed={activeKpiCard === 'today'} className="queue-kpi-chip" onClick={() => applySavedQueueView('today')}>
+            <strong>{triageSummary.todayCount}</strong> Today
           </button>
-          <button type="button" aria-pressed={activeKpiCard === 'waiting-parts'}
-            className={`queue-kpi-card${activeKpiCard === 'waiting-parts' ? ' queue-kpi-card-review' : ''}`}
-            onClick={() => applySavedQueueView('waiting-parts')}>
-            <span>Waiting on Parts</span>
-            <strong>{triageSummary.waitingOnPartsCount}</strong>
-            <p className="muted">Status: waiting on parts</p>
+          <button type="button" aria-pressed={activeKpiCard === 'waiting-parts'} className="queue-kpi-chip" onClick={() => applySavedQueueView('waiting-parts')}>
+            <strong>{triageSummary.waitingOnPartsCount}</strong> Waiting on Parts
           </button>
-          <button type="button" aria-pressed={activeKpiCard === 'needs-assignment'}
-            className={`queue-kpi-card${activeKpiCard === 'needs-assignment' ? ' queue-kpi-card-alert' : ''}`}
-            onClick={() => applySavedQueueView('needs-assignment')}>
-            <span>Needs Assignment</span>
-            <strong>{triageSummary.needsDispatchReviewCount}</strong>
-            <p className="muted">Missing tech, lead, or schedule</p>
+          <button type="button" aria-pressed={activeKpiCard === 'needs-assignment'} className="queue-kpi-chip queue-kpi-chip-alert" onClick={() => applySavedQueueView('needs-assignment')}>
+            <strong>{triageSummary.needsDispatchReviewCount}</strong> Needs Assignment
           </button>
-          <button type="button" aria-pressed={activeKpiCard === 'ready-invoice'}
-            className={`queue-kpi-card${activeKpiCard === 'ready-invoice' ? ' queue-kpi-card-ready' : ''}`}
-            onClick={() => applySavedQueueView('ready-invoice')}>
-            <span>Ready to Invoice</span>
-            <strong>{triageSummary.readyToInvoiceCount}</strong>
-            <p className="muted">Awaiting billing</p>
+          <button type="button" aria-pressed={activeKpiCard === 'ready-invoice'} className="queue-kpi-chip" onClick={() => applySavedQueueView('ready-invoice')}>
+            <strong>{triageSummary.readyToInvoiceCount}</strong> Ready to Invoice
           </button>
-          <button type="button" aria-pressed={activeKpiCard === 'completed-review'}
-            className="queue-kpi-card"
-            onClick={() => applySavedQueueView('completed-review')}>
-            <span>Completed Review</span>
-            <strong>{triageSummary.completedReviewCount}</strong>
-            <p className="muted">Verify and close</p>
+          <button type="button" aria-pressed={activeKpiCard === 'completed-review'} className="queue-kpi-chip" onClick={() => applySavedQueueView('completed-review')}>
+            <strong>{triageSummary.completedReviewCount}</strong> Completed Review
           </button>
-          <button type="button" aria-pressed={activeKpiCard === 'closed-tickets'}
-            className="queue-kpi-card"
-            onClick={() => applySavedQueueView('closed-tickets')}>
-            <span>Closed Tickets</span>
-            <strong>{triageSummary.closedCount}</strong>
-            <p className="muted">Completed &amp; archived</p>
+          <button type="button" aria-pressed={activeKpiCard === 'closed-tickets'} className="queue-kpi-chip" onClick={() => applySavedQueueView('closed-tickets')}>
+            <strong>{triageSummary.closedCount}</strong> Closed Tickets
           </button>
-          {assignmentDataUnavailable ? <p className="muted" style={{ gridColumn: '1 / -1', margin: 0 }}>Assignments unavailable — readiness counts are not shown.</p> : null}
+          {assignmentDataUnavailable ? <span className="queue-kpi-chip queue-kpi-chip-warn">Assignments unavailable</span> : null}
         </div>
       ) : null}
 
