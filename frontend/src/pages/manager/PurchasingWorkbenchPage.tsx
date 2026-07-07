@@ -330,19 +330,19 @@ export function PurchasingWorkbenchPage() {
       <article className="card">
         <h3>Create purchase order</h3>
         <form className="form-grid" onSubmit={submitCreate}>
-          <label>Vendor
+          <label className="sr-label">Vendor
             <select aria-label="Purchase order vendor" required value={form.vendorId} onChange={(event) => setForm({ ...form, vendorId: event.target.value })}>
               <option value="">Select vendor</option>
               {activeVendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
             </select>
           </label>
-          <label>PO number
-            <input aria-label="Purchase order number" value={form.purchaseOrderNumber} onChange={(event) => setForm({ ...form, purchaseOrderNumber: event.target.value })} placeholder="Auto-generated if blank" />
+          <label className="sr-label">PO number
+            <input aria-label="Purchase order number" maxLength={100} value={form.purchaseOrderNumber} onChange={(event) => setForm({ ...form, purchaseOrderNumber: event.target.value })} placeholder="Auto-generated if blank" />
           </label>
-          <label>Expected date
+          <label className="sr-label">Expected date
             <input aria-label="Expected date" type="date" value={form.expectedAtUtc} onChange={(event) => setForm({ ...form, expectedAtUtc: event.target.value })} />
           </label>
-          <label>Part
+          <label className="sr-label">Part
             <select aria-label="Purchase order part" required value={form.partId} onChange={(event) => {
               const part = activeParts.find((item) => item.id === event.target.value)
               setForm({ ...form, partId: event.target.value, vendorId: part?.vendorId ?? form.vendorId, unitCost: String(part?.unitCost ?? 0) })
@@ -350,19 +350,24 @@ export function PurchasingWorkbenchPage() {
               <option value="">Select part</option>
               {activeParts.map((part) => <option key={part.id} value={part.id}>{part.partNumber} · {part.name}</option>)}
             </select>
+            {selectedPart ? (
+              <span className={`field-char-count${getCatalogStatus(selectedPart) !== 'Ready for ticket use' ? ' field-char-count--warn' : ''}`}>
+                {getCatalogStatus(selectedPart)}{selectedPart.vendorId ? ' · vendor linked' : ' · no vendor linked'}
+              </span>
+            ) : null}
           </label>
-          <label>Quantity
+          <label className="sr-label">Quantity
             <input aria-label="Quantity ordered" required min="0.0001" step="0.0001" type="number" value={form.quantityOrdered} onChange={(event) => setForm({ ...form, quantityOrdered: event.target.value })} />
           </label>
-          <label>Unit cost
+          <label className="sr-label">Unit cost
             <input aria-label="Unit cost" required min="0" step="0.01" type="number" value={form.unitCost} onChange={(event) => setForm({ ...form, unitCost: event.target.value })} />
           </label>
-          <label>Notes
-            <textarea aria-label="Purchase order notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+          <label className="sr-label form-field-full">Notes
+            <textarea aria-label="Purchase order notes" rows={3} maxLength={2000} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+            <span className={`field-char-count${form.notes.length > 1800 ? ' field-char-count--warn' : ''}`}>{form.notes.length} / 2,000</span>
           </label>
           <button type="submit" disabled={busyAction !== null}>{busyAction === 'create' ? 'Creating...' : 'Create purchase order'}</button>
         </form>
-        {selectedPart ? <p className="muted">Selected part status: {getCatalogStatus(selectedPart)} · vendor {selectedPart.vendorId ? 'linked' : 'not linked'} · order requests optional</p> : null}
       </article>
 
       <article className="card">
@@ -431,33 +436,39 @@ export function PurchasingWorkbenchPage() {
           </div>
 
           <form className="form-grid" onSubmit={submitInvoice}>
-            <h4>Vendor invoice and landed costs</h4>
-            <label>Vendor invoice #
-              <input aria-label="Vendor invoice number" value={invoiceForm.vendorInvoiceNumber} onChange={(event) => setInvoiceForm({ ...invoiceForm, vendorInvoiceNumber: event.target.value })} />
+            <h4 className="form-field-full">Vendor invoice and landed costs</h4>
+            <label className="sr-label">Vendor invoice #
+              <input aria-label="Vendor invoice number" maxLength={100} value={invoiceForm.vendorInvoiceNumber} onChange={(event) => setInvoiceForm({ ...invoiceForm, vendorInvoiceNumber: event.target.value })} />
+              <span className={`field-char-count${invoiceForm.vendorInvoiceNumber.length > 85 ? ' field-char-count--warn' : ''}`}>{invoiceForm.vendorInvoiceNumber.length} / 100</span>
             </label>
-            <label>Invoice date
+            <label className="sr-label">Invoice date
               <input aria-label="Vendor invoice date" type="date" value={invoiceForm.vendorInvoiceDateUtc} onChange={(event) => setInvoiceForm({ ...invoiceForm, vendorInvoiceDateUtc: event.target.value })} />
             </label>
-            <label>Invoice status
+            <label className="sr-label">Invoice status
               <select aria-label="Vendor invoice status" value={invoiceForm.invoiceStatus} onChange={(event) => setInvoiceForm({ ...invoiceForm, invoiceStatus: event.target.value })}>
                 {Object.entries(invoiceStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
             </label>
-            <label>Freight
+            <label className="sr-label">Freight
               <input aria-label="Freight cost" type="number" min="0" step="0.01" value={invoiceForm.freightCost} onChange={(event) => setInvoiceForm({ ...invoiceForm, freightCost: event.target.value })} />
             </label>
-            <label>Tax
+            <label className="sr-label">Tax
               <input aria-label="Tax amount" type="number" min="0" step="0.01" value={invoiceForm.taxAmount} onChange={(event) => setInvoiceForm({ ...invoiceForm, taxAmount: event.target.value })} />
             </label>
-            <label>Other landed cost
+            <label className="sr-label">Other landed cost
               <input aria-label="Other landed cost" type="number" min="0" step="0.01" value={invoiceForm.otherLandedCost} onChange={(event) => setInvoiceForm({ ...invoiceForm, otherLandedCost: event.target.value })} />
             </label>
-            <label>Landed-cost notes
-              <textarea aria-label="Landed-cost notes" value={invoiceForm.landedCostNotes} onChange={(event) => setInvoiceForm({ ...invoiceForm, landedCostNotes: event.target.value })} />
+            <label className="sr-label form-field-full">Landed-cost notes
+              <textarea aria-label="Landed-cost notes" rows={3} maxLength={2000} value={invoiceForm.landedCostNotes} onChange={(event) => setInvoiceForm({ ...invoiceForm, landedCostNotes: event.target.value })} />
+              <span className={`field-char-count${invoiceForm.landedCostNotes.length > 1800 ? ' field-char-count--warn' : ''}`}>{invoiceForm.landedCostNotes.length} / 2,000</span>
             </label>
             <button type="submit" disabled={busyAction !== null}>{busyAction === 'invoice' ? 'Saving invoice...' : 'Save invoice and landed costs'}</button>
           </form>
-          <p className="muted">Invoice subtotal {currencyFormatter.format(selectedOrder.invoiceSubtotal)} · landed costs {currencyFormatter.format(selectedOrder.landedCostTotal)}</p>
+          <div className="po-review-summary muted">
+            <span>Invoice subtotal <strong>{currencyFormatter.format(selectedOrder.invoiceSubtotal)}</strong></span>
+            <span>Landed costs <strong>{currencyFormatter.format(selectedOrder.landedCostTotal)}</strong></span>
+            <span>Total <strong>{currencyFormatter.format(selectedOrder.invoiceSubtotal + selectedOrder.landedCostTotal)}</strong></span>
+          </div>
         </article>
       ) : null}
 

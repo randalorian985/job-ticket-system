@@ -1301,6 +1301,11 @@ pre {
   color: #334155;
 }
 
+/* Utility: full-width grid item */
+.form-field-full {
+  grid-column: 1 / -1;
+}
+
 /* Purchasing workbench */
 .purchasing-kpi-grid {
   display: grid;
