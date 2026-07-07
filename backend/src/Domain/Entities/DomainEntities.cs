@@ -40,6 +40,25 @@ public sealed class NewTicketNotificationRecipient : AuditableEntity
     public Guid? AddedByUserId { get; set; }
 }
 
+public sealed class MailerConfiguration : AuditableEntity
+{
+    public MailerProvider Provider { get; set; } = MailerProvider.ManualSmtp;
+    public bool Enabled { get; set; }
+    public string? FromName { get; set; }
+    public string? FromAddress { get; set; }
+    public string? ReplyToAddress { get; set; }
+    public string? SmtpHost { get; set; }
+    public int SmtpPort { get; set; } = 587;
+    public bool SmtpEnableSsl { get; set; } = true;
+    public string? SmtpUsername { get; set; }
+    public string? SmtpPasswordCipherText { get; set; }
+    public string? AppBaseUrl { get; set; }
+    public DateTime? LastTestedAtUtc { get; set; }
+    public bool? LastTestSucceeded { get; set; }
+    public string? LastTestMessage { get; set; }
+    public Guid? UpdatedByUserId { get; set; }
+}
+
 public sealed class TicketStatusFilterOption : AuditableEntity
 {
     public string DisplayLabel { get; set; } = string.Empty;

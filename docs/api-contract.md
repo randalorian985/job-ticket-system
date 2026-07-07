@@ -62,6 +62,24 @@ Endpoints:
 
 The feature adds the `CompanyConfigurations` table. It does not change `Customers`, customer selection, job-ticket customer/billing-party fields, service-location relationships, or master-data customer APIs.
 
+## Mailer Configuration
+Mailer configuration controls the outgoing account used by new-ticket and part-order notification emails. Runtime SMTP environment variables remain a fallback when no database mailer configuration row exists.
+
+Endpoints:
+- `GET /api/mailer-configuration`
+  - Authorization: `AdminOnly`.
+  - Returns current provider, status, SMTP host/port/SSL, sender identity, saved-password flag, test status, and whether values came from environment fallback or the database row.
+- `PUT /api/mailer-configuration`
+  - Authorization: `AdminOnly`.
+  - Request DTO: `UpdateMailerConfigurationDto`.
+  - Creates or updates the singleton mailer row. SMTP passwords are accepted only as write-only values and are stored through server-side protection.
+- `POST /api/mailer-configuration/test`
+  - Authorization: `AdminOnly`.
+  - Request DTO: `SendMailerTestRequestDto` with `recipientEmail`.
+  - Sends a test email with the saved mailer settings and records the latest test result on the database row when one exists.
+
+The first implemented provider is `ManualSmtp`. Google Workspace and Microsoft 365 are represented as future OAuth providers but are rejected by the API until their OAuth flows are implemented.
+
 ## Ticket Status Filter Configuration
 Ticket status filter configuration controls which status filter boxes appear in the Manager/Admin job-ticket queue. It maps labels to existing `JobTicketStatus` values only; it is not a custom workflow engine and does not add statuses or transitions.
 
@@ -466,7 +484,7 @@ Behavior:
 This section documents the existing inventory API foundation only. It does not approve reintroducing the Inventory UI, warehouse/truck inventory expansion, transfer workflows, low-stock alerts, replenishment, average-cost or landed-cost inventory accounting expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval behavior.
 
 ## Manager/Admin Navigation Routes
-All routes under `/manage` require Manager or Admin role. Routes under `/manage/users` and `/manage/company-configuration` and `/manage/ticket-status-filters` require Admin role.
+All routes under `/manage` require Manager or Admin role. Routes under `/manage/users`, `/manage/company-configuration`, `/manage/alerts`, `/manage/mailer-settings`, and `/manage/ticket-status-filters` require Admin role.
 
 - `/manage`: Manager/Admin dashboard.
 - `/manage/job-tickets`: job-ticket queue.
@@ -481,8 +499,11 @@ All routes under `/manage` require Manager or Admin role. Routes under `/manage/
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
 - `/manage/time-approval`: time approval queue.
+- `/manage/parts-approval`: parts approval workflow.
 - `/manage/reports`: reports hub.
 - `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
+- `/manage/alerts`: Admin-only alert recipients and notification routing.
+- `/manage/mailer-settings`: Admin-only outgoing mailer provider, SMTP, sender identity, and test email settings.
 - `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
 - `/manage/users`: Admin-only user management.
 - `/manage/dispatch`: legacy redirect to `/manage/job-tickets`.
@@ -491,6 +512,7 @@ All routes under `/manage` require Manager or Admin role. Routes under `/manage/
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
 - `/manage/company-configuration` remains Admin-only.
+- `/manage/mailer-settings` remains Admin-only.
 - `/manage/ticket-status-filters` remains Admin-only.
 - `GET /api/ticket-status-filters` is Manager/Admin-readable; `PUT /api/ticket-status-filters` remains Admin-only.
 - User-management endpoints under `/api/users` remain Admin-only except for the narrow Manager/Admin `GET /api/users/assignable-employees` lookup documented above.

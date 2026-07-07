@@ -665,6 +665,10 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
     private static void ValidateClockOut(ClockOutRequestDto request)
     {
         ValidationHelpers.ValidateRequired(request.WorkSummary, nameof(request.WorkSummary));
+        if (!request.ClockOutLatitude.HasValue || !request.ClockOutLongitude.HasValue)
+        {
+            throw new ValidationException("Clock-out coordinates are required.");
+        }
     }
 }
 

@@ -12,6 +12,7 @@ import {
   EquipmentPage,
   InvoiceReadyPacketPage,
   LaborReportsPage,
+  MailerSettingsPage,
   PartRequestsPage,
   PartsServiceReportsPage,
   PartsApprovalPage,
@@ -89,6 +90,7 @@ export function AppRouter() {
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
             <Route path="company-configuration" element={<CompanyConfigurationPage />} />
             <Route path="alerts" element={<AlertsConfigurationPage />} />
+            <Route path="mailer-settings" element={<MailerSettingsPage />} />
             <Route path="ticket-status-filters" element={<TicketStatusFiltersPage />} />
             <Route path="users" element={<UsersPage />} />
           </Route>

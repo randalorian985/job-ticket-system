@@ -3,6 +3,7 @@ using System.Text.Json;
 using JobTicketSystem.Api.Auth;
 using JobTicketSystem.Api.Pilot;
 using JobTicketSystem.Api.Production;
+using JobTicketSystem.Api.Security;
 using JobTicketSystem.Api.TestEnvironment;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.CompanyConfiguration;
@@ -82,7 +83,9 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddDataProtection();
 builder.Services.AddScoped<ICurrentUserContext, HttpCurrentUserContext>();
+builder.Services.AddSingleton<IMailerSecretProtector, DataProtectionMailerSecretProtector>();
 builder.Services.AddScoped<ActiveEmployeeTokenValidationEvents>();
 builder.Services.AddScoped<IAuthorizationHandler, AssignedEmployeeOrManagerHandler>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -91,6 +94,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<ICompanyConfigurationService, CompanyConfigurationService>();
 builder.Services.Configure<SmtpEmailSettings>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddScoped<IMailerConfigurationService, MailerConfigurationService>();
 builder.Services.AddScoped<IPartOrderRequestNotificationService, PartOrderRequestNotificationService>();
 builder.Services.AddScoped<INewTicketNotificationService, NewTicketNotificationService>();
 builder.Services.AddScoped<INewTicketNotificationRecipientsService, NewTicketNotificationRecipientsService>();

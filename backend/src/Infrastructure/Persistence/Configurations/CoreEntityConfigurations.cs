@@ -1,4 +1,5 @@
 using JobTicketSystem.Domain.Entities;
+using JobTicketSystem.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -43,6 +44,27 @@ public sealed class NewTicketNotificationRecipientEntityConfiguration : IEntityT
         builder.Property(x => x.Email).HasMaxLength(320).IsRequired();
         builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
         builder.HasIndex(x => x.IsActive);
+    }
+}
+
+public sealed class MailerConfigurationEntityConfiguration : IEntityTypeConfiguration<MailerConfiguration>
+{
+    public void Configure(EntityTypeBuilder<MailerConfiguration> builder)
+    {
+        builder.ConfigureAuditableEntity();
+        builder.Property(x => x.Provider).HasConversion<int>().IsRequired();
+        builder.Property(x => x.Enabled).HasDefaultValue(false).IsRequired();
+        builder.Property(x => x.FromName).HasMaxLength(200);
+        builder.Property(x => x.FromAddress).HasMaxLength(320);
+        builder.Property(x => x.ReplyToAddress).HasMaxLength(320);
+        builder.Property(x => x.SmtpHost).HasMaxLength(255);
+        builder.Property(x => x.SmtpPort).HasDefaultValue(587).IsRequired();
+        builder.Property(x => x.SmtpEnableSsl).HasDefaultValue(true).IsRequired();
+        builder.Property(x => x.SmtpUsername).HasMaxLength(320);
+        builder.Property(x => x.SmtpPasswordCipherText).HasMaxLength(4000);
+        builder.Property(x => x.AppBaseUrl).HasMaxLength(300);
+        builder.Property(x => x.LastTestMessage).HasMaxLength(1000);
+        builder.HasIndex(x => x.UpdatedAtUtc);
     }
 }
 

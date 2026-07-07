@@ -145,8 +145,11 @@ Admin users can:
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
 - `/manage/time-approval`: time approval queue.
+- `/manage/parts-approval`: parts approval workflow.
 - `/manage/reports`: reports hub.
 - `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
+- `/manage/alerts`: Admin-only alert recipients and notification routing.
+- `/manage/mailer-settings`: Admin-only outgoing mailer settings.
 - `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
 - `/manage/users`: Admin-only user management.
 - `/manage/dispatch`: legacy bookmark route that redirects to `/manage/job-tickets`.
@@ -1096,6 +1099,7 @@ Company Configuration is Admin-only and represents the crane company's own ident
 
 Admin-only access:
 - `/manage/company-configuration`
+- `/manage/mailer-settings`
 
 Admins can manage:
 - company name and legal name;
@@ -1104,6 +1108,14 @@ Admins can manage:
 - address;
 - company logo;
 - primary, secondary, and accent brand colors.
+
+Mailer Settings is Admin-only and manages the outgoing email account used by ticket and part-order notifications. Manual SMTP is available now. Google Workspace and Microsoft 365 appear as planned OAuth provider options, but OAuth connection flows are not active yet.
+
+Mailer Settings supports:
+- enabling or disabling outgoing mail;
+- SMTP host, port, SSL/TLS, username, and protected password storage;
+- from name, from address, reply-to address, and app base URL;
+- a test email action and latest test status.
 
 ### Color Settings
 
@@ -1138,6 +1150,9 @@ API summary:
 - `PUT /api/company-configuration`: Admin-only profile and color update.
 - `POST /api/company-configuration/logo`: Admin-only logo upload.
 - `GET /api/company-configuration/logo`: public logo stream when a logo exists.
+- `GET /api/mailer-configuration`: Admin-only mailer settings read.
+- `PUT /api/mailer-configuration`: Admin-only mailer settings save; SMTP password values are write-only.
+- `POST /api/mailer-configuration/test`: Admin-only test email send.
 
 ## Ticket Filter Configuration
 

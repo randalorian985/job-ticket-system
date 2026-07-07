@@ -2,11 +2,9 @@ using System.Net;
 using System.Net.Mail;
 using System.Text;
 using JobTicketSystem.Application.CompanyConfiguration;
-using JobTicketSystem.Application.Security;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace JobTicketSystem.Application.Notifications;
 
@@ -18,12 +16,12 @@ public interface IPartOrderRequestNotificationService
 public sealed class PartOrderRequestNotificationService(
     ApplicationDbContext dbContext,
     ICompanyConfigurationService companyConfigurationService,
-    IOptions<SmtpEmailSettings> smtpOptions) : IPartOrderRequestNotificationService
+    IMailerConfigurationService mailerConfigurationService) : IPartOrderRequestNotificationService
 {
     public async Task NotifyRequestedAsync(Guid jobTicketPartId, CancellationToken cancellationToken = default)
     {
-        var settings = smtpOptions.Value;
-        if (!settings.Enabled || string.IsNullOrWhiteSpace(settings.Host))
+        var settings = await mailerConfigurationService.GetResolvedSettingsAsync(cancellationToken);
+        if (!settings.Enabled || !settings.IsConfigured)
         {
             return;
         }
@@ -47,18 +45,8 @@ public sealed class PartOrderRequestNotificationService(
         var subject = $"Part order request for {part.JobTicket.TicketNumber}";
         var body = BuildBody(part);
 
-        using var message = new MailMessage(settings.FromAddress ?? recipient, recipient, subject, body)
-        {
-            IsBodyHtml = false
-        };
-
-        using var client = new SmtpClient(settings.Host, settings.Port)
-        {
-            EnableSsl = settings.EnableSsl,
-            Credentials = string.IsNullOrWhiteSpace(settings.Username)
-                ? CredentialCache.DefaultNetworkCredentials
-                : new NetworkCredential(settings.Username, settings.Password)
-        };
+        using var message = MailerConfigurationService.CreateMessage(settings, recipient, subject, body);
+        using var client = CreateSmtpClient(settings);
 
         await client.SendMailAsync(message, cancellationToken);
     }
@@ -77,6 +65,17 @@ public sealed class PartOrderRequestNotificationService(
         }
 
         return builder.ToString();
+    }
+
+    private static SmtpClient CreateSmtpClient(ResolvedMailerSettings settings)
+    {
+        return new SmtpClient(settings.Host, settings.Port)
+        {
+            EnableSsl = settings.EnableSsl,
+            Credentials = string.IsNullOrWhiteSpace(settings.Username)
+                ? CredentialCache.DefaultNetworkCredentials
+                : new NetworkCredential(settings.Username, settings.Password)
+        };
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

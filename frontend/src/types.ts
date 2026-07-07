@@ -68,6 +68,56 @@ export type AddNewTicketNotificationRecipientDto = {
   email: string
 }
 
+export type MailerProvider = 'ManualSmtp' | 'GoogleWorkspace' | 'Microsoft365'
+
+export type MailerConfigurationDto = {
+  id: string
+  provider: MailerProvider
+  enabled: boolean
+  configurationSource: string
+  isConfigured: boolean
+  status: string
+  statusMessage?: string | null
+  fromName?: string | null
+  fromAddress?: string | null
+  replyToAddress?: string | null
+  smtpHost?: string | null
+  smtpPort: number
+  smtpEnableSsl: boolean
+  smtpUsername?: string | null
+  smtpPasswordSet: boolean
+  appBaseUrl?: string | null
+  lastTestedAtUtc?: string | null
+  lastTestSucceeded?: boolean | null
+  lastTestMessage?: string | null
+  updatedAtUtc?: string | null
+}
+
+export type UpdateMailerConfigurationDto = {
+  provider: MailerProvider
+  enabled: boolean
+  fromName?: string | null
+  fromAddress?: string | null
+  replyToAddress?: string | null
+  smtpHost?: string | null
+  smtpPort: number
+  smtpEnableSsl: boolean
+  smtpUsername?: string | null
+  smtpPassword?: string | null
+  clearSmtpPassword: boolean
+  appBaseUrl?: string | null
+}
+
+export type SendMailerTestRequestDto = {
+  recipientEmail: string
+}
+
+export type MailerTestResultDto = {
+  success: boolean
+  message: string
+  testedAtUtc: string
+}
+
 export type TicketStatusFilterOptionDto = {
   id: string
   displayLabel: string

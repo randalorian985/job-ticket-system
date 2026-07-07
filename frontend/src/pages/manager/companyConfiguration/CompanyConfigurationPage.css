@@ -142,6 +142,98 @@
   padding-top: 0.85rem;
 }
 
+.mailer-provider-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mailer-provider-option {
+  align-items: flex-start;
+  background: #f8fafc;
+  border: 1px solid #d9e2ef;
+  color: var(--text-main);
+  display: grid;
+  gap: 0.25rem;
+  justify-items: start;
+  min-height: 4.25rem;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.mailer-provider-option span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mailer-provider-option-active {
+  background: #eef3ff;
+  border-color: var(--primary);
+}
+
+.mailer-status-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.mailer-status-grid div {
+  background: #f8fafc;
+  border: 1px solid #e5eaf1;
+  border-radius: 7px;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.mailer-status-grid span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.mailer-status-pill {
+  align-self: start;
+  background: #f8fafc;
+  border: 1px solid #d9e2ef;
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.65rem;
+}
+
+.mailer-status-pill-ready {
+  background: #ecfdf3;
+  border-color: #b7e4c7;
+  color: #087f5b;
+}
+
+.mailer-status-pill-review {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.mailer-inline-check {
+  align-items: center;
+  display: flex;
+  gap: 0.45rem;
+}
+
+.mailer-inline-check input {
+  width: auto;
+}
+
+.mailer-test-row {
+  align-items: end;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .company-config-preview {
   position: sticky;
   top: 1rem;

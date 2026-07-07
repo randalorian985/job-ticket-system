@@ -148,3 +148,10 @@ public enum WorkLocationType
     CompanyShop = 2,
     Mixed = 3
 }
+
+public enum MailerProvider
+{
+    ManualSmtp = 1,
+    GoogleWorkspace = 2,
+    Microsoft365 = 3
+}

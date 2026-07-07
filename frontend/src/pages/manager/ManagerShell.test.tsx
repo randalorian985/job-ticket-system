@@ -33,6 +33,7 @@ describe('ManagerShell', () => {
             <Route path="reports/parts-service" element={<p>Parts service reports page</p>} />
             <Route path="wiki" element={<p>Wiki page</p>} />
             <Route path="company-configuration" element={<p>Company configuration page</p>} />
+            <Route path="mailer-settings" element={<p>Mailer settings page</p>} />
             <Route path="ticket-status-filters" element={<p>Ticket filters page</p>} />
             <Route path="users" element={<p>Users page</p>} />
           </Route>
@@ -76,6 +77,7 @@ describe('ManagerShell', () => {
     renderShell('/manage')
 
     expect(screen.queryByRole('option', { name: 'Company Configuration' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Mailer Settings' })).not.toBeInTheDocument()
     expect(screen.queryByRole('option', { name: 'Ticket Filters' })).not.toBeInTheDocument()
     expect(screen.queryByRole('option', { name: 'Users' })).not.toBeInTheDocument()
     expect(screen.queryByText('Admin')).not.toBeInTheDocument()
@@ -91,6 +93,7 @@ describe('ManagerShell', () => {
 
     const sectionPicker = screen.getByLabelText('Manager section navigation')
     expect(screen.getByRole('option', { name: 'Company Configuration' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Mailer Settings' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Ticket Filters' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Users' })).toBeInTheDocument()
     expect(sectionPicker).toHaveValue('/manage/users')

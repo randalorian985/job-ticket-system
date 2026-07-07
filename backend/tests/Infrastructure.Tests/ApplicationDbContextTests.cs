@@ -24,6 +24,7 @@ public sealed class ApplicationDbContextTests
         Assert.Contains(typeof(PartCategory), entityTypes);
         Assert.Contains(typeof(Part), entityTypes);
         Assert.Contains(typeof(TicketStatusFilterOption), entityTypes);
+        Assert.Contains(typeof(MailerConfiguration), entityTypes);
         Assert.Contains(typeof(JobTicket), entityTypes);
         Assert.Contains(typeof(JobTicketEmployee), entityTypes);
         Assert.Contains(typeof(TimeEntry), entityTypes);
@@ -136,6 +137,7 @@ public sealed class ApplicationDbContextTests
         var script = context.GetService<IMigrator>().GenerateScript();
 
         Assert.Contains("TicketStatusFilterOptions", script);
+        Assert.Contains("MailerConfigurations", script);
         Assert.Contains("Waiting on Customer", script);
     }
 

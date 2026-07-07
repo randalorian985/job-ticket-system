@@ -6,7 +6,6 @@ using JobTicketSystem.Domain.Enums;
 using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace JobTicketSystem.Application.Notifications;
 
@@ -17,15 +16,15 @@ public interface INewTicketNotificationService
 
 public sealed class NewTicketNotificationService(
     ApplicationDbContext dbContext,
-    IOptions<SmtpEmailSettings> smtpOptions,
+    IMailerConfigurationService mailerConfigurationService,
     ILogger<NewTicketNotificationService> logger) : INewTicketNotificationService
 {
     public async Task NotifyAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
     {
         try
         {
-            var settings = smtpOptions.Value;
-            if (!settings.Enabled || string.IsNullOrWhiteSpace(settings.Host))
+            var settings = await mailerConfigurationService.GetResolvedSettingsAsync(cancellationToken);
+            if (!settings.Enabled || !settings.IsConfigured)
             {
                 return;
             }
@@ -78,18 +77,8 @@ public sealed class NewTicketNotificationService(
                     var subject = BuildSubject(ticket);
                     var body = BuildBody(ticket, settings);
 
-                    using var message = new MailMessage(settings.FromAddress ?? recipientEmail, recipientEmail, subject, body)
-                    {
-                        IsBodyHtml = false
-                    };
-
-                    using var client = new SmtpClient(settings.Host, settings.Port)
-                    {
-                        EnableSsl = settings.EnableSsl,
-                        Credentials = string.IsNullOrWhiteSpace(settings.Username)
-                            ? CredentialCache.DefaultNetworkCredentials
-                            : new NetworkCredential(settings.Username, settings.Password)
-                    };
+                    using var message = MailerConfigurationService.CreateMessage(settings, recipientEmail, subject, body);
+                    using var client = CreateSmtpClient(settings);
 
                     await client.SendMailAsync(message, cancellationToken);
                     notifiedEmails.Add(recipientEmail);
@@ -138,7 +127,7 @@ public sealed class NewTicketNotificationService(
         return $"[{priority}] New Ticket: {ticket.Title} — {ticket.Customer?.Name ?? "Unknown"} / {location}";
     }
 
-    private static string BuildBody(JobTicket ticket, SmtpEmailSettings settings)
+    private static string BuildBody(JobTicket ticket, ResolvedMailerSettings settings)
     {
         var builder = new StringBuilder();
         builder.AppendLine($"A new service ticket has been submitted.");
@@ -181,6 +170,17 @@ public sealed class NewTicketNotificationService(
         }
 
         return builder.ToString();
+    }
+
+    private static SmtpClient CreateSmtpClient(ResolvedMailerSettings settings)
+    {
+        return new SmtpClient(settings.Host, settings.Port)
+        {
+            EnableSsl = settings.EnableSsl,
+            Credentials = string.IsNullOrWhiteSpace(settings.Username)
+                ? CredentialCache.DefaultNetworkCredentials
+                : new NetworkCredential(settings.Username, settings.Password)
+        };
     }
 
     private static string? NormalizeEmail(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
