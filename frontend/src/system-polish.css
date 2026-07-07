@@ -425,17 +425,18 @@ td button {
 }
 
 .report-hub {
-  gap: 1.1rem;
+  gap: 0.95rem;
 }
 
 .report-hub-hero {
-  background: #ffffff;
-  border: 1px solid #d9e1ec;
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(23, 32, 51, 0.04);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #d9e1ec;
+  border-radius: 0;
+  box-shadow: none;
   display: grid;
-  gap: 0.85rem;
-  padding: 1rem;
+  gap: 0.7rem;
+  padding: 0.2rem 0 0.85rem;
 }
 
 .report-hero-layout,
@@ -467,19 +468,20 @@ td button {
 }
 
 .report-hero-metrics {
-  display: grid;
-  gap: 0.65rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
 }
 
 .report-hero-metrics > div {
-  background: #f7f9fc;
-  border: 1px solid #dfe7f1;
-  border-radius: 7px;
-  display: grid;
-  gap: 0.2rem;
+  align-items: baseline;
+  background: #ffffff;
+  border: 1px solid #d9e1ec;
+  border-radius: 999px;
+  display: flex;
+  gap: 0.4rem;
   min-width: 0;
-  padding: 0.65rem 0.75rem;
+  padding: 0.32rem 0.55rem;
 }
 
 .report-hero-metrics span,
@@ -492,19 +494,19 @@ td button {
 
 .report-hero-metrics strong {
   color: var(--text-strong);
-  font-size: 1rem;
+  font-size: 0.82rem;
 }
 
 .report-note-panel {
   align-items: center;
-  background: #f4fbf8;
-  border: 1px solid #cfeadd;
+  background: #f7fbf9;
+  border: 1px solid #d8eee3;
   border-left: 3px solid var(--success);
-  border-radius: 7px;
+  border-radius: 6px;
   color: var(--text-strong);
   display: flex;
   gap: 0.65rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0.45rem 0.65rem;
 }
 
 .report-note-panel strong {
@@ -517,18 +519,18 @@ td button {
 
 .report-note-panel span {
   color: var(--text-muted);
-  font-size: 0.84rem;
+  font-size: 0.8rem;
 }
 
 .report-catalog {
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .report-section-panel {
   background: transparent;
   border: 0;
   border-radius: 0;
-  gap: 0.8rem;
+  gap: 0.65rem;
   padding: 0;
 }
 
@@ -567,54 +569,56 @@ td button {
 .report-action-grid {
   align-items: start;
   display: grid;
-  gap: 0.85rem;
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 0.45rem;
+  grid-template-columns: 1fr;
 }
 
 .report-run-card {
   align-self: start;
   background: #ffffff;
   border: 1px solid #d4deeb;
+  border-left: 3px solid transparent;
   border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(23, 32, 51, 0.04);
+  box-shadow: none;
   display: grid;
-  gap: 0.7rem;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto auto;
-  padding: 0.75rem;
+  gap: 0.85rem;
+  grid-template-columns: minmax(12rem, 1.05fr) minmax(17rem, 1.45fr) auto;
+  grid-template-rows: auto;
+  padding: 0.65rem 0.75rem;
   transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
 .report-run-card:hover {
   border-color: #aebbd1;
-  box-shadow: 0 6px 16px rgba(23, 32, 51, 0.07);
+  border-left-color: var(--brand);
+  box-shadow: 0 3px 10px rgba(23, 32, 51, 0.06);
 }
 
 .report-card-top {
   align-items: start;
-  border-bottom: 1px solid #e5eaf1;
+  border-bottom: 0;
   display: grid;
-  gap: 0.65rem;
-  grid-template-columns: minmax(0, 1fr) auto;
-  margin-bottom: 0.05rem;
+  gap: 0.35rem;
+  grid-template-columns: 1fr;
+  margin-bottom: 0;
   min-width: 0;
-  padding-bottom: 0.65rem;
+  padding-bottom: 0;
 }
 
 .report-card-heading {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.18rem;
   min-width: 0;
 }
 
 .report-card-top h4 {
-  font-size: 1rem;
+  font-size: 0.94rem;
   margin: 0;
 }
 
 .report-card-heading p {
-  font-size: 0.82rem;
-  line-height: 1.38;
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 
 .report-card-top span {
@@ -623,7 +627,7 @@ td button {
   border-radius: 999px;
   color: #41516a;
   justify-self: start;
-  padding: 0.24rem 0.48rem;
+  padding: 0.2rem 0.42rem;
   white-space: nowrap;
 }
 
@@ -635,7 +639,7 @@ td button {
 .report-card-body {
   align-content: start;
   display: grid;
-  gap: 0.55rem;
+  gap: 0.45rem;
   min-width: 0;
 }
 
@@ -649,7 +653,7 @@ td button {
   background: #f8fafc;
   border: 1px solid #e0e7f0;
   border-radius: 7px;
-  padding: 0.55rem 0.65rem;
+  padding: 0.48rem 0.58rem;
 }
 
 .report-filter-details summary {
@@ -695,12 +699,12 @@ td button {
 }
 
 .report-card-controls {
-  background: #f8fafc;
-  border: 1px solid #e0e7f0;
-  border-radius: 7px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   display: grid;
-  gap: 0.55rem;
-  padding: 0.55rem 0.65rem;
+  gap: 0.35rem;
+  padding: 0;
 }
 
 .report-card-controls small {
@@ -709,18 +713,18 @@ td button {
 
 .report-card-footer {
   align-items: center;
-  border-top: 1px solid #eef2f7;
+  border-top: 0;
   display: flex;
   justify-content: flex-end;
-  margin-top: 0.1rem;
-  padding-top: 0.65rem;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .report-card-footer button {
   min-height: 2.25rem;
-  min-width: 0;
-  padding: 0.5rem 0.7rem;
-  width: 100%;
+  min-width: 9.5rem;
+  padding: 0.45rem 0.75rem;
+  width: auto;
 }
 
 .report-run-card .report-card-controls,
@@ -1546,10 +1550,6 @@ tbody tr:hover td {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .report-hero-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
 }
 
 @media (max-width: 720px) {
@@ -1602,7 +1602,14 @@ tbody tr:hover td {
   }
 
   .report-hero-metrics {
-    grid-template-columns: 1fr;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .report-hero-metrics > div {
+    border-radius: 7px;
+    justify-content: space-between;
+    width: 100%;
   }
 
   .report-report-metrics {
@@ -1616,6 +1623,14 @@ tbody tr:hover td {
 
   .report-run-card {
     grid-template-columns: 1fr;
+  }
+
+  .report-card-footer {
+    justify-content: stretch;
+  }
+
+  .report-card-footer button {
+    width: 100%;
   }
 
   .report-card-inputs {

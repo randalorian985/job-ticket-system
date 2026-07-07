@@ -663,7 +663,7 @@ export function ReportsPage() {
                   generatedAt ? `Generated ${generatedAt}` : null,
                   `${rows.length} row${rows.length === 1 ? '' : 's'}`,
                   filterSummary || null
-                ].filter(Boolean).join(' · ')}
+                ].filter(Boolean).join(' | ')}
               </p>
             </div>
             <div className="report-print-full-header no-screen" aria-hidden="true">
@@ -689,7 +689,7 @@ export function ReportsPage() {
         ) : null}
         {mode && hasRows ? (
           <div className="report-print-page-footer no-screen" aria-hidden="true">
-            <span>{reportBrandName} · {title}</span>
+            <span>{reportBrandName} | {title}</span>
           </div>
         ) : null}
         {activeScreen === 'results' ? <Errorable error={error} /> : null}
