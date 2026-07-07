@@ -1487,12 +1487,16 @@ pre {
 }
 
 button.queue-kpi-chip {
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.queue-kpi-chip {
   align-items: center;
   background: #f8fafc;
   border: 1px solid #dbe4ef;
   border-radius: 999px;
   color: #334155;
-  cursor: pointer;
   display: inline-flex;
   font-size: 0.82rem;
   font-weight: 700;
@@ -1500,11 +1504,10 @@ button.queue-kpi-chip {
   min-height: 2rem;
   padding: 0.28rem 0.65rem;
   text-align: left;
-  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
   width: auto;
 }
 
-button.queue-kpi-chip strong {
+.queue-kpi-chip strong {
   color: #0b1220;
   font-size: 0.88rem;
   font-weight: 900;
