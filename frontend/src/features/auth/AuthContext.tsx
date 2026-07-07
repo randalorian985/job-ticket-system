@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthMeDto | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { notify } = useNotification()
+  const { notify, clearNotifications } = useNotification()
 
   // Register a 401 handler so mid-session token expiry shows a clear message
   useEffect(() => {
@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const me = await authApi.me()
       setUser(me)
+      clearNotifications()
     } catch (error) {
       authStorage.clearToken()
       if (error instanceof ApiError) {

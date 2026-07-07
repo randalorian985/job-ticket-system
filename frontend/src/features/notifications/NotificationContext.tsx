@@ -12,6 +12,7 @@ type NotificationContextValue = {
   notifications: Notification[]
   notify: (message: string, type?: NotificationType) => void
   dismiss: (id: string) => void
+  clearNotifications: () => void
 }
 
 const NotificationContext = createContext<NotificationContextValue | undefined>(undefined)
@@ -24,6 +25,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     clearTimeout(timerRefs.current[id])
     delete timerRefs.current[id]
     setNotifications((prev) => prev.filter((n) => n.id !== id))
+  }, [])
+
+  const clearNotifications = useCallback(() => {
+    Object.values(timerRefs.current).forEach(clearTimeout)
+    timerRefs.current = {}
+    setNotifications([])
   }, [])
 
   const notify = useCallback(
@@ -41,7 +48,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   )
 
   return (
-    <NotificationContext.Provider value={{ notifications, notify, dismiss }}>
+    <NotificationContext.Provider value={{ notifications, notify, dismiss, clearNotifications }}>
       {children}
     </NotificationContext.Provider>
   )
