@@ -2716,7 +2716,27 @@ td {
   gap: 0.45rem;
 }
 
+.parts-history-button-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.parts-history-button-row button {
+  min-width: 8.5rem;
+}
+
 .parts-history-filter-actions p {
+  margin: 0;
+}
+
+.parts-history-empty {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.parts-history-empty p {
   margin: 0;
 }
 

@@ -26,7 +26,7 @@ beforeEach(() => {
 })
 
 describe('PartsUsageHistoryPage', () => {
-  it('renders cautious parts usage history evidence without recommendation language', async () => {
+  it('waits for filters before rendering cautious parts usage history evidence', async () => {
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
     vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Crane A', isArchived: false }] as any)
     vi.mocked(masterDataApi.listParts).mockResolvedValue([{ id: 'p1', partNumber: 'SEAL-1', name: 'Seal Kit', isArchived: false }] as any)
@@ -54,7 +54,20 @@ describe('PartsUsageHistoryPage', () => {
 
     renderWithRouter(<PartsUsageHistoryPage />)
 
-    expect((await screen.findAllByText('SEAL-1 · Seal Kit')).length).toBeGreaterThan(0)
+    expect(await screen.findByText('Set filters to review usage history.')).toBeInTheDocument()
+    expect(partsUsageHistoryApi.list).not.toHaveBeenCalled()
+    expect(screen.queryByText('previously used on this equipment')).not.toBeInTheDocument()
+
+    const filters = screen.getByRole('form', { name: 'parts usage history filters' })
+    const equipmentSelect = within(filters).getByRole('combobox', { name: 'Equipment' })
+    const partSelect = within(filters).getByRole('combobox', { name: 'Part' })
+    const user = userEvent.setup()
+
+    await user.selectOptions(equipmentSelect, 'eq1')
+    await user.selectOptions(partSelect, 'p1')
+    fireEvent.submit(filters)
+
+    expect(await screen.findByText('SEAL-1 - Seal Kit')).toBeInTheDocument()
     expect(screen.getByText('previously used on this equipment')).toBeInTheDocument()
     expect(screen.getByText('technician-confirmed')).toBeInTheDocument()
     expect(screen.getByText(/not compatibility guarantees or automatic recommendations/i)).toBeInTheDocument()
@@ -70,7 +83,7 @@ describe('PartsUsageHistoryPage', () => {
 
     renderWithRouter(<PartsUsageHistoryPage />)
 
-    await screen.findByText('No parts usage history matches the current filters.')
+    await screen.findByText('Set filters to review usage history.')
     const filters = screen.getByRole('form', { name: 'parts usage history filters' })
     const equipmentSelect = within(filters).getByRole('combobox', { name: 'Equipment' })
     const partSelect = within(filters).getByRole('combobox', { name: 'Part' })
@@ -85,5 +98,21 @@ describe('PartsUsageHistoryPage', () => {
     fireEvent.submit(filters)
 
     await waitFor(() => expect(partsUsageHistoryApi.list).toHaveBeenLastCalledWith({ equipmentId: 'eq1', partId: 'p1', limit: 50 }))
+  })
+
+  it('does not request history when no filters are selected', async () => {
+    vi.mocked(masterDataApi.listCustomers).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([] as any)
+    vi.mocked(masterDataApi.listParts).mockResolvedValue([] as any)
+    vi.mocked(partsUsageHistoryApi.list).mockResolvedValue([] as any)
+
+    renderWithRouter(<PartsUsageHistoryPage />)
+
+    await screen.findByText('Set filters to review usage history.')
+    fireEvent.submit(screen.getByRole('form', { name: 'parts usage history filters' }))
+
+    expect(screen.getByText('Choose at least one filter before reviewing parts usage history.')).toBeInTheDocument()
+    expect(partsUsageHistoryApi.list).not.toHaveBeenCalled()
+    expect(screen.queryByText('No parts usage history matches the current filters.')).not.toBeInTheDocument()
   })
 })
