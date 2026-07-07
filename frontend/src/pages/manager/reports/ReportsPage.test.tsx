@@ -177,6 +177,34 @@ describe('ReportsPage', () => {
     expect(screen.queryByRole('heading', { name: 'Report Filters' })).not.toBeInTheDocument()
   })
 
+  it('opens optional filters only on the selected report card', () => {
+    renderWithRouter(<ReportsPage />)
+
+    const cardsWithFilters = [
+      'Jobs Ready to Invoice',
+      'Labor by Job',
+      'Labor by Employee',
+      'Parts by Job',
+      'Customer Service History'
+    ].map((reportTitle) => {
+      const card = screen.getByLabelText(`${reportTitle} report`)
+      const details = within(card).getByText('Show optional filters').closest('details')
+      expect(details).toBeInTheDocument()
+      expect(details).not.toHaveAttribute('open')
+      return { reportTitle, details }
+    })
+
+    fireEvent.click(within(screen.getByLabelText('Labor by Job report')).getByText('Show optional filters'))
+
+    for (const { reportTitle, details } of cardsWithFilters) {
+      if (reportTitle === 'Labor by Job') {
+        expect(details).toHaveAttribute('open')
+      } else {
+        expect(details).not.toHaveAttribute('open')
+      }
+    }
+  })
+
   it('applies supported filters, renders scan-friendly rows, and exports loaded raw CSV values', async () => {
     vi.mocked(reportsApi.getLaborByJob).mockResolvedValue([
       {
