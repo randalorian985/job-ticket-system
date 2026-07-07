@@ -12,7 +12,7 @@ if (-not $scriptPath) {
 $repoRoot = Split-Path -Parent $scriptPath
 Set-Location $repoRoot
 
-$vpsHost = "hal-vps"
+$vpsHost = "mudbug-dev"
 $vpsRepo = "/opt/job-ticket-system"
 
 function Write-Step {
