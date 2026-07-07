@@ -112,6 +112,34 @@ export const reportFilterFields: Record<ReportMode, FilterField[]> = {
   customerHistory: ['equipment', 'dateRange', 'jobStatus']
 }
 
+export const reportRequiresJobTicketSource = (mode: ReportMode) =>
+  mode === 'invoiceReady' || mode === 'jobCost'
+
+export const reportRequiresCustomerSource = (mode: ReportMode) =>
+  mode === 'customerHistory'
+
+export const reportCatalogSummary = {
+  totalReports: reportSections.reduce((count, section) => count + section.modes.length, 0),
+  filterableReports: reportSections.reduce(
+    (count, section) => count + section.modes.filter((mode) => reportFilterFields[mode].length > 0).length,
+    0
+  ),
+  sourceScopedReports: reportSections.reduce(
+    (count, section) => count + section.modes.filter((mode) => reportRequiresJobTicketSource(mode) || reportRequiresCustomerSource(mode)).length,
+    0
+  )
+}
+
+export const reportInputBadgeLabels: Record<ReportMode, string> = {
+  invoiceReady: 'Select ticket',
+  jobCost: 'Select ticket',
+  jobsReady: 'Optional filters',
+  laborJob: 'Optional filters',
+  laborEmployee: 'Optional filters',
+  partsJob: 'Optional filters',
+  customerHistory: 'Select customer'
+}
+
 export const reportBrandName = 'Job Ticket System'
 
 // ── Saved defaults (localStorage) ────────────────────────────────────────────

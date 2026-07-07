@@ -20,31 +20,23 @@ import {
   type ReportMode,
   type ReportRow,
   type ReportColumn,
-  type FilterField,
   type ReportSourceSelections,
   type ReportFiltersByMode,
-  type ReportSavedDefaults,
-  type ReportFilterLabels,
   defaultFilters,
   reportTitleMap,
   reportDescriptions,
   reportSections,
   reportFilterFields,
+  reportCatalogSummary,
+  reportInputBadgeLabels,
   reportBrandName,
-  isReportMode,
+  reportRequiresJobTicketSource,
+  reportRequiresCustomerSource,
   readSavedReportDefaults,
   writeSavedReportDefaults,
   clearSavedReportDefaults,
-  money,
-  quantity,
-  hours,
-  dateForExport,
-  dateUtc,
-  getJobStatusLabel,
-  getInvoiceStatusLabel,
   columnsByMode,
   userMessageForReportError,
-  reportUsesField,
   filtersForMode,
   buildFilterSummary,
   csvFileName,
@@ -53,6 +45,32 @@ import {
   generatedDateStamp,
   reportCsvWithMetadata
 } from './reportDefinitions'
+
+const loadReportRows = async (
+  reportMode: ReportMode,
+  selectedSourceId: string,
+  scopedFilters: ReportQueryFilters
+): Promise<ReportRow[]> => {
+  switch (reportMode) {
+    case 'invoiceReady':
+      return [await reportsApi.getInvoiceReadySummary(selectedSourceId)]
+    case 'jobsReady':
+      return (await reportsApi.getJobsReadyToInvoice(scopedFilters)) as ReportRow[]
+    case 'laborJob':
+      return (await reportsApi.getLaborByJob(scopedFilters)) as ReportRow[]
+    case 'laborEmployee':
+      return (await reportsApi.getLaborByEmployee(scopedFilters)) as ReportRow[]
+    case 'partsJob':
+      return (await reportsApi.getPartsByJob(scopedFilters)) as ReportRow[]
+    case 'jobCost':
+      return [await reportsApi.getCostSummary(selectedSourceId)]
+    case 'customerHistory':
+      return scopedFilters.equipmentId
+        ? (await reportsApi.getEquipmentHistory(scopedFilters.equipmentId, scopedFilters)) as ReportRow[]
+        : (await reportsApi.getCustomerHistory(selectedSourceId, scopedFilters)) as ReportRow[]
+  }
+}
+
 export function ReportsPage() {
   const {
     configuration: companyConfiguration,
@@ -78,15 +96,6 @@ export function ReportsPage() {
   const [reportMessage, setReportMessage] = useState<string | null>(null)
   const [generatedAt, setGeneratedAt] = useState<string | null>(null)
   const [generatedFileDate, setGeneratedFileDate] = useState<string | null>(null)
-  const totalReportCount = reportSections.reduce((count, section) => count + section.modes.length, 0)
-  const filterableReportCount = reportSections.reduce(
-    (count, section) => count + section.modes.filter((reportMode) => reportFilterFields[reportMode].length > 0).length,
-    0
-  )
-  const sourceScopedReportCount = reportSections.reduce(
-    (count, section) => count + section.modes.filter((reportMode) => reportMode === 'invoiceReady' || reportMode === 'jobCost' || reportMode === 'customerHistory').length,
-    0
-  )
 
   useEffect(() => {
     let isMounted = true
@@ -194,12 +203,12 @@ export function ReportsPage() {
   const apply = async (nextMode: ReportMode) => {
     const selectedSourceId = sourceSelections[nextMode]?.trim() ?? ''
 
-    if ((nextMode === 'invoiceReady' || nextMode === 'jobCost') && !selectedSourceId) {
+    if (reportRequiresJobTicketSource(nextMode) && !selectedSourceId) {
       requireSourceId(`Select a job ticket before running ${reportTitleMap[nextMode]}.`)
       return
     }
 
-    if (nextMode === 'customerHistory' && !selectedSourceId) {
+    if (reportRequiresCustomerSource(nextMode) && !selectedSourceId) {
       requireSourceId('Select a customer before running Customer Service History.')
       return
     }
@@ -227,24 +236,9 @@ export function ReportsPage() {
       setGeneratedFileDate(null)
 
       const scopedFilters = filtersForMode(nextMode, filtersByMode[nextMode] ?? defaultFilters)
-      const data =
-        nextMode === 'invoiceReady'
-          ? [await reportsApi.getInvoiceReadySummary(selectedSourceId)]
-          : nextMode === 'jobsReady'
-            ? await reportsApi.getJobsReadyToInvoice(scopedFilters)
-            : nextMode === 'laborJob'
-              ? await reportsApi.getLaborByJob(scopedFilters)
-              : nextMode === 'laborEmployee'
-                ? await reportsApi.getLaborByEmployee(scopedFilters)
-                : nextMode === 'partsJob'
-                  ? await reportsApi.getPartsByJob(scopedFilters)
-                  : nextMode === 'jobCost'
-                    ? [await reportsApi.getCostSummary(selectedSourceId)]
-                    : scopedFilters.equipmentId
-                      ? await reportsApi.getEquipmentHistory(scopedFilters.equipmentId, scopedFilters)
-                      : await reportsApi.getCustomerHistory(selectedSourceId, scopedFilters)
+      const data = await loadReportRows(nextMode, selectedSourceId, scopedFilters)
 
-      setRows(data as ReportRow[])
+      setRows(data)
       setReportMessage(`${reportTitleMap[nextMode]} loaded with ${data.length} visible row${data.length === 1 ? '' : 's'}.`)
       setGeneratedAt(generatedAtLabel())
       setGeneratedFileDate(generatedDateStamp())
@@ -264,9 +258,9 @@ export function ReportsPage() {
   const hasRows = rows.length > 0
   const activeSourceId = mode ? sourceSelections[mode] : undefined
   const activeEquipmentId = mode === 'customerHistory' ? filtersByMode.customerHistory?.equipmentId : undefined
-  const sourceLabel = mode === 'invoiceReady' || mode === 'jobCost'
+  const sourceLabel = mode && reportRequiresJobTicketSource(mode)
     ? jobTicketLabelById.get(activeSourceId ?? '')
-    : mode === 'customerHistory'
+    : mode && reportRequiresCustomerSource(mode)
       ? [customerLabelById.get(activeSourceId ?? ''), activeEquipmentId ? equipmentLabelById.get(activeEquipmentId) : null].filter(Boolean).join(' — ') || undefined
       : undefined
   const filterSummary = useMemo(
@@ -339,7 +333,7 @@ export function ReportsPage() {
     const titleForMode = reportTitleMap[reportMode]
     const selectedSourceId = sourceSelections[reportMode] ?? ''
 
-    if (reportMode === 'invoiceReady' || reportMode === 'jobCost') {
+    if (reportRequiresJobTicketSource(reportMode)) {
       return (
         <div className="report-card-controls">
           <label>
@@ -361,7 +355,7 @@ export function ReportsPage() {
       )
     }
 
-    if (reportMode === 'customerHistory') {
+    if (reportRequiresCustomerSource(reportMode)) {
       const customerEquipment = activeEquipment.filter((item) => item.customerId === selectedSourceId)
       const selectedEquipmentId = filtersByMode.customerHistory?.equipmentId ?? ''
       return (
@@ -588,15 +582,15 @@ export function ReportsPage() {
         <div className="report-hero-metrics" aria-label="report catalog summary">
           <div>
             <span>Catalog</span>
-            <strong>{totalReportCount} reports</strong>
+            <strong>{reportCatalogSummary.totalReports} reports</strong>
           </div>
           <div>
             <span>Filters</span>
-            <strong>{filterableReportCount} optional sets</strong>
+            <strong>{reportCatalogSummary.filterableReports} optional sets</strong>
           </div>
           <div>
             <span>Sources</span>
-            <strong>{sourceScopedReportCount} scoped reports</strong>
+            <strong>{reportCatalogSummary.sourceScopedReports} scoped reports</strong>
           </div>
         </div>
         <div className="report-note-panel">
@@ -772,11 +766,7 @@ export function ReportsPage() {
                       <h4>{reportTitleMap[reportMode]}</h4>
                       <p className="muted">{reportDescriptions[reportMode]}</p>
                     </div>
-                    <span>
-                      {reportMode === 'invoiceReady' || reportMode === 'jobCost' ? 'Select ticket' :
-                       reportMode === 'customerHistory' ? 'Select customer' :
-                       reportFilterFields[reportMode].length ? 'Optional filters' : 'No filters'}
-                    </span>
+                    <span>{reportInputBadgeLabels[reportMode]}</span>
                   </div>
                   <div className="report-card-body">
                     <div className="report-card-inputs">
