@@ -1011,11 +1011,13 @@ Reports support shared filters where applicable:
 
 The frontend validates required source selections, date ranges, and paging values before calling report APIs.
 
+Invoice-ready review uses a dedicated packet view. From **Jobs Ready to Invoice**, select the job ticket number to open the packet. From **Invoice-ready Summary**, choose a job ticket and use **View Invoice-ready Packet**. The packet includes job, customer, billing party, service location, equipment, PO/contact fields, work notes, approved labor, approved parts, totals, and **Print** / **Download PDF** actions. Use **Open ticket** from the packet only when you need to edit or investigate the underlying job ticket.
+
 Report inputs are saved per report on the user's browser. For example, changing the selected job ticket on Invoice-ready Summary does not change the selected job ticket on Job Cost Summary. Use **Reset report inputs** to clear saved report defaults and return filters to their standard values.
 
 ### Running A Report
 
-Each report card in the catalog shows the report name, a plain-language description of what it returns, and either a source selector or optional filter controls. Click **Run** on a report card to load results.
+Each report card in the catalog shows the report name, a plain-language description of what it returns, and either a source selector or optional filter controls. Click the card action to load results or open the invoice-ready packet for a selected ticket.
 
 Once a report loads, the results screen shows:
 - the report toolbar at the top with action buttons;

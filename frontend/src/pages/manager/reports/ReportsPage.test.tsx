@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { Route, Routes } from 'react-router-dom'
 import { ApiError } from '../../../api/httpClient'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { masterDataApi } from '../../../api/masterDataApi'
@@ -75,6 +76,13 @@ const readCsvFromExportLink = () => {
 const reportDefaultsStorageKey = 'job-ticket-system:manager-reports:defaults:v1'
 
 const renderBillingReports = () => renderWithRouter(<ReportsPage />)
+const renderBillingReportsWithPacketRoute = () => renderWithRouter(
+  <Routes>
+    <Route path="/manage/reports" element={<ReportsPage />} />
+    <Route path="/manage/reports/invoice-ready/:jobTicketId" element={<p>Invoice-ready packet route</p>} />
+  </Routes>,
+  { initialEntries: ['/manage/reports'] }
+)
 const renderLaborReports = () => renderWithRouter(<LaborReportsPage />)
 const renderPartsServiceReports = () => renderWithRouter(<PartsServiceReportsPage />)
 
@@ -389,9 +397,9 @@ describe('ReportsPage', () => {
   it('validates required source IDs before calling single-record report APIs', () => {
     renderBillingReports()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Run Invoice-ready Summary' }))
+    fireEvent.click(screen.getByRole('button', { name: 'View Invoice-ready Packet' }))
 
-    expect(screen.getByText('Select a job ticket before running Invoice-ready Summary.')).toBeInTheDocument()
+    expect(screen.getByText('Select a job ticket before viewing the invoice-ready packet.')).toBeInTheDocument()
     expect(reportsApi.getInvoiceReadySummary).not.toHaveBeenCalled()
     expect(screen.queryByRole('link', { name: 'Export CSV' })).not.toBeInTheDocument()
   })
@@ -520,7 +528,7 @@ describe('ReportsPage', () => {
     expect(screen.queryByRole('link', { name: 'Export CSV' })).not.toBeInTheDocument()
   })
 
-  it('keeps invoice-ready reporting aligned with the implemented API response and export columns', async () => {
+  it('opens the invoice-ready packet route for the selected job ticket', async () => {
     vi.mocked(reportsApi.getInvoiceReadySummary).mockResolvedValue({
       jobTicketId: 'job-invoice-1',
       jobTicketNumber: 'JT-READY',
@@ -548,21 +556,14 @@ describe('ReportsPage', () => {
       billingContactEmail: null
     } as any)
 
-    renderBillingReports()
+    renderBillingReportsWithPacketRoute()
 
     const invoiceCard = screen.getByLabelText('Invoice-ready Summary report')
     expect(await within(invoiceCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
     fireEvent.change(within(invoiceCard).getByLabelText('Invoice-ready Summary job ticket'), { target: { value: 'job-invoice-1' } })
-    fireEvent.click(within(invoiceCard).getByRole('button', { name: 'Run Invoice-ready Summary' }))
+    fireEvent.click(within(invoiceCard).getByRole('button', { name: 'View Invoice-ready Packet' }))
 
-    expect(await screen.findByRole('table', { name: 'Invoice-ready Summary results' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'JT-READY' })).toHaveAttribute('href', '/manage/job-tickets/job-invoice-1')
-    expect(screen.getByRole('columnheader', { name: 'Labor Billable' })).toBeInTheDocument()
-    expect(screen.getByText('$372.00')).toBeInTheDocument()
-    expect(reportsApi.getInvoiceReadySummary).toHaveBeenCalledWith('job-invoice-1')
-
-    const csv = readCsvFromExportLink()
-    expect(csv).toContain('Invoice Status')
-    expect(csv).toContain('JT-READY,Gamma Service,Gamma AP,Plant 4,Compressor,Completed,Ready,3,285,75,12,372')
+    expect(await screen.findByText('Invoice-ready packet route')).toBeInTheDocument()
+    expect(reportsApi.getInvoiceReadySummary).not.toHaveBeenCalled()
   })
 })

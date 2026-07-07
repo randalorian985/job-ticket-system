@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { Route, Routes } from 'react-router-dom'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
@@ -737,6 +738,13 @@ describe('PartsPage', () => {
 
 describe('ReportsPage', () => {
   const renderReports = () => renderWithRouter(<ReportsPage />)
+  const renderReportsWithPacketRoute = () => renderWithRouter(
+    <Routes>
+      <Route path="/manage/reports" element={<ReportsPage />} />
+      <Route path="/manage/reports/invoice-ready/:jobTicketId" element={<p>Invoice-ready packet route</p>} />
+    </Routes>,
+    { initialEntries: ['/manage/reports'] }
+  )
   const renderLaborReports = () => renderWithRouter(<LaborReportsPage />)
   const renderPartsServiceReports = () => renderWithRouter(<PartsServiceReportsPage />)
 
@@ -792,7 +800,7 @@ describe('ReportsPage', () => {
     fireEvent.change(within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice invoice status filter'), { target: { value: '2' } })
     fireEvent.click(within(jobsReadyCard).getByRole('button', { name: 'Run Jobs Ready to Invoice' }))
 
-    expect(await screen.findByRole('link', { name: 'JT-100' })).toHaveAttribute('href', '/manage/job-tickets/j1')
+    expect(await screen.findByRole('link', { name: 'JT-100' })).toHaveAttribute('href', '/manage/reports/invoice-ready/j1')
     expect(screen.getAllByText('Ready').length).toBeGreaterThan(0)
     expect(screen.getByText('$120.50')).toBeInTheDocument()
     expect(reportsApi.getJobsReadyToInvoice).toHaveBeenCalledWith(expect.objectContaining({
@@ -849,18 +857,17 @@ describe('ReportsPage', () => {
     expect(reportsApi.getPartsByJob).toHaveBeenCalledWith({ jobTicketId: 'j2' })
   })
 
-  it('runs invoice-ready summary by job ticket id', async () => {
+  it('opens invoice-ready summary as a packet by job ticket id', async () => {
     vi.mocked(reportsApi.getInvoiceReadySummary).mockResolvedValue({ jobTicketId: 'j2', jobTicketNumber: 'JT-200', customer: 'Gamma', billingPartyCustomer: 'Gamma AP', serviceLocation: 'Plant', equipment: 'Pump', jobStatus: 7, invoiceStatus: 1, workDescriptions: [], approvedLaborEntries: [], approvedParts: [], laborHours: 1, laborCostTotal: 40, laborBillableTotal: 95, partsCostTotal: 10, partsBillableTotal: 20, miscCharges: 0, tax: 2, grandTotal: 117 } as any)
-    renderReports()
+    renderReportsWithPacketRoute()
 
     const invoiceCard = screen.getByLabelText('Invoice-ready Summary report')
     expect(await within(invoiceCard).findByRole('option', { name: 'JT-200 - Gamma invoice summary' })).toBeInTheDocument()
     fireEvent.change(within(invoiceCard).getByLabelText('Invoice-ready Summary job ticket'), { target: { value: 'j2' } })
-    fireEvent.click(within(invoiceCard).getByRole('button', { name: 'Run Invoice-ready Summary' }))
+    fireEvent.click(within(invoiceCard).getByRole('button', { name: 'View Invoice-ready Packet' }))
 
-    expect(await screen.findByRole('link', { name: 'JT-200' })).toBeInTheDocument()
-    expect(reportsApi.getInvoiceReadySummary).toHaveBeenCalledWith('j2')
-    expect(screen.getByText('$117.00')).toBeInTheDocument()
+    expect(await screen.findByText('Invoice-ready packet route')).toBeInTheDocument()
+    expect(reportsApi.getInvoiceReadySummary).not.toHaveBeenCalled()
   })
 
   it('surfaces user-friendly report failures', async () => {

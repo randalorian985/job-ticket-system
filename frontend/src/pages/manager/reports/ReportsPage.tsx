@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { jobTicketsApi } from '../../../api/jobTicketsApi'
 import { masterDataApi } from '../../../api/masterDataApi'
 import { reportsApi } from '../../../api/reportsApi'
@@ -46,6 +46,9 @@ import {
   generatedDateStamp,
   reportCsvWithMetadata
 } from './reportDefinitions'
+
+const reportActionLabel = (reportMode: ReportMode) =>
+  reportMode === 'invoiceReady' ? 'View Invoice-ready Packet' : `Run ${reportTitleMap[reportMode]}`
 
 const loadReportRows = async (
   reportMode: ReportMode,
@@ -99,6 +102,7 @@ function ReportsPageContent({
     initials: companyInitials,
     addressLines: companyAddressLines
   } = useCompanyBranding()
+  const navigate = useNavigate()
   const savedDefaults = useMemo(readSavedReportDefaults, [])
   const [activeScreen, setActiveScreen] = useState<'catalog' | 'results'>('catalog')
   const [filtersByMode, setFiltersByMode] = useState<ReportFiltersByMode>(savedDefaults.filtersByMode ?? {})
@@ -226,12 +230,19 @@ function ReportsPageContent({
     const selectedSourceId = sourceSelections[nextMode]?.trim() ?? ''
 
     if (reportRequiresJobTicketSource(nextMode) && !selectedSourceId) {
-      requireSourceId(`Select a job ticket before running ${reportTitleMap[nextMode]}.`)
+      requireSourceId(nextMode === 'invoiceReady'
+        ? 'Select a job ticket before viewing the invoice-ready packet.'
+        : `Select a job ticket before running ${reportTitleMap[nextMode]}.`)
       return
     }
 
     if (reportRequiresCustomerSource(nextMode) && !selectedSourceId) {
       requireSourceId('Select a customer before running Customer Service History.')
+      return
+    }
+
+    if (nextMode === 'invoiceReady') {
+      navigate(`/manage/reports/invoice-ready/${selectedSourceId}`)
       return
     }
 
@@ -820,7 +831,7 @@ function ReportsPageContent({
                   </div>
                   <div className="report-card-footer">
                     <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
-                      {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
+                      {loadingMode === reportMode ? 'Loading...' : reportActionLabel(reportMode)}
                     </button>
                   </div>
                 </article>

@@ -1549,6 +1549,199 @@ tbody tr:hover td {
   border-radius: 7px;
 }
 
+.invoice-packet-page {
+  gap: 0.85rem;
+}
+
+.invoice-packet-toolbar {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d9e1ec;
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+}
+
+.invoice-packet {
+  background: #ffffff;
+  border: 1px solid #d9e1ec;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.invoice-packet-header {
+  align-items: start;
+  border-bottom: 1px solid #e5eaf1;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-bottom: 0.85rem;
+}
+
+.invoice-packet-letterhead {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.invoice-packet-letterhead img,
+.invoice-packet-letterhead .product-mark {
+  background: #ffffff;
+  border: 1px solid #d9e1ec;
+  border-radius: 6px;
+  height: 2.75rem;
+  object-fit: contain;
+  width: 2.75rem;
+}
+
+.invoice-packet-letterhead .product-mark {
+  align-items: center;
+  color: var(--brand);
+  display: inline-flex;
+  font-weight: 850;
+  justify-content: center;
+}
+
+.invoice-packet-letterhead div,
+.invoice-packet-title {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.invoice-packet-letterhead span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.invoice-packet-title {
+  text-align: right;
+}
+
+.invoice-packet-status-grid {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.invoice-packet-status-grid > div {
+  background: #f7f9fc;
+  border: 1px solid #e1e7f0;
+  border-radius: 7px;
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.invoice-packet-status-grid span,
+.invoice-packet-section-heading span,
+.invoice-packet-note span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.invoice-packet-status-grid strong {
+  color: var(--text-strong);
+  font-size: 0.92rem;
+}
+
+.invoice-packet-section {
+  border-top: 1px solid #e5eaf1;
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.85rem;
+}
+
+.invoice-packet-section-heading {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.invoice-packet-note {
+  background: #f7f9fc;
+  border: 1px solid #e1e7f0;
+  border-radius: 7px;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem;
+}
+
+.invoice-packet-note-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.invoice-packet-table {
+  min-width: 760px;
+}
+
+.invoice-packet-table caption {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  padding: 0 0 0.4rem;
+  text-align: left;
+}
+
+.invoice-packet-table th {
+  background: #f7f9fc;
+  color: var(--text-strong);
+}
+
+.invoice-packet-totals-section {
+  justify-items: end;
+}
+
+.invoice-packet-totals {
+  border: 1px solid #d9e1ec;
+  border-radius: 8px;
+  display: grid;
+  margin: 0;
+  max-width: 22rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.invoice-packet-totals > div {
+  align-items: center;
+  border-bottom: 1px solid #e5eaf1;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.55rem 0.7rem;
+}
+
+.invoice-packet-totals > div:last-child {
+  border-bottom: 0;
+}
+
+.invoice-packet-totals dt {
+  color: var(--text-muted);
+  font-weight: 750;
+}
+
+.invoice-packet-totals dd {
+  color: var(--text-strong);
+  font-weight: 850;
+  margin: 0;
+}
+
+.invoice-packet-grand-total {
+  background: #edf2ff;
+}
+
 @media (max-width: 1080px) {
   .manager-desktop-nav {
     align-items: stretch;
@@ -1647,6 +1840,20 @@ tbody tr:hover td {
   .report-note-panel {
     align-items: start;
     flex-direction: column;
+  }
+
+  .invoice-packet-toolbar,
+  .invoice-packet-header {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-packet-toolbar {
+    flex-direction: column;
+  }
+
+  .invoice-packet-title {
+    text-align: left;
   }
 
   .report-run-card {
@@ -1884,6 +2091,87 @@ tbody tr:hover td {
   .print-report-surface th {
     background: #0f766e !important;
     color: #ffffff !important;
+  }
+
+  .invoice-packet {
+    border: 0 !important;
+    border-radius: 0 !important;
+    gap: 0.12in !important;
+    padding: 0 !important;
+  }
+
+  .invoice-packet-header {
+    border-bottom: 1px solid #cbd5e1;
+    display: block;
+    padding-bottom: 0.1in;
+  }
+
+  .invoice-packet-letterhead {
+    margin-bottom: 0.08in;
+  }
+
+  .invoice-packet-letterhead img,
+  .invoice-packet-letterhead .product-mark {
+    height: 0.38in;
+    width: 0.38in;
+  }
+
+  .invoice-packet-title {
+    text-align: left;
+  }
+
+  .invoice-packet-status-grid {
+    gap: 0.04in;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .invoice-packet-status-grid > div,
+  .invoice-packet-note {
+    border-radius: 3pt;
+    padding: 0.04in 0.05in;
+  }
+
+  .invoice-packet-status-grid span,
+  .invoice-packet-section-heading span,
+  .invoice-packet-note span {
+    font-size: 6.5pt;
+  }
+
+  .invoice-packet-status-grid strong {
+    font-size: 8pt;
+  }
+
+  .invoice-packet-section {
+    break-inside: avoid;
+    gap: 0.05in;
+    padding-top: 0.1in;
+  }
+
+  .invoice-packet-section-heading h3 {
+    font-size: 11pt;
+  }
+
+  .invoice-packet-note-list,
+  .invoice-packet-note p {
+    font-size: 8pt;
+  }
+
+  .invoice-packet-table {
+    min-width: 0 !important;
+  }
+
+  .invoice-packet-totals {
+    border-radius: 3pt;
+    max-width: 2.5in;
+  }
+
+  .invoice-packet-totals > div {
+    padding: 0.035in 0.05in;
+  }
+
+  .invoice-packet-totals dt,
+  .invoice-packet-totals dd {
+    font-size: 8pt;
   }
 
   .print-report-surface tbody tr:nth-child(even) td {

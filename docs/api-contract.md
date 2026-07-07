@@ -265,7 +265,7 @@ The maximum upload size is 50 MB. The same limit is enforced by the HTTP control
 Employee uploads, file caption/visibility updates, and file archives remain subject to the employee field-recording guard above. Manager/Admin users can continue ticket file/photo review and invoice-attachment coordination without an employee clock-in gate.
 
 ## Reporting
-Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports UI groups the existing endpoints into invoice/closeout, labor/parts, and service-history sections, then performs browser print/save-PDF output and client-side CSV export from the currently loaded table rows. There is no server-side PDF renderer, server-side export job, invoice generation, payment workflow, customer portal workflow, recommendation engine, AI/scoring, automatic compatibility decision, or automatic approval behavior in this reporting slice.
+Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports UI groups the existing endpoints into job, labor, and parts/service report pages, then performs browser print/PDF output from generated report views and client-side CSV export from currently loaded table rows. Invoice-ready review also has a frontend packet view backed by the existing invoice-ready summary endpoint. There is no server-side PDF renderer, server-side export job, invoice generation, payment workflow, customer portal workflow, recommendation engine, AI/scoring, automatic compatibility decision, or automatic approval behavior in this reporting slice.
 
 Authorization: `ManagerOrAdmin`.
 
@@ -310,7 +310,7 @@ Endpoints:
   - Returns `ServiceHistoryItemDto[]` for the selected equipment record.
 
 Client export behavior:
-- Print/save-PDF uses the browser print dialog from the generated report results screen.
+- Report print uses the browser print dialog from the generated report results screen. The invoice-ready packet view exposes browser print and a client-generated PDF download from the same invoice-ready JSON payload.
 - CSV is produced in the Manager/Admin frontend from the rows currently loaded in the browser.
 - Company Configuration profile details are included in generated report headers and CSV metadata when available.
 - CSV values use raw DTO values and report labels, not localized display formatting.

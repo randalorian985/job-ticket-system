@@ -268,6 +268,9 @@ export const getInvoiceStatusLabel = (value: number) => {
 export const jobLink = (id: string, label: string) =>
   <Link to={`/manage/job-tickets/${id}`}>{label}</Link>
 
+export const invoiceReadyPacketLink = (id: string, label: string) =>
+  <Link to={`/manage/reports/invoice-ready/${id}`}>{label}</Link>
+
 export const managerListLink = (to: string, label?: string | null) =>
   label ? <Link to={to}>{label}</Link> : '-'
 
@@ -275,7 +278,7 @@ export const managerListLink = (to: string, label?: string | null) =>
 
 export const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
   invoiceReady: [
-    { header: 'Job Ticket', value: (row: InvoiceReadySummaryDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Job Ticket', value: (row: InvoiceReadySummaryDto) => row.jobTicketNumber, render: (row) => invoiceReadyPacketLink(row.jobTicketId, row.jobTicketNumber) },
     { header: 'Customer', value: (row: InvoiceReadySummaryDto) => row.customer },
     { header: 'Billing Party', value: (row: InvoiceReadySummaryDto) => row.billingPartyCustomer },
     { header: 'Service Location', value: (row: InvoiceReadySummaryDto) => row.serviceLocation },
@@ -298,7 +301,7 @@ export const columnsByMode: Record<ReportMode, ReportColumn<any>[]> = {
     { header: 'Grand Total', value: (row: JobCostSummaryDto) => row.grandTotal, render: (row) => money(row.grandTotal), align: 'number' }
   ],
   jobsReady: [
-    { header: 'Job Ticket', value: (row: JobsReadyToInvoiceItemDto) => row.jobTicketNumber, render: (row) => jobLink(row.jobTicketId, row.jobTicketNumber) },
+    { header: 'Job Ticket', value: (row: JobsReadyToInvoiceItemDto) => row.jobTicketNumber, render: (row) => invoiceReadyPacketLink(row.jobTicketId, row.jobTicketNumber) },
     { header: 'Customer', value: (row: JobsReadyToInvoiceItemDto) => row.customer, render: (row) => managerListLink('/manage/customers', row.customer) },
     { header: 'Billing Party', value: (row: JobsReadyToInvoiceItemDto) => row.billingPartyCustomer },
     { header: 'Job Status', value: (row: JobsReadyToInvoiceItemDto) => getJobStatusLabel(row.jobStatus) },

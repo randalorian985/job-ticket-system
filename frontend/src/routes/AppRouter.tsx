@@ -10,6 +10,7 @@ import {
   CustomersPage,
   EquipmentHistoryPage,
   EquipmentPage,
+  InvoiceReadyPacketPage,
   LaborReportsPage,
   PartRequestsPage,
   PartsServiceReportsPage,
@@ -80,6 +81,7 @@ export function AppRouter() {
           <Route path="time-approval" element={<TimeApprovalPage />} />
           <Route path="parts-approval" element={<PartsApprovalPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="reports/invoice-ready/:jobTicketId" element={<InvoiceReadyPacketPage />} />
           <Route path="reports/labor" element={<LaborReportsPage />} />
           <Route path="reports/parts-service" element={<PartsServiceReportsPage />} />
           <Route path="reports/labor-parts-service" element={<Navigate to="/manage/reports/labor" replace />} />
