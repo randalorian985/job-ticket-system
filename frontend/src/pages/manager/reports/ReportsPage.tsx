@@ -747,7 +747,11 @@ export function ReportsPage() {
                 <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
                   <div className="report-card-top">
                     <h4>{reportTitleMap[reportMode]}</h4>
-                    <span>{reportFilterFields[reportMode].length ? 'Optional filters' : 'Choose source'}</span>
+                    <span>
+                      {reportMode === 'invoiceReady' || reportMode === 'jobCost' ? 'Select ticket' :
+                       reportMode === 'customerHistory' ? 'Select customer' :
+                       reportFilterFields[reportMode].length ? 'Optional filters' : 'No filters'}
+                    </span>
                   </div>
                   <div className="report-card-body">
                     <p className="muted">{reportDescriptions[reportMode]}</p>

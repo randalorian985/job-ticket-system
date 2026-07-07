@@ -91,19 +91,14 @@ export const reportDescriptions: Record<ReportMode, string> = {
 
 export const reportSections: Array<{ title: string; description: string; modes: ReportMode[] }> = [
   {
-    title: 'Invoice and Closeout',
-    description: 'Review jobs ready for invoicing and pull cost summaries for individual tickets.',
+    title: 'Invoice and Billing',
+    description: 'Billing summaries for individual tickets and queues of jobs ready for invoice review.',
     modes: ['invoiceReady', 'jobCost', 'jobsReady']
   },
   {
-    title: 'Labor and Parts',
-    description: 'Review approved time and parts totals by job or employee, ready to export.',
-    modes: ['laborJob', 'laborEmployee', 'partsJob']
-  },
-  {
-    title: 'Service History',
-    description: 'Look up the complete service record for a customer, optionally filtered to a specific piece of equipment.',
-    modes: ['customerHistory']
+    title: 'Labor, Parts & Service History',
+    description: 'Approved time and parts totals by job or employee, plus the complete service record for any customer.',
+    modes: ['laborJob', 'laborEmployee', 'partsJob', 'customerHistory']
   }
 ]
 
