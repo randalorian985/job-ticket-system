@@ -7,7 +7,7 @@ import { renderWithRouter } from '../../../test/renderWithRouter'
 import { reportsApi } from '../../../api/reportsApi'
 import { usersApi } from '../../../api/usersApi'
 import { downloadReportPdf } from '../../../utils/reportPdf'
-import { ReportsPage } from './ReportsPage'
+import { LaborPartsServiceReportsPage, ReportsPage } from './ReportsPage'
 
 vi.mock('../../../api/jobTicketsApi', () => ({
   jobTicketsApi: {
@@ -71,6 +71,11 @@ const readCsvFromExportLink = () => {
   const href = screen.getByRole('link', { name: 'Export CSV' }).getAttribute('href') ?? ''
   return decodeURIComponent(href.replace('data:text/csv;charset=utf-8,', ''))
 }
+
+const reportDefaultsStorageKey = 'job-ticket-system:manager-reports:defaults:v1'
+
+const renderBillingReports = () => renderWithRouter(<ReportsPage />)
+const renderLaborPartsServiceReports = () => renderWithRouter(<LaborPartsServiceReportsPage />)
 
 beforeEach(() => {
   cleanup()
@@ -148,17 +153,17 @@ beforeEach(() => {
 })
 
 describe('ReportsPage', () => {
-  it('renders grouped Manager/Admin report sections and supported report cards', () => {
-    renderWithRouter(<ReportsPage />)
+  it('renders the Job Reports billing page without labor, parts, or service-history reports', () => {
+    renderBillingReports()
 
-    expect(screen.getByRole('heading', { name: 'Reports' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Job Reports' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'report preview' })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'report catalog' })).toBeInTheDocument()
-    expect(screen.getByText('Billing, labor, parts, and service-history reporting for Manager/Admin review.')).toBeInTheDocument()
-    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('7 reports')
-    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('5 optional sets')
-    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('3 scoped reports')
-    expect(screen.getByText(/Approved-time rates are captured at approval/i)).toBeInTheDocument()
+    expect(screen.getByText('Invoice and billing reporting for job closeout and Manager/Admin review.')).toBeInTheDocument()
+    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('3 reports')
+    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('1 optional set')
+    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('2 scoped reports')
+    expect(screen.getByText(/Run billing reports, then export CSV or PDF/i)).toBeInTheDocument()
     expect(screen.queryByText('Report group')).not.toBeInTheDocument()
 
     const invoiceSection = screen.getByLabelText('Invoice and Billing')
@@ -167,6 +172,24 @@ describe('ReportsPage', () => {
     expect(within(invoiceSection).getByText('Job Cost Summary')).toBeInTheDocument()
     expect(within(invoiceSection).getByText('Jobs Ready to Invoice')).toBeInTheDocument()
     expect(within(screen.getByLabelText('Invoice-ready Summary report')).getByLabelText('Invoice-ready Summary job ticket')).toBeInTheDocument()
+
+    expect(screen.queryByLabelText('Labor, Parts & Service History')).not.toBeInTheDocument()
+    expect(screen.queryByText('Labor by Job')).not.toBeInTheDocument()
+    expect(screen.queryByText('Labor by Employee')).not.toBeInTheDocument()
+    expect(screen.queryByText('Parts by Job')).not.toBeInTheDocument()
+    expect(screen.queryByText('Customer Service History')).not.toBeInTheDocument()
+  })
+
+  it('renders the moved Labor, Parts & Service Reports page', () => {
+    renderLaborPartsServiceReports()
+
+    expect(screen.getByRole('heading', { name: 'Labor, Parts & Service Reports' })).toBeInTheDocument()
+    expect(screen.getByText('Labor, parts, and service-history reporting for operational review.')).toBeInTheDocument()
+    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('4 reports')
+    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('4 optional sets')
+    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('1 scoped report')
+    expect(screen.getByText(/Approved-time rates are captured at approval/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Invoice and Billing')).not.toBeInTheDocument()
 
     const laborSection = screen.getByLabelText('Labor, Parts & Service History')
     expect(within(laborSection).getByText('4 reports')).toBeInTheDocument()
@@ -182,10 +205,9 @@ describe('ReportsPage', () => {
   })
 
   it('opens optional filters only on the selected report card', () => {
-    renderWithRouter(<ReportsPage />)
+    renderLaborPartsServiceReports()
 
     const cardsWithFilters = [
-      'Jobs Ready to Invoice',
       'Labor by Job',
       'Labor by Employee',
       'Parts by Job',
@@ -223,7 +245,7 @@ describe('ReportsPage', () => {
       }
     ] as any)
 
-    renderWithRouter(<ReportsPage />)
+    renderLaborPartsServiceReports()
 
     const laborByJobCard = screen.getByLabelText('Labor by Job report')
     expect(await within(laborByJobCard).findByRole('option', { name: 'Taylor Technician' })).toBeInTheDocument()
@@ -292,7 +314,7 @@ describe('ReportsPage', () => {
     let resolveReport: (value: any[]) => void = () => undefined
     vi.mocked(reportsApi.getLaborByEmployee).mockReturnValue(new Promise((resolve) => { resolveReport = resolve }) as any)
 
-    renderWithRouter(<ReportsPage />)
+    renderLaborPartsServiceReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Employee' }))
     expect(await screen.findByText('Loading Labor by Employee')).toBeInTheDocument()
@@ -308,7 +330,7 @@ describe('ReportsPage', () => {
   it('surfaces user-friendly report failures without rendering stale empty-state copy', async () => {
     vi.mocked(reportsApi.getPartsByJob).mockRejectedValue(new ApiError('Forbidden', 403))
 
-    renderWithRouter(<ReportsPage />)
+    renderLaborPartsServiceReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Parts by Job' }))
 
@@ -317,7 +339,7 @@ describe('ReportsPage', () => {
   })
 
   it('validates required source IDs before calling single-record report APIs', () => {
-    renderWithRouter(<ReportsPage />)
+    renderBillingReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Invoice-ready Summary' }))
 
@@ -326,19 +348,15 @@ describe('ReportsPage', () => {
     expect(screen.queryByRole('link', { name: 'Export CSV' })).not.toBeInTheDocument()
   })
 
-  it('keeps every report source dropdown selection independent', async () => {
-    renderWithRouter(<ReportsPage />)
-
+  it('keeps single-ticket report source dropdown selections independent', async () => {
+    renderBillingReports()
     const invoiceCard = screen.getByLabelText('Invoice-ready Summary report')
     const costCard = screen.getByLabelText('Job Cost Summary report')
-    const customerHistoryCard = screen.getByLabelText('Customer Service History report')
 
     expect(await within(invoiceCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
 
     const invoiceSelect = within(invoiceCard).getByLabelText('Invoice-ready Summary job ticket')
     const costSelect = within(costCard).getByLabelText('Job Cost Summary job ticket')
-    const customerSelect = within(customerHistoryCard).getByLabelText('Customer Service History customer')
-    const equipmentFilter = within(customerHistoryCard).getByLabelText('Customer Service History equipment')
 
     fireEvent.change(invoiceSelect, { target: { value: 'job-invoice-1' } })
     expect(invoiceSelect).toHaveValue('job-invoice-1')
@@ -347,9 +365,18 @@ describe('ReportsPage', () => {
     fireEvent.change(costSelect, { target: { value: 'job-1' } })
     expect(invoiceSelect).toHaveValue('job-invoice-1')
     expect(costSelect).toHaveValue('job-1')
+  })
+
+  it('keeps customer service history source and equipment selection scoped to the service report page', async () => {
+    renderLaborPartsServiceReports()
+
+    const customerHistoryCard = screen.getByLabelText('Customer Service History report')
+    const customerSelect = within(customerHistoryCard).getByLabelText('Customer Service History customer')
+    const equipmentFilter = within(customerHistoryCard).getByLabelText('Customer Service History equipment')
 
     // Equipment filter is disabled until a customer is selected
     expect(equipmentFilter).toBeDisabled()
+    expect(await within(customerHistoryCard).findByRole('option', { name: 'Acme Service (ACME)' })).toBeInTheDocument()
 
     fireEvent.change(customerSelect, { target: { value: 'customer-1' } })
     expect(customerSelect).toHaveValue('customer-1')
@@ -364,61 +391,75 @@ describe('ReportsPage', () => {
   })
 
   it('keeps optional report filters independent between report cards', async () => {
-    renderWithRouter(<ReportsPage />)
+    renderLaborPartsServiceReports()
 
-    const jobsReadyCard = screen.getByLabelText('Jobs Ready to Invoice report')
     const laborByJobCard = screen.getByLabelText('Labor by Job report')
+    const partsByJobCard = screen.getByLabelText('Parts by Job report')
 
-    fireEvent.click(within(jobsReadyCard).getByText('Show optional filters'))
     fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
+    fireEvent.click(within(partsByJobCard).getByText('Show optional filters'))
 
-    const jobsReadyCustomer = within(jobsReadyCard).getByLabelText('Jobs Ready to Invoice customer filter')
     const laborByJobCustomer = within(laborByJobCard).getByLabelText('Labor by Job customer filter')
-    await waitFor(() => expect(jobsReadyCustomer).not.toBeDisabled())
-
-    fireEvent.change(jobsReadyCustomer, { target: { value: 'customer-1' } })
-    expect(jobsReadyCustomer).toHaveValue('customer-1')
-    expect(laborByJobCustomer).toHaveValue('')
+    const partsByJobCustomer = within(partsByJobCard).getByLabelText('Parts by Job customer filter')
+    await waitFor(() => expect(laborByJobCustomer).not.toBeDisabled())
 
     fireEvent.change(laborByJobCustomer, { target: { value: 'customer-1' } })
-    expect(jobsReadyCustomer).toHaveValue('customer-1')
     expect(laborByJobCustomer).toHaveValue('customer-1')
+    expect(partsByJobCustomer).toHaveValue('')
 
-    fireEvent.change(jobsReadyCustomer, { target: { value: '' } })
-    expect(jobsReadyCustomer).toHaveValue('')
+    fireEvent.change(partsByJobCustomer, { target: { value: 'customer-1' } })
     expect(laborByJobCustomer).toHaveValue('customer-1')
+    expect(partsByJobCustomer).toHaveValue('customer-1')
+
+    fireEvent.change(laborByJobCustomer, { target: { value: '' } })
+    expect(laborByJobCustomer).toHaveValue('')
+    expect(partsByJobCustomer).toHaveValue('customer-1')
   })
 
-  it('restores report-specific saved defaults and clears them from reset', async () => {
-    renderWithRouter(<ReportsPage />)
+  it('restores report-specific saved defaults across report pages and clears them from reset', async () => {
+    renderBillingReports()
 
     const costCard = screen.getByLabelText('Job Cost Summary report')
-    const laborByJobCard = screen.getByLabelText('Labor by Job report')
     expect(await within(costCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
-
     fireEvent.change(within(costCard).getByLabelText('Job Cost Summary job ticket'), { target: { value: 'job-invoice-1' } })
-    fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
-    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job customer filter'), { target: { value: 'customer-1' } })
-    await waitFor(() => expect(localStorage.length).toBeGreaterThan(0))
 
     cleanup()
-    renderWithRouter(<ReportsPage />)
+    renderLaborPartsServiceReports()
+
+    const laborByJobCard = screen.getByLabelText('Labor by Job report')
+    fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
+    expect(await within(laborByJobCard).findByRole('option', { name: 'Acme Service (ACME)' })).toBeInTheDocument()
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job customer filter'), { target: { value: 'customer-1' } })
+    await waitFor(() => expect(localStorage.getItem(reportDefaultsStorageKey)).toContain('customer-1'))
+
+    cleanup()
+    renderBillingReports()
 
     const restoredCostCard = screen.getByLabelText('Job Cost Summary report')
-    const restoredLaborByJobCard = screen.getByLabelText('Labor by Job report')
     expect(await within(restoredCostCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
     expect(within(restoredCostCard).getByLabelText('Job Cost Summary job ticket')).toHaveValue('job-invoice-1')
+
+    cleanup()
+    renderLaborPartsServiceReports()
+
+    const restoredLaborByJobCard = screen.getByLabelText('Labor by Job report')
     fireEvent.click(within(restoredLaborByJobCard).getByText('Show optional filters'))
+    expect(await within(restoredLaborByJobCard).findByRole('option', { name: 'Acme Service (ACME)' })).toBeInTheDocument()
     expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job customer filter')).toHaveValue('customer-1')
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
-    expect(within(restoredCostCard).getByLabelText('Job Cost Summary job ticket')).toHaveValue('')
     expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job customer filter')).toHaveValue('')
     expect(localStorage.length).toBe(0)
+
+    cleanup()
+    renderBillingReports()
+    const clearedCostCard = screen.getByLabelText('Job Cost Summary report')
+    expect(await within(clearedCostCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
+    expect(within(clearedCostCard).getByLabelText('Job Cost Summary job ticket')).toHaveValue('')
   })
 
   it('validates report date ranges before calling report APIs', async () => {
-    renderWithRouter(<ReportsPage />)
+    renderLaborPartsServiceReports()
 
     const laborByJobCard = screen.getByLabelText('Labor by Job report')
     fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
@@ -459,7 +500,7 @@ describe('ReportsPage', () => {
       billingContactEmail: null
     } as any)
 
-    renderWithRouter(<ReportsPage />)
+    renderBillingReports()
 
     const invoiceCard = screen.getByLabelText('Invoice-ready Summary report')
     expect(await within(invoiceCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()

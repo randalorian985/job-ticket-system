@@ -64,6 +64,13 @@ export type ReportFilterLabels = {
   employees: Map<string, string>
   equipment: Map<string, string>
 }
+export type ReportSectionId = 'invoiceBilling' | 'laborPartsService'
+export type ReportSectionDefinition = {
+  id: ReportSectionId
+  title: string
+  description: string
+  modes: ReportMode[]
+}
 
 // ── Report catalog ────────────────────────────────────────────────────────────
 
@@ -89,13 +96,15 @@ export const reportDescriptions: Record<ReportMode, string> = {
   customerHistory: 'Complete service record for a selected customer — all tickets, statuses, and dates. Optionally narrow to a specific piece of equipment.'
 }
 
-export const reportSections: Array<{ title: string; description: string; modes: ReportMode[] }> = [
+export const reportSections: ReportSectionDefinition[] = [
   {
+    id: 'invoiceBilling',
     title: 'Invoice and Billing',
     description: 'Billing summaries for individual tickets and queues of jobs ready for invoice review.',
     modes: ['invoiceReady', 'jobCost', 'jobsReady']
   },
   {
+    id: 'laborPartsService',
     title: 'Labor, Parts & Service History',
     description: 'Approved time and parts totals by job or employee, plus the complete service record for any customer.',
     modes: ['laborJob', 'laborEmployee', 'partsJob', 'customerHistory']
@@ -118,17 +127,19 @@ export const reportRequiresJobTicketSource = (mode: ReportMode) =>
 export const reportRequiresCustomerSource = (mode: ReportMode) =>
   mode === 'customerHistory'
 
-export const reportCatalogSummary = {
-  totalReports: reportSections.reduce((count, section) => count + section.modes.length, 0),
-  filterableReports: reportSections.reduce(
+export const getReportCatalogSummary = (sections: ReportSectionDefinition[]) => ({
+  totalReports: sections.reduce((count, section) => count + section.modes.length, 0),
+  filterableReports: sections.reduce(
     (count, section) => count + section.modes.filter((mode) => reportFilterFields[mode].length > 0).length,
     0
   ),
-  sourceScopedReports: reportSections.reduce(
+  sourceScopedReports: sections.reduce(
     (count, section) => count + section.modes.filter((mode) => reportRequiresJobTicketSource(mode) || reportRequiresCustomerSource(mode)).length,
     0
   )
-}
+})
+
+export const reportCatalogSummary = getReportCatalogSummary(reportSections)
 
 export const reportInputBadgeLabels: Record<ReportMode, string> = {
   invoiceReady: 'Select ticket',

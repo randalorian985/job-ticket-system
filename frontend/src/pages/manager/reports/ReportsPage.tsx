@@ -20,6 +20,7 @@ import {
   type ReportMode,
   type ReportRow,
   type ReportColumn,
+  type ReportSectionDefinition,
   type ReportSourceSelections,
   type ReportFiltersByMode,
   defaultFilters,
@@ -27,7 +28,7 @@ import {
   reportDescriptions,
   reportSections,
   reportFilterFields,
-  reportCatalogSummary,
+  getReportCatalogSummary,
   reportInputBadgeLabels,
   reportBrandName,
   reportRequiresJobTicketSource,
@@ -71,7 +72,26 @@ const loadReportRows = async (
   }
 }
 
-export function ReportsPage() {
+const invoiceBillingReportSections = reportSections.filter((section) => section.id === 'invoiceBilling')
+const laborPartsServiceReportSections = reportSections.filter((section) => section.id === 'laborPartsService')
+const countLabel = (count: number, singular: string, plural = `${singular}s`) =>
+  `${count} ${count === 1 ? singular : plural}`
+
+type ReportsPageContentProps = {
+  pageTitle: string
+  pageDescription: string
+  sections: ReportSectionDefinition[]
+  noteLabel: string
+  noteText: string
+}
+
+function ReportsPageContent({
+  pageTitle,
+  pageDescription,
+  sections,
+  noteLabel,
+  noteText
+}: ReportsPageContentProps) {
   const {
     configuration: companyConfiguration,
     logoUrl: companyLogoUrl,
@@ -96,6 +116,7 @@ export function ReportsPage() {
   const [reportMessage, setReportMessage] = useState<string | null>(null)
   const [generatedAt, setGeneratedAt] = useState<string | null>(null)
   const [generatedFileDate, setGeneratedFileDate] = useState<string | null>(null)
+  const catalogSummary = useMemo(() => getReportCatalogSummary(sections), [sections])
 
   useEffect(() => {
     let isMounted = true
@@ -571,8 +592,8 @@ export function ReportsPage() {
         <div className="report-hero-layout">
           <div className="report-title-block">
             <p className="eyebrow">Reporting</p>
-            <h2>Reports</h2>
-            <p className="muted">Billing, labor, parts, and service-history reporting for Manager/Admin review.</p>
+            <h2>{pageTitle}</h2>
+            <p className="muted">{pageDescription}</p>
           </div>
           <div className="row report-hero-actions">
             <Link className="button-link secondary-link" to="/manage/wiki#reports">Wiki</Link>
@@ -582,20 +603,20 @@ export function ReportsPage() {
         <div className="report-hero-metrics" aria-label="report catalog summary">
           <div>
             <span>Catalog</span>
-            <strong>{reportCatalogSummary.totalReports} reports</strong>
+            <strong>{countLabel(catalogSummary.totalReports, 'report')}</strong>
           </div>
           <div>
             <span>Filters</span>
-            <strong>{reportCatalogSummary.filterableReports} optional sets</strong>
+            <strong>{countLabel(catalogSummary.filterableReports, 'optional set')}</strong>
           </div>
           <div>
             <span>Sources</span>
-            <strong>{reportCatalogSummary.sourceScopedReports} scoped reports</strong>
+            <strong>{countLabel(catalogSummary.sourceScopedReports, 'scoped report')}</strong>
           </div>
         </div>
         <div className="report-note-panel">
-          <strong>Labor totals</strong>
-          <span>Approved-time rates are captured at approval and stay consistent in exports.</span>
+          <strong>{noteLabel}</strong>
+          <span>{noteText}</span>
         </div>
         {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
@@ -749,7 +770,7 @@ export function ReportsPage() {
       </section>
 
       <div className="report-catalog stack" role="region" aria-label="report catalog" hidden={activeScreen !== 'catalog'}>
-        {reportSections.map((section) => (
+        {sections.map((section) => (
           <section className="report-section report-section-panel stack" key={section.title} aria-label={section.title}>
             <div className="report-section-heading">
               <div>
@@ -786,5 +807,29 @@ export function ReportsPage() {
         ))}
       </div>
     </section>
+  )
+}
+
+export function ReportsPage() {
+  return (
+    <ReportsPageContent
+      pageTitle="Job Reports"
+      pageDescription="Invoice and billing reporting for job closeout and Manager/Admin review."
+      sections={invoiceBillingReportSections}
+      noteLabel="Billing review"
+      noteText="Run billing reports, then export CSV or PDF after rows load."
+    />
+  )
+}
+
+export function LaborPartsServiceReportsPage() {
+  return (
+    <ReportsPageContent
+      pageTitle="Labor, Parts & Service Reports"
+      pageDescription="Labor, parts, and service-history reporting for operational review."
+      sections={laborPartsServiceReportSections}
+      noteLabel="Labor totals"
+      noteText="Approved-time rates are captured at approval and stay consistent in exports."
+    />
   )
 }
