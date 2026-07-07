@@ -1471,6 +1471,34 @@ tbody tr:hover td {
   -webkit-text-fill-color: #ffffff;
 }
 
+.schedule-view-nav .tab-btn {
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--text-muted);
+  min-height: 2.35rem;
+  padding: 0.45rem 1.1rem;
+}
+
+.schedule-view-nav .tab-btn:hover:not(:disabled),
+.schedule-view-nav .tab-btn:focus-visible {
+  background: transparent;
+  border-bottom-color: #b9c5d5;
+  box-shadow: none;
+  color: var(--text-strong);
+}
+
+.schedule-view-nav .tab-btn.tab-btn--active,
+.schedule-view-nav .tab-btn.tab-btn--active:hover,
+.schedule-view-nav .tab-btn.tab-btn--active:focus-visible {
+  background: transparent;
+  border-bottom-color: var(--brand);
+  color: var(--brand);
+  -webkit-text-fill-color: var(--brand);
+}
+
 .ticket-create-step:not(.ticket-create-step-active):hover,
 .ticket-create-step:not(.ticket-create-step-active):focus-visible,
 .section-editor-nav button:not(.section-editor-nav-active):hover,
