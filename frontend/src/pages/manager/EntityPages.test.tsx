@@ -749,7 +749,7 @@ describe('ReportsPage', () => {
     expect(screen.getByText('Labor by Employee')).toBeInTheDocument()
     expect(screen.getByText('Parts by Job')).toBeInTheDocument()
     expect(screen.getByText('Customer Service History')).toBeInTheDocument()
-    expect(screen.getByText('Equipment Service History')).toBeInTheDocument()
+    expect(screen.queryByText('Equipment Service History')).not.toBeInTheDocument()
     expect(screen.getByText(/Labor totals reflect the rate captured/i)).toBeInTheDocument()
   })
 

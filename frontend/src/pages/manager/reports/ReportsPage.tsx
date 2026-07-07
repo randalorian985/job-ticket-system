@@ -179,14 +179,6 @@ export function ReportsPage() {
       return 'From date must be on or before the to date.'
     }
 
-    if (typeof scopedFilters.offset === 'number' && scopedFilters.offset < 0) {
-      return 'Offset must be zero or greater.'
-    }
-
-    if (typeof scopedFilters.limit === 'number' && scopedFilters.limit < 1) {
-      return 'Limit must be at least 1.'
-    }
-
     return null
   }
 
@@ -200,11 +192,6 @@ export function ReportsPage() {
 
     if (nextMode === 'customerHistory' && !selectedSourceId) {
       requireSourceId('Select a customer before running Customer Service History.')
-      return
-    }
-
-    if (nextMode === 'equipmentHistory' && !selectedSourceId) {
-      requireSourceId('Select equipment before running Equipment Service History.')
       return
     }
 
@@ -244,9 +231,9 @@ export function ReportsPage() {
                   ? await reportsApi.getPartsByJob(scopedFilters)
                   : nextMode === 'jobCost'
                     ? [await reportsApi.getCostSummary(selectedSourceId)]
-                    : nextMode === 'customerHistory'
-                      ? await reportsApi.getCustomerHistory(selectedSourceId, scopedFilters)
-                      : await reportsApi.getEquipmentHistory(selectedSourceId, scopedFilters)
+                    : scopedFilters.equipmentId
+                      ? await reportsApi.getEquipmentHistory(scopedFilters.equipmentId, scopedFilters)
+                      : await reportsApi.getCustomerHistory(selectedSourceId, scopedFilters)
 
       setRows(data as ReportRow[])
       setReportMessage(`${reportTitleMap[nextMode]} loaded with ${data.length} visible row${data.length === 1 ? '' : 's'}.`)
@@ -267,22 +254,22 @@ export function ReportsPage() {
   const title = mode ? reportTitleMap[mode] : ''
   const hasRows = rows.length > 0
   const activeSourceId = mode ? sourceSelections[mode] : undefined
+  const activeEquipmentId = mode === 'customerHistory' ? filtersByMode.customerHistory?.equipmentId : undefined
   const sourceLabel = mode === 'invoiceReady' || mode === 'jobCost'
     ? jobTicketLabelById.get(activeSourceId ?? '')
     : mode === 'customerHistory'
-      ? customerLabelById.get(activeSourceId ?? '')
-      : mode === 'equipmentHistory'
-        ? equipmentLabelById.get(activeSourceId ?? '')
-        : undefined
+      ? [customerLabelById.get(activeSourceId ?? ''), activeEquipmentId ? equipmentLabelById.get(activeEquipmentId) : null].filter(Boolean).join(' — ') || undefined
+      : undefined
   const filterSummary = useMemo(
     () => (mode
       ? buildFilterSummary(mode, filtersForMode(mode, filtersByMode[mode] ?? defaultFilters), {
         customers: customerLabelById,
         serviceLocations: serviceLocationLabelById,
-        employees: employeeLabelById
+        employees: employeeLabelById,
+        equipment: equipmentLabelById
       }, sourceLabel)
       : ''),
-    [customerLabelById, employeeLabelById, filtersByMode, mode, serviceLocationLabelById, sourceLabel]
+    [customerLabelById, employeeLabelById, equipmentLabelById, filtersByMode, mode, serviceLocationLabelById, sourceLabel]
   )
   const companyReportDetails = useMemo(
     () => [
@@ -366,6 +353,8 @@ export function ReportsPage() {
     }
 
     if (reportMode === 'customerHistory') {
+      const customerEquipment = activeEquipment.filter((item) => item.customerId === selectedSourceId)
+      const selectedEquipmentId = filtersByMode.customerHistory?.equipmentId ?? ''
       return (
         <div className="report-card-controls">
           <label>
@@ -373,7 +362,10 @@ export function ReportsPage() {
             <select
               aria-label="Customer Service History customer"
               value={selectedSourceId}
-              onChange={(event) => updateSourceSelection(reportMode, event.target.value)}
+              onChange={(event) => {
+                updateSourceSelection(reportMode, event.target.value)
+                updateFilters(reportMode, { equipmentId: undefined })
+              }}
               disabled={referenceLoading}
             >
               <option value="">{referenceLoading ? 'Loading customers...' : 'Select customer'}</option>
@@ -384,31 +376,23 @@ export function ReportsPage() {
               ))}
             </select>
           </label>
-          <small className="muted">Required for this service-history report.</small>
-        </div>
-      )
-    }
-
-    if (reportMode === 'equipmentHistory') {
-      return (
-        <div className="report-card-controls">
           <label>
-            Equipment
+            Equipment (optional)
             <select
-              aria-label="Equipment Service History equipment"
-              value={selectedSourceId}
-              onChange={(event) => updateSourceSelection(reportMode, event.target.value)}
-              disabled={referenceLoading}
+              aria-label="Customer Service History equipment"
+              value={selectedEquipmentId}
+              onChange={(event) => updateFilters(reportMode, { equipmentId: event.target.value || undefined })}
+              disabled={referenceLoading || !selectedSourceId}
             >
-              <option value="">{referenceLoading ? 'Loading equipment...' : 'Select equipment'}</option>
-              {activeEquipment.map((item) => (
+              <option value="">{!selectedSourceId ? 'Select a customer first' : 'All equipment'}</option>
+              {customerEquipment.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.equipmentNumber ? `${item.name} (${item.equipmentNumber})` : item.name}
                 </option>
               ))}
             </select>
           </label>
-          <small className="muted">Required for this service-history report.</small>
+          <small className="muted">Customer required. Choose equipment to narrow history to a specific asset.</small>
         </div>
       )
     }
@@ -564,31 +548,6 @@ export function ReportsPage() {
             <option value="5">Paid</option>
             <option value="6">Void</option>
           </select>
-        </label>
-      )
-    }
-
-    if (fields.includes('paging')) {
-      controls.push(
-        <label key="offset">
-          Offset
-          <input
-            aria-label={`${titleForMode} offset filter`}
-            type="number"
-            min={0}
-            value={filters.offset ?? 0}
-            onChange={(event) => updateFilters(reportMode, { offset: Number(event.target.value) || 0 })}
-          />
-        </label>,
-        <label key="limit">
-          Limit
-          <input
-            aria-label={`${titleForMode} limit filter`}
-            type="number"
-            min={1}
-            value={filters.limit ?? 50}
-            onChange={(event) => updateFilters(reportMode, { limit: Number(event.target.value) || 50 })}
-          />
         </label>
       )
     }

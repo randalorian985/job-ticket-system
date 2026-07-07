@@ -724,6 +724,7 @@ export type ReportQueryFilters = {
   dateFromUtc?: string
   dateToUtc?: string
   customerId?: string
+  equipmentId?: string
   billingPartyCustomerId?: string
   serviceLocationId?: string
   employeeId?: string

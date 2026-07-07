@@ -11,10 +11,11 @@ import type {
 import { apiRequest } from './httpClient'
 
 const toQuery = (filters?: ReportQueryFilters) => {
-  const params = new URLSearchParams({ offset: String(filters?.offset ?? 0), limit: String(filters?.limit ?? 50) })
+  const params = new URLSearchParams({ offset: String(filters?.offset ?? 0), limit: String(filters?.limit ?? 500) })
   if (filters?.dateFromUtc) params.set('dateFromUtc', filters.dateFromUtc)
   if (filters?.dateToUtc) params.set('dateToUtc', filters.dateToUtc)
   if (filters?.customerId) params.set('customerId', filters.customerId)
+  if (filters?.equipmentId) params.set('equipmentId', filters.equipmentId)
   if (filters?.billingPartyCustomerId) params.set('billingPartyCustomerId', filters.billingPartyCustomerId)
   if (filters?.serviceLocationId) params.set('serviceLocationId', filters.serviceLocationId)
   if (filters?.employeeId) params.set('employeeId', filters.employeeId)

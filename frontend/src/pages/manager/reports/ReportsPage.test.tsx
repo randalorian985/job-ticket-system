@@ -172,8 +172,9 @@ describe('ReportsPage', () => {
 
     const historySection = screen.getByLabelText('Service History')
     expect(within(historySection).getByText('Customer Service History')).toBeInTheDocument()
-    expect(within(historySection).getByText('Equipment Service History')).toBeInTheDocument()
+    expect(within(historySection).queryByText('Equipment Service History')).not.toBeInTheDocument()
     expect(within(screen.getByLabelText('Customer Service History report')).getByLabelText('Customer Service History customer')).toBeInTheDocument()
+    expect(within(screen.getByLabelText('Customer Service History report')).getByLabelText('Customer Service History equipment')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Report Filters' })).not.toBeInTheDocument()
   })
 
@@ -199,7 +200,6 @@ describe('ReportsPage', () => {
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job customer filter'), { target: { value: 'customer-1' } })
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job service location filter'), { target: { value: 'location-1' } })
     fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job employee filter'), { target: { value: 'emp-7' } })
-    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job limit filter'), { target: { value: '75' } })
     fireEvent.click(within(laborByJobCard).getByRole('button', { name: 'Run Labor by Job' }))
 
     expect(await screen.findByRole('link', { name: 'JT-2026-000123' })).toHaveAttribute('href', '/manage/job-tickets/job-1')
@@ -216,7 +216,6 @@ describe('ReportsPage', () => {
     expect(screen.getAllByText(/Service location: Acme Service - Plant 4/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Employee: Taylor Technician/).length).toBeGreaterThan(0)
     expect(screen.queryByText(/Employee: emp-7/)).not.toBeInTheDocument()
-    expect(screen.getAllByText(/Limit: 75/).length).toBeGreaterThan(0)
 
     const exportLink = screen.getByRole('link', { name: 'Export CSV' })
     expect(exportLink.getAttribute('download')).toMatch(/^report-labor-by-job-\d{4}-\d{2}-\d{2}\.csv$/)
@@ -233,14 +232,12 @@ describe('ReportsPage', () => {
     expect(csv).toContain('Company,Mudbug Digital')
     expect(csv).toContain('Company details,"100 Bayou Road | Lafayette, LA, 70501 | 555-0100 | ops@mudbugdigital.test | https://mudbugdigital.test"')
     expect(csv).toContain('Report,Labor by Job')
-    expect(csv).toContain('Applied scope,Customer: Acme Service (ACME) | Service location: Acme Service - Plant 4 | Employee: Taylor Technician | Limit: 75')
+    expect(csv).toContain('Applied scope,Customer: Acme Service (ACME) | Service location: Acme Service - Plant 4 | Employee: Taylor Technician')
     expect(csv).toContain('Visible rows,1')
     expect(csv).toContain('Labor Billable')
     expect(csv).toContain('JT-2026-000123,Acme Service,2.5,125,300,2026-05-01,2026-05-02')
     expect(csv).not.toContain('$300.00')
     await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledWith({
-      offset: 0,
-      limit: 75,
       customerId: 'customer-1',
       serviceLocationId: 'location-1',
       employeeId: 'emp-7'
@@ -250,8 +247,6 @@ describe('ReportsPage', () => {
     await waitFor(() => expect(reportsApi.getLaborByJob).toHaveBeenCalledTimes(2))
     expect(screen.getByLabelText('report preview')).toBeVisible()
     expect(reportsApi.getLaborByJob).toHaveBeenLastCalledWith({
-      offset: 0,
-      limit: 75,
       customerId: 'customer-1',
       serviceLocationId: 'location-1',
       employeeId: 'emp-7'
@@ -259,7 +254,6 @@ describe('ReportsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
     expect(within(laborByJobCard).getByLabelText('Labor by Job employee filter')).toHaveValue('')
-    expect(within(laborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(50)
     expect(screen.getByLabelText('Labor by Job report')).toBeVisible()
   })
 
@@ -307,14 +301,13 @@ describe('ReportsPage', () => {
     const invoiceCard = screen.getByLabelText('Invoice-ready Summary report')
     const costCard = screen.getByLabelText('Job Cost Summary report')
     const customerHistoryCard = screen.getByLabelText('Customer Service History report')
-    const equipmentHistoryCard = screen.getByLabelText('Equipment Service History report')
 
     expect(await within(invoiceCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
 
     const invoiceSelect = within(invoiceCard).getByLabelText('Invoice-ready Summary job ticket')
     const costSelect = within(costCard).getByLabelText('Job Cost Summary job ticket')
     const customerSelect = within(customerHistoryCard).getByLabelText('Customer Service History customer')
-    const equipmentSelect = within(equipmentHistoryCard).getByLabelText('Equipment Service History equipment')
+    const equipmentFilter = within(customerHistoryCard).getByLabelText('Customer Service History equipment')
 
     fireEvent.change(invoiceSelect, { target: { value: 'job-invoice-1' } })
     expect(invoiceSelect).toHaveValue('job-invoice-1')
@@ -324,13 +317,19 @@ describe('ReportsPage', () => {
     expect(invoiceSelect).toHaveValue('job-invoice-1')
     expect(costSelect).toHaveValue('job-1')
 
+    // Equipment filter is disabled until a customer is selected
+    expect(equipmentFilter).toBeDisabled()
+
     fireEvent.change(customerSelect, { target: { value: 'customer-1' } })
     expect(customerSelect).toHaveValue('customer-1')
-    expect(equipmentSelect).toHaveValue('')
+    expect(equipmentFilter).not.toBeDisabled()
 
-    fireEvent.change(equipmentSelect, { target: { value: 'equipment-1' } })
+    // Equipment filter shows the selected customer's equipment
+    expect(within(customerHistoryCard).getByRole('option', { name: 'Compressor (EQ-1)' })).toBeInTheDocument()
+
+    fireEvent.change(equipmentFilter, { target: { value: 'equipment-1' } })
+    expect(equipmentFilter).toHaveValue('equipment-1')
     expect(customerSelect).toHaveValue('customer-1')
-    expect(equipmentSelect).toHaveValue('equipment-1')
   })
 
   it('keeps optional report filters independent between report cards', async () => {
@@ -368,7 +367,7 @@ describe('ReportsPage', () => {
 
     fireEvent.change(within(costCard).getByLabelText('Job Cost Summary job ticket'), { target: { value: 'job-invoice-1' } })
     fireEvent.click(within(laborByJobCard).getByText('Show optional filters'))
-    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job limit filter'), { target: { value: '75' } })
+    fireEvent.change(within(laborByJobCard).getByLabelText('Labor by Job customer filter'), { target: { value: 'customer-1' } })
     await waitFor(() => expect(localStorage.length).toBeGreaterThan(0))
 
     cleanup()
@@ -379,11 +378,11 @@ describe('ReportsPage', () => {
     expect(await within(restoredCostCard).findByRole('option', { name: 'JT-READY - Ready compressor PM' })).toBeInTheDocument()
     expect(within(restoredCostCard).getByLabelText('Job Cost Summary job ticket')).toHaveValue('job-invoice-1')
     fireEvent.click(within(restoredLaborByJobCard).getByText('Show optional filters'))
-    expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(75)
+    expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job customer filter')).toHaveValue('customer-1')
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset report inputs' }))
     expect(within(restoredCostCard).getByLabelText('Job Cost Summary job ticket')).toHaveValue('')
-    expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job limit filter')).toHaveValue(50)
+    expect(within(restoredLaborByJobCard).getByLabelText('Labor by Job customer filter')).toHaveValue('')
     expect(localStorage.length).toBe(0)
   })
 
