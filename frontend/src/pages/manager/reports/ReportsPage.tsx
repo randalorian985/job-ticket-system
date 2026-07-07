@@ -288,13 +288,14 @@ function ReportsPageContent({
   const filterSummary = useMemo(
     () => (mode
       ? buildFilterSummary(mode, filtersForMode(mode, filtersByMode[mode] ?? defaultFilters), {
+        jobTickets: jobTicketLabelById,
         customers: customerLabelById,
         serviceLocations: serviceLocationLabelById,
         employees: employeeLabelById,
         equipment: equipmentLabelById
       }, sourceLabel)
       : ''),
-    [customerLabelById, employeeLabelById, equipmentLabelById, filtersByMode, mode, serviceLocationLabelById, sourceLabel]
+    [customerLabelById, employeeLabelById, equipmentLabelById, filtersByMode, jobTicketLabelById, mode, serviceLocationLabelById, sourceLabel]
   )
   const companyReportDetails = useMemo(
     () => [
@@ -432,6 +433,25 @@ function ReportsPageContent({
     const titleForMode = reportTitleMap[reportMode]
     const filters = filtersByMode[reportMode] ?? defaultFilters
     const controls: JSX.Element[] = []
+
+    if (fields.includes('jobTicket')) {
+      controls.push(
+        <label key="jobTicket">
+          Job ticket
+          <select
+            aria-label={`${titleForMode} job ticket filter`}
+            value={filters.jobTicketId ?? ''}
+            onChange={(event) => updateFilters(reportMode, { jobTicketId: event.target.value || undefined })}
+            disabled={referenceLoading}
+          >
+            <option value="">Any job ticket</option>
+            {jobTickets.map((job) => (
+              <option key={job.id} value={job.id}>{job.ticketNumber} - {job.title}</option>
+            ))}
+          </select>
+        </label>
+      )
+    }
 
     if (fields.includes('dateRange')) {
       controls.push(
@@ -778,7 +798,9 @@ function ReportsPageContent({
                 <h3>{section.title}</h3>
                 <p className="muted">{section.description}</p>
               </div>
-              <span className="report-section-count">{section.modes.length} report{section.modes.length === 1 ? '' : 's'}</span>
+              <span className="report-section-count">
+                {section.modes.length + (section.links?.length ?? 0)} report{section.modes.length + (section.links?.length ?? 0) === 1 ? '' : 's'}
+              </span>
             </div>
             <div className="report-action-grid">
               {section.modes.map((reportMode) => (
@@ -800,6 +822,21 @@ function ReportsPageContent({
                     <button type="button" onClick={() => apply(reportMode)} disabled={loadingMode !== null}>
                       {loadingMode === reportMode ? 'Loading...' : `Run ${reportTitleMap[reportMode]}`}
                     </button>
+                  </div>
+                </article>
+              ))}
+              {section.links?.map((link) => (
+                <article className="report-card report-run-card" key={link.to} aria-label={`${link.title} report link`}>
+                  <div className="report-card-top">
+                    <div className="report-card-heading">
+                      <h4>{link.title}</h4>
+                      <p className="muted">{link.description}</p>
+                    </div>
+                    <span>{link.badgeLabel}</span>
+                  </div>
+                  <div className="report-card-body" />
+                  <div className="report-card-footer">
+                    <Link className="button-link" to={link.to}>{link.actionLabel}</Link>
                   </div>
                 </article>
               ))}

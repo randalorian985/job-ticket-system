@@ -106,6 +106,7 @@ describe('ManagerShell', () => {
     expect(screen.getByRole('link', { name: 'Job Reports' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Labor Reports' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Parts & Service' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Parts Usage' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Dispatch' })).not.toBeInTheDocument()
     expect(screen.getByText('Customers & Equipment')).toBeInTheDocument()
     expect(screen.getByText('Parts & Supply')).toBeInTheDocument()

@@ -9,6 +9,7 @@ namespace JobTicketSystem.Application.Reporting;
 public sealed record ReportQueryFiltersDto(
     DateTime? DateFromUtc = null,
     DateTime? DateToUtc = null,
+    Guid? JobTicketId = null,
     Guid? CustomerId = null,
     Guid? BillingPartyCustomerId = null,
     Guid? ServiceLocationId = null,
@@ -325,6 +326,7 @@ public sealed class ReportingService(ApplicationDbContext dbContext) : IReportin
         return query
             .Where(x => !filters.DateFromUtc.HasValue || x.CreatedAtUtc >= filters.DateFromUtc.Value)
             .Where(x => !filters.DateToUtc.HasValue || x.CreatedAtUtc <= filters.DateToUtc.Value)
+            .Where(x => !filters.JobTicketId.HasValue || x.Id == filters.JobTicketId.Value)
             .Where(x => !filters.CustomerId.HasValue || x.CustomerId == filters.CustomerId.Value)
             .Where(x => !filters.BillingPartyCustomerId.HasValue || x.BillingPartyCustomerId == filters.BillingPartyCustomerId.Value)
             .Where(x => !filters.ServiceLocationId.HasValue || x.ServiceLocationId == filters.ServiceLocationId.Value)

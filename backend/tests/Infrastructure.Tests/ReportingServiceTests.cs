@@ -187,6 +187,19 @@ public sealed class ReportingServiceTests
     }
 
     [Fact]
+    public async Task Parts_by_job_can_filter_to_selected_job_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedAsync(context);
+        var service = new ReportingService(context);
+
+        var result = await service.GetPartsByJobAsync(new ReportQueryFiltersDto(JobTicketId: refs.MainJob.Id));
+
+        var job = Assert.Single(result);
+        Assert.Equal(refs.MainJob.Id, job.JobTicketId);
+    }
+
+    [Fact]
     public async Task Job_rollup_reports_include_lifecycle_dates_for_export()
     {
         await using var context = CreateContext();

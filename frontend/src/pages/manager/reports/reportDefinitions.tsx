@@ -43,6 +43,7 @@ export type ReportColumn<T extends ReportRow> = CsvColumn<T> & {
 }
 
 export type FilterField =
+  | 'jobTicket'
   | 'dateRange'
   | 'customer'
   | 'equipment'
@@ -59,17 +60,26 @@ export type ReportSavedDefaults = {
   sourceSelections?: ReportSourceSelections
 }
 export type ReportFilterLabels = {
+  jobTickets: Map<string, string>
   customers: Map<string, string>
   serviceLocations: Map<string, string>
   employees: Map<string, string>
   equipment: Map<string, string>
 }
 export type ReportSectionId = 'invoiceBilling' | 'labor' | 'partsService'
+export type ReportSectionLinkDefinition = {
+  title: string
+  description: string
+  to: string
+  badgeLabel: string
+  actionLabel: string
+}
 export type ReportSectionDefinition = {
   id: ReportSectionId
   title: string
   description: string
   modes: ReportMode[]
+  links?: ReportSectionLinkDefinition[]
 }
 
 // ── Report catalog ────────────────────────────────────────────────────────────
@@ -113,7 +123,16 @@ export const reportSections: ReportSectionDefinition[] = [
     id: 'partsService',
     title: 'Parts & Service History',
     description: 'Approved parts totals by job plus the complete service record for any customer.',
-    modes: ['partsJob', 'customerHistory']
+    modes: ['partsJob', 'customerHistory'],
+    links: [
+      {
+        title: 'Parts Usage History',
+        description: 'Filter-first usage history by customer, equipment, or part.',
+        to: '/manage/parts-usage-history',
+        badgeLabel: 'History view',
+        actionLabel: 'Open Parts Usage History'
+      }
+    ]
   }
 ]
 
@@ -123,7 +142,7 @@ export const reportFilterFields: Record<ReportMode, FilterField[]> = {
   jobsReady: ['dateRange', 'customer', 'billingParty', 'serviceLocation', 'jobStatus', 'invoiceStatus'],
   laborJob: ['dateRange', 'customer', 'serviceLocation', 'employee', 'jobStatus'],
   laborEmployee: ['dateRange', 'customer', 'employee', 'jobStatus'],
-  partsJob: ['dateRange', 'customer', 'serviceLocation', 'jobStatus'],
+  partsJob: ['jobTicket', 'dateRange', 'customer', 'serviceLocation', 'jobStatus'],
   customerHistory: ['equipment', 'dateRange', 'jobStatus']
 }
 
@@ -134,7 +153,7 @@ export const reportRequiresCustomerSource = (mode: ReportMode) =>
   mode === 'customerHistory'
 
 export const getReportCatalogSummary = (sections: ReportSectionDefinition[]) => ({
-  totalReports: sections.reduce((count, section) => count + section.modes.length, 0),
+  totalReports: sections.reduce((count, section) => count + section.modes.length + (section.links?.length ?? 0), 0),
   filterableReports: sections.reduce(
     (count, section) => count + section.modes.filter((mode) => reportFilterFields[mode].length > 0).length,
     0
@@ -344,6 +363,7 @@ export const reportUsesField = (mode: ReportMode, field: FilterField) =>
 export const filtersForMode = (mode: ReportMode, filters: ReportQueryFilters): ReportQueryFilters => {
   if (!reportFilterFields[mode].length) return {}
   const scoped: ReportQueryFilters = {}
+  if (reportUsesField(mode, 'jobTicket')) scoped.jobTicketId = filters.jobTicketId
   if (reportUsesField(mode, 'dateRange')) { scoped.dateFromUtc = filters.dateFromUtc; scoped.dateToUtc = filters.dateToUtc }
   if (reportUsesField(mode, 'customer')) scoped.customerId = filters.customerId
   if (reportUsesField(mode, 'equipment')) scoped.equipmentId = filters.equipmentId
@@ -363,6 +383,7 @@ export const buildFilterSummary = (
 ) => {
   const summary: string[] = []
   if (sourceLabel) summary.push(`Source: ${sourceLabel}`)
+  if (filters.jobTicketId) summary.push(`Job ticket: ${labels.jobTickets.get(filters.jobTicketId) ?? 'Job ticket unavailable'}`)
   if (filters.dateFromUtc || filters.dateToUtc) summary.push(`Dates: ${dateUtc(filters.dateFromUtc)} to ${dateUtc(filters.dateToUtc)}`)
   if (filters.customerId) summary.push(`Customer: ${labels.customers.get(filters.customerId) ?? 'Customer unavailable'}`)
   if (filters.equipmentId) summary.push(`Equipment: ${labels.equipment.get(filters.equipmentId) ?? 'Equipment unavailable'}`)

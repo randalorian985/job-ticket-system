@@ -981,10 +981,10 @@ The purchasing screen shows success and error feedback for create, submit, recei
 
 Reports are Manager/Admin-only.
 
-The reports hub is organized into three sections:
-- **Invoice and Closeout** — review jobs ready for invoicing and pull cost summaries for individual tickets.
-- **Labor and Parts** — review approved time and parts totals by job or employee, ready to export.
-- **Service History** — look up the complete service record for a customer or piece of equipment.
+The Reports menu is organized into three pages:
+- **Job Reports** — review jobs ready for invoicing and pull cost summaries for individual tickets.
+- **Labor Reports** — review approved time totals by job or employee, ready to export.
+- **Parts & Service Reports** — review approved parts by job, open parts usage history, and look up customer service history.
 
 Implemented report types include:
 - **Invoice-ready Summary** — invoice-ready totals for a single job ticket: approved labor, parts used, and billable amounts.
@@ -992,13 +992,14 @@ Implemented report types include:
 - **Jobs Ready to Invoice** — jobs with approved billable activity that are ready for invoice review. Filter by date, customer, status, or billing party.
 - **Labor by Job** — approved time entries grouped by job ticket, with hours and billable totals for each assignment.
 - **Labor by Employee** — approved time entries grouped by employee, showing total hours and billable time per worker.
-- **Parts by Job** — approved parts used on each job, with quantities and billable price totals per ticket.
+- **Parts by Job** — approved parts used on each job, with quantities and billable price totals per ticket. It can be narrowed to a selected job ticket.
 - **Customer Service History** — complete service record for a selected customer: all tickets, statuses, and dates.
 - **Equipment Service History** — complete service record for a selected piece of equipment: all tickets, statuses, and dates.
 
 Reports support shared filters where applicable:
 - from date;
 - to date;
+- job ticket;
 - customer;
 - billing party customer;
 - service location;

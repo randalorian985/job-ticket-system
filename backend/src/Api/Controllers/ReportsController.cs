@@ -73,6 +73,7 @@ public sealed class ReportsController(IReportingService reportingService) : Cont
     public async Task<ActionResult<IReadOnlyList<PartsByJobDto>>> GetPartsByJobAsync(
         [FromQuery] DateTime? dateFromUtc,
         [FromQuery] DateTime? dateToUtc,
+        [FromQuery] Guid? jobTicketId,
         [FromQuery] Guid? customerId,
         [FromQuery] Guid? billingPartyCustomerId,
         [FromQuery] Guid? serviceLocationId,
@@ -82,7 +83,7 @@ public sealed class ReportsController(IReportingService reportingService) : Cont
         [FromQuery] int offset = 0,
         [FromQuery] int limit = 50,
         CancellationToken cancellationToken = default)
-        => Ok(await reportingService.GetPartsByJobAsync(CreateFilters(dateFromUtc, dateToUtc, customerId, billingPartyCustomerId, serviceLocationId, employeeId, jobStatus, invoiceStatus, offset, limit), cancellationToken));
+        => Ok(await reportingService.GetPartsByJobAsync(CreateFilters(dateFromUtc, dateToUtc, customerId, billingPartyCustomerId, serviceLocationId, employeeId, jobStatus, invoiceStatus, offset, limit, jobTicketId), cancellationToken));
 
     [HttpGet("customers/{customerId:guid}/service-history")]
     public async Task<ActionResult<IReadOnlyList<ServiceHistoryItemDto>>> GetCustomerServiceHistoryAsync(
@@ -125,6 +126,18 @@ public sealed class ReportsController(IReportingService reportingService) : Cont
         JobTicketStatus? jobStatus,
         InvoiceStatus? invoiceStatus,
         int offset,
-        int limit)
-        => new(dateFromUtc, dateToUtc, customerId, billingPartyCustomerId, serviceLocationId, employeeId, jobStatus, invoiceStatus, offset, limit);
+        int limit,
+        Guid? jobTicketId = null)
+        => new(
+            DateFromUtc: dateFromUtc,
+            DateToUtc: dateToUtc,
+            JobTicketId: jobTicketId,
+            CustomerId: customerId,
+            BillingPartyCustomerId: billingPartyCustomerId,
+            ServiceLocationId: serviceLocationId,
+            EmployeeId: employeeId,
+            JobStatus: jobStatus,
+            InvoiceStatus: invoiceStatus,
+            Offset: offset,
+            Limit: limit);
 }

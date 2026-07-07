@@ -774,6 +774,7 @@ describe('ReportsPage', () => {
     expect(screen.queryByText('Labor by Employee')).not.toBeInTheDocument()
     expect(screen.getByText('Parts by Job')).toBeInTheDocument()
     expect(screen.getByText('Customer Service History')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open Parts Usage History' })).toHaveAttribute('href', '/manage/parts-usage-history')
     expect(screen.queryByText('Equipment Service History')).not.toBeInTheDocument()
     expect(screen.getByText(/Use customer history to review service records/i)).toBeInTheDocument()
   })
@@ -837,10 +838,15 @@ describe('ReportsPage', () => {
     vi.mocked(reportsApi.getPartsByJob).mockResolvedValue([{ jobTicketId: 'job-parts-1', jobTicketNumber: 'JT-PARTS', customer: 'Beta', approvedPartQuantity: 2, partsCostTotal: 10, partsBillableTotal: 25 }] as any)
     renderPartsServiceReports()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Run Parts by Job' }))
+    const partsByJobCard = screen.getByLabelText('Parts by Job report')
+    expect(await within(partsByJobCard).findByRole('option', { name: 'JT-200 - Gamma invoice summary' })).toBeInTheDocument()
+    fireEvent.click(within(partsByJobCard).getByText('Show optional filters'))
+    fireEvent.change(within(partsByJobCard).getByLabelText('Parts by Job job ticket filter'), { target: { value: 'j2' } })
+    fireEvent.click(within(partsByJobCard).getByRole('button', { name: 'Run Parts by Job' }))
 
     expect(await screen.findByRole('link', { name: 'JT-PARTS' })).toHaveAttribute('href', '/manage/job-tickets/job-parts-1')
     expect(screen.getByText('$25.00')).toBeInTheDocument()
+    expect(reportsApi.getPartsByJob).toHaveBeenCalledWith({ jobTicketId: 'j2' })
   })
 
   it('runs invoice-ready summary by job ticket id', async () => {

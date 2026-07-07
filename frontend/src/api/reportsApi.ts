@@ -12,6 +12,7 @@ import { apiRequest } from './httpClient'
 
 const toQuery = (filters?: ReportQueryFilters) => {
   const params = new URLSearchParams({ offset: String(filters?.offset ?? 0), limit: String(filters?.limit ?? 500) })
+  if (filters?.jobTicketId) params.set('jobTicketId', filters.jobTicketId)
   if (filters?.dateFromUtc) params.set('dateFromUtc', filters.dateFromUtc)
   if (filters?.dateToUtc) params.set('dateToUtc', filters.dateToUtc)
   if (filters?.customerId) params.set('customerId', filters.customerId)

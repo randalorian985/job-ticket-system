@@ -270,6 +270,7 @@ Reporting endpoints are Manager/Admin-only JSON APIs. The Manager/Admin reports 
 Authorization: `ManagerOrAdmin`.
 
 Shared list filters where supported:
+- `jobTicketId`
 - `dateFromUtc`
 - `dateToUtc`
 - `customerId`
@@ -302,6 +303,7 @@ Endpoints:
 - `GET /api/reports/parts/by-job`
   - Returns `PartsByJobDto[]`.
   - Groups approved job parts by job using captured part cost and sale-price snapshots.
+  - Supports `jobTicketId` to narrow the grouped result to one selected ticket.
 - `GET /api/reports/customers/{customerId}/service-history`
   - Returns `ServiceHistoryItemDto[]` for the selected customer.
 - `GET /api/reports/equipment/{equipmentId}/service-history`

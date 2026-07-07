@@ -721,6 +721,7 @@ export type AssignableEmployeeDto = {
 
 
 export type ReportQueryFilters = {
+  jobTicketId?: string
   dateFromUtc?: string
   dateToUtc?: string
   customerId?: string

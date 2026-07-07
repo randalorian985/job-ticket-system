@@ -206,16 +206,18 @@ describe('ReportsPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Parts & Service Reports' })).toBeInTheDocument()
     expect(screen.getByText('Parts usage and customer service-history reporting for operational review.')).toBeInTheDocument()
-    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('2 reports')
+    expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('3 reports')
     expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('2 optional sets')
     expect(screen.getByLabelText('report catalog summary')).toHaveTextContent('1 scoped report')
     expect(screen.getByText(/Use customer history to review service records/i)).toBeInTheDocument()
     expect(screen.queryByLabelText('Invoice and Billing')).not.toBeInTheDocument()
 
     const partsServiceSection = screen.getByLabelText('Parts & Service History')
-    expect(within(partsServiceSection).getByText('2 reports')).toBeInTheDocument()
+    expect(within(partsServiceSection).getByText('3 reports')).toBeInTheDocument()
     expect(within(partsServiceSection).getByText('Parts by Job')).toBeInTheDocument()
     expect(within(partsServiceSection).getByText('Customer Service History')).toBeInTheDocument()
+    expect(within(partsServiceSection).getByText('Parts Usage History')).toBeInTheDocument()
+    expect(within(partsServiceSection).getByRole('link', { name: 'Open Parts Usage History' })).toHaveAttribute('href', '/manage/parts-usage-history')
     expect(screen.queryByText('Labor by Job')).not.toBeInTheDocument()
     expect(screen.queryByText('Labor by Employee')).not.toBeInTheDocument()
     expect(screen.queryByText('Equipment Service History')).not.toBeInTheDocument()
@@ -354,6 +356,34 @@ describe('ReportsPage', () => {
 
     expect(await screen.findByText('You do not have permission to run manager reports.')).toBeInTheDocument()
     expect(screen.queryByText(/No rows match the current report and filters/i)).not.toBeInTheDocument()
+  })
+
+  it('filters Parts by Job to a selected job ticket', async () => {
+    vi.mocked(reportsApi.getPartsByJob).mockResolvedValue([
+      {
+        jobTicketId: 'job-1',
+        jobTicketNumber: 'JT-2026-000123',
+        customer: 'Acme Service',
+        approvedPartQuantity: 3,
+        partsCostTotal: 90,
+        partsBillableTotal: 150,
+        createdAtUtc: '2026-05-01T00:30:00Z',
+        completedAtUtc: '2026-05-02T00:30:00Z'
+      }
+    ] as any)
+
+    renderPartsServiceReports()
+
+    const partsByJobCard = screen.getByLabelText('Parts by Job report')
+    expect(await within(partsByJobCard).findByRole('option', { name: 'JT-2026-000123 - Labor review job' })).toBeInTheDocument()
+    fireEvent.click(within(partsByJobCard).getByText('Show optional filters'))
+    fireEvent.change(within(partsByJobCard).getByLabelText('Parts by Job job ticket filter'), { target: { value: 'job-1' } })
+    fireEvent.click(within(partsByJobCard).getByRole('button', { name: 'Run Parts by Job' }))
+
+    expect(await screen.findByRole('link', { name: 'JT-2026-000123' })).toHaveAttribute('href', '/manage/job-tickets/job-1')
+    expect(screen.getByRole('cell', { name: '$150.00' })).toBeInTheDocument()
+    expect(screen.getByLabelText('report summary')).toHaveTextContent('Job ticket: JT-2026-000123 - Labor review job')
+    expect(reportsApi.getPartsByJob).toHaveBeenCalledWith({ jobTicketId: 'job-1' })
   })
 
   it('validates required source IDs before calling single-record report APIs', () => {
