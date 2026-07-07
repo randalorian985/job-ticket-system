@@ -78,6 +78,15 @@ export function ReportsPage() {
   const [reportMessage, setReportMessage] = useState<string | null>(null)
   const [generatedAt, setGeneratedAt] = useState<string | null>(null)
   const [generatedFileDate, setGeneratedFileDate] = useState<string | null>(null)
+  const totalReportCount = reportSections.reduce((count, section) => count + section.modes.length, 0)
+  const filterableReportCount = reportSections.reduce(
+    (count, section) => count + section.modes.filter((reportMode) => reportFilterFields[reportMode].length > 0).length,
+    0
+  )
+  const sourceScopedReportCount = reportSections.reduce(
+    (count, section) => count + section.modes.filter((reportMode) => reportMode === 'invoiceReady' || reportMode === 'jobCost' || reportMode === 'customerHistory').length,
+    0
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -564,23 +573,35 @@ export function ReportsPage() {
 
   return (
     <section className="report-hub stack">
-      <header className="card stack report-hub-hero">
+      <header className="report-hub-hero">
         <div className="report-hero-layout">
-          <div>
+          <div className="report-title-block">
             <p className="eyebrow">Reporting</p>
             <h2>Reports</h2>
-            <p className="muted">
-              Pick the report you need, set its source or optional filters in the same panel, then run it.
-            </p>
+            <p className="muted">Billing, labor, parts, and service-history reporting for Manager/Admin review.</p>
           </div>
-          <div className="row">
+          <div className="row report-hero-actions">
             <Link className="button-link secondary-link" to="/manage/wiki#reports">Wiki</Link>
             <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
           </div>
         </div>
+        <div className="report-hero-metrics" aria-label="report catalog summary">
+          <div>
+            <span>Catalog</span>
+            <strong>{totalReportCount} reports</strong>
+          </div>
+          <div>
+            <span>Filters</span>
+            <strong>{filterableReportCount} optional sets</strong>
+          </div>
+          <div>
+            <span>Sources</span>
+            <strong>{sourceScopedReportCount} scoped reports</strong>
+          </div>
+        </div>
         <div className="report-note-panel">
           <strong>Labor totals</strong>
-          <span>Run reports from this panel, then export to CSV or PDF after rows load. Labor totals reflect the rate captured at the time each entry was approved.</span>
+          <span>Approved-time rates are captured at approval and stay consistent in exports.</span>
         </div>
         {referenceLoading ? <p className="muted" role="status">Loading report selectors...</p> : null}
       </header>
@@ -741,12 +762,16 @@ export function ReportsPage() {
                 <h3>{section.title}</h3>
                 <p className="muted">{section.description}</p>
               </div>
+              <span className="report-section-count">{section.modes.length} report{section.modes.length === 1 ? '' : 's'}</span>
             </div>
             <div className="report-action-grid">
               {section.modes.map((reportMode) => (
                 <article className="report-card report-run-card" key={reportMode} aria-label={`${reportTitleMap[reportMode]} report`} aria-busy={loadingMode === reportMode}>
                   <div className="report-card-top">
-                    <h4>{reportTitleMap[reportMode]}</h4>
+                    <div className="report-card-heading">
+                      <h4>{reportTitleMap[reportMode]}</h4>
+                      <p className="muted">{reportDescriptions[reportMode]}</p>
+                    </div>
                     <span>
                       {reportMode === 'invoiceReady' || reportMode === 'jobCost' ? 'Select ticket' :
                        reportMode === 'customerHistory' ? 'Select customer' :
@@ -754,7 +779,6 @@ export function ReportsPage() {
                     </span>
                   </div>
                   <div className="report-card-body">
-                    <p className="muted">{reportDescriptions[reportMode]}</p>
                     <div className="report-card-inputs">
                       {renderSourceControl(reportMode)}
                       {renderFilterControls(reportMode)}
