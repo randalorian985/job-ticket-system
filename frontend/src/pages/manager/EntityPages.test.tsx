@@ -6,7 +6,7 @@ import { masterDataApi } from '../../api/masterDataApi'
 import { reportsApi } from '../../api/reportsApi'
 import { usersApi } from '../../api/usersApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
-import { CustomersPage, EquipmentPage, LaborPartsServiceReportsPage, PartsPage, ReportsPage, ServiceLocationsPage } from './EntityPages'
+import { CustomersPage, EquipmentPage, LaborReportsPage, PartsPage, PartsServiceReportsPage, ReportsPage, ServiceLocationsPage } from './EntityPages'
 
 vi.mock('../../api/jobTicketsApi', () => ({
   jobTicketsApi: {
@@ -737,7 +737,8 @@ describe('PartsPage', () => {
 
 describe('ReportsPage', () => {
   const renderReports = () => renderWithRouter(<ReportsPage />)
-  const renderLaborPartsServiceReports = () => renderWithRouter(<LaborPartsServiceReportsPage />)
+  const renderLaborReports = () => renderWithRouter(<LaborReportsPage />)
+  const renderPartsServiceReports = () => renderWithRouter(<PartsServiceReportsPage />)
 
   it('renders billing reports separately from labor, parts, and service history reports', () => {
     renderReports()
@@ -752,17 +753,29 @@ describe('ReportsPage', () => {
     expect(screen.queryByText('Customer Service History')).not.toBeInTheDocument()
   })
 
-  it('renders the moved labor, parts, and service-history reports page', () => {
-    renderLaborPartsServiceReports()
+  it('renders the moved labor reports page', () => {
+    renderLaborReports()
 
-    expect(screen.getByRole('heading', { name: 'Labor, Parts & Service Reports' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Labor Reports' })).toBeInTheDocument()
     expect(screen.queryByText('Invoice-ready Summary')).not.toBeInTheDocument()
     expect(screen.getByText('Labor by Job')).toBeInTheDocument()
     expect(screen.getByText('Labor by Employee')).toBeInTheDocument()
+    expect(screen.queryByText('Parts by Job')).not.toBeInTheDocument()
+    expect(screen.queryByText('Customer Service History')).not.toBeInTheDocument()
+    expect(screen.getByText(/Approved-time rates are captured at approval/i)).toBeInTheDocument()
+  })
+
+  it('renders the moved parts and service-history reports page', () => {
+    renderPartsServiceReports()
+
+    expect(screen.getByRole('heading', { name: 'Parts & Service Reports' })).toBeInTheDocument()
+    expect(screen.queryByText('Invoice-ready Summary')).not.toBeInTheDocument()
+    expect(screen.queryByText('Labor by Job')).not.toBeInTheDocument()
+    expect(screen.queryByText('Labor by Employee')).not.toBeInTheDocument()
     expect(screen.getByText('Parts by Job')).toBeInTheDocument()
     expect(screen.getByText('Customer Service History')).toBeInTheDocument()
     expect(screen.queryByText('Equipment Service History')).not.toBeInTheDocument()
-    expect(screen.getByText(/Approved-time rates are captured at approval/i)).toBeInTheDocument()
+    expect(screen.getByText(/Use customer history to review service records/i)).toBeInTheDocument()
   })
 
   it('applies supported filters, renders jobs ready to invoice rows, and exports escaped CSV', async () => {
@@ -797,7 +810,7 @@ describe('ReportsPage', () => {
   it('shows loading and empty states for labor by employee', async () => {
     let resolveReport: (value: any[]) => void = () => undefined
     vi.mocked(reportsApi.getLaborByEmployee).mockReturnValue(new Promise((resolve) => { resolveReport = resolve }) as any)
-    renderLaborPartsServiceReports()
+    renderLaborReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Employee' }))
     expect(await screen.findByText('Loading Labor by Employee')).toBeInTheDocument()
@@ -809,7 +822,7 @@ describe('ReportsPage', () => {
 
   it('renders labor by employee success data with snapshot labeling', async () => {
     vi.mocked(reportsApi.getLaborByEmployee).mockResolvedValue([{ employeeId: 'e1', employeeName: 'Casey Tech', approvedLaborHours: 4, laborCostTotal: 80, laborBillableTotal: 160, jobCount: 2 }] as any)
-    renderLaborPartsServiceReports()
+    renderLaborReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Labor by Employee' }))
 
@@ -822,7 +835,7 @@ describe('ReportsPage', () => {
 
   it('renders parts by job rows with job detail drill-in', async () => {
     vi.mocked(reportsApi.getPartsByJob).mockResolvedValue([{ jobTicketId: 'job-parts-1', jobTicketNumber: 'JT-PARTS', customer: 'Beta', approvedPartQuantity: 2, partsCostTotal: 10, partsBillableTotal: 25 }] as any)
-    renderLaborPartsServiceReports()
+    renderPartsServiceReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Parts by Job' }))
 
@@ -846,7 +859,7 @@ describe('ReportsPage', () => {
 
   it('surfaces user-friendly report failures', async () => {
     vi.mocked(reportsApi.getPartsByJob).mockRejectedValue(new ApiError('Forbidden', 403))
-    renderLaborPartsServiceReports()
+    renderPartsServiceReports()
 
     fireEvent.click(screen.getByRole('button', { name: 'Run Parts by Job' }))
 

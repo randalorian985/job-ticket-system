@@ -29,7 +29,8 @@ describe('ManagerShell', () => {
             <Route index element={<p>Dashboard page</p>} />
             <Route path="job-tickets/:jobTicketId" element={<p>Ticket detail page</p>} />
             <Route path="reports" element={<p>Reports page</p>} />
-            <Route path="reports/labor-parts-service" element={<p>Labor reports page</p>} />
+            <Route path="reports/labor" element={<p>Labor reports page</p>} />
+            <Route path="reports/parts-service" element={<p>Parts service reports page</p>} />
             <Route path="wiki" element={<p>Wiki page</p>} />
             <Route path="company-configuration" element={<p>Company configuration page</p>} />
             <Route path="ticket-status-filters" element={<p>Ticket filters page</p>} />
@@ -55,10 +56,15 @@ describe('ManagerShell', () => {
     expect(screen.getByText('Reports page')).toBeInTheDocument()
     expect(sectionPicker).toHaveValue('/manage/reports')
 
-    await user.selectOptions(sectionPicker, '/manage/reports/labor-parts-service')
+    await user.selectOptions(sectionPicker, '/manage/reports/labor')
 
     expect(screen.getByText('Labor reports page')).toBeInTheDocument()
-    expect(sectionPicker).toHaveValue('/manage/reports/labor-parts-service')
+    expect(sectionPicker).toHaveValue('/manage/reports/labor')
+
+    await user.selectOptions(sectionPicker, '/manage/reports/parts-service')
+
+    expect(screen.getByText('Parts service reports page')).toBeInTheDocument()
+    expect(sectionPicker).toHaveValue('/manage/reports/parts-service')
 
     await user.selectOptions(sectionPicker, '/manage/wiki')
 
@@ -98,7 +104,8 @@ describe('ManagerShell', () => {
     expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Job Tickets' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Job Reports' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Labor, Parts & Service' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Labor Reports' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Parts & Service' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Dispatch' })).not.toBeInTheDocument()
     expect(screen.getByText('Customers & Equipment')).toBeInTheDocument()
     expect(screen.getByText('Parts & Supply')).toBeInTheDocument()
@@ -112,13 +119,22 @@ describe('ManagerShell', () => {
     expect(screen.queryByRole('link', { name: 'Inventory' })).not.toBeInTheDocument()
   })
 
-  it('selects the new labor, parts, and service report page in manager navigation', () => {
-    renderShell('/manage/reports/labor-parts-service')
+  it('selects the labor reports page in manager navigation', () => {
+    renderShell('/manage/reports/labor')
 
     const sectionPicker = screen.getByLabelText('Manager section navigation')
-    expect(sectionPicker).toHaveValue('/manage/reports/labor-parts-service')
+    expect(sectionPicker).toHaveValue('/manage/reports/labor')
     expect(screen.getByText('Labor reports page')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Labor, Parts & Service' })).toHaveClass('active-nav-link')
+    expect(screen.getByRole('link', { name: 'Labor Reports' })).toHaveClass('active-nav-link')
+  })
+
+  it('selects the parts and service reports page in manager navigation', () => {
+    renderShell('/manage/reports/parts-service')
+
+    const sectionPicker = screen.getByLabelText('Manager section navigation')
+    expect(sectionPicker).toHaveValue('/manage/reports/parts-service')
+    expect(screen.getByText('Parts service reports page')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Parts & Service' })).toHaveClass('active-nav-link')
   })
 
   it('closes the previously opened desktop menu when another menu opens', async () => {

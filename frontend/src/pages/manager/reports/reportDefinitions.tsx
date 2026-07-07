@@ -64,7 +64,7 @@ export type ReportFilterLabels = {
   employees: Map<string, string>
   equipment: Map<string, string>
 }
-export type ReportSectionId = 'invoiceBilling' | 'laborPartsService'
+export type ReportSectionId = 'invoiceBilling' | 'labor' | 'partsService'
 export type ReportSectionDefinition = {
   id: ReportSectionId
   title: string
@@ -104,10 +104,16 @@ export const reportSections: ReportSectionDefinition[] = [
     modes: ['invoiceReady', 'jobCost', 'jobsReady']
   },
   {
-    id: 'laborPartsService',
-    title: 'Labor, Parts & Service History',
-    description: 'Approved time and parts totals by job or employee, plus the complete service record for any customer.',
-    modes: ['laborJob', 'laborEmployee', 'partsJob', 'customerHistory']
+    id: 'labor',
+    title: 'Approved Labor',
+    description: 'Approved time totals by job or employee for labor review.',
+    modes: ['laborJob', 'laborEmployee']
+  },
+  {
+    id: 'partsService',
+    title: 'Parts & Service History',
+    description: 'Approved parts totals by job plus the complete service record for any customer.',
+    modes: ['partsJob', 'customerHistory']
   }
 ]
 

@@ -10,8 +10,9 @@ import {
   CustomersPage,
   EquipmentHistoryPage,
   EquipmentPage,
-  LaborPartsServiceReportsPage,
+  LaborReportsPage,
   PartRequestsPage,
+  PartsServiceReportsPage,
   PartsApprovalPage,
   PartsPage,
   PartsUsageHistoryPage,
@@ -79,7 +80,9 @@ export function AppRouter() {
           <Route path="time-approval" element={<TimeApprovalPage />} />
           <Route path="parts-approval" element={<PartsApprovalPage />} />
           <Route path="reports" element={<ReportsPage />} />
-          <Route path="reports/labor-parts-service" element={<LaborPartsServiceReportsPage />} />
+          <Route path="reports/labor" element={<LaborReportsPage />} />
+          <Route path="reports/parts-service" element={<PartsServiceReportsPage />} />
+          <Route path="reports/labor-parts-service" element={<Navigate to="/manage/reports/labor" replace />} />
           <Route path="wiki" element={<SystemWikiPage />} />
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
             <Route path="company-configuration" element={<CompanyConfigurationPage />} />

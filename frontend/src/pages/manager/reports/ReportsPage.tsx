@@ -73,7 +73,8 @@ const loadReportRows = async (
 }
 
 const invoiceBillingReportSections = reportSections.filter((section) => section.id === 'invoiceBilling')
-const laborPartsServiceReportSections = reportSections.filter((section) => section.id === 'laborPartsService')
+const laborReportSections = reportSections.filter((section) => section.id === 'labor')
+const partsServiceReportSections = reportSections.filter((section) => section.id === 'partsService')
 const countLabel = (count: number, singular: string, plural = `${singular}s`) =>
   `${count} ${count === 1 ? singular : plural}`
 
@@ -822,14 +823,26 @@ export function ReportsPage() {
   )
 }
 
-export function LaborPartsServiceReportsPage() {
+export function LaborReportsPage() {
   return (
     <ReportsPageContent
-      pageTitle="Labor, Parts & Service Reports"
-      pageDescription="Labor, parts, and service-history reporting for operational review."
-      sections={laborPartsServiceReportSections}
+      pageTitle="Labor Reports"
+      pageDescription="Labor reporting for approved time by job or employee."
+      sections={laborReportSections}
       noteLabel="Labor totals"
       noteText="Approved-time rates are captured at approval and stay consistent in exports."
+    />
+  )
+}
+
+export function PartsServiceReportsPage() {
+  return (
+    <ReportsPageContent
+      pageTitle="Parts & Service Reports"
+      pageDescription="Parts usage and customer service-history reporting for operational review."
+      sections={partsServiceReportSections}
+      noteLabel="Service history"
+      noteText="Use customer history to review service records, or run parts totals by job."
     />
   )
 }

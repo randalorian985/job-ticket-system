@@ -46,7 +46,8 @@ const navGroups: ManagerNavGroup[] = [
     label: 'Reports',
     items: [
       { label: 'Job Reports', to: '/manage/reports' },
-      { label: 'Labor, Parts & Service', to: '/manage/reports/labor-parts-service' },
+      { label: 'Labor Reports', to: '/manage/reports/labor' },
+      { label: 'Parts & Service', to: '/manage/reports/parts-service' },
       { label: 'Parts Usage', to: '/manage/parts-usage-history' },
       { label: 'Travel Time', to: '/manage/travel-time' }
     ]
