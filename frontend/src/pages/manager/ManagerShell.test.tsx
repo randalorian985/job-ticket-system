@@ -126,6 +126,8 @@ describe('ManagerShell', () => {
     expect(sectionPicker).toHaveValue('/manage/reports/labor')
     expect(screen.getByText('Labor reports page')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Labor Reports' })).toHaveClass('active-nav-link')
+    expect(screen.getByRole('link', { name: 'Job Reports' })).not.toHaveClass('active-nav-link')
+    expect(screen.getByRole('link', { name: 'Parts & Service' })).not.toHaveClass('active-nav-link')
   })
 
   it('selects the parts and service reports page in manager navigation', () => {
@@ -135,6 +137,8 @@ describe('ManagerShell', () => {
     expect(sectionPicker).toHaveValue('/manage/reports/parts-service')
     expect(screen.getByText('Parts service reports page')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Parts & Service' })).toHaveClass('active-nav-link')
+    expect(screen.getByRole('link', { name: 'Job Reports' })).not.toHaveClass('active-nav-link')
+    expect(screen.getByRole('link', { name: 'Labor Reports' })).not.toHaveClass('active-nav-link')
   })
 
   it('closes the previously opened desktop menu when another menu opens', async () => {
