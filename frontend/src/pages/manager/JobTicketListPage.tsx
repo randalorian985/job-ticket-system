@@ -84,6 +84,21 @@ const queueExportColumns: CsvColumn<QueueExportRow>[] = [
 
 const ticketViewModeStorageKey = 'job-ticket-manager-queue-view-mode'
 const dateForExport = (value?: string | null) => value ? value.slice(0, 10) : ''
+
+const deriveSavedQueueView = (sp: URLSearchParams): SavedQueueViewKey => {
+  const status = sp.get('status')
+  const readiness = sp.get('readiness')
+  if (!status || status === 'active') {
+    if (readiness === 'needs-review') return 'needs-assignment'
+    return 'open-tickets'
+  }
+  if (status === 'closed') return 'closed-tickets'
+  if (status === '5') return 'waiting-parts'
+  if (status === '10') return 'ready-invoice'
+  if (status === '7') return 'completed-review'
+  return 'custom'
+}
+
 const savedQueueViews: SavedQueueView[] = [
   { value: 'custom', label: 'Custom filters' },
   { value: 'open-tickets', label: 'Open Tickets', preset: { status: 'active' } },
@@ -248,9 +263,9 @@ export function JobTicketListPage() {
   const [locations, setLocations] = useState<Record<string, ServiceLocationDto>>({})
   const [ticketStatusFilters, setTicketStatusFilters] = useState<TicketStatusFilterOptionDto[]>(defaultTicketStatusFilterOptions)
   const [ticketViewMode, setTicketViewMode] = useState<TicketViewMode>(getStoredTicketViewMode)
-  const [savedQueueView, setSavedQueueView] = useState<SavedQueueViewKey>('custom')
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [savedQueueView, setSavedQueueView] = useState<SavedQueueViewKey>(() => deriveSavedQueueView(searchParams))
   const queueFilters = readJobTicketQueueFilters(searchParams)
   const statusFilter = queueFilters.status
   const priorityFilter = queueFilters.priority
@@ -481,13 +496,27 @@ export function JobTicketListPage() {
     }
   }, [assignmentDataUnavailable, assignmentMap, jobs])
 
-  const hasActiveFilters = statusFilter !== allFilterValue ||
-    priorityFilter !== allFilterValue ||
-    customerFilter !== allFilterValue ||
-    dispatchReadinessFilter !== allFilterValue ||
-    attentionFilter !== allFilterValue ||
-    savedQueueView !== 'custom' ||
-    Boolean(searchText.trim())
+  const isDefaultView = savedQueueView === 'open-tickets' &&
+    (statusFilter === allFilterValue || statusFilter === 'active') &&
+    priorityFilter === allFilterValue &&
+    customerFilter === allFilterValue &&
+    dispatchReadinessFilter === allFilterValue &&
+    attentionFilter === allFilterValue &&
+    !searchText.trim()
+  const hasActiveFilters = !isDefaultView
+
+  const activeKpiCard = useMemo((): SavedQueueViewKey | null => {
+    if (savedQueueView !== 'custom') return savedQueueView
+    if (statusFilter === allFilterValue || statusFilter === 'active') {
+      if (dispatchReadinessFilter === 'needs-review') return 'needs-assignment'
+      return 'open-tickets'
+    }
+    if (statusFilter === 'closed') return 'closed-tickets'
+    if (statusFilter === '5') return 'waiting-parts'
+    if (statusFilter === '10') return 'ready-invoice'
+    if (statusFilter === '7') return 'completed-review'
+    return null
+  }, [dispatchReadinessFilter, savedQueueView, statusFilter])
 
   const queueExportRows = useMemo<QueueExportRow[]>(() => filteredJobs.map((job) => {
     const assignments = assignmentDataUnavailable ? null : assignmentMap[job.id] ?? []
@@ -529,10 +558,10 @@ export function JobTicketListPage() {
         ? 'No tickets are loaded yet.'
         : hasActiveFilters
           ? `Filtered view showing ${filteredJobs.length} of ${jobs.length} tickets.`
-          : `Showing all ${jobs.length} loaded tickets.`
+          : `Showing ${filteredJobs.length} open tickets. Search by ticket number to find closed tickets.`
 
   const resetFilters = () => {
-    setSavedQueueView('custom')
+    setSavedQueueView('open-tickets')
     setSearchParams({}, { replace: true })
   }
 
@@ -594,33 +623,58 @@ export function JobTicketListPage() {
       </section>
 
       {!isLoading && !error && jobs.length ? (
-        <section className="queue-saved-views" aria-label="saved queue views">
-          <div className="queue-saved-views-heading">
-            <div>
-              <h3>Saved Views</h3>
-              <p className="muted">Common manager queues stay compact and use the filters above.</p>
-            </div>
-            {hasActiveFilters ? <span className="status-pill">Filtered view</span> : null}
-          </div>
-          <div className="queue-saved-view-row">
-            <label className="sr-label queue-saved-view-control">
-              Saved view
-              <select value={savedQueueView} onChange={(event) => applySavedQueueView(event.target.value as SavedQueueViewKey)}>
-                {savedQueueViews.map((view) => <option key={view.value} value={view.value}>{view.label}</option>)}
-              </select>
-            </label>
-            <div className="queue-saved-view-counts" aria-label="saved view counts">
-              <span><strong>{triageSummary.activeCount}</strong> Open Tickets</span>
-              <span><strong>{triageSummary.closedCount}</strong> Closed Tickets</span>
-              <span><strong>{triageSummary.todayCount}</strong> Today</span>
-              <span><strong>{triageSummary.waitingOnPartsCount}</strong> Waiting on Parts</span>
-              <span><strong>{triageSummary.readyToInvoiceCount}</strong> Ready to Invoice</span>
-              <span><strong>{triageSummary.needsDispatchReviewCount}</strong> Needs Assignment</span>
-              <span><strong>{triageSummary.completedReviewCount}</strong> Completed Review</span>
-              {assignmentDataUnavailable ? <span><strong>!</strong> Assignments unavailable</span> : null}
-            </div>
-          </div>
-        </section>
+        <div className="queue-kpi-grid" role="group" aria-label="quick ticket views">
+          <button type="button" aria-pressed={activeKpiCard === 'open-tickets'}
+            className={`queue-kpi-card${activeKpiCard === 'open-tickets' ? ' queue-kpi-card-ready' : ''}`}
+            onClick={() => applySavedQueueView('open-tickets')}>
+            <span>Open Tickets</span>
+            <strong>{triageSummary.activeCount}</strong>
+            <p className="muted">Active &amp; in-progress</p>
+          </button>
+          <button type="button" aria-pressed={activeKpiCard === 'today'}
+            className={`queue-kpi-card${activeKpiCard === 'today' ? ' queue-kpi-card-review' : ''}`}
+            onClick={() => applySavedQueueView('today')}>
+            <span>Today</span>
+            <strong>{triageSummary.todayCount}</strong>
+            <p className="muted">Scheduled today</p>
+          </button>
+          <button type="button" aria-pressed={activeKpiCard === 'waiting-parts'}
+            className={`queue-kpi-card${activeKpiCard === 'waiting-parts' ? ' queue-kpi-card-review' : ''}`}
+            onClick={() => applySavedQueueView('waiting-parts')}>
+            <span>Waiting on Parts</span>
+            <strong>{triageSummary.waitingOnPartsCount}</strong>
+            <p className="muted">Status: waiting on parts</p>
+          </button>
+          <button type="button" aria-pressed={activeKpiCard === 'needs-assignment'}
+            className={`queue-kpi-card${activeKpiCard === 'needs-assignment' ? ' queue-kpi-card-alert' : ''}`}
+            onClick={() => applySavedQueueView('needs-assignment')}>
+            <span>Needs Assignment</span>
+            <strong>{triageSummary.needsDispatchReviewCount}</strong>
+            <p className="muted">Missing tech, lead, or schedule</p>
+          </button>
+          <button type="button" aria-pressed={activeKpiCard === 'ready-invoice'}
+            className={`queue-kpi-card${activeKpiCard === 'ready-invoice' ? ' queue-kpi-card-ready' : ''}`}
+            onClick={() => applySavedQueueView('ready-invoice')}>
+            <span>Ready to Invoice</span>
+            <strong>{triageSummary.readyToInvoiceCount}</strong>
+            <p className="muted">Awaiting billing</p>
+          </button>
+          <button type="button" aria-pressed={activeKpiCard === 'completed-review'}
+            className="queue-kpi-card"
+            onClick={() => applySavedQueueView('completed-review')}>
+            <span>Completed Review</span>
+            <strong>{triageSummary.completedReviewCount}</strong>
+            <p className="muted">Verify and close</p>
+          </button>
+          <button type="button" aria-pressed={activeKpiCard === 'closed-tickets'}
+            className="queue-kpi-card"
+            onClick={() => applySavedQueueView('closed-tickets')}>
+            <span>Closed Tickets</span>
+            <strong>{triageSummary.closedCount}</strong>
+            <p className="muted">Completed &amp; archived</p>
+          </button>
+          {assignmentDataUnavailable ? <p className="muted" style={{ gridColumn: '1 / -1', margin: 0 }}>Assignments unavailable — readiness counts are not shown.</p> : null}
+        </div>
       ) : null}
 
       {!isLoading && !error && assignmentDataUnavailable ? (

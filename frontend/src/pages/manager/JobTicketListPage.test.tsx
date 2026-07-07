@@ -106,7 +106,7 @@ describe('Manager list pages', () => {
         id: 'job-3',
         ticketNumber: 'JT-3',
         title: 'Completed archive review',
-        status: 7,
+        status: 3,
         priority: 1,
         customerId: 'c-2',
         serviceLocationId: 's-2',
@@ -138,7 +138,7 @@ describe('Manager list pages', () => {
     expect(within(compactList).getAllByText(/Scheduled:/)).toHaveLength(2)
     expect(within(compactList).getAllByText(/Due:/)).toHaveLength(2)
     const completedRow = within(compactList).getByLabelText('JT-3 compact ticket')
-    expect(within(completedRow).getByText('No assignment or schedule validation is needed until the ticket returns to an active status.')).toBeInTheDocument()
+    expect(within(completedRow).getByText('Assign at least one employee.')).toBeInTheDocument()
     expect(within(completedRow).queryByText('Ready for work.')).not.toBeInTheDocument()
     expect(within(compactList).getAllByRole('link', { name: 'Open Ticket' })[0]).toHaveAttribute(
       'href',
@@ -166,7 +166,7 @@ describe('Manager list pages', () => {
     expect(screen.getByText('Assigned: Employee unavailable · Lead: Employee unavailable')).toBeInTheDocument()
   })
 
-  it('shows compact saved queue views for common manager queues', async () => {
+  it('shows clickable KPI view cards and filters tickets when clicked', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Fix compressor', status: 4, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Inspect pump', status: 5, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
@@ -175,20 +175,38 @@ describe('Manager list pages', () => {
 
     renderPage()
 
-    expect(await screen.findByLabelText('saved queue views')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Saved Views' })).toBeInTheDocument()
-    const savedView = screen.getByLabelText('Saved view')
-    expect(within(savedView).getByRole('option', { name: 'Open Tickets' })).toBeInTheDocument()
-    expect(within(savedView).getByRole('option', { name: 'Closed Tickets' })).toBeInTheDocument()
-    expect(within(savedView).getByRole('option', { name: 'Today' })).toBeInTheDocument()
-    expect(within(savedView).getByRole('option', { name: 'Waiting on Parts' })).toBeInTheDocument()
-    expect(within(savedView).getByRole('option', { name: 'Ready to Invoice' })).toBeInTheDocument()
-    expect(within(savedView).getByRole('option', { name: 'Needs Assignment' })).toBeInTheDocument()
-    expect(within(savedView).getByRole('option', { name: 'Completed Review' })).toBeInTheDocument()
-    expect(within(screen.getByLabelText('saved view counts')).getByText(/Open Tickets/)).toBeInTheDocument()
-    expect(within(screen.getByLabelText('saved view counts')).getByText(/Closed Tickets/)).toBeInTheDocument()
-    expect(within(screen.getByLabelText('saved view counts')).getByText(/Waiting on Parts/)).toBeInTheDocument()
-    expect(within(screen.getByLabelText('saved view counts')).getByText(/Needs Assignment/)).toBeInTheDocument()
+    expect(await screen.findByLabelText('quick ticket views')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Open Tickets/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Closed Tickets/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Waiting on Parts/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Needs Assignment/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Ready to Invoice/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Completed Review/ })).toBeInTheDocument()
+
+    // Default: open tickets (JT-1 and JT-2 active); JT-3 closed not shown
+    expect(screen.getByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('JT-2')).toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+
+    // Click Waiting on Parts
+    fireEvent.click(screen.getByRole('button', { name: /Waiting on Parts/ }))
+    expect(screen.getByText('JT-2')).toBeInTheDocument()
+    expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Status')).toHaveValue('5')
+
+    // Click Closed Tickets
+    fireEvent.click(screen.getByRole('button', { name: /Closed Tickets/ }))
+    expect(screen.getByText('JT-3')).toBeInTheDocument()
+    expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
+    expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Status')).toHaveValue('closed')
+
+    // Click Open Tickets to return to default
+    fireEvent.click(screen.getByRole('button', { name: /Open Tickets/ }))
+    expect(screen.getByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('JT-2')).toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
   })
 
   it('renders default configured statuses in the status filter instead of shortcut boxes', async () => {
@@ -242,7 +260,7 @@ describe('Manager list pages', () => {
       { id: 'status-completed', displayLabel: 'Completed Review', status: 7, displayOrder: 60, isActive: true }
     ] as any)
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
-      { id: 'job-1', ticketNumber: 'JT-1', title: 'Draft job', status: 1, priority: 2, customerId: 'c-1', serviceLocationId: 's-1' },
+      { id: 'job-1', ticketNumber: 'JT-1', title: 'Assigned job', status: 3, priority: 2, customerId: 'c-1', serviceLocationId: 's-1' },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Completed job', status: 7, priority: 2, customerId: 'c-2', serviceLocationId: 's-2' }
     ] as any)
 
@@ -323,7 +341,7 @@ describe('Manager list pages', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(screen.getByText('JT-2')).toBeInTheDocument()
-    expect(screen.getByText('JT-3')).toBeInTheDocument()
+    // JT-3 (closed) is hidden in default open-tickets view
 
     fireEvent.change(screen.getByLabelText('Work readiness'), { target: { value: 'ready' } })
     expect(screen.getByText('JT-1')).toBeInTheDocument()
@@ -342,7 +360,7 @@ describe('Manager list pages', () => {
     expect(screen.getByText('JT-3')).toBeInTheDocument()
   })
 
-  it('puts search before saved views and filters the list when a saved view is selected', async () => {
+  it('defaults to open tickets and positions KPI cards after filter controls', async () => {
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([
       { id: 'job-1', ticketNumber: 'JT-1', title: 'Waiting compressor parts', status: 5, priority: 4, customerId: 'c-1', serviceLocationId: 's-1', scheduledStartAtUtc: null, dueAtUtc: null },
       { id: 'job-2', ticketNumber: 'JT-2', title: 'Scheduled pump', status: 4, priority: 2, customerId: 'c-2', serviceLocationId: 's-2', scheduledStartAtUtc: '2026-05-12T08:00:00Z', dueAtUtc: '2026-05-13T08:00:00Z' },
@@ -351,30 +369,34 @@ describe('Manager list pages', () => {
 
     renderPage()
 
+    // Default: open tickets only — JT-1 and JT-2 active, JT-3 closed not shown
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    expect(screen.getByText('JT-2')).toBeInTheDocument()
+    expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
+
+    // Filter controls appear before KPI cards in DOM order
     const filters = screen.getByLabelText('job ticket filters')
-    const savedViews = screen.getByLabelText('saved queue views')
-    expect(filters.compareDocumentPosition(savedViews) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(screen.getByText('Showing all 3 loaded tickets.')).toBeInTheDocument()
+    const kpiCards = screen.getByLabelText('quick ticket views')
+    expect(filters.compareDocumentPosition(kpiCards) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
-    fireEvent.change(screen.getByLabelText('Saved view'), { target: { value: 'waiting-parts' } })
+    // Default result summary
+    expect(screen.getByText('Showing 2 open tickets. Search by ticket number to find closed tickets.')).toBeInTheDocument()
 
+    // Waiting on Parts KPI card filters to JT-1
+    fireEvent.click(screen.getByRole('button', { name: /Waiting on Parts/ }))
     expect(screen.getByText('JT-1')).toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(screen.queryByText('JT-3')).not.toBeInTheDocument()
     expect(screen.getByText('Filtered view showing 1 of 3 tickets.')).toBeInTheDocument()
     expect(screen.getByLabelText('Status')).toHaveValue('5')
-    expect(screen.getByLabelText('Priority')).toHaveValue('all')
-    expect(screen.getByLabelText('Saved view')).toHaveValue('waiting-parts')
 
-    fireEvent.change(screen.getByLabelText('Saved view'), { target: { value: 'closed-tickets' } })
-
+    // Closed Tickets KPI card filters to JT-3
+    fireEvent.click(screen.getByRole('button', { name: /Closed Tickets/ }))
     expect(screen.queryByText('JT-1')).not.toBeInTheDocument()
     expect(screen.queryByText('JT-2')).not.toBeInTheDocument()
     expect(screen.getByText('JT-3')).toBeInTheDocument()
     expect(screen.getByText('Filtered view showing 1 of 3 tickets.')).toBeInTheDocument()
     expect(screen.getByLabelText('Status')).toHaveValue('closed')
-    expect(screen.getByLabelText('Saved view')).toHaveValue('closed-tickets')
   })
 
   it('shows inline data quality warnings without blocking the queue', async () => {
