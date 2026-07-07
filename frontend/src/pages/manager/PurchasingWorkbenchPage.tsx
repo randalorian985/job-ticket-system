@@ -304,27 +304,11 @@ export function PurchasingWorkbenchPage() {
         {error ? <p role="alert" className="error">{error}</p> : null}
       </article>
 
-      <div className="purchasing-kpi-grid">
-        <div className="queue-kpi-card">
-          <span>Visible POs</span>
-          <strong>{purchaseOrders.length}</strong>
-          <p className="muted">Purchase orders in this list</p>
-        </div>
-        <div className={submittedOrReceivingCount > 0 ? 'queue-kpi-card queue-kpi-card-review' : 'queue-kpi-card'}>
-          <span>Need receiving</span>
-          <strong>{submittedOrReceivingCount}</strong>
-          <p className="muted">Submitted or partially received</p>
-        </div>
-        <div className="queue-kpi-card">
-          <span>Drafts</span>
-          <strong>{draftCount}</strong>
-          <p className="muted">Waiting to be submitted</p>
-        </div>
-        <div className="queue-kpi-card">
-          <span>Archived</span>
-          <strong>{archivedCount}</strong>
-          <p className="muted">Hidden from day-to-day work</p>
-        </div>
+      <div className="queue-kpi-chip-row">
+        <span className="queue-kpi-chip queue-kpi-chip-static"><strong>{purchaseOrders.length}</strong> All POs</span>
+        <span className={`queue-kpi-chip queue-kpi-chip-static${submittedOrReceivingCount > 0 ? ' queue-kpi-chip-alert-static' : ''}`}><strong>{submittedOrReceivingCount}</strong> Need Receiving</span>
+        <span className="queue-kpi-chip queue-kpi-chip-static"><strong>{draftCount}</strong> Drafts</span>
+        <span className="queue-kpi-chip queue-kpi-chip-static"><strong>{archivedCount}</strong> Archived</span>
       </div>
 
       <article className="card">
@@ -350,11 +334,6 @@ export function PurchasingWorkbenchPage() {
               <option value="">Select part</option>
               {activeParts.map((part) => <option key={part.id} value={part.id}>{part.partNumber} · {part.name}</option>)}
             </select>
-            {selectedPart ? (
-              <span className={`field-char-count${getCatalogStatus(selectedPart) !== 'Ready for ticket use' ? ' field-char-count--warn' : ''}`}>
-                {getCatalogStatus(selectedPart)}{selectedPart.vendorId ? ' · vendor linked' : ' · no vendor linked'}
-              </span>
-            ) : null}
           </label>
           <label className="sr-label">Quantity
             <input aria-label="Quantity ordered" required min="0.0001" step="0.0001" type="number" value={form.quantityOrdered} onChange={(event) => setForm({ ...form, quantityOrdered: event.target.value })} />

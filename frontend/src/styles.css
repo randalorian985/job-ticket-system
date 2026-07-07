@@ -1522,6 +1522,16 @@ button.queue-kpi-chip[aria-pressed="true"]:hover:not(:disabled) {
   border-color: #2448b0;
 }
 
+/* Static (non-interactive) chip variant for informational displays */
+span.queue-kpi-chip,
+.queue-kpi-chip-static {
+  cursor: default;
+}
+
+.queue-kpi-chip-alert-static strong {
+  color: #be123c;
+}
+
 button.queue-kpi-chip[aria-pressed="true"] {
   background: #3157c8;
   border-color: #3157c8;
