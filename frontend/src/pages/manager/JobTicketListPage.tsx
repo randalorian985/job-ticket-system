@@ -36,7 +36,7 @@ type QueuePreset = {
   attention?: string
 }
 
-type SavedQueueViewKey = 'custom' | 'open-tickets' | 'closed-tickets' | 'today' | 'waiting-parts' | 'ready-invoice' | 'needs-assignment' | 'completed-review'
+type SavedQueueViewKey = 'custom' | 'all-tickets' | 'open-tickets' | 'closed-tickets' | 'today' | 'waiting-parts' | 'ready-invoice' | 'needs-assignment' | 'completed-review'
 
 type SavedQueueView = {
   value: SavedQueueViewKey
@@ -101,6 +101,7 @@ const deriveSavedQueueView = (sp: URLSearchParams): SavedQueueViewKey => {
 
 const savedQueueViews: SavedQueueView[] = [
   { value: 'custom', label: 'Custom filters' },
+  { value: 'all-tickets', label: 'All Tickets', preset: {} },
   { value: 'open-tickets', label: 'Open Tickets', preset: { status: 'active' } },
   { value: 'closed-tickets', label: 'Closed Tickets', preset: { status: 'closed' } },
   { value: 'today', label: 'Today', preset: { status: 'active' } },
@@ -449,6 +450,7 @@ export function JobTicketListPage() {
       const matchesSearch = !normalizedSearch || [job.ticketNumber, job.title, customerName, locationName, ...assignmentNames]
         .some((value) => value.toLocaleLowerCase().includes(normalizedSearch))
       const matchesSavedQueueView = savedQueueView === 'custom' ||
+        savedQueueView === 'all-tickets' ||
         (savedQueueView === 'open-tickets' && activeStatusValues.has(job.status)) ||
         (savedQueueView === 'closed-tickets' && closedStatusValues.has(job.status)) ||
         (savedQueueView === 'today' && activeStatusValues.has(job.status) && isSameLocalDate(job.scheduledStartAtUtc, today)) ||
@@ -507,7 +509,8 @@ export function JobTicketListPage() {
 
   const activeKpiCard = useMemo((): SavedQueueViewKey | null => {
     if (savedQueueView !== 'custom') return savedQueueView
-    if (statusFilter === allFilterValue || statusFilter === 'active') {
+    if (statusFilter === allFilterValue) return 'all-tickets'
+    if (statusFilter === 'active') {
       if (dispatchReadinessFilter === 'needs-review') return 'needs-assignment'
       return 'open-tickets'
     }
@@ -624,6 +627,9 @@ export function JobTicketListPage() {
 
       {!isLoading && !error && jobs.length ? (
         <div className="queue-kpi-chip-row" role="group" aria-label="quick ticket views">
+          <button type="button" aria-pressed={activeKpiCard === 'all-tickets'} className="queue-kpi-chip" onClick={() => applySavedQueueView('all-tickets')}>
+            <strong>{jobs.length}</strong> All
+          </button>
           <button type="button" aria-pressed={activeKpiCard === 'open-tickets'} className="queue-kpi-chip" onClick={() => applySavedQueueView('open-tickets')}>
             <strong>{triageSummary.activeCount}</strong> Open Tickets
           </button>

@@ -1512,6 +1512,11 @@ button.queue-kpi-chip:hover:not(:disabled) {
   transform: none;
 }
 
+button.queue-kpi-chip[aria-pressed="true"]:hover:not(:disabled) {
+  background: #2448b0;
+  border-color: #2448b0;
+}
+
 button.queue-kpi-chip[aria-pressed="true"] {
   background: #3157c8;
   border-color: #3157c8;
