@@ -102,6 +102,7 @@ export function PurchasingWorkbenchPage() {
   const [form, setForm] = useState<PurchaseOrderFormState>({ vendorId: '', purchaseOrderNumber: '', partId: '', quantityOrdered: '1', unitCost: '0', expectedAtUtc: '', notes: '' })
   const [invoiceForm, setInvoiceForm] = useState<InvoiceFormState>(createInvoiceState())
   const [receiveQuantities, setReceiveQuantities] = useState<Record<string, string>>({})
+  const [purchasingViewFilter, setPurchasingViewFilter] = useState<'all' | 'need-receiving' | 'drafts' | 'archived'>('all')
 
   const activeVendors = useMemo(() => vendors.filter((vendor) => !vendor.isArchived), [vendors])
   const activeParts = useMemo(() => parts.filter((part) => !part.isArchived), [parts])
@@ -113,6 +114,13 @@ export function PurchasingWorkbenchPage() {
   const optionalOrderCandidates = useMemo(() => activeParts
     .filter((part) => !part.vendorId || !part.description?.trim())
     .map((part) => ({ ...part, statusLabel: getCatalogStatus(part) })), [activeParts])
+
+  const filteredPurchaseOrders = useMemo(() => {
+    if (purchasingViewFilter === 'need-receiving') return purchaseOrders.filter((o) => o.status === 2 || o.status === 3)
+    if (purchasingViewFilter === 'drafts') return purchaseOrders.filter((o) => o.status === 1)
+    if (purchasingViewFilter === 'archived') return purchaseOrders.filter((o) => o.isArchived)
+    return purchaseOrders
+  }, [purchaseOrders, purchasingViewFilter])
 
   const refresh = async () => {
     const [partList, vendorList, orderList] = await Promise.all([
@@ -305,10 +313,10 @@ export function PurchasingWorkbenchPage() {
       </article>
 
       <div className="queue-kpi-chip-row">
-        <span className="queue-kpi-chip queue-kpi-chip-static"><strong>{purchaseOrders.length}</strong> All POs</span>
-        <span className={`queue-kpi-chip queue-kpi-chip-static${submittedOrReceivingCount > 0 ? ' queue-kpi-chip-alert-static' : ''}`}><strong>{submittedOrReceivingCount}</strong> Need Receiving</span>
-        <span className="queue-kpi-chip queue-kpi-chip-static"><strong>{draftCount}</strong> Drafts</span>
-        <span className="queue-kpi-chip queue-kpi-chip-static"><strong>{archivedCount}</strong> Archived</span>
+        <button type="button" aria-pressed={purchasingViewFilter === 'all'} className="queue-kpi-chip" onClick={() => setPurchasingViewFilter('all')}><strong>{purchaseOrders.length}</strong> All POs</button>
+        <button type="button" aria-pressed={purchasingViewFilter === 'need-receiving'} className={`queue-kpi-chip${submittedOrReceivingCount > 0 ? ' queue-kpi-chip-alert' : ''}`} onClick={() => setPurchasingViewFilter('need-receiving')}><strong>{submittedOrReceivingCount}</strong> Need Receiving</button>
+        <button type="button" aria-pressed={purchasingViewFilter === 'drafts'} className="queue-kpi-chip" onClick={() => setPurchasingViewFilter('drafts')}><strong>{draftCount}</strong> Drafts</button>
+        <button type="button" aria-pressed={purchasingViewFilter === 'archived'} className="queue-kpi-chip" onClick={() => setPurchasingViewFilter('archived')}><strong>{archivedCount}</strong> Archived</button>
       </div>
 
       <article className="card">
@@ -353,12 +361,14 @@ export function PurchasingWorkbenchPage() {
         <h3>Purchase orders</h3>
         {purchaseOrders.length === 0 ? (
           <p className="muted">No purchase orders yet. Create your first purchase order above.</p>
+        ) : filteredPurchaseOrders.length === 0 ? (
+          <p className="muted">No purchase orders match the selected filter.</p>
         ) : (
           <div className="table-wrapper">
             <table>
               <thead><tr><th>PO</th><th>Vendor</th><th>Status</th><th>Received</th><th>Invoice</th><th>Costs</th><th></th></tr></thead>
               <tbody>
-                {purchaseOrders.map((order) => {
+                {filteredPurchaseOrders.map((order) => {
                   const rowClasses = [
                     order.isArchived ? 'muted' : '',
                     selectedOrder?.id === order.id ? 'po-row-selected' : ''
