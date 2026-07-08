@@ -156,6 +156,7 @@ public sealed class EquipmentCompatiblePartConfiguration : IEntityTypeConfigurat
     {
         builder.HasKey(x => new { x.EquipmentId, x.PartId });
         builder.Property(x => x.Notes).HasMaxLength(1000);
+        builder.HasQueryFilter(x => !x.Equipment.IsDeleted && !x.Part.IsDeleted);
         builder.HasOne(x => x.Equipment).WithMany(x => x.CompatibleParts).HasForeignKey(x => x.EquipmentId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Part).WithMany(x => x.EquipmentCompatibleParts).HasForeignKey(x => x.PartId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(x => x.EquipmentId);
@@ -408,7 +409,7 @@ public sealed class JobTicketPartConfiguration : IEntityTypeConfiguration<JobTic
         builder.Property(x => x.OfficeOrderRequested).HasDefaultValue(false).IsRequired();
         builder.Property(x => x.OfficeOrderNotes).HasMaxLength(2000);
         builder.Property(x => x.IsBillable).HasDefaultValue(true).IsRequired();
-        builder.Property(x => x.ApprovalStatus).HasDefaultValue(JobTicketSystem.Domain.Enums.JobPartApprovalStatus.Pending).IsRequired();
+        builder.Property(x => x.ApprovalStatus).IsRequired();
         builder.Property(x => x.Notes).HasMaxLength(2000);
         builder.Property(x => x.ComponentCategory).HasMaxLength(150);
         builder.Property(x => x.FailureDescription).HasMaxLength(4000);

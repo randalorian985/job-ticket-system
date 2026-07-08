@@ -4,6 +4,8 @@ using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
 using JobTicketSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Xunit;
 
@@ -11,6 +13,39 @@ namespace JobTicketSystem.Infrastructure.Tests;
 
 public sealed class MailerConfigurationServiceTests
 {
+    [Fact]
+    public void SmtpEmailSettings_can_bind_from_configuration_options()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Smtp:Enabled"] = "true",
+                ["Smtp:Host"] = "smtp.example.com",
+                ["Smtp:Port"] = "2525",
+                ["Smtp:EnableSsl"] = "false",
+                ["Smtp:Username"] = "mailer",
+                ["Smtp:Password"] = "smtp-secret",
+                ["Smtp:FromAddress"] = "dispatch@example.com",
+                ["Smtp:AppBaseUrl"] = "https://dev.mudbugdigital.com"
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.Configure<SmtpEmailSettings>(configuration.GetSection("Smtp"));
+
+        using var provider = services.BuildServiceProvider();
+        var settings = provider.GetRequiredService<IOptions<SmtpEmailSettings>>().Value;
+
+        Assert.True(settings.Enabled);
+        Assert.Equal("smtp.example.com", settings.Host);
+        Assert.Equal(2525, settings.Port);
+        Assert.False(settings.EnableSsl);
+        Assert.Equal("mailer", settings.Username);
+        Assert.Equal("smtp-secret", settings.Password);
+        Assert.Equal("dispatch@example.com", settings.FromAddress);
+        Assert.Equal("https://dev.mudbugdigital.com", settings.AppBaseUrl);
+    }
+
     [Fact]
     public async Task Get_returns_environment_settings_without_creating_database_row()
     {

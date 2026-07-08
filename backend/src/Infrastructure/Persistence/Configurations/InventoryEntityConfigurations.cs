@@ -28,6 +28,7 @@ public sealed class InventoryTransactionConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.QuantityDelta).HasPrecision(18, 4);
         builder.Property(x => x.Reason).HasMaxLength(500).IsRequired();
         builder.Property(x => x.Notes).HasMaxLength(2000);
+        builder.HasQueryFilter(x => !x.Part.IsDeleted);
         builder.HasOne(x => x.StockLocation).WithMany(x => x.InventoryTransactions).HasForeignKey(x => x.StockLocationId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Part).WithMany().HasForeignKey(x => x.PartId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.PurchaseOrder).WithMany().HasForeignKey(x => x.PurchaseOrderId).OnDelete(DeleteBehavior.Restrict);

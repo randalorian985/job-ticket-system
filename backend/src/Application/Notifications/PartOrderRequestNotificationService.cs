@@ -66,12 +66,38 @@ public sealed class PartOrderRequestNotificationService(
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
-public sealed record SmtpEmailSettings(
-    bool Enabled,
-    string? Host,
-    int Port,
-    bool EnableSsl,
-    string? Username,
-    string? Password,
-    string? FromAddress,
-    string? AppBaseUrl);
+public sealed class SmtpEmailSettings
+{
+    public SmtpEmailSettings()
+    {
+    }
+
+    public SmtpEmailSettings(
+        bool enabled,
+        string? host,
+        int port,
+        bool enableSsl,
+        string? username,
+        string? password,
+        string? fromAddress,
+        string? appBaseUrl)
+    {
+        Enabled = enabled;
+        Host = host;
+        Port = port;
+        EnableSsl = enableSsl;
+        Username = username;
+        Password = password;
+        FromAddress = fromAddress;
+        AppBaseUrl = appBaseUrl;
+    }
+
+    public bool Enabled { get; init; }
+    public string? Host { get; init; }
+    public int Port { get; init; } = 587;
+    public bool EnableSsl { get; init; } = true;
+    public string? Username { get; init; }
+    public string? Password { get; init; }
+    public string? FromAddress { get; init; }
+    public string? AppBaseUrl { get; init; }
+}
