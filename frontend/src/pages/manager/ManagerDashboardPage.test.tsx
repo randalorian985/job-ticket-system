@@ -60,7 +60,7 @@ describe('ManagerDashboardPage', () => {
     expect(within(kpis).getByText('All Jobs')).toBeInTheDocument()
 
     expect(screen.getByRole('heading', { name: 'Unresolved Jobs by Status' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Assignment & Schedule' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Scheduling' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Back Office Review' })).toBeInTheDocument()
     const nextAction = screen.getByLabelText('next scheduling action')
     expect(within(nextAction).getByText('Next scheduling action')).toBeInTheDocument()
@@ -87,7 +87,7 @@ describe('ManagerDashboardPage', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Assignment & Schedule' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Scheduling' })).toBeInTheDocument()
     const nextAction = screen.getByLabelText('next scheduling action')
     expect(within(nextAction).getByText('Next scheduling action')).toBeInTheDocument()
     expect(within(nextAction).getByText('No assignment or schedule blockers are visible from the dashboard data.')).toBeInTheDocument()
@@ -106,7 +106,7 @@ describe('ManagerDashboardPage', () => {
     )
 
     expect(await screen.findByText('Unable to load the operations summary.')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Assignment & Schedule' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Scheduling' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Back Office Review' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('next scheduling action')).not.toBeInTheDocument()
   })

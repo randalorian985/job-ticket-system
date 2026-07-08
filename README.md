@@ -22,7 +22,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 - Technicians must be clocked into the selected job ticket before recording field work through work notes, parts, part requests, or file/photo uploads; Manager/Admin back-office actions are not gated by an employee clock-in.
 - Manager/Admin service-ticket detail now presents a cohesive field-service workbench with ticket overview, customer, service location, equipment, assignments, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
 - Manager/Admin ticket actions use URL-backed focused workflow panels for section-based ticket editing, quick notes, photo/file upload, labor review, status review, archive review, and Add / Request Part while staying on existing ticket, part-request, assignment, file, time, and reporting APIs.
-- Manager/Admin ticket workflow guidance now highlights the recommended next action, target workflow, workflow path, mobile quick actions, and invoice-review requirements without changing backend APIs or business workflow.
+- Manager/Admin ticket detail now uses one next action, practical tabs, compact quick actions, Scheduling handoff, and invoice-review requirements without changing backend APIs or business workflow.
 - Manager/Admin ticket create/edit now treats billing party as an explicit relationship that can default from the customer, follow job-site/equipment billing context, or be overridden to any customer record without being overwritten by later customer changes.
 - Manager/Admin task navigation uses URL-backed queue filters, dashboard links into filtered queues, queue-aware return links, workflow tabs, and a recommended next action that opens the selected ticket workflow in a focused view.
 - Technician screens do not expose part cost, billable price, vendor cost, purchase history, catalog cleanup, purchasing, inventory, or invoice-facing billing controls.
@@ -34,7 +34,7 @@ Job Ticket Management System is an API-first platform for creating, assigning, e
 ## Current UI Direction
 The Manager/Admin Service Ticket Workspace Redesign is implemented for the job-ticket detail/workspace flow, and the same restrained operational design system is applied across the rest of the existing application.
 
-The service-ticket side now centers on one job-ticket record: the queue creates and finds tickets, the ticket workspace handles Assignment & Schedule, technicians capture work, Managers/Admins review the ticket, and Reports supports invoice-ready review. The design direction remains adapted to Crane's job-ticket scope.
+The service-ticket side now centers on one job-ticket record: the queue creates and finds tickets, Scheduling handles schedule review, the ticket workspace reviews service details, technician context, labor, parts, files, history, and invoice readiness, technicians capture work, and Reports supports invoice-ready review. The design direction remains adapted to Crane's job-ticket scope.
 
 This UI direction does not approve external client portals, online payments, quote approval automation, customer notification automation, purchasing expansion, inventory expansion, parts recommendations, AI/scoring, automatic compatibility, or automatic approval.
 

@@ -43,10 +43,8 @@ import {
   MobileQuickActions,
   RecommendedActionPanel,
   TicketWorkbenchHero,
-  TicketWorkbenchKpis,
   TicketWorkbenchRail,
   WorkflowFocusHeading,
-  WorkflowPath,
   WorkflowTabs,
 } from "./jobTicketDetail/JobTicketWorkbenchShell";
 import {
@@ -67,7 +65,6 @@ import {
   workflowTabs,
   type ActivityItem,
   type WorkbenchDrawer,
-  type WorkflowPathStep,
   type WorkflowTab,
 } from "./jobTicketDetail/jobTicketDetailHelpers";
 import { activeDispatchStatusValues, getSafeManagerReturnContext } from "./managerTaskNavigation";
@@ -338,8 +335,6 @@ export function JobTicketDetailPage() {
   }, [assignmentLoadFailed, assignments, employeesById, job, leadAssignment]);
 
   const dispatchWarnings = dispatchReadiness.warnings;
-  const openDispatchChecks = dispatchReadiness.checks.filter((check) => !check.isReady);
-  const completedDispatchChecks = dispatchReadiness.checks.filter((check) => check.isReady);
   const nextDispatchFix = dispatchWarnings[0] ?? "All assignment and schedule requirements are complete.";
 
   const closeoutReview = useMemo(() => {
@@ -1028,52 +1023,30 @@ export function JobTicketDetailPage() {
         ? "closeout"
         : "overview";
   const recommendedActionDetail = hasActiveDispatchBlocker
-    ? dispatchWarnings[0]
+    ? job?.status === 2
+      ? "Open Scheduling to assign the technician and service window for this submitted ticket."
+      : dispatchWarnings[0]
     : partsReview.blockerCount
       ? partsReview.nextAction
-      : closeoutReview.warnings[0] ?? "Review the service details and continue the current workflow.";
-  const recommendedWorkflowLabel = workflowTabs.find((tab) => tab.value === recommendedWorkflow)?.label ?? "Overview";
+      : closeoutReview.warnings[0] ?? "Review the service details and continue the current ticket work.";
+  const recommendedWorkflowLabel = recommendedWorkflow === "dispatch"
+    ? "Scheduling"
+    : workflowTabs.find((tab) => tab.value === recommendedWorkflow)?.label ?? "Overview";
   const activeWorkflowLabel = workflowTabs.find((tab) => tab.value === activeTab)?.label ?? "Overview";
   const recommendedActionTitle = hasActiveDispatchBlocker
-    ? "Resolve assignment blocker"
+    ? job?.status === 2 ? "Send to Scheduling" : "Review scheduling details"
     : partsReview.blockerCount
       ? "Review parts blocker"
       : closeoutReview.warnings.length
         ? "Finish invoice review"
         : "Review service details";
   const recommendedActionStatus = hasActiveDispatchBlocker
-    ? `${dispatchWarnings.length} assignment item${dispatchWarnings.length === 1 ? "" : "s"} open`
+    ? dispatchReadiness.statusLabel
     : partsReview.blockerCount
       ? `${partsReview.blockerCount} parts blocker${partsReview.blockerCount === 1 ? "" : "s"}`
       : closeoutReview.warnings.length
         ? `${closeoutReview.warnings.length} invoice review item${closeoutReview.warnings.length === 1 ? "" : "s"} open`
         : "No immediate blockers visible";
-  const workflowPathSteps: WorkflowPathStep[] = [
-    {
-      label: "Assignment & Schedule",
-      value: "dispatch",
-      summary: dispatchWarnings.length ? `${dispatchWarnings.length} open` : "Ready",
-      state: dispatchWarnings.length ? "open" : "ready",
-    },
-    {
-      label: "Field Work",
-      value: "time",
-      summary: `${entries.length + timeEntries.length} labor notes`,
-      state: entries.length || timeEntries.length ? "ready" : "open",
-    },
-    {
-      label: "Parts / Files",
-      value: partsReview.blockerCount ? "parts" : "files",
-      summary: partsReview.blockerCount ? `${partsReview.blockerCount} blockers` : `${parts.length + files.length} records`,
-      state: partsReview.blockerCount ? "alert" : "ready",
-    },
-    {
-      label: "Invoice Review",
-      value: "closeout",
-      summary: closeoutReview.warnings.length ? `${closeoutReview.warnings.length} open` : "Ready",
-      state: closeoutReview.warnings.length ? "open" : "ready",
-    },
-  ];
 
   const openLaborWorkflow = () => {
     selectWorkflowTab("time", true);
@@ -1124,16 +1097,11 @@ export function JobTicketDetailPage() {
             actionDetail={recommendedActionDetail}
             actionStatus={recommendedActionStatus}
             actionTitle={recommendedActionTitle}
+            actionHref={recommendedWorkflow === "dispatch" ? "/manage/schedule" : undefined}
             recommendedWorkflow={recommendedWorkflow}
             workflowFocusMode={workflowFocusMode}
             workflowLabel={recommendedWorkflowLabel}
             onOpenWorkflow={openRecommendedWorkflow}
-          />
-
-          <WorkflowPath
-            steps={workflowPathSteps}
-            workflowFocusMode={workflowFocusMode}
-            onSelectWorkflowTab={selectWorkflowTab}
           />
 
           <WorkflowFocusHeading
@@ -1153,17 +1121,6 @@ export function JobTicketDetailPage() {
             workflowFocusMode={workflowFocusMode}
             onOpenDrawer={openWorkflowDrawer}
             onOpenLabor={openLaborWorkflow}
-          />
-
-          <TicketWorkbenchKpis
-            closeoutReview={closeoutReview}
-            dispatchReadiness={dispatchReadiness}
-            dispatchWarnings={dispatchWarnings}
-            files={files}
-            invoiceSummary={invoiceSummary}
-            laborSummary={laborSummary}
-            partsReview={partsReview}
-            workflowFocusMode={workflowFocusMode}
           />
 
           <section className={workflowFocusMode ? "ticket-workbench-layout ticket-workbench-layout-focused" : "ticket-workbench-layout"}>
@@ -1235,10 +1192,10 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "photo" ? (
-                <section id="ticket-workbench-drawer-photo" className="workbench-drawer no-print" aria-label="quick photo upload panel" tabIndex={-1}>
+                <section id="ticket-workbench-drawer-photo" className="workbench-drawer no-print" aria-label="quick file upload panel" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
-                      <h3>Add Photo</h3>
+                      <h3>Add File</h3>
                       <p className="muted">Upload a job photo, PDF, or closeout attachment from the ticket workspace.</p>
                     </div>
                     <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
@@ -1268,7 +1225,7 @@ export function JobTicketDetailPage() {
                       Mark for invoice review
                     </label>
                     <div className="row">
-                      <button type="submit" disabled={isUploadingQuickFile}>{isUploadingQuickFile ? "Uploading..." : "Upload Photo/File"}</button>
+                      <button type="submit" disabled={isUploadingQuickFile}>{isUploadingQuickFile ? "Uploading..." : "Upload File"}</button>
                       <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Cancel</button>
                     </div>
                     <p className="muted">Allowed file types: JPG, PNG, WebP, or PDF.</p>
@@ -1277,7 +1234,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "status" ? (
-                <section id="ticket-workbench-drawer-status" className="workbench-drawer no-print" aria-label="status workflow review" tabIndex={-1}>
+                <section id="ticket-workbench-drawer-status" className="workbench-drawer no-print" aria-label="status review" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Status Review</h3>
@@ -1328,7 +1285,7 @@ export function JobTicketDetailPage() {
               ) : null}
 
               {activeDrawer === "archive" ? (
-                <section id="ticket-workbench-drawer-archive" className="workbench-drawer no-print" aria-label="archive workflow review" tabIndex={-1}>
+                <section id="ticket-workbench-drawer-archive" className="workbench-drawer no-print" aria-label="archive review" tabIndex={-1}>
                   <div className="workbench-panel-heading">
                     <div>
                       <h3>Archive Review</h3>
@@ -1706,7 +1663,7 @@ export function JobTicketDetailPage() {
                     <h3>Parts Used &amp; Requested</h3>
                     <p className="muted">Ticket parts and back-office request status.</p>
                   </div>
-                  <button type="button" className="secondary-button no-print" onClick={() => toggleDrawer("part")}>Open Add / Request Part Panel</button>
+                  <button type="button" className="secondary-button no-print" onClick={() => toggleDrawer("part")}>Add Part</button>
                 </div>
                 <section className="parts-summary" aria-label="waiting on parts summary">
                   <div>
@@ -2016,13 +1973,8 @@ export function JobTicketDetailPage() {
             </div>
 
             <TicketWorkbenchRail
-              assignments={assignments}
-              completedDispatchChecks={completedDispatchChecks}
               dispatchReadiness={dispatchReadiness}
-              getEmployeeDisplayName={getEmployeeDisplayName}
               job={job}
-              leadAssignment={leadAssignment}
-              openDispatchChecks={openDispatchChecks}
               workflowFocusMode={workflowFocusMode}
               onOpenDrawer={openWorkflowDrawer}
               onOpenLabor={openLaborWorkflow}

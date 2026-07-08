@@ -60,11 +60,19 @@ Manager/Admin Service Ticket Workspace Redesign is merged and protected on `main
 - `/manage` remains Manager/Admin-only and `/manage/users` remains Admin-only;
 - no backend API behavior, schema, migration, enum, auth, purchasing expansion, inventory expansion, portal, payment, notification, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior was added.
 
+Manager/Admin ticket detail cleanup was completed on July 8, 2026:
+- affected modules: `frontend/src/pages/manager/JobTicketDetailPage.tsx`, `frontend/src/pages/manager/jobTicketDetail/*`, shared styles, ticket detail tests, route/page notes, README, project scope, and client wiki documentation;
+- the separate job-ticket workflow preview route was removed after the approved design was folded into the live ticket workspace;
+- the live ticket detail screen now uses one next action, a smaller Quick Actions rail, a Status rail card, practical tabs, and Files upload wording;
+- the old workflow path cards, ticket KPI strip, assignment-requirements rail card, and duplicated scheduling context were removed from the live ticket detail page;
+- Scheduling is presented as the handoff module from submitted tickets and the quick action rail, while the legacy `dispatch` tab remains the internal value for the user-facing Technicians tab until Scheduling owns all assignment editing;
+- no backend API behavior, schema, migration, enum, auth, role, scheduling engine, automatic scheduling, automatic approval, purchasing expansion, inventory expansion, recommendation/scoring/AI, client portal, payment, or invoice-generation behavior was added.
+
 Manager/Admin Section-Based Ticket Editing and Quick Actions was implemented on June 17, 2026:
 - affected modules: `frontend/src/pages/manager/JobTicketDetailPage.tsx`, `frontend/src/pages/manager/JobTicketEditorForm.tsx`, ticket detail/editor tests, shared styles, and client wiki documentation;
 - the old single long Edit Ticket form is replaced by section navigation for Basics, Customer & Equipment, Scope & Notes, Billing, and Schedule;
-- quick actions now expose Add Note, Add Photo, Add Labor, and Change Status from the ticket workbench action rail;
-- Add Note uses the existing job-ticket work-entry API; Add Photo uses the existing job-ticket file upload API; Add Labor opens the existing Labor workflow tab; Change Status keeps the existing guarded status review panel;
+- quick actions now expose Add Note, Add File, Review Labor, and Change Status from the ticket workbench action rail;
+- Add Note uses the existing job-ticket work-entry API; Add File uses the existing job-ticket file upload API; Review Labor opens the existing Labor tab; Change Status keeps the existing guarded status review panel;
 - no database schema, migration, enum, authorization, route, backend API, DTO, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, or automatic approval behavior was added.
 
 Manager/Admin Dispatch Board was retired on June 23, 2026 after review of the real operating workflow:
@@ -84,7 +92,7 @@ Service-equipment meaning was corrected throughout the active system on June 22,
 Manager/Admin Service Ticket Workflow Audit and repair was completed on June 18, 2026:
 - affected modules: `frontend/src/pages/manager/JobTicketDetailPage.tsx`, `frontend/src/pages/manager/JobTicketDetailPage.test.tsx`, shared styles, page/route developer notes, client wiki documentation, and ticket workflow screenshots;
 - direct workflow-tab and action-rail navigation now opens the selected ticket workflow in the focused `view=workflow` screen;
-- Edit Ticket, Change Status, Archive Review, Add Note, Add Photo, Add Labor, and Add / Request Part now land users on the relevant focused panel or tab with stronger focus/contrast feedback;
+- Edit Ticket, Change Status, Archive Review, Add Note, Add File, Review Labor, and Add / Request Part now land users on the relevant focused panel or tab with stronger focus/contrast feedback;
 - **Back to ticket overview** closes open focused drawers before returning to the normal ticket overview;
 - the audit report is documented in `docs/service-ticket-workflow-audit-2026-06-18.md`;
 - no backend API behavior, schema, migration, enum, auth, role, purchasing, receiving, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, invoice-generation, payment, or customer portal behavior was added.
@@ -105,9 +113,9 @@ Production readiness hardening was completed on June 18, 2026:
 - no schema migration, historical migration edit, API route/DTO change, enum change, auth weakening, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, client portal, payment, or invoice-generation behavior was added.
 
 Manager/Admin ticket workflow refinement was completed on June 18, 2026:
-- the ticket overview recommended-action card now names the next step, target workflow, and visible blocker count;
-- a ticket workflow path lets users jump between Assignment & Schedule, Field Work, Parts / Files, and Invoice Review without changing the underlying ticket-backed workflow;
-- mobile ticket overview adds compact Add Note, Add Photo, Labor, and Status shortcuts near the top of the page;
+- the ticket overview next-action card now names the next step, destination, and visible blocker count;
+- the later July cleanup removed the temporary workflow path cards; tabs remain the in-ticket navigation;
+- mobile ticket overview adds compact Add Note, Add File, Labor, and Status shortcuts near the top of the page;
 - Invoice Review now surfaces open closeout requirements before invoice-ready totals and keeps direct status/labor/file follow-up actions visible;
 - this is a frontend workflow-clarity refinement only and does not add backend APIs, routes, DTOs, schema migrations, enum changes, auth changes, new dispatch models, purchasing expansion, receiving expansion, inventory expansion, recommendation/scoring/AI, automatic compatibility, automatic approval, client portal, payment, or invoice-generation behavior.
 
@@ -116,7 +124,7 @@ Manager/Admin task-navigation and workflow-tab polish is merged and protected on
 - Manager dashboard summary links open the corresponding filtered queues;
 - Manager/Admin job-ticket queue can export the currently visible filtered ticket rows as client-side CSV;
 - ticket detail links preserve safe queue-aware return context;
-- ticket detail exposes workflow tabs for Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History, with a visible recommended next action;
+- ticket detail exposes workflow tabs for Service Details, Technicians, Labor, Parts, Files, Invoice Review, and History, with one visible next action and a Scheduling handoff;
 - developer setup validation checks Docker Compose configuration even when `.env` is absent by using `.env.example` safely;
 - this polish is a frontend navigation/developer-setup improvement and does not change backend API behavior, business rules, authorization, schema, migrations, enums, purchasing expansion, inventory expansion, recommendation, AI/scoring, automatic compatibility, or automatic approval behavior.
 

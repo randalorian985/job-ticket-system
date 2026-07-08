@@ -35,7 +35,6 @@ import { JobTicketDetailPage } from '../pages/manager/JobTicketDetailPage'
 import { JobTicketListPage } from '../pages/manager/JobTicketListPage'
 import { ManagerDashboardPage } from '../pages/manager/ManagerDashboardPage'
 import { ManagerShell } from '../pages/manager/ManagerShell'
-import { JobTicketWorkflowPreviewPage } from '../pages/preview/JobTicketWorkflowPreviewPage'
 import { UxPreviewReadinessPage } from '../pages/preview/UxPreviewReadinessPage'
 
 function HomeRoute() {
@@ -57,7 +56,6 @@ export function AppRouter() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/preview" element={<UxPreviewReadinessPage />} />
-      <Route path="/preview/job-ticket-workflow" element={<JobTicketWorkflowPreviewPage />} />
 
       <Route element={<ProtectedRoute allowedRoles={['Employee']} />}>
         <Route path="/jobs" element={<MyJobsPage />} />

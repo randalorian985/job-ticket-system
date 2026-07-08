@@ -65,16 +65,9 @@ export type PartsReviewSummary = {
   nextAction: string;
 };
 
-export type WorkflowPathStep = {
-  label: string;
-  value: WorkflowTab;
-  summary: string;
-  state: "alert" | "open" | "ready";
-};
-
 export const workflowTabs: WorkflowTabDefinition[] = [
   { value: "overview", label: "Service Details", description: "Review the customer, location, equipment, scope, and billing details." },
-  { value: "dispatch", label: "Assignment & Schedule", description: "Manage assigned technicians, lead tech, schedule, and due date." },
+  { value: "dispatch", label: "Technicians", description: "Review current technician assignments. Schedule placement stays in Scheduling." },
   { value: "time", label: "Labor", description: "Review work entries, time entries, and approval status." },
   { value: "parts", label: "Parts", description: "Review parts used, requested, ordered, and awaiting approval." },
   { value: "files", label: "Files", description: "Review job files, photos, and invoice attachments." },

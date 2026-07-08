@@ -158,7 +158,7 @@ describe('JobTicketDetailPage', () => {
   }
 
   const selectWorkflowTab = (name: string) => fireEvent.click(screen.getByRole('tab', { name }))
-  const openPartPanel = () => clickFirstButton('Open Add / Request Part Panel')
+  const openPartPanel = () => clickFirstButton('Add Part')
   const openStatusPanel = () => clickFirstButton('Change Status')
   const openArchivePanel = () => clickFirstButton('Archive Review')
 
@@ -166,14 +166,13 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Ticket Actions' })).toBeInTheDocument()
-    expect(screen.getByRole('tooltip', { name: 'These checks identify missing assignment or scheduling details before work starts. Completed checks stay available below.' })).toBeInTheDocument()
-    expect(screen.getByLabelText('ticket workflow path')).toHaveTextContent('Assignment & Schedule')
-    expect(screen.getByLabelText('ticket workflow path')).toHaveTextContent('Invoice Review')
+    expect(screen.getByRole('heading', { name: 'Quick Actions' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('ticket workflow path')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('ticket workspace summary')).not.toBeInTheDocument()
     expect(screen.getByLabelText('mobile ticket quick actions')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Service Details' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ticket Status & Priority' })).toBeInTheDocument()
-    selectWorkflowTab('Assignment & Schedule')
+    selectWorkflowTab('Technicians')
     expect(screen.getByRole('heading', { name: 'Technician Assignments' })).toBeInTheDocument()
     selectWorkflowTab('Labor')
     expect(screen.getByRole('heading', { name: 'Labor & Time Entries' })).toBeInTheDocument()
@@ -187,13 +186,8 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByLabelText('invoice review')).toHaveFocus()
     expectRenderedText('Ready to work')
     expectRenderedText('Next Required UpdateAll assignment and schedule requirements are complete.')
-    expectRenderedText('Assigned employees: Alex Rivera.')
-    expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
     expectRenderedText('Alex Rivera Lead Tech')
-    expect(screen.getByText('8 of 8 complete')).toBeInTheDocument()
-    expect(screen.getByText('No assignment or schedule blockers are currently visible.')).toBeInTheDocument()
-    expect(screen.getByText('Review 8 completed requirements')).toBeInTheDocument()
     expect(screen.getByText('Labor / Work Entries')).toBeInTheDocument()
     selectWorkflowTab('Parts')
     expect(screen.getByRole('tabpanel', { name: 'Parts' })).toHaveAttribute('aria-label', 'parts used and requested panel')
@@ -201,13 +195,13 @@ describe('JobTicketDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openStatusPanel()
     expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
-    expect(screen.getByLabelText('status workflow review')).toHaveFocus()
+    expect(screen.getByLabelText('status review')).toHaveFocus()
     expect(screen.getByRole('button', { name: 'Choose a new status' })).toBeDisabled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openArchivePanel()
     expect(screen.getByRole('heading', { name: 'Archive Review' })).toBeInTheDocument()
-    expect(screen.getByLabelText('archive workflow review')).toHaveFocus()
+    expect(screen.getByLabelText('archive review')).toHaveFocus()
     expect(screen.getByLabelText('Archive Reason')).toBeInTheDocument()
   })
 
@@ -222,7 +216,7 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getAllByText('P-100 - Hydraulic hose').length).toBeGreaterThan(0)
   })
 
-  it('opens quick actions for notes, photos, labor, and status review', async () => {
+  it('opens quick actions for notes, files, labor, and status review', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
@@ -242,19 +236,19 @@ describe('JobTicketDetailPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     expect(screen.queryByLabelText('quick note panel')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Add Photo' }))
-    expect(screen.getByRole('heading', { name: 'Add Photo' })).toBeInTheDocument()
-    expect(screen.getByLabelText('quick photo upload panel')).toHaveFocus()
+    fireEvent.click(screen.getByRole('button', { name: 'Add File' }))
+    expect(screen.getByRole('heading', { name: 'Add File' })).toBeInTheDocument()
+    expect(screen.getByLabelText('quick file upload panel')).toHaveFocus()
     const file = new File(['photo'], 'after.jpg', { type: 'image/jpeg' })
     fireEvent.change(screen.getByLabelText('Photo or file'), { target: { files: [file] } })
     fireEvent.change(screen.getByLabelText('Caption'), { target: { value: 'After repair' } })
     fireEvent.click(screen.getByLabelText('Mark for invoice review'))
-    fireEvent.click(screen.getByRole('button', { name: 'Upload Photo/File' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Upload File' }))
     await waitFor(() => expect(filesApi.upload).toHaveBeenCalledWith('j1', expect.any(FormData)))
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
-    expect(screen.queryByLabelText('quick photo upload panel')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }))
+    expect(screen.queryByLabelText('quick file upload panel')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Review Labor' }))
     expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
     expect(screen.getByLabelText('labor and time entries panel')).toHaveFocus()
 
@@ -479,7 +473,7 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Ready to work')
-    expectRenderedText('check the job scope for component-only work')
+    expectRenderedText('If no service equipment is listed, confirm the component or part is clear in the job scope before invoice review.')
   })
 
   it('marks completed tickets as outside active work even when detail context is complete', async () => {
@@ -506,7 +500,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Not active work')
     expectRenderedText('Next Required UpdateTicket is outside the active work queue.')
-    expectRenderedText('Work statusTicket is outside the active work queue.')
+    expectRenderedText('ReadinessNot active work')
   })
 
   it('loads assignable technicians for manager assignment dropdown without calling the admin users endpoint', async () => {
@@ -520,9 +514,7 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(usersApi.list).not.toHaveBeenCalled()
     expect(usersApi.listAssignableEmployees).toHaveBeenCalled()
-    selectWorkflowTab('Assignment & Schedule')
-    expectRenderedText('Assigned employees: Alex Rivera.')
-    expectRenderedText('Lead tech is Alex Rivera.')
+    selectWorkflowTab('Technicians')
     expectRenderedText('Current lead: Alex Rivera')
     expectRenderedText('Alex Rivera Lead Tech')
     expect(screen.getByRole('option', { name: 'Blair Stone' })).toBeInTheDocument()
@@ -539,8 +531,6 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expect(usersApi.list).not.toHaveBeenCalled()
     expect(usersApi.listAssignableEmployees).toHaveBeenCalled()
-    expectRenderedText('Assigned employees: Alex Rivera.')
-    expectRenderedText('Lead tech is Alex Rivera.')
     expectRenderedText('Current lead: Alex Rivera')
     expectRenderedText('Alex Rivera Lead Tech')
   })
@@ -564,9 +554,9 @@ describe('JobTicketDetailPage', () => {
 
     await screen.findAllByText('Needs attention')
     expectRenderedText('Next Required UpdateNo employees are assigned.')
-    expect(screen.getAllByText('4 open').length).toBeGreaterThan(0)
-    expect(screen.getByRole('list', { name: 'open assignment and schedule checks' })).toBeInTheDocument()
-    expect(screen.getByText('Review 4 completed requirements')).toBeInTheDocument()
+    const recommendation = screen.getByLabelText('next action')
+    expect(recommendation).toHaveTextContent('Send to Scheduling')
+    expect(within(recommendation).getByRole('link', { name: 'Open Scheduling' })).toHaveAttribute('href', '/manage/schedule')
     expectRenderedText('No employees are assigned.')
     expectRenderedText('No lead tech is marked.')
     expectRenderedText('No scheduled start is set.')
@@ -581,10 +571,10 @@ describe('JobTicketDetailPage', () => {
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
     expectRenderedText('Assignment data unavailable')
     expectRenderedText('Next Required UpdateAssignment data could not be loaded. Refresh or retry before assignment review.')
-    selectWorkflowTab('Assignment & Schedule')
+    selectWorkflowTab('Technicians')
     expect(screen.getByRole('alert')).toHaveTextContent('Assignment data could not be loaded. Refresh before editing assignments or assignment review.')
     expect(screen.getByRole('button', { name: 'Assign Employee' })).toBeDisabled()
-    expectRenderedText('Assignment dataAssignment data could not be loaded. Refresh or retry before assignment review.')
+    expectRenderedText('ReadinessAssignment data unavailable')
   })
 
   it('prevents adding a second lead without clearing the current one first', async () => {
@@ -732,15 +722,15 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    const recommendation = screen.getByLabelText('recommended action')
+    const recommendation = screen.getByLabelText('next action')
     expect(recommendation).toHaveTextContent('Finish invoice review')
-    expect(recommendation).toHaveTextContent('Target workflow')
+    expect(recommendation).toHaveTextContent('Goes to')
     expect(recommendation).toHaveTextContent('Some loaded time entries still need approval review.')
     expect(recommendation).not.toHaveTextContent('Ticket is outside the active work queue.')
 
     const openWorkflowButton = screen.getByRole('button', { name: 'Open Invoice Review' })
-    expect(openWorkflowButton).toHaveAttribute('title', 'Open the Invoice Review workflow screen')
-    expect(screen.getByRole('tooltip', { name: 'Open the recommended Invoice Review screen for this ticket.' })).toBeInTheDocument()
+    expect(openWorkflowButton).toHaveAttribute('title', 'Open Invoice Review')
+    expect(screen.getByRole('tooltip', { name: 'Open Invoice Review for this ticket.' })).toBeInTheDocument()
     fireEvent.click(openWorkflowButton)
     expect(screen.getByRole('tab', { name: 'Invoice Review' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('button', { name: 'Back to ticket overview' })).toBeInTheDocument()

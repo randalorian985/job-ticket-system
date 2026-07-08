@@ -11,10 +11,10 @@ The audit focused on the existing Service Ticket workflow without changing the b
 Areas reviewed:
 - Manager/Admin dashboard operations summary and assignment/readiness links.
 - Manager/Admin job-ticket queue filters, work-readiness summaries, CSV export surface, and safe ticket return links.
-- Manager/Admin job-ticket assignment and schedule controls, status actions, and ticket handoff links.
-- Manager/Admin ticket workspace tabs: Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History.
-- Ticket actions: Edit Ticket, Change Status, Add Note, Add Photo, Add Labor, Open Add / Request Part Panel, and Archive Review.
-- Ticket workflow cards and panels: assignment readiness, closeout, parts, labor/time, files/photos, invoice review, and activity.
+- Manager/Admin job-ticket technician context, Scheduling handoff links, status actions, and ticket handoff links.
+- Manager/Admin ticket workspace tabs: Service Details, Technicians, Labor, Parts, Files, Invoice Review, and History.
+- Ticket actions: Edit Ticket, Change Status, Add Note, Add File, Review Labor, Add Part, Open Scheduling, and Archive Review.
+- Ticket workflow panels: technician context, closeout, parts, labor/time, files/photos, invoice review, and activity.
 - Employee mobile job detail, clock in/out, work notes, parts, file/photo upload, and field-work gating.
 - Back-office Parts Request Queue filtering and request review.
 - Documentation and screenshot references in the system wiki.

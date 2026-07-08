@@ -28,7 +28,7 @@ Core scope:
 - Employee assigned-job lists exclude fully closed tickets (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`) without removing them from Manager/Admin queues, reports, history, or audit trails.
 - File/photo uploads accept JPG/JPEG, PNG, WebP, and PDF files up to 50 MB, with the limit enforced in both the HTTP layer and application service.
 - Manager/Admin job-ticket detail is implemented as a service-ticket workbench with ticket overview, customer, service location, equipment, assignment, service scope, status/priority, time/labor, parts, files/photos, activity, and invoice-ready summary panels.
-- Manager/Admin ticket detail uses focused in-page panels for section-based ticket editing, quick notes, photo/file upload, labor review, status changes, archive review, and Add / Request Part actions backed by existing APIs; the recommended action opens the relevant workflow tab in a focused ticket view.
+- Manager/Admin ticket detail uses focused in-page panels for section-based ticket editing, quick notes, file/photo upload, labor review, status changes, archive review, and Add Part actions backed by existing APIs; the next action opens the relevant ticket section or Scheduling handoff.
 - On a job ticket, the crane/equipment field means the customer's unit being serviced. It is not a company crane assignment; only employees are assigned to tickets. Component or part details belong in the job scope or service instructions.
 - Manager/Admin Job Tickets is the main operating screen for creating, assigning, scheduling, and reviewing work. Assignment and schedule details live on the ticket itself, and the legacy `/manage/dispatch` URL redirects to `/manage/job-tickets`.
 - Manager/Admin reporting is implemented as a bounded reports hub for the existing reporting domains: invoice/closeout review, job cost summaries, jobs ready to invoice, labor by job, labor by employee, parts by job, customer service history, and equipment service history. The frontend validates required source IDs, date ranges, and paging values before calling existing report APIs.
@@ -42,7 +42,7 @@ Core scope:
 - No schema migration is required for Phase 2 because the workflow uses existing job-ticket part office-review fields.
 - Shared Employee and Manager/Admin UI polish is implemented as a presentation-only stabilization layer across existing screens. It standardizes typography, compact actions, form density, tables, cards, navigation, responsive layout, and loading/empty/error presentation without changing workflow authorization or API behavior.
 - Manager/Admin Service Ticket Workspace Redesign is implemented for the ticket detail/workspace flow without expanding into deferred purchasing, inventory, payment, client portal, notification, approval automation, recommendation, or scoring domains.
-- Manager/Admin task navigation now uses URL-backed job-ticket queue filters, dashboard links into exact queues, queue-aware return links, workflow tabs, and the `view=workflow` ticket focus state; these are frontend navigation contracts only and do not change backend APIs or business rules.
+- Manager/Admin task navigation now uses URL-backed job-ticket queue filters, dashboard links into exact queues, queue-aware return links, ticket tabs, and the `view=workflow` ticket focus state; these are frontend navigation contracts only and do not change backend APIs or business rules.
 - Manager/Admin Time Approval is now a queue-first workflow with default pending-entry loading, employee-name filtering, broad job/customer/site/location search, contextual review details, bulk approve, reject, and edit-and-approve with audit-safe adjustment records.
 - The latest post-Time Approval regression audit is recorded in the historical audit log and keeps the project in a clean planning state for the next selected Manager/Admin workflow lane.
 - Local pilot seed data now covers six demo tickets across ready-for-invoice, assigned field work, waiting-on-parts, unassigned scheduling, missing-lead review, and urgent in-progress work without adding migrations or production seed behavior.
@@ -130,9 +130,9 @@ Implemented redesign focus:
 - shareable queue URLs for status, priority, customer, work readiness, and search filters;
 - dashboard summary links that open the corresponding filtered queue;
 - queue-aware breadcrumbs that preserve the originating job queue across ticket review;
-- ticket workflow tabs for Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History, with a visible recommended next action.
-- service-ticket workflow stabilization keeps direct tab/action navigation in the focused `view=workflow` screen, focuses opened action panels, and closes focused drawers when returning to the ticket overview.
-- ticket workflow refinement keeps the same ticket-backed workbench but makes the next action, target workflow, mobile quick actions, and invoice-review closeout requirements more visible.
+- ticket tabs for Service Details, Technicians, Labor, Parts, Files, Invoice Review, and History, with one visible next action.
+- service-ticket navigation keeps direct tab/action navigation in the focused `view=workflow` screen, focuses opened action panels, and closes focused drawers when returning to the ticket overview.
+- ticket detail refinement keeps the same ticket-backed workbench but makes the next action, Scheduling handoff, mobile quick actions, files upload, and invoice-review closeout requirements more visible.
 
 Assignment and scheduling are intentionally ticket-backed. They do not add a separate pre-ticket dispatch-job model, backend dispatch lifecycle enum, scheduling engine, availability calendar, automatic approval, invoice generation, or Dispatch-specific schema migration.
 

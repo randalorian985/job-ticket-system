@@ -101,7 +101,7 @@ Manager users can:
 - view the dashboard;
 - create and manage job tickets;
 - assign employees;
-- review job-ticket details and workflow tabs;
+- review job-ticket details and ticket tabs;
 - review and update status/priority;
 - review employee time entries;
 - approve, reject, or edit-and-approve time entries;
@@ -507,12 +507,12 @@ It includes:
 - files/photos;
 - activity;
 - invoice-ready summary;
-- recommended next action;
-- workflow tabs.
+- next action;
+- ticket tabs.
 
-Workflow tabs include:
+Ticket tabs include:
 - Service Details;
-- Assignment & Schedule;
+- Technicians;
 - Labor;
 - Parts;
 - Files;
@@ -527,10 +527,10 @@ The workspace keeps related work on one screen instead of forcing Managers/Admin
 Managers/Admins open a ticket from the job-ticket queue, dashboard links, reports, or another Manager/Admin workflow. The ticket view preserves safe return context where possible, so a user can go back to the filtered queue they came from.
 
 The ticket view is organized around review first and editing second:
-- the top summary shows ticket number, title, status, priority, customer, location, equipment, and due date;
-- the recommended next action opens the most relevant workflow screen;
-- workflow tabs separate Service Details, Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History;
-- the side action rail keeps common Manager/Admin actions visible without taking over the whole screen.
+- the top summary shows ticket number, title, status, priority, customer, location, equipment, scheduled start, and due date;
+- the next action opens the most relevant ticket area or Scheduling handoff;
+- tabs separate Service Details, Technicians, Labor, Parts, Files, Invoice Review, and History;
+- the right action rail keeps common Manager/Admin actions and status review visible without taking over the whole screen.
 
 This view is intended to answer "what needs attention?" before asking the user to edit anything.
 
@@ -541,17 +541,18 @@ The **Scheduling** screen at `/manage/schedule` is a dedicated view for coordina
 - **By Date**: a week view showing tickets with a scheduled start in the selected week. Use the previous/next week arrows or **This week** to navigate. Each ticket card links directly to the ticket workspace.
 - **By Technician**: a week view grouping scheduled tickets by their assigned technician. Useful for spotting over-assigned or under-assigned staff across a week.
 
-From the Scheduling screen, Managers/Admins can review ticket priority, customer, service location, and scheduled start. Editing a ticket's schedule or assignment is done through the existing **Assignment & Schedule** tab in the ticket workspace.
+From the Scheduling screen, Managers/Admins can review ticket priority, customer, service location, scheduled start, and technician planning context. Scheduling is the handoff point for submitted tickets that still need placement. Until Scheduling owns all edit controls, the ticket workspace retains the **Technicians** tab for current technician context and existing assignment controls.
 
 The Scheduling screen is a Manager/Admin-only view. It does not add a separate dispatch entity, dispatch lifecycle, automatic scheduling engine, or automatic assignment behavior.
 
-### Assignment And Schedule Workflow
-**Plain-language rule:** there is one work record: the job ticket. The system does not have a separate Dispatch module or a separate dispatcher workflow. Managers/Admins create a job ticket, assign technicians, set schedule and due dates, and review the ticket as work moves forward.
+### Technician Assignment And Scheduling Workflow
+**Plain-language rule:** there is one work record: the job ticket. The system does not have a separate Dispatch module or a separate dispatcher workflow. Front office users create the initial ticket, Scheduling coordinates placement, and the ticket workspace carries the service record forward.
 
 Use each area for one clear purpose:
-- use **Job Tickets** to create, find, assign, schedule, and edit work records;
+- use **Job Tickets** to create, find, and review work records;
 - use the create-ticket **Schedule / assign tech** step for optional initial assignment when opening new work;
-- use the ticket workspace's **Assignment & Schedule** tab for ongoing assignment, lead tech, schedule, due date, and assignment warnings;
+- use **Scheduling** to review unscheduled work, calendar placement, and technician load;
+- use the ticket workspace's **Technicians** tab for current technician context and existing assignment controls until Scheduling owns all assignment editing;
 - use the ticket workspace for scope, labor, parts, files, notes, status changes, and closeout review;
 - use **Reports** for billing-ready and invoice review.
 
@@ -565,8 +566,8 @@ The job ticket moves through the existing workflow from request through review. 
 ```mermaid
 flowchart TD
   A["Create Job Ticket"] --> B["Review Scope, Customer, Location, Equipment"]
-  B --> C["Assign Technicians And Lead Tech"]
-  C --> D["Set Schedule And Due Date"]
+  B --> C["Optional Initial Schedule And Technician Context"]
+  C --> D["Scheduling Reviews Placement And Load"]
   D --> E["Technician Works Ticket"]
   E --> F["Manager/Admin Reviews Labor, Parts, Files, And Status"]
   F --> G["Invoice Review / Reports"]
@@ -603,7 +604,7 @@ The compact list keeps each row focused on:
 
 Use the compact list when the queue feels busy. It is designed to keep the important operating signals visible without bringing back a separate Dispatch screen.
 
-#### Assignment And Schedule Checks
+#### Scheduling And Technician Checks
 The system checks for the information Managers/Admins need before field work is clear:
 - assigned technician;
 - lead tech;
@@ -626,11 +627,11 @@ Use Reports for billing-ready and invoice review. Job Tickets do not generate in
 On mobile:
 - use the Job Tickets queue or dashboard links to find the ticket;
 - use the compact ticket list for dense scanning;
-- open the ticket workspace for Assignment & Schedule, Labor, Parts, Files, Invoice Review, and History;
-- focused workflow panels keep the selected task near the top of the screen.
+- open the ticket workspace for Technicians, Labor, Parts, Files, Invoice Review, and History;
+- focused panels keep the selected task near the top of the screen.
 
 #### Permissions And Validation Rules
-Assignment and schedule work is available only in the Manager/Admin workspace.
+Technician assignment and schedule work is available only in the Manager/Admin workspace.
 
 Validation and warnings preserve existing data integrity:
 - missing assignment, lead tech, schedule, or due date are shown as review items;
@@ -648,22 +649,22 @@ The new workflow keeps editing in the ticket workspace but splits the edit panel
 - **Billing**: purchase order and billing contact fields;
 - **Schedule**: requested, scheduled start, and due dates.
 
-The same assignment and schedule readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
+Technician and schedule readiness review remains visible above the edit sections. Users can move between sections without leaving the editor, then save through the existing ticket update workflow.
 
 The editor also shows the same ticket create guide used on new tickets, so managers can quickly jump back to customer, billing, job-location, equipment, schedule, or review sections. Billing party is treated as its own relationship: it can match the customer, follow the job-site customer, follow the equipment billing customer, or point at any other customer record. Copy helpers are available inside relationship and billing sections, and data-quality warnings stay visible while editing.
 
 ![Section-based ticket editor with assignment and schedule readiness](assets/system-wiki/ticket-section-editor.png)
 
-Workflow tabs and action buttons now open the selected ticket workflow in a focused view. This means the selected panel appears directly under the workflow heading and tabs instead of requiring mobile users to scroll past the overview rail. The focused view includes a **Back to ticket overview** control, and that control closes any open focused panel before returning to the normal ticket overview.
+Tabs and action buttons open the selected ticket section in a focused view. This means the selected panel appears directly under the section heading and tabs instead of requiring mobile users to scroll past the overview rail. The focused view includes a **Back to ticket overview** control, and that control closes any open focused panel before returning to the normal ticket overview.
 
-The ticket overview also includes a workflow-guidance area:
-- **Recommended next action** names the next practical step, explains the blocker or reason, shows the target workflow, and opens that workflow directly.
-- **Ticket workflow path** shows Assignment & Schedule, Field Work, Parts / Files, and Invoice Review so office users can jump to the right stage without hunting through the page.
-- The **Invoice Review** workflow shows open closeout requirements before invoice totals so billing handoff work is visible before users review dollars.
+The ticket overview also includes a next-action area:
+- **Next action** names the next practical step, explains the blocker or reason, shows where it goes, and opens that destination directly.
+- The old workflow path cards were removed; the tab strip is the in-ticket navigation.
+- The **Invoice Review** tab shows open closeout requirements before invoice totals so billing handoff work is visible before users review dollars.
 
 ![Invoice review workflow](assets/system-wiki/ticket-invoice-review.png)
 
-The edit workflow should preserve:
+The edit flow should preserve:
 - customer/service-location relationships;
 - equipment relationships;
 - assigned manager context;
@@ -680,9 +681,9 @@ User experience improvements:
 - fewer fields compete for attention at one time;
 - section buttons make the edit model predictable;
 - mobile users can edit one section at a time instead of working through a long stacked form;
-- assignment and schedule readiness feedback remains visible while editing;
-- quick actions let users add notes, upload photos/files, review labor, or change status without opening the full editor.
-- mobile ticket shortcuts keep Add Note, Add Photo, Labor, and Status close to the top of the ticket overview.
+- technician and schedule readiness feedback remains visible while editing;
+- quick actions let users add notes, upload files, review labor, add parts, open Scheduling, or change status without opening the full editor.
+- mobile ticket shortcuts keep Add Note, Add File, Labor, and Status close to the top of the ticket overview.
 
 What stays the same:
 - users still open the editor through **Edit Ticket**;
@@ -692,26 +693,26 @@ What stays the same:
 
 ```mermaid
 flowchart TD
-  A["Open ticket view"] --> B["Review summary and recommended action"]
+  A["Open ticket view"] --> B["Review summary and next action"]
   B --> C{"Need to edit ticket details?"}
   C -->|Yes| D["Open Edit Ticket"]
   D --> E["Choose edit section"]
   E --> F["Update section fields"]
   F --> G["Save ticket changes"]
-  C -->|No| H["Use workflow tabs or quick actions"]
-  H --> I["Add Note / Add Photo / Add Labor / Change Status"]
+  C -->|No| H["Use tabs or quick actions"]
+  H --> I["Add Note / Add File / Review Labor / Change Status"]
 ```
 
 ### Mobile User Experience
 On smaller screens, the section-based editor reduces the amount of visible form content. Users choose the section they need, make the change, and save. This avoids the older long-form edit mode where relationship, billing, notes, and schedule controls all appeared in one continuous vertical form.
 
 Mobile users should prefer:
-- quick actions for simple notes and photos/files;
+- quick actions for simple notes and files;
 - the Labor tab for reviewing labor/time entries;
 - the Status Review panel for status changes;
 - section editing only when ticket details need to change.
 
-On the mobile ticket overview, the compact quick-action row gives direct access to Add Note, Add Photo, Labor, and Status without waiting for users to scroll into the side rail.
+On the mobile ticket overview, the compact quick-action row gives direct access to Add Note, Add File, Labor, and Status without waiting for users to scroll into the side rail.
 
 ![Mobile ticket workspace](assets/system-wiki/ticket-workspace-mobile.png)
 
@@ -733,11 +734,12 @@ Manager/Admin users can access the ticket workbench and ticket edit controls. Em
 Protected controls:
 - Edit Ticket;
 - Add Note;
-- Add Photo;
-- Add Labor;
+- Add File;
+- Review Labor;
 - Change Status;
 - Archive Review;
 - Add / Request Part;
+- Open Scheduling;
 - assignment controls.
 
 The enhancement does not weaken access rules. It only changes the Manager/Admin layout and quick-action access points.
@@ -745,10 +747,11 @@ The enhancement does not weaken access rules. It only changes the Manager/Admin 
 ### Quick Actions
 Quick actions are short paths for common ticket updates:
 - **Add Note** opens the focused History workflow with a note panel and saves a Manager/Admin work entry to ticket history.
-- **Add Photo** opens the focused Files workflow with an upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
-- **Add Labor** opens the focused Labor workflow tab for time/labor review and follow-up.
+- **Add File** opens the focused Files section with an upload panel for JPG, PNG, WebP, or PDF files and can mark the file for invoice review.
+- **Review Labor** opens the focused Labor tab for time/labor review and follow-up.
 - **Change Status** opens a focused Status Review panel with warnings and status selection.
-- **Open Add / Request Part Panel** opens the focused Parts workflow with the existing in-ticket add/request form.
+- **Open Scheduling** links to the Scheduling screen for calendar and technician-load review.
+- **Add Part** opens the focused Parts tab with the existing in-ticket add/request form.
 
 Quick actions are intended for small updates. Use the section editor when relationship, billing, schedule, or detailed ticket fields need to change.
 
@@ -760,7 +763,7 @@ Quick actions are intended for small updates. Use the section editor when relati
 
 ![Parts add/request workflow](assets/system-wiki/ticket-parts-workflow.png)
 
-Mobile focused workflows keep the selected panel directly under the workflow tabs so users do not need to hunt below the ticket overview rail.
+Mobile focused panels keep the selected panel directly under the ticket tabs so users do not need to hunt below the ticket overview rail.
 
 ![Mobile labor workflow](assets/system-wiki/ticket-labor-mobile.png)
 
@@ -778,7 +781,7 @@ Findings and repairs:
 
 Implemented repairs:
 - direct workflow tab and action-rail navigation now sets the URL-backed `view=workflow` state;
-- Add Note, Add Photo, Add Labor, Add / Request Part, Edit Ticket, Change Status, and Archive Review open focused panels where appropriate;
+- Add Note, Add File, Review Labor, Add / Request Part, Edit Ticket, Open Scheduling, Change Status, and Archive Review open focused panels or screens where appropriate;
 - drawer panels receive programmatic focus when opened;
 - workflow panel focus waits when a drawer is active;
 - **Back to ticket overview** clears open focused drawers;
@@ -1375,7 +1378,7 @@ Unexpected server errors, browser errors, and failed API requests with HTTP 500 
 2. Review the quiet operations summary.
 3. Open Job Tickets and choose **Compact list** for fast scanning or **Rich cards** for deeper readiness review.
 4. Use Quick Views for Active tickets, Waiting, Missing due, Unassigned, Needs review, and Ready to work.
-5. During create, use **Schedule / assign tech** for optional initial assignment, then use ticket-workspace **Assignment & Schedule** for updates.
+5. During create, use **Schedule / assign tech** for optional initial assignment, then use **Scheduling** for placement review and ticket-workspace **Technicians** for current assignment context.
 6. Confirm the crane/equipment being serviced or describe component-only work in the ticket scope.
 7. Review completed work in the ticket workspace.
 8. Review tickets waiting on parts.
@@ -1462,7 +1465,7 @@ Use this checklist when introducing the system to a client team.
 - Use Job Tickets as the main operating screen.
 - Use quick views without letting the page become a wall of shortcuts.
 - Confirm the service equipment, then set schedule and optional lead/additional technicians during ticket creation.
-- Use ticket-workspace **Assignment & Schedule** when assignment or dates need updates after create.
+- Use **Scheduling** for placement review and ticket-workspace **Technicians** for current assignment context after create.
 - Use the **Scheduling** screen to review unscheduled work, see the week calendar, and review by-technician load.
 - Review completed tickets in the ticket workspace and billing-ready work in Reports.
 - Filter job-ticket queues.

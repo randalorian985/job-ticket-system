@@ -187,7 +187,7 @@ export function ManagerDashboardPage() {
           </article>
 
           <article className="operations-panel">
-            <h3>Assignment & Schedule</h3>
+            <h3>Scheduling</h3>
             <div className="operations-bar-list">
               {readinessRows.map((row) => (
                 <Link className="operations-bar-row operations-queue-link" key={row.label} to={row.to}>
