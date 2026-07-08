@@ -374,3 +374,35 @@
 .manager-dashboard-board .operations-bar-fill-accent {
   background: #4f46e5;
 }
+
+.operations-next-focus {
+  background: #f8fbff;
+  border-top: 1px solid #e5eaf1;
+  color: #3f4b63;
+  display: grid;
+  gap: 0.25rem;
+  line-height: 1.35;
+  margin: 0;
+  padding: 0.85rem 1.25rem 1rem;
+}
+
+.operations-next-focus span {
+  color: #253047;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.operations-next-focus a {
+  color: #31456d;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.operations-next-focus a:hover,
+.operations-next-focus a:focus-visible {
+  color: #4f46e5;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}

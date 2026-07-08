@@ -183,8 +183,8 @@ export function ManagerDashboardPage() {
                 </Link>
               ))}
             </div>
-            <p className="muted">
-              Next assignment focus:{' '}
+            <p className="operations-next-focus">
+              <span>Next assignment focus</span>
               {summary.nextAssignmentFocusId ? (
                 <Link to={buildJobTicketDetailPath(summary.nextAssignmentFocusId, "/manage")}>{summary.nextAssignmentFocus}</Link>
               ) : summary.nextAssignmentFocus}
