@@ -79,6 +79,38 @@ h3 {
   text-transform: uppercase;
 }
 
+a {
+  color: var(--brand-strong);
+  text-decoration-color: rgba(49, 87, 200, 0.48);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.16em;
+}
+
+a:hover {
+  color: var(--brand);
+  text-decoration-color: currentColor;
+}
+
+.breadcrumb-line {
+  color: var(--text-muted);
+}
+
+.breadcrumb-line a {
+  border-radius: 4px;
+  color: var(--company-secondary);
+  font-weight: 700;
+  padding: 0.05rem 0.16rem;
+  text-decoration-color: rgba(49, 87, 200, 0.38);
+  transition: background 120ms ease, color 120ms ease, text-decoration-color 120ms ease;
+}
+
+.breadcrumb-line a:hover,
+.breadcrumb-line a:focus-visible {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  text-decoration-color: transparent;
+}
+
 .desktop-shell {
   max-width: 1360px;
   padding: 1rem 1.25rem 2rem;
