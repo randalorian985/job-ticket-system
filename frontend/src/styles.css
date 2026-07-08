@@ -1444,12 +1444,22 @@ button.queue-kpi-chip:hover:not(:disabled) {
   background: #eef3ff;
   border-color: #3157c8;
   box-shadow: none;
+  color: #334155;
   transform: none;
+}
+
+button.queue-kpi-chip:hover:not(:disabled) strong {
+  color: #0b1220;
 }
 
 button.queue-kpi-chip[aria-pressed="true"]:hover:not(:disabled) {
   background: #2448b0;
   border-color: #2448b0;
+  color: #ffffff;
+}
+
+button.queue-kpi-chip[aria-pressed="true"]:hover:not(:disabled) strong {
+  color: #ffffff;
 }
 
 /* Static (non-interactive) chip variant for informational displays */
@@ -1473,6 +1483,10 @@ button.queue-kpi-chip[aria-pressed="true"] strong {
 }
 
 button.queue-kpi-chip.queue-kpi-chip-alert:not([aria-pressed="true"]) strong {
+  color: #be123c;
+}
+
+button.queue-kpi-chip.queue-kpi-chip-alert:not([aria-pressed="true"]):hover:not(:disabled) strong {
   color: #be123c;
 }
 
@@ -2832,7 +2846,7 @@ td {
   align-items: start;
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(270px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 320px);
 }
 
 .ticket-workbench-rail,

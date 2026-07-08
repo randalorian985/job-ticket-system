@@ -192,6 +192,7 @@ button:hover:not(:disabled),
   background: var(--brand-strong);
   border-color: var(--brand-strong);
   box-shadow: 0 3px 10px rgba(36, 68, 159, 0.16);
+  color: var(--brand-contrast);
   transform: none;
 }
 

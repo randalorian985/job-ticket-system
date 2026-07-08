@@ -1167,19 +1167,6 @@ export function JobTicketDetailPage() {
           />
 
           <section className={workflowFocusMode ? "ticket-workbench-layout ticket-workbench-layout-focused" : "ticket-workbench-layout"}>
-            <TicketWorkbenchRail
-              assignments={assignments}
-              completedDispatchChecks={completedDispatchChecks}
-              dispatchReadiness={dispatchReadiness}
-              getEmployeeDisplayName={getEmployeeDisplayName}
-              job={job}
-              leadAssignment={leadAssignment}
-              openDispatchChecks={openDispatchChecks}
-              workflowFocusMode={workflowFocusMode}
-              onOpenDrawer={openWorkflowDrawer}
-              onOpenLabor={openLaborWorkflow}
-            />
-
             <div className="ticket-workbench-main">
               {activeDrawer === "ticket" && editPayload ? (
                 <section id="ticket-workbench-drawer-ticket" className="workbench-drawer no-print" aria-label="ticket editor panel" tabIndex={-1}>
@@ -2027,6 +2014,19 @@ export function JobTicketDetailPage() {
                 )}
               </article>
             </div>
+
+            <TicketWorkbenchRail
+              assignments={assignments}
+              completedDispatchChecks={completedDispatchChecks}
+              dispatchReadiness={dispatchReadiness}
+              getEmployeeDisplayName={getEmployeeDisplayName}
+              job={job}
+              leadAssignment={leadAssignment}
+              openDispatchChecks={openDispatchChecks}
+              workflowFocusMode={workflowFocusMode}
+              onOpenDrawer={openWorkflowDrawer}
+              onOpenLabor={openLaborWorkflow}
+            />
           </section>
         </>
       ) : null}
