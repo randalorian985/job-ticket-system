@@ -245,7 +245,7 @@ export function UsersPage() {
             <label>First name<input aria-label="First name" value={draft.firstName} onChange={(e) => setDraft({ ...draft, firstName: e.target.value })} /></label>
             <label>Last name<input aria-label="Last name" value={draft.lastName} onChange={(e) => setDraft({ ...draft, lastName: e.target.value })} /></label>
             <label>Role<select aria-label="Role" value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })}>{userRoles.map((role) => <option key={role} value={role}>{role}</option>)}</select></label>
-            {editing ? <p className="muted role-warning">Role changes are confirmed before save because they change route access immediately.</p> : <label>Temporary password<input aria-label="Temporary password" type="password" value={draft.password} onChange={(e) => setDraft({ ...draft, password: e.target.value })} autoComplete="new-password" /></label>}
+            {editing ? <p className="muted role-warning">Role changes are confirmed before save because they change screen access immediately.</p> : <label>Temporary password<input aria-label="Temporary password" type="password" value={draft.password} onChange={(e) => setDraft({ ...draft, password: e.target.value })} autoComplete="new-password" /></label>}
           </div>
           <div className="row form-actions">
             <button type="submit" disabled={isSaving}>{isSaving ? 'Saving user…' : editing ? 'Save user changes' : 'Create user'}</button>

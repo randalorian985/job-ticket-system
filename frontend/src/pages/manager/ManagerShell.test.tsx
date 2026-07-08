@@ -31,7 +31,7 @@ describe('ManagerShell', () => {
             <Route path="reports" element={<p>Reports page</p>} />
             <Route path="reports/labor" element={<p>Labor reports page</p>} />
             <Route path="reports/parts-service" element={<p>Parts service reports page</p>} />
-            <Route path="wiki" element={<p>Wiki page</p>} />
+            <Route path="wiki" element={<p>User Guide page</p>} />
             <Route path="company-configuration" element={<p>Company configuration page</p>} />
             <Route path="mailer-settings" element={<p>Mailer settings page</p>} />
             <Route path="error-logs" element={<p>Error logs page</p>} />
@@ -70,7 +70,7 @@ describe('ManagerShell', () => {
 
     await user.selectOptions(sectionPicker, '/manage/wiki')
 
-    expect(screen.getByText('Wiki page')).toBeInTheDocument()
+    expect(screen.getByText('User Guide page')).toBeInTheDocument()
     expect(sectionPicker).toHaveValue('/manage/wiki')
   })
 

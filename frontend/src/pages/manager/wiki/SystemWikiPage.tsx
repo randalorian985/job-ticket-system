@@ -170,7 +170,7 @@ export function SystemWikiPage() {
 
     fetch(wikiPath)
       .then((response) => {
-        if (!response.ok) throw new Error('Wiki not found')
+        if (!response.ok) throw new Error('Guide not found')
         return response.text()
       })
       .then((content) => {
@@ -181,7 +181,7 @@ export function SystemWikiPage() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError('Unable to load the system wiki.')
+          setError('Unable to load the user guide.')
         }
       })
 
@@ -202,24 +202,24 @@ export function SystemWikiPage() {
     <section className="system-wiki-page">
       <header className="card stack system-wiki-hero">
         <div>
-          <p className="eyebrow">Client documentation</p>
-          <h2>System Wiki</h2>
+          <p className="eyebrow">User documentation</p>
+          <h2>User Guide</h2>
           <p className="muted">Operational guide for job tickets, employee work, Manager/Admin workflows, reporting, master data, and training.</p>
         </div>
         <div className="row system-wiki-actions">
-          <a className="button-link secondary-link" href={wikiPath} target="_blank" rel="noreferrer">Open markdown</a>
-          <button className="secondary-button" type="button" onClick={() => window.print()} title="Open the browser print dialog for the wiki.">
-            Print Wiki Page
+          <a className="button-link secondary-link" href={wikiPath} target="_blank" rel="noreferrer">Open full guide</a>
+          <button className="secondary-button" type="button" onClick={() => window.print()} title="Open the browser print dialog for the guide.">
+            Print Guide
           </button>
         </div>
       </header>
 
       {error ? <p className="error">{error}</p> : null}
-      {!markdown && !error ? <p className="muted" role="status">Loading system wiki...</p> : null}
+      {!markdown && !error ? <p className="muted" role="status">Loading user guide...</p> : null}
 
       {markdown ? (
         <div className="system-wiki-layout">
-          <aside className="card system-wiki-toc" aria-label="Wiki table of contents">
+          <aside className="card system-wiki-toc" aria-label="Guide table of contents">
             <h3>Contents</h3>
             {headings.map((heading) => (
               <a key={heading.id} href={`#${heading.id}`}>{heading.text}</a>

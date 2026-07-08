@@ -8,6 +8,19 @@ const limitOptions = [50, 100, 250, 500]
 
 const formatDateTime = (value: string) => new Date(value).toLocaleString()
 
+const sourceLabel = (value?: string | null) => {
+  switch (value) {
+    case 'ApiRequest':
+      return 'System Request'
+    case 'Client':
+      return 'Browser'
+    case 'Server':
+      return 'Server'
+    default:
+      return value || 'All sources'
+  }
+}
+
 const messageForError = (requestError: unknown) => {
   if (requestError instanceof ApiError) {
     if (requestError.status === 401 || requestError.status === 403) return 'Only Admin users can review application errors.'
@@ -91,7 +104,7 @@ export function ErrorLogsPage() {
           Source
           <select value={source} onChange={(event) => setSource(event.target.value)}>
             <option value="">All sources</option>
-            {sourceOptions.filter(Boolean).map((option) => <option key={option} value={option}>{option}</option>)}
+            {sourceOptions.filter(Boolean).map((option) => <option key={option} value={option}>{sourceLabel(option)}</option>)}
           </select>
         </label>
         <label className="sr-label queue-search-field">
@@ -128,7 +141,7 @@ export function ErrorLogsPage() {
               <li key={log.id} className="card stack">
                 <div className="review-heading">
                   <div>
-                    <p className="eyebrow">{log.source} - {log.severity}</p>
+                    <p className="eyebrow">{sourceLabel(log.source)} - {log.severity}</p>
                     <h3>{log.message}</h3>
                     <p className="muted">{formatDateTime(log.occurredAtUtc)}</p>
                   </div>
@@ -138,21 +151,21 @@ export function ErrorLogsPage() {
                 <div className="ticket-meta-grid">
                   <div><strong>Cause</strong><span>{log.cause ?? 'Cause unavailable'}</span></div>
                   <div><strong>Where</strong><span>{locationLabel(log)}</span></div>
-                  <div><strong>Page / component</strong><span>{log.location ?? 'Not provided'}</span></div>
+                  <div><strong>Screen or area</strong><span>{log.location ?? 'Not provided'}</span></div>
                   <div><strong>User</strong><span>{log.userId ?? 'Not captured'}</span></div>
                 </div>
 
                 <details>
-                  <summary>Technical details</summary>
+                  <summary>More details</summary>
                   <div className="stack">
-                    {log.userAgent ? <p className="muted"><strong>User agent:</strong> {log.userAgent}</p> : null}
+                    {log.userAgent ? <p className="muted"><strong>Browser/device:</strong> {log.userAgent}</p> : null}
                     {metadata ? (
                       <pre className="code-block">{metadata}</pre>
                     ) : null}
                     {log.stackTrace ? (
                       <pre className="code-block">{log.stackTrace}</pre>
                     ) : (
-                      <p className="muted">No stack trace captured.</p>
+                      <p className="muted">No extra error detail captured.</p>
                     )}
                   </div>
                 </details>

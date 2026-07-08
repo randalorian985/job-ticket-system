@@ -55,7 +55,7 @@ const navGroups: ManagerNavGroup[] = [
     label: 'Review & Reference',
     items: [
       { label: 'Time Approval', to: '/manage/time-approval' },
-      { label: 'Wiki', to: '/manage/wiki' }
+      { label: 'User Guide', to: '/manage/wiki' }
     ]
   },
   {

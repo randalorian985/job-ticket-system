@@ -1,9 +1,9 @@
-# Job Ticket System Wiki
+# Job Ticket System User Guide
 
 ## Purpose
-This wiki explains how Employees, Managers, and Admins use the Job Ticket System in day-to-day work.
+This guide explains how Employees, Managers, and Admins use the Job Ticket System in day-to-day work.
 
-## How To Use This Wiki
+## How To Use This Guide
 - Start with the role that matches the user being trained.
 - Use the screenshots to recognize each screen.
 - Follow the workflow sections in order during training.
@@ -16,11 +16,11 @@ The system is centered on field-service job tickets:
 - let Managers/Admins review work, time, parts, reports, users, and supporting master data;
 - preserve role boundaries so each user sees the tools appropriate to their job.
 
-Screenshots in this wiki are intended to show screen layout and workflow behavior, not production customer data.
+Screenshots in this guide are intended to show screen layout and workflow behavior, not production customer data.
 
-## Client Quick Start
+## Training Quick Start
 
-For a first client walkthrough, use this order:
+For a first walkthrough, use this order:
 
 1. Start with [Roles And Access](#roles-and-access) so users understand what each account type can do.
 2. Confirm [Company Configuration](#company-configuration) before showing branded UI or report output.
@@ -30,7 +30,7 @@ For a first client walkthrough, use this order:
 6. Review [Time Tracking And Approval](#time-tracking-and-approval), [Parts And Part Requests](#parts-and-part-requests), and [Reports](#reports).
 7. Finish with [Current Scope Boundaries](#current-scope-boundaries) so users know what is intentionally not included.
 
-For live training, use the [Client Training Checklist](#client-training-checklist) near the end of this wiki.
+For live training, use the [Training Checklist](#training-checklist) near the end of this guide.
 
 ## Screenshot Index
 
@@ -153,7 +153,7 @@ Admin users can:
 - **Time Approval**: time approval queue.
 - **Parts Approval**: parts approval workflow.
 - **Reports**: job, labor, parts, and service reports.
-- **Wiki**: in-app help.
+- **User Guide**: in-app help.
 - **Company Configuration**: Admin-only company profile, logo, and color settings.
 - **Alerts & Notifications**: Admin-only alert recipients and notification routing.
 - **Mailer Settings**: Admin-only outgoing mail settings.
@@ -170,10 +170,10 @@ Admin users can:
 3. Protected screens require an authenticated user with the correct role.
 4. Unauthorized users are redirected away from restricted screens.
 5. Inactive, archived, or deleted users should not be allowed to continue using protected workflows.
-6. Sessions use JWT tokens with a 2-hour expiry. The application warns users before the token expires:
+6. Sessions stay active for 2 hours. The application warns users before the session expires:
    - A **warning** notification appears at 5 minutes before expiry: save any work in progress.
    - An **error** notification appears at 1 minute before expiry.
-7. If a request is rejected with a 401 (for example, if a token expired mid-session without a visible warning), the application clears the session and surfaces a clear sign-in-again message through the notification banner.
+7. If a session expires mid-work, the application clears the session and surfaces a clear sign-in-again message through the notification banner.
 
 ![Login screen](assets/system-wiki/login.png)
 
@@ -252,7 +252,7 @@ Travel capture records:
 - GPS latitude (when available);
 - GPS longitude (when available);
 - GPS accuracy (when available);
-- device metadata;
+- browser/device details;
 - optional note.
 
 When the technician reaches the job site, **Arrive - End Travel** ends the travel entry. The screen then returns to the normal clock-in state so the employee can start active job time.
@@ -268,7 +268,7 @@ Clock-in records:
 - GPS latitude (when available);
 - GPS longitude (when available);
 - GPS accuracy (when available);
-- device metadata;
+- browser/device details;
 - optional clock note.
 
 The system attempts high-accuracy GPS first, then falls back to low-accuracy GPS if the first attempt fails. If both attempts fail (for example, in a facility with no signal), the clock-in proceeds without coordinates and the confirmation message notes that no GPS signal was available. GPS is not required to complete a clock-in.
@@ -680,7 +680,7 @@ Section responsibilities:
 - Basics handles identity/status fields.
 - Customer & Equipment handles relationship fields and quick-add relationship helpers.
 - Scope & Notes handles narrative fields.
-- Billing handles closeout billing metadata.
+- Billing handles closeout billing details.
 - Schedule handles date/time planning fields.
 
 ### User Permissions And Edit Controls
@@ -804,7 +804,7 @@ Managers/Admins can:
 
 Manager edits reuse audit-safe adjustment behavior.
 
-The system does not add unsupported payroll, break-duration, or labor-type schema concepts in this workflow.
+The system does not add unsupported payroll, break-duration, or labor-type fields in this workflow.
 
 ![Manager/Admin time approval queue](assets/system-wiki/time-approval.png)
 
@@ -962,7 +962,7 @@ Managers/Admins can work with:
 - expected dates;
 - purchase-order lines;
 - submitted, received, canceled, closed, archived, and unarchived states;
-- vendor invoice metadata where already supported;
+- vendor invoice details where already supported;
 - landed-cost fields where already supported;
 - receipt recording for purchase-order quantities.
 
@@ -1062,7 +1062,7 @@ Both the browser **Print** button and **Download PDF** produce output in the sam
 - company name and contact details;
 - report title (large);
 - report description;
-- three metadata boxes: Generated date, Row count, and Column count;
+- three summary boxes: Generated date, Row count, and Column count;
 - a divider line;
 - Applied scope summary;
 - data table with a teal/green header row and alternating row backgrounds;
@@ -1077,7 +1077,7 @@ Important reporting boundaries:
 - The system does not collect payments.
 - The system does not provide a customer portal.
 - The system does not run server-side reporting jobs.
-- CSV export is generated in the browser from currently loaded rows and includes report metadata at the top of the file.
+- CSV export is generated from currently loaded rows and includes report details at the top of the file.
 
 ### Future Service Estimate / Quote Export Direction
 
@@ -1169,7 +1169,7 @@ Company Configuration is used by:
 - the login screen brand area;
 - the Manager/Admin shell header;
 - generated report print/save-PDF headers;
-- generated report CSV metadata.
+- generated report CSV details.
 
 Logo upload accepts JPG/JPEG, PNG, and WebP images up to 2 MB. The upload path validates file extension, content type, size, and image signature before storing the file.
 
@@ -1185,7 +1185,7 @@ Admins use this page to privately review application errors after they happen. E
 - date and time;
 - where it happened, including the system area or browser page when available;
 - user role and user ID when captured;
-- user agent, metadata, and stack trace inside technical details.
+- browser/device details and extra troubleshooting details when captured.
 
 The page supports source filtering for server, browser, and failed system request errors, text search, and a result limit selector. Results are newest first so recent failures are visible without searching through older records.
 
@@ -1365,7 +1365,7 @@ The system currently does not include:
 
 Any of those areas should be treated as future scope requiring a separate approval and implementation plan.
 
-## Client Training Checklist
+## Training Checklist
 
 Use this checklist when introducing the system to a client team.
 
@@ -1420,7 +1420,7 @@ Use this checklist when introducing the system to a client team.
 
 ## Training Access
 
-Training accounts are environment-specific. For customer sessions, provide usernames and temporary passwords through the agreed handoff channel instead of publishing credentials in the wiki.
+Training accounts are specific to each customer session. Provide usernames and temporary passwords through the agreed handoff channel instead of publishing credentials in the guide.
 
 Training users should not be treated as production credentials.
 

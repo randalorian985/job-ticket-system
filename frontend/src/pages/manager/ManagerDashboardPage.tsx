@@ -134,7 +134,7 @@ export function ManagerDashboardPage() {
         <div className="row dashboard-actions">
           <Link className="button-link" to="/manage/job-tickets/new">Create Job Ticket</Link>
           <Link className="button-link secondary-link" to="/manage/job-tickets">Review jobs</Link>
-          <Link className="button-link secondary-link" to="/manage/wiki#manager-admin-workspace">Wiki</Link>
+          <Link className="button-link secondary-link" to="/manage/wiki#manager-admin-workspace">User Guide</Link>
         </div>
       </header>
 

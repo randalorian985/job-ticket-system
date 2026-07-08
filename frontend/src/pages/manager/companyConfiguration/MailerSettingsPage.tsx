@@ -11,7 +11,7 @@ type MailerForm = UpdateMailerConfigurationDto & {
 
 const providerOptions: Array<{ value: MailerProvider; label: string; status: string; disabled?: boolean }> = [
   { value: 'ManualSmtp', label: 'Manual SMTP', status: 'Available' },
-  { value: 'GoogleWorkspace', label: 'Google Workspace', status: 'OAuth pending', disabled: true },
+  { value: 'GoogleWorkspace', label: 'Google Workspace', status: 'Not available yet', disabled: true },
   { value: 'Microsoft365', label: 'Microsoft 365 Graph', status: 'Available' }
 ]
 
@@ -67,6 +67,17 @@ const formatTimestamp = (value?: string | null) => {
   if (!value) return 'Not tested'
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+}
+
+const configurationSourceLabel = (source: string) => {
+  switch (source) {
+    case 'Database':
+      return 'Saved settings'
+    case 'Environment':
+      return 'Server settings'
+    default:
+      return source
+  }
 }
 
 export function MailerSettingsPage() {
@@ -201,7 +212,7 @@ export function MailerSettingsPage() {
 
             <div className="mailer-status-grid">
               <div><span>Provider</span><strong>{selectedProvider.label}</strong></div>
-              <div><span>Source</span><strong>{configuration.configurationSource}</strong></div>
+              <div><span>Settings</span><strong>{configurationSourceLabel(configuration.configurationSource)}</strong></div>
               <div><span>Status</span><strong>{configuration.statusMessage ?? configuration.status}</strong></div>
               <div>
                 <span>{form.provider === 'Microsoft365' ? 'Client secret' : 'Password'}</span>
