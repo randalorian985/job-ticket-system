@@ -144,7 +144,7 @@ export function ManagerDashboardPage() {
     <section className="manager-dashboard-board" aria-label="manager operations dashboard">
       <header className="dashboard-hero-strip">
         <div>
-          <h2>Job ticket management dashboard</h2>
+          <h2>Job Ticket Management Dashboard</h2>
           <p className="muted">Manager/Admin summary for open work, technician assignment, scheduling, and back-office review queues.</p>
         </div>
         <div className="row dashboard-actions">

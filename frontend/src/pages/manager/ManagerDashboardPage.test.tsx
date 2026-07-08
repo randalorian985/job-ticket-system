@@ -46,7 +46,7 @@ describe('ManagerDashboardPage', () => {
     )
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading operations summary')
-    expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Job Ticket Management Dashboard' })).toBeInTheDocument()
     expect(screen.getByLabelText('manager operations dashboard')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Create Job Ticket' })).toHaveAttribute('href', '/manage/job-tickets/new')
     expect(screen.queryByLabelText('manager workspace shortcuts')).not.toBeInTheDocument()
@@ -121,7 +121,7 @@ describe('ManagerDashboardPage', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Job Ticket Management Dashboard' })).toBeInTheDocument()
     expect(screen.queryByText('Ticket Filters')).not.toBeInTheDocument()
     expect(screen.queryByText('Users')).not.toBeInTheDocument()
   })

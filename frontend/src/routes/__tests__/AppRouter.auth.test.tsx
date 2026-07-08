@@ -233,7 +233,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Job Ticket Management Dashboard' })).toBeInTheDocument()
     expect(screen.queryByText('Users')).not.toBeInTheDocument()
 
     render(
@@ -302,7 +302,7 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Service Operations' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Job Ticket Management Dashboard' })).toBeInTheDocument()
   })
 
   it('manager and admin users are routed to manager console from root', async () => {
@@ -320,7 +320,7 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Service Operations' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Job Ticket Management Dashboard' })).toBeInTheDocument()
 
     vi.mocked(useAuth).mockReturnValue({
       user: adminUser,
@@ -336,7 +336,7 @@ describe('AppRouter authentication rendering', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Service Operations' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Job Ticket Management Dashboard' })).toBeInTheDocument()
   })
 
   it('manager and admin users cannot access employee-only routes', async () => {
@@ -441,7 +441,7 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'Job ticket management dashboard' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Job Ticket Management Dashboard' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Inventory Operations' })).not.toBeInTheDocument()
   })
 })
