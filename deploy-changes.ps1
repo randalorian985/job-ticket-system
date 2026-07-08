@@ -114,9 +114,25 @@ wait_for_health "http://127.0.0.1:8080/health" "local"
 wait_for_health "https://dev.mudbugdigital.com/health" "public"
 '@
 
-($remoteScript -replace "`r", "") | ssh $vpsHost "bash -s"
-if ($LASTEXITCODE -ne 0) {
-	throw "Remote deploy failed."
+$remoteScriptPath = "/tmp/job-ticket-deploy-$([Guid]::NewGuid().ToString("N")).sh"
+$localRemoteScriptPath = Join-Path ([System.IO.Path]::GetTempPath()) "job-ticket-remote-deploy-$([Guid]::NewGuid().ToString("N")).sh"
+
+try {
+	$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+	[System.IO.File]::WriteAllText($localRemoteScriptPath, ($remoteScript -replace "`r", ""), $utf8NoBom)
+
+	& scp $localRemoteScriptPath "${vpsHost}:$remoteScriptPath"
+	if ($LASTEXITCODE -ne 0) {
+		throw "Failed to copy remote deploy script to VPS."
+	}
+
+	& ssh $vpsHost "bash '$remoteScriptPath'; status=`$?; rm -f '$remoteScriptPath'; exit `$status"
+	if ($LASTEXITCODE -ne 0) {
+		throw "Remote deploy failed."
+	}
+}
+finally {
+	Remove-Item -LiteralPath $localRemoteScriptPath -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host "Deployment succeeded. Local and VPS are synced to origin/main with healthy checks." -ForegroundColor Green
