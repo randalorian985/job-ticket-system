@@ -38,6 +38,9 @@ export function UxPreviewReadinessPage() {
           This public readiness screen lets reviewers confirm the deployed app opens before signing in.
         </p>
         <div className="preview-actions" aria-label="Preview links">
+          <a className="button-link" href="/preview/job-ticket-workflow">
+            Job ticket detail
+          </a>
           <a className="button-link" href="/login">
             Employee login
           </a>
