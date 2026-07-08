@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Mail;
 using System.Text;
 using JobTicketSystem.Application.CompanyConfiguration;
 using JobTicketSystem.Domain.Entities;
@@ -16,7 +14,8 @@ public interface IPartOrderRequestNotificationService
 public sealed class PartOrderRequestNotificationService(
     ApplicationDbContext dbContext,
     ICompanyConfigurationService companyConfigurationService,
-    IMailerConfigurationService mailerConfigurationService) : IPartOrderRequestNotificationService
+    IMailerConfigurationService mailerConfigurationService,
+    IMailerDeliveryService mailerDeliveryService) : IPartOrderRequestNotificationService
 {
     public async Task NotifyRequestedAsync(Guid jobTicketPartId, CancellationToken cancellationToken = default)
     {
@@ -45,10 +44,7 @@ public sealed class PartOrderRequestNotificationService(
         var subject = $"Part order request for {part.JobTicket.TicketNumber}";
         var body = BuildBody(part);
 
-        using var message = MailerConfigurationService.CreateMessage(settings, recipient, subject, body);
-        using var client = CreateSmtpClient(settings);
-
-        await client.SendMailAsync(message, cancellationToken);
+        await mailerDeliveryService.SendAsync(settings, recipient, subject, body, cancellationToken);
     }
 
     private static string BuildBody(JobTicketPart part)
@@ -65,17 +61,6 @@ public sealed class PartOrderRequestNotificationService(
         }
 
         return builder.ToString();
-    }
-
-    private static SmtpClient CreateSmtpClient(ResolvedMailerSettings settings)
-    {
-        return new SmtpClient(settings.Host, settings.Port)
-        {
-            EnableSsl = settings.EnableSsl,
-            Credentials = string.IsNullOrWhiteSpace(settings.Username)
-                ? CredentialCache.DefaultNetworkCredentials
-                : new NetworkCredential(settings.Username, settings.Password)
-        };
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

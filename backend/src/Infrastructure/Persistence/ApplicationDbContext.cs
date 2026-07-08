@@ -33,6 +33,7 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<JobTicketPart> JobTicketParts => Set<JobTicketPart>();
     public DbSet<JobTicketFile> JobTicketFiles => Set<JobTicketFile>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<ApplicationErrorLog> ApplicationErrorLogs => Set<ApplicationErrorLog>();
     public DbSet<InvoiceSummary> InvoiceSummaries => Set<InvoiceSummary>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();

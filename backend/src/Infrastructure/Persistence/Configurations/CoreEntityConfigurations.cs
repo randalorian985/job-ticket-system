@@ -62,6 +62,10 @@ public sealed class MailerConfigurationEntityConfiguration : IEntityTypeConfigur
         builder.Property(x => x.SmtpEnableSsl).HasDefaultValue(true).IsRequired();
         builder.Property(x => x.SmtpUsername).HasMaxLength(320);
         builder.Property(x => x.SmtpPasswordCipherText).HasMaxLength(4000);
+        builder.Property(x => x.Microsoft365TenantId).HasMaxLength(200);
+        builder.Property(x => x.Microsoft365ClientId).HasMaxLength(100);
+        builder.Property(x => x.Microsoft365ClientSecretCipherText).HasMaxLength(4000);
+        builder.Property(x => x.Microsoft365SenderEmail).HasMaxLength(320);
         builder.Property(x => x.AppBaseUrl).HasMaxLength(300);
         builder.Property(x => x.LastTestMessage).HasMaxLength(1000);
         builder.HasIndex(x => x.UpdatedAtUtc);
@@ -467,6 +471,27 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(x => x.NewValuesJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.IpAddress).HasMaxLength(64);
         builder.HasIndex(x => new { x.EntityName, x.EntityId });
+    }
+}
+
+public sealed class ApplicationErrorLogConfiguration : IEntityTypeConfiguration<ApplicationErrorLog>
+{
+    public void Configure(EntityTypeBuilder<ApplicationErrorLog> builder)
+    {
+        builder.Property(x => x.Severity).HasMaxLength(40);
+        builder.Property(x => x.Source).HasMaxLength(80);
+        builder.Property(x => x.Message).HasMaxLength(2000);
+        builder.Property(x => x.Cause).HasMaxLength(2000);
+        builder.Property(x => x.Location).HasMaxLength(1000);
+        builder.Property(x => x.RequestPath).HasMaxLength(1000);
+        builder.Property(x => x.RequestMethod).HasMaxLength(20);
+        builder.Property(x => x.UserRole).HasMaxLength(50);
+        builder.Property(x => x.UserAgent).HasMaxLength(1000);
+        builder.Property(x => x.StackTrace).HasColumnType("nvarchar(max)");
+        builder.Property(x => x.MetadataJson).HasColumnType("nvarchar(max)");
+        builder.HasIndex(x => x.OccurredAtUtc);
+        builder.HasIndex(x => x.Source);
+        builder.HasIndex(x => x.RequestPath);
     }
 }
 

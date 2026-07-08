@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Mail;
 using System.Text;
 using JobTicketSystem.Domain.Entities;
 using JobTicketSystem.Domain.Enums;
@@ -17,6 +15,7 @@ public interface INewTicketNotificationService
 public sealed class NewTicketNotificationService(
     ApplicationDbContext dbContext,
     IMailerConfigurationService mailerConfigurationService,
+    IMailerDeliveryService mailerDeliveryService,
     ILogger<NewTicketNotificationService> logger) : INewTicketNotificationService
 {
     public async Task NotifyAsync(Guid jobTicketId, CancellationToken cancellationToken = default)
@@ -77,10 +76,7 @@ public sealed class NewTicketNotificationService(
                     var subject = BuildSubject(ticket);
                     var body = BuildBody(ticket, settings);
 
-                    using var message = MailerConfigurationService.CreateMessage(settings, recipientEmail, subject, body);
-                    using var client = CreateSmtpClient(settings);
-
-                    await client.SendMailAsync(message, cancellationToken);
+                    await mailerDeliveryService.SendAsync(settings, recipientEmail, subject, body, cancellationToken);
                     notifiedEmails.Add(recipientEmail);
                 }
                 catch (Exception ex)
@@ -170,17 +166,6 @@ public sealed class NewTicketNotificationService(
         }
 
         return builder.ToString();
-    }
-
-    private static SmtpClient CreateSmtpClient(ResolvedMailerSettings settings)
-    {
-        return new SmtpClient(settings.Host, settings.Port)
-        {
-            EnableSsl = settings.EnableSsl,
-            Credentials = string.IsNullOrWhiteSpace(settings.Username)
-                ? CredentialCache.DefaultNetworkCredentials
-                : new NetworkCredential(settings.Username, settings.Password)
-        };
     }
 
     private static string? NormalizeEmail(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

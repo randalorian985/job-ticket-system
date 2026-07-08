@@ -5718,3 +5718,18 @@ body:has(.notification-banner) #root > *:first-child {
   font-weight: 500;
 }
 .button-link:hover { opacity: 0.9; }
+
+.code-block {
+  max-height: 22rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: #101827;
+  color: #e5edf7;
+  font-family: Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}

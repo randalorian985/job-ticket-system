@@ -36,8 +36,11 @@ For live training, use the [Client Training Checklist](#client-training-checklis
 
 The screenshots below appear again in the workflow sections where they are most relevant:
 
-Last refresh: June 24, 2026 — full-size Chrome captures from the live VPS demo environment with pilot/demo accounts.
-Screenshots marked *(pending refresh)* reflect UI changes made after the last capture and will be updated in the next scheduled pass.
+Documentation rebuild: July 7, 2026.
+Baseline screenshot refresh: June 24-25, 2026, using full-size Chrome captures from the live VPS demo environment with pilot/demo accounts.
+Workflow/layout screenshot refresh: July 7, 2026, for Employee Job Detail, Job Tickets, Purchasing, Reports, Parts Usage History, Travel Time, Company Configuration, Alerts & Notifications, and Mailer Settings using mocked admin/demo configuration.
+Screenshots are intended to show screen layout and workflow behavior, not production customer data.
+
 | Screen | Screenshot |
 | --- | --- |
 | Login | [login.png](assets/system-wiki/login.png) |
@@ -56,11 +59,16 @@ Screenshots marked *(pending refresh)* reflect UI changes made after the last ca
 | Mobile ticket editor | [ticket-edit-mobile.png](assets/system-wiki/ticket-edit-mobile.png) |
 | Mobile labor workflow | [ticket-labor-mobile.png](assets/system-wiki/ticket-labor-mobile.png) |
 | Mobile parts workflow | [ticket-parts-mobile.png](assets/system-wiki/ticket-parts-mobile.png) |
-| Time approval | [time-approval.png](assets/system-wiki/time-approval.png) *(pending refresh)* |
+| Time approval | [time-approval.png](assets/system-wiki/time-approval.png) |
+| Travel Time report | [travel-time.png](assets/system-wiki/travel-time.png) |
 | Parts requests | [part-requests.png](assets/system-wiki/part-requests.png) |
+| Parts usage history | [parts-usage-history.png](assets/system-wiki/parts-usage-history.png) |
 | Master data customers | [master-data-customers.png](assets/system-wiki/master-data-customers.png) |
 | Purchasing support | [purchasing.png](assets/system-wiki/purchasing.png) |
-| Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) *(pending refresh)* |
+| Reports hub | [reports-hub.png](assets/system-wiki/reports-hub.png) |
+| Company Configuration | [company-configuration.png](assets/system-wiki/company-configuration.png) |
+| Alerts & Notifications | [alerts-notifications.png](assets/system-wiki/alerts-notifications.png) |
+| Mailer Settings | [mailer-settings.png](assets/system-wiki/mailer-settings.png) |
 | Admin users | [admin-users.png](assets/system-wiki/admin-users.png) |
 | Ticket filter configuration | [ticket-status-filters.png](assets/system-wiki/ticket-status-filters.png) |
 
@@ -104,6 +112,7 @@ Manager users can:
 
 Manager users cannot:
 - access Admin-only user management;
+- access private application error logs;
 - weaken role boundaries;
 - perform hard deletes.
 
@@ -118,6 +127,7 @@ Admin users can:
 - deactivate/archive users;
 - reset user passwords;
 - filter users by search, role, and active/inactive status;
+- review private application error logs for server, browser, and failed API request errors;
 - access all Manager/Admin operational screens.
 
 ## Navigation Overview
@@ -144,15 +154,22 @@ Admin users can:
 - `/manage/part-requests`: parts request queue.
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
+- `/manage/travel-time`: travel time report for technician travel entries.
 - `/manage/time-approval`: time approval queue.
 - `/manage/parts-approval`: parts approval workflow.
-- `/manage/reports`: reports hub.
+- `/manage/reports`: Job Reports page.
+- `/manage/reports/labor`: Labor Reports page.
+- `/manage/reports/parts-service`: Parts & Service Reports page.
+- `/manage/reports/invoice-ready/{jobTicketId}`: invoice-ready packet view for a selected ticket.
+- `/manage/wiki`: in-app system wiki.
 - `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
 - `/manage/alerts`: Admin-only alert recipients and notification routing.
 - `/manage/mailer-settings`: Admin-only outgoing mailer settings.
+- `/manage/error-logs`: Admin-only private application error review.
 - `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
 - `/manage/users`: Admin-only user management.
-- `/manage/dispatch`: legacy bookmark route that redirects to `/manage/job-tickets`.
+- `/manage/dispatch`: legacy bookmark route that redirects to `/manage/schedule`.
+- `/manage/reports/labor-parts-service`: legacy report bookmark route that redirects to `/manage/reports/labor`.
 
 ## Production Demo Operations
 
@@ -226,9 +243,9 @@ When an employee opens a job, the detail screen shows:
 - job description;
 - a short "Before You Start" readiness review;
 - a plain-language "Next action" card;
-- clock-in/clock-out controls.
+- Start Travel, Arrive - End Travel, clock-in, and clock-out controls.
 
-The "Next action" card is the technician's main guide. Before clock-in, it points the employee to clock in or to finish the already-active ticket. After clock-in, it shows short links for Add Note, Add Part, Upload Photo, and Clock Out so the employee can do one field update at a time.
+The "Next action" card is the technician's main guide. Before clock-in, it points the employee to Start Travel, Clock In, Arrive - End Travel, or to finish the already-active ticket. After clock-in, it shows short links for Add Note, Add Part, Upload Photo, and Clock Out so the employee can do one field update at a time.
 
 Before clock-in, the deeper field tools are hidden behind a clear message. After the technician clocks into that exact ticket, the active-job tools appear:
 - work note form;
@@ -256,6 +273,22 @@ It checks:
 
 If information is missing, the employee should contact a Manager/Admin before starting or continuing work.
 
+### Travel To Job Site
+Employees can start a travel entry from the job detail screen before clocking into field work.
+
+Travel capture records:
+- job ticket;
+- employee;
+- GPS latitude (when available);
+- GPS longitude (when available);
+- GPS accuracy (when available);
+- device metadata;
+- optional note.
+
+When the technician reaches the job site, **Arrive - End Travel** ends the travel entry. The screen then returns to the normal clock-in state so the employee can start active job time.
+
+Travel time is a time-entry type used for reporting and review. It does not unlock field recording tools. Work notes, parts, and file uploads still require clock-in to the job itself.
+
 ### Clock In
 Employees clock in from the job detail screen.
 
@@ -269,6 +302,8 @@ Clock-in records:
 - optional clock note.
 
 The system attempts high-accuracy GPS first, then falls back to low-accuracy GPS if the first attempt fails. If both attempts fail (for example, in a facility with no signal), the clock-in proceeds without coordinates and the confirmation message notes that no GPS signal was available. GPS is not required to complete a clock-in.
+
+The system enforces one active time entry per technician. If an employee is already traveling to or clocked into another ticket, the screen directs them to open that active ticket and end travel or clock out before starting another entry.
 
 ### Clock Out
 Employees clock out from the same job detail screen.
@@ -394,16 +429,17 @@ The queue has two view modes:
 
 The selected view is remembered in the browser for that Manager/Admin user session. It does not change the ticket data, filters, CSV export, routes, or authorization rules.
 
-The queue also includes a compact **Saved Views** dropdown for common operating queues:
+The queue also includes a clickable count-chip row for common operating queues. Selecting a chip applies normal queue filters and updates the shareable queue URL. The chips are compact operating controls, not dashboard cards, so the queue stays dense enough for daily dispatch review.
+
+Current queue chips:
+- All Tickets;
 - Open Tickets;
-- Closed Tickets;
 - Today;
 - Waiting on Parts;
-- Ready to Invoice;
 - Needs Assignment;
-- Completed Review.
-
-Saved views apply normal queue filters and show small counts inline. They are intentionally presented as a dropdown and compact count chips instead of dashboard-style cards.
+- Ready to Invoice;
+- Completed Review;
+- Closed Tickets.
 
 Important queue concepts:
 - active job queue;
@@ -526,7 +562,7 @@ Use each area for one clear purpose:
 
 People are assigned to a job ticket. The customer's crane or other equipment is what the ticket says the team is servicing. It is not assigned as a company resource. If the work is on a component or part, describe that clearly in **Job / Scope** or **Service Instructions**.
 
-Old bookmarks to `/manage/dispatch` redirect to `/manage/job-tickets` so users land in the current workflow.
+Old bookmarks to `/manage/dispatch` redirect to `/manage/schedule` so users land in the current scheduling view.
 
 #### One Job-Ticket Workflow
 The job ticket moves through the existing workflow from request through review. Assignment and schedule details are part of that ticket.
@@ -544,15 +580,17 @@ flowchart TD
 The UI uses the real ticket statuses: Draft, Submitted, Assigned, In Progress, Waiting on Parts, Waiting on Customer, Completed, Cancelled, Invoiced, and Reviewed. It does not invent separate Requested, Scheduled, or Dispatched statuses.
 
 #### Quick Views
-The Job Tickets screen has a small set of practical quick views:
-- **Active tickets**;
-- **Waiting**;
-- **Missing due**;
-- **Unassigned**;
-- **Needs review**;
-- **Ready to work**.
+The Job Tickets screen has a compact chip row for practical quick views:
+- **All Tickets**;
+- **Open Tickets**;
+- **Today**;
+- **Waiting on Parts**;
+- **Needs Assignment**;
+- **Ready to Invoice**;
+- **Completed Review**;
+- **Closed Tickets**.
 
-These quick views are not a second workflow. They only apply filters to the same job-ticket list. Admin-configured status labels stay in the Status filter so the screen does not become crowded with shortcut boxes.
+These quick views are not a second workflow. They only apply filters to the same job-ticket list. Admin-configured status labels stay in the Status filter so the chip row does not become a custom workflow engine.
 
 #### Compact List
 The Job Tickets screen has two views:
@@ -792,6 +830,26 @@ Time entries connect field activity to:
 - work summary;
 - labor review.
 
+Time entries now have a type:
+- **Field Work**: created by Clock In / Clock Out and used for normal labor review.
+- **Travel**: created by Start Travel / Arrive - End Travel and reviewed through the Travel Time report.
+
+Only one active time entry is allowed per technician at a time, regardless of type.
+
+### Travel Time Report
+Travel Time is available from the Reports navigation at `/manage/travel-time`.
+
+Managers/Admins can:
+- review travel entries logged by technicians;
+- filter by technician;
+- filter by date range;
+- see total travel duration for the filtered rows;
+- open the related job ticket from each travel row.
+
+The Travel Time report is for visibility and review. It does not replace the Time Approval queue for normal field-work labor approval.
+
+![Manager/Admin travel time report](assets/system-wiki/travel-time.png)
+
 ### Manager/Admin Time Approval Queue
 The Time Approval screen is queue-first.
 
@@ -859,6 +917,19 @@ This is a ticket-support workflow. It is not automatic purchasing, automatic app
 
 ### Parts Usage History
 Parts usage history gives Managers/Admins visibility into historical usage.
+
+The page is filter-first. Results stay hidden until a Manager/Admin chooses at least one filter and runs the search.
+
+Available filters:
+- customer;
+- equipment;
+- part.
+
+If a customer is selected, the equipment list narrows to equipment tied to that customer, owner, or responsible billing customer. The page shows summary badges for visible rows, approved installs, and pending review after a search. Before a search, the badges show that a filter is required and summarize available active equipment and parts.
+
+Each result can show the part, customer, equipment, model, status evidence, and a link back to the related job ticket.
+
+![Manager/Admin parts usage history screen](assets/system-wiki/parts-usage-history.png)
 
 The wording is intentionally cautious. It should not be treated as:
 - recommendations;
@@ -974,6 +1045,14 @@ Managers/Admins can work with:
 - landed-cost fields where already supported;
 - receipt recording for purchase-order quantities.
 
+The current Purchasing Workbench uses compact clickable chips to filter the purchase-order list:
+- All POs;
+- Need Receiving;
+- Drafts;
+- Archived.
+
+The workbench layout keeps create, list, and selected-PO review on the same screen. The selected review panel shows line quantities, received quantities, unit costs, line subtotals, status pills, invoice status, vendor invoice fields, freight/tax/other landed costs, landed-cost notes, invoice subtotal, landed costs, and total.
+
 This is existing purchasing support. It is not approval to expand into a larger purchasing, accounting, receiving, or vendor-invoice product without a separate approved scope.
 
 The purchasing screen shows success and error feedback for create, submit, receiving, close, archive, and vendor-invoice save actions. Inventory remains hidden until that workflow is completed, so users should treat purchasing as purchase-order coordination rather than a complete warehouse workflow.
@@ -984,35 +1063,40 @@ The purchasing screen shows success and error feedback for create, submit, recei
 
 Reports are Manager/Admin-only.
 
-The Reports menu is organized into three pages:
-- **Job Reports** — review jobs ready for invoicing and pull cost summaries for individual tickets.
-- **Labor Reports** — review approved time totals by job or employee, ready to export.
-- **Parts & Service Reports** — review approved parts by job, open parts usage history, and look up customer service history.
+The Reports navigation is organized into:
+- **Job Reports** - review jobs ready for invoicing and pull cost summaries for individual tickets.
+- **Labor Reports** - review approved time totals by job or employee, ready to export.
+- **Parts & Service** - review approved parts by job, open parts usage history, and look up customer service history.
+- **Travel Time** - review technician travel entries.
+
+Inside the main Reports module, the report catalog is split into three report pages:
+- **Invoice and Billing**;
+- **Approved Labor**;
+- **Parts & Service History**.
 
 Implemented report types include:
-- **Invoice-ready Summary** — invoice-ready totals for a single job ticket: approved labor, parts used, and billable amounts.
-- **Job Cost Summary** — cost breakdown for a single job ticket: approved labor hours, parts used, and running totals.
-- **Jobs Ready to Invoice** — jobs with approved billable activity that are ready for invoice review. Filter by date, customer, status, or billing party.
-- **Labor by Job** — approved time entries grouped by job ticket, with hours and billable totals for each assignment.
-- **Labor by Employee** — approved time entries grouped by employee, showing total hours and billable time per worker.
-- **Parts by Job** — approved parts used on each job, with quantities and billable price totals per ticket. It can be narrowed to a selected job ticket.
-- **Customer Service History** — complete service record for a selected customer: all tickets, statuses, and dates.
-- **Equipment Service History** — complete service record for a selected piece of equipment: all tickets, statuses, and dates.
+- **Invoice-ready Summary** - invoice-ready totals for a selected job ticket: approved labor, parts used, and billable amounts.
+- **Job Cost Summary** - cost breakdown for a selected job ticket: approved labor hours, parts used, and running totals.
+- **Jobs Ready to Invoice** - jobs with approved billable activity that are ready for invoice review.
+- **Labor by Job** - approved time entries grouped by job ticket, with hours and billable totals for each assignment.
+- **Labor by Employee** - approved time entries grouped by employee, showing total hours and billable time per worker.
+- **Parts by Job** - approved parts used on each job, with quantities and billable price totals per ticket.
+- **Customer Service History** - complete service record for a selected customer, optionally narrowed to one piece of equipment.
+- **Parts Usage History** - a linked filter-first history view for customer, equipment, or part usage.
 
 Reports support shared filters where applicable:
 - from date;
 - to date;
 - job ticket;
 - customer;
+- equipment;
 - billing party customer;
 - service location;
 - employee;
 - job status;
-- invoice status;
-- offset;
-- limit.
+- invoice status.
 
-The frontend validates required source selections, date ranges, and paging values before calling report APIs.
+The frontend validates required source selections and date ranges before calling report APIs. Reports that require a source record, such as Invoice-ready Summary, Job Cost Summary, and Customer Service History, show a source selector instead of running against every record.
 
 Invoice-ready review uses a dedicated packet view. From **Jobs Ready to Invoice**, select the job ticket number to open the packet. From **Invoice-ready Summary**, choose a job ticket and use **View Invoice-ready Packet**. The packet includes job, customer, billing party, service location, equipment, PO/contact fields, work notes, approved labor, approved parts, totals, and **Print** / **Download PDF** actions. Use **Open ticket** from the packet only when you need to edit or investigate the underlying job ticket.
 
@@ -1099,9 +1183,11 @@ Company Configuration is Admin-only and represents the crane company's own ident
 
 Admin-only access:
 - `/manage/company-configuration`
+- `/manage/alerts`
 - `/manage/mailer-settings`
+- `/manage/error-logs`
 
-Admins can manage:
+Company Configuration manages:
 - company name and legal name;
 - primary contact;
 - phone, email, and website;
@@ -1109,13 +1195,37 @@ Admins can manage:
 - company logo;
 - primary, secondary, and accent brand colors.
 
-Mailer Settings is Admin-only and manages the outgoing email account used by ticket and part-order notifications. Manual SMTP is available now. Google Workspace and Microsoft 365 appear as planned OAuth provider options, but OAuth connection flows are not active yet.
+The Company Configuration form is split into focused panels for profile details, logo upload, brand colors, and live preview. Text inputs show character counts so Admins can keep saved values inside the API limits before submitting.
+
+![Admin company configuration screen](assets/system-wiki/company-configuration.png)
+
+Alerts & Notifications is Admin-only and manages notification routing separate from the outgoing delivery account.
+
+Alerts & Notifications supports:
+- part order requests email, with fallback to company contact email when blank;
+- enabling or disabling new-ticket notifications;
+- minimum priority required for new-ticket notifications;
+- recipient list review;
+- adding notification recipients by label and email address;
+- removing notification recipients.
+
+![Admin alerts and notifications screen](assets/system-wiki/alerts-notifications.png)
+
+Mailer Settings is Admin-only and manages the outgoing email account used by ticket and part-order notifications. Manual SMTP and Microsoft 365 Graph are available. Google Workspace appears as a planned OAuth provider option, but its connection flow is not active yet.
 
 Mailer Settings supports:
 - enabling or disabling outgoing mail;
 - SMTP host, port, SSL/TLS, username, and protected password storage;
+- Microsoft 365 Graph tenant ID or domain, application client ID, protected client secret storage, and sender mailbox;
 - from name, from address, reply-to address, and app base URL;
 - a test email action and latest test status.
+
+Microsoft 365 Graph uses application permissions instead of a signed-in human account. The Microsoft Entra app registration must have Microsoft Graph `Mail.Send` application permission with admin consent, and a successful configuration shows `Connected via Microsoft 365 Graph.`
+For Microsoft 365 Graph, the Sender mailbox is the mailbox used in the Graph sendMail call. The client secret is write-only: after save, the UI only shows whether a secret is saved.
+
+Detailed setup steps are documented in [Microsoft 365 Graph Mailer Setup](/docs/microsoft-365-graph-mailer-setup.md).
+
+![Admin Mailer Settings Microsoft 365 Graph screen](assets/system-wiki/mailer-settings.png)
 
 ### Color Settings
 
@@ -1150,13 +1260,45 @@ API summary:
 - `PUT /api/company-configuration`: Admin-only profile and color update.
 - `POST /api/company-configuration/logo`: Admin-only logo upload.
 - `GET /api/company-configuration/logo`: public logo stream when a logo exists.
+- `GET /api/company-configuration/notification-recipients`: Admin-only notification recipient list.
+- `POST /api/company-configuration/notification-recipients`: Admin-only add notification recipient.
+- `DELETE /api/company-configuration/notification-recipients/{id}`: Admin-only remove notification recipient.
 - `GET /api/mailer-configuration`: Admin-only mailer settings read.
-- `PUT /api/mailer-configuration`: Admin-only mailer settings save; SMTP password values are write-only.
+- `PUT /api/mailer-configuration`: Admin-only mailer settings save; SMTP password and Microsoft 365 client secret values are write-only.
 - `POST /api/mailer-configuration/test`: Admin-only test email send.
+
+## Application Error Logs
+
+Application Error Logs is Admin-only and is available at `/manage/error-logs`.
+
+Admins use this page to privately review application errors after they happen. Each entry shows:
+- what failed;
+- likely cause or exception type;
+- date and time;
+- where it happened, including API route, browser page, or component location when available;
+- user role and user ID when captured;
+- user agent, metadata, and stack trace inside technical details.
+
+The page supports source filtering for Server, Client, and ApiRequest errors, text search, and a result limit selector. Results are newest first so recent failures are visible without searching through older records.
+
+What gets captured:
+- unhandled backend exceptions after authentication;
+- browser `window.error` and unhandled promise rejection events;
+- frontend API requests that receive HTTP 500 or higher responses.
+
+Important boundaries:
+- Managers and Employees cannot open the Error Logs page;
+- Managers and Employees cannot read `/api/error-logs`;
+- client-side reporting is best-effort and must never block normal user work;
+- error logs are for troubleshooting, not a replacement for user-facing validation messages or production monitoring.
+
+API summary:
+- `GET /api/error-logs`: Admin-only list with optional `limit`, `source`, and `search`.
+- `POST /api/error-logs/client`: authenticated user best-effort browser/API error reporting.
 
 ## Ticket Filter Configuration
 
-Ticket Filter Configuration is Admin-only and controls the status shortcut boxes shown in the Manager/Admin job-ticket queue.
+Ticket Filter Configuration is Admin-only and controls the configurable status filter choices shown in the Manager/Admin job-ticket queue.
 
 Admin-only access:
 - `/manage/ticket-status-filters`
@@ -1164,7 +1306,7 @@ Admin-only access:
 Admins can:
 - view the current status filter list;
 - add a filter that maps to an existing ticket status;
-- rename the label shown on a filter box;
+- rename the label shown in the queue status filter;
 - change display order;
 - mark a filter active or inactive;
 - save the global filter list.
@@ -1176,7 +1318,7 @@ Important boundaries:
 - it does not add new ticket statuses;
 - it does not change ticket status numeric values;
 - it does not change status transition rules;
-- inactive filters do not appear in the normal queue shortcut row;
+- inactive filters do not appear in the normal queue status filter;
 - closed tickets remain available to Manager/Admin users through queue filters, ticket workspace, reports, and history.
 
 API summary:
@@ -1252,6 +1394,8 @@ Common validation examples:
 
 When a request fails, the screen should show a useful error message and keep the user in the workflow.
 Manager/Admin ticket workspace refreshes, Employee mobile post-action refreshes, and Parts Request Queue filter reloads should also clear loading states after failures, so users are not left waiting without feedback or told that a saved action failed.
+
+Unexpected server errors, browser errors, and failed API requests with HTTP 500 or higher are also recorded for Admin review in Application Error Logs. This troubleshooting record is separate from user-facing validation and should not interrupt the user's current workflow.
 
 ## Recommended Operating Process
 

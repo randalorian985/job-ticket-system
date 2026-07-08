@@ -28,6 +28,7 @@
 - Time entries (`/api/time-entries/*`)
 - Scheduling (`/api/scheduling/*`)
 - Reporting (`/api/reports/*`)
+- Application error logs (`/api/error-logs/*`)
 - Parts usage history visibility (`/api/parts/usage-history`)
 - Parts request workflow Phase 2 (`/api/part-requests/*`)
 - Purchase orders and vendor cost tracking (`/api/purchase-orders/*`)
@@ -53,10 +54,21 @@ Endpoints:
 - `GET /api/company-configuration/logo`
   - Authorization: public.
   - Streams the uploaded logo or returns `404 Not Found` when no logo is available.
+- `GET /api/company-configuration/notification-recipients`
+  - Authorization: `AdminOnly`.
+  - Returns `NewTicketNotificationRecipientDto[]`.
+- `POST /api/company-configuration/notification-recipients`
+  - Authorization: `AdminOnly`.
+  - Request DTO: `AddNewTicketNotificationRecipientDto`.
+  - Adds a new-ticket notification recipient.
+- `DELETE /api/company-configuration/notification-recipients/{id}`
+  - Authorization: `AdminOnly`.
+  - Removes a new-ticket notification recipient.
 
 `CompanyConfigurationDto` includes:
 - company profile fields: `companyName`, `legalName`, `contactName`, `email`, `phone`, `website`, address fields;
 - brand fields: `primaryColor`, `secondaryColor`, `accentColor`;
+- notification routing fields: `partOrderRequestsEmail`, `newTicketNotificationsEnabled`, and `newTicketNotificationMinimumPriority`;
 - logo metadata: `hasLogo`, original file name, content type, file size, upload time;
 - audit timestamps.
 
@@ -68,20 +80,51 @@ Mailer configuration controls the outgoing account used by new-ticket and part-o
 Endpoints:
 - `GET /api/mailer-configuration`
   - Authorization: `AdminOnly`.
-  - Returns current provider, status, SMTP host/port/SSL, sender identity, saved-password flag, test status, and whether values came from environment fallback or the database row.
+  - Returns current provider, status, SMTP host/port/SSL, Microsoft 365 tenant/client/sender details, sender identity, saved-secret flags, test status, and whether values came from environment fallback or the database row.
 - `PUT /api/mailer-configuration`
   - Authorization: `AdminOnly`.
   - Request DTO: `UpdateMailerConfigurationDto`.
-  - Creates or updates the singleton mailer row. SMTP passwords are accepted only as write-only values and are stored through server-side protection.
+  - Creates or updates the singleton mailer row. SMTP passwords and Microsoft 365 client secrets are accepted only as write-only values and are stored through server-side protection.
 - `POST /api/mailer-configuration/test`
   - Authorization: `AdminOnly`.
   - Request DTO: `SendMailerTestRequestDto` with `recipientEmail`.
   - Sends a test email with the saved mailer settings and records the latest test result on the database row when one exists.
 
-The first implemented provider is `ManualSmtp`. Google Workspace and Microsoft 365 are represented as future OAuth providers but are rejected by the API until their OAuth flows are implemented.
+Implemented providers are `ManualSmtp` and `Microsoft365`. Microsoft 365 uses application Graph mail with tenant ID or tenant domain, application client ID, write-only client secret, and sender mailbox. The application registration must have Microsoft Graph `Mail.Send` application permission with admin consent, and the sender mailbox is the `/users/{sender}/sendMail` mailbox used for system notifications. A configured Microsoft 365 provider reports `Connected via Microsoft 365 Graph.` Google Workspace remains represented as a future OAuth provider and is rejected by the API until that flow is implemented.
+
+## Application Error Logs
+Application error logs provide a private Admin review screen for server exceptions, browser errors, and failed API requests. They are for operational troubleshooting only and do not expose error review to Manager or Employee users.
+
+Endpoints:
+- `GET /api/error-logs`
+  - Authorization: `AdminOnly`.
+  - Query parameters: `limit` (1-500, default 100), optional `source`, and optional `search`.
+  - Returns newest `ApplicationErrorLogDto[]` records first.
+- `POST /api/error-logs/client`
+  - Authorization: `EmployeeOrAbove`.
+  - Request DTO: `ClientErrorLogRequestDto`.
+  - Records best-effort browser and failed API request details for later Admin review.
+
+`ApplicationErrorLogDto` includes:
+- `id`
+- `occurredAtUtc`
+- `severity`
+- `source` (`Server`, `Client`, or `ApiRequest`)
+- `message`
+- `cause`
+- `location`
+- `requestPath`
+- `requestMethod`
+- `userId`
+- `userRole`
+- `userAgent`
+- `stackTrace`
+- `metadataJson`
+
+Server-side unhandled exceptions are captured by API middleware after authentication, including the authenticated user when available, request method/path, endpoint display name, user agent, stack trace, and trace metadata. Browser-side unhandled errors and failed API responses with HTTP 500+ are reported by the frontend on a best-effort basis. Error reporting must never block the user workflow or create a reporting loop.
 
 ## Ticket Status Filter Configuration
-Ticket status filter configuration controls which status filter boxes appear in the Manager/Admin job-ticket queue. It maps labels to existing `JobTicketStatus` values only; it is not a custom workflow engine and does not add statuses or transitions.
+Ticket status filter configuration controls which configurable status filter choices appear in the Manager/Admin job-ticket queue. It maps labels to existing `JobTicketStatus` values only; it is not a custom workflow engine and does not add statuses or transitions.
 
 Endpoints:
 - `GET /api/ticket-status-filters`
@@ -171,7 +214,7 @@ Endpoints:
 This module does not add a dispatch-job table, backend dispatch enum, automatic scheduling engine, automatic approval, or invoice-generation behavior.
 
 ## Job Ticket Assignment And Schedule Workflow
-The Manager/Admin Job Tickets screen is the main workflow for creating, assigning, scheduling, and reviewing work. The legacy `/manage/dispatch` route redirects to `/manage/job-tickets`.
+The Manager/Admin Job Tickets screen is the main workflow for creating, assigning, scheduling, and reviewing work. The legacy `/manage/dispatch` route redirects to `/manage/schedule`.
 
 Existing APIs used:
 - `GET /api/job-tickets`
@@ -484,7 +527,7 @@ Behavior:
 This section documents the existing inventory API foundation only. It does not approve reintroducing the Inventory UI, warehouse/truck inventory expansion, transfer workflows, low-stock alerts, replenishment, average-cost or landed-cost inventory accounting expansion, recommendations, AI/scoring, automatic compatibility, or automatic approval behavior.
 
 ## Manager/Admin Navigation Routes
-All routes under `/manage` require Manager or Admin role. Routes under `/manage/users`, `/manage/company-configuration`, `/manage/alerts`, `/manage/mailer-settings`, and `/manage/ticket-status-filters` require Admin role.
+All routes under `/manage` require Manager or Admin role. Routes under `/manage/users`, `/manage/company-configuration`, `/manage/alerts`, `/manage/mailer-settings`, `/manage/error-logs`, and `/manage/ticket-status-filters` require Admin role.
 
 - `/manage`: Manager/Admin dashboard.
 - `/manage/job-tickets`: job-ticket queue.
@@ -498,22 +541,32 @@ All routes under `/manage` require Manager or Admin role. Routes under `/manage/
 - `/manage/part-requests`: parts request queue.
 - `/manage/purchasing`: purchasing support.
 - `/manage/parts-usage-history`: parts usage history visibility.
+- `/manage/travel-time`: travel time report for technician travel entries.
 - `/manage/time-approval`: time approval queue.
 - `/manage/parts-approval`: parts approval workflow.
-- `/manage/reports`: reports hub.
+- `/manage/reports`: Job Reports page.
+- `/manage/reports/labor`: Labor Reports page.
+- `/manage/reports/parts-service`: Parts & Service Reports page.
+- `/manage/reports/invoice-ready/{jobTicketId}`: invoice-ready packet view for a selected ticket.
+- `/manage/wiki`: in-app system wiki.
 - `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
 - `/manage/alerts`: Admin-only alert recipients and notification routing.
-- `/manage/mailer-settings`: Admin-only outgoing mailer provider, SMTP, sender identity, and test email settings.
+- `/manage/mailer-settings`: Admin-only outgoing mailer provider, SMTP or Microsoft 365 Graph connection, sender identity, and test email settings.
+- `/manage/error-logs`: Admin-only private application error review.
 - `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
 - `/manage/users`: Admin-only user management.
-- `/manage/dispatch`: legacy redirect to `/manage/job-tickets`.
+- `/manage/dispatch`: legacy redirect to `/manage/schedule`.
+- `/manage/reports/labor-parts-service`: legacy report bookmark route that redirects to `/manage/reports/labor`.
 
 ## Protected Boundaries
 - `/manage` remains Manager/Admin-only.
 - `/manage/users` remains Admin-only.
 - `/manage/company-configuration` remains Admin-only.
+- `/manage/alerts` remains Admin-only.
 - `/manage/mailer-settings` remains Admin-only.
+- `/manage/error-logs` remains Admin-only.
 - `/manage/ticket-status-filters` remains Admin-only.
+- `GET /api/error-logs` remains Admin-only; `POST /api/error-logs/client` accepts authenticated Employee, Manager, and Admin users only for best-effort error reporting.
 - `GET /api/ticket-status-filters` is Manager/Admin-readable; `PUT /api/ticket-status-filters` remains Admin-only.
 - User-management endpoints under `/api/users` remain Admin-only except for the narrow Manager/Admin `GET /api/users/assignable-employees` lookup documented above.
 - Admin user-management list search and role/status filters are frontend-only over the loaded `/api/users` results; they do not add query parameters or new user-management endpoints.

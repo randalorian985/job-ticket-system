@@ -6,12 +6,13 @@ import './CompanyConfigurationPage.css'
 
 type MailerForm = UpdateMailerConfigurationDto & {
   smtpPassword: string
+  microsoft365ClientSecret: string
 }
 
 const providerOptions: Array<{ value: MailerProvider; label: string; status: string; disabled?: boolean }> = [
   { value: 'ManualSmtp', label: 'Manual SMTP', status: 'Available' },
   { value: 'GoogleWorkspace', label: 'Google Workspace', status: 'OAuth pending', disabled: true },
-  { value: 'Microsoft365', label: 'Microsoft 365', status: 'OAuth pending', disabled: true }
+  { value: 'Microsoft365', label: 'Microsoft 365 Graph', status: 'Available' }
 ]
 
 const messageForError = (error: unknown, fallback: string) =>
@@ -34,6 +35,11 @@ const toFormValue = (config: MailerConfigurationDto): MailerForm => ({
   smtpUsername: config.smtpUsername ?? '',
   smtpPassword: '',
   clearSmtpPassword: false,
+  microsoft365TenantId: config.microsoft365TenantId ?? '',
+  microsoft365ClientId: config.microsoft365ClientId ?? '',
+  microsoft365ClientSecret: '',
+  clearMicrosoft365ClientSecret: false,
+  microsoft365SenderEmail: config.microsoft365SenderEmail ?? '',
   appBaseUrl: config.appBaseUrl ?? ''
 })
 
@@ -49,7 +55,12 @@ const normalizeForm = (form: MailerForm): UpdateMailerConfigurationDto => ({
   smtpUsername: nullIfBlank(form.smtpUsername),
   smtpPassword: nullIfBlank(form.smtpPassword),
   clearSmtpPassword: form.clearSmtpPassword,
-  appBaseUrl: nullIfBlank(form.appBaseUrl)
+  appBaseUrl: nullIfBlank(form.appBaseUrl),
+  microsoft365TenantId: nullIfBlank(form.microsoft365TenantId),
+  microsoft365ClientId: nullIfBlank(form.microsoft365ClientId),
+  microsoft365ClientSecret: nullIfBlank(form.microsoft365ClientSecret),
+  clearMicrosoft365ClientSecret: form.clearMicrosoft365ClientSecret,
+  microsoft365SenderEmail: nullIfBlank(form.microsoft365SenderEmail)
 })
 
 const formatTimestamp = (value?: string | null) => {
@@ -131,7 +142,13 @@ export function MailerSettingsPage() {
       setTestMessage(result.message)
       const refreshed = await mailerConfigurationApi.get()
       setConfiguration(refreshed)
-      setForm((prev) => prev ? { ...toFormValue(refreshed), smtpPassword: prev.smtpPassword } : toFormValue(refreshed))
+      setForm((prev) => prev
+        ? {
+            ...toFormValue(refreshed),
+            smtpPassword: prev.smtpPassword,
+            microsoft365ClientSecret: prev.microsoft365ClientSecret
+          }
+        : toFormValue(refreshed))
     } catch (testError) {
       setError(messageForError(testError, 'Test email could not be sent.'))
     } finally {
@@ -186,14 +203,19 @@ export function MailerSettingsPage() {
               <div><span>Provider</span><strong>{selectedProvider.label}</strong></div>
               <div><span>Source</span><strong>{configuration.configurationSource}</strong></div>
               <div><span>Status</span><strong>{configuration.statusMessage ?? configuration.status}</strong></div>
-              <div><span>Password</span><strong>{configuration.smtpPasswordSet ? 'Saved' : 'Not saved'}</strong></div>
+              <div>
+                <span>{form.provider === 'Microsoft365' ? 'Client secret' : 'Password'}</span>
+                <strong>{form.provider === 'Microsoft365'
+                  ? configuration.microsoft365ClientSecretSet ? 'Saved' : 'Not saved'
+                  : configuration.smtpPasswordSet ? 'Saved' : 'Not saved'}</strong>
+              </div>
             </div>
           </section>
 
-          <section className="company-config-panel stack" aria-label="smtp mailer settings">
+          <section className="company-config-panel stack" aria-label={form.provider === 'Microsoft365' ? 'microsoft 365 graph settings' : 'smtp mailer settings'}>
             <div className="company-config-section-heading">
               <div>
-                <p className="eyebrow">Manual SMTP</p>
+                <p className="eyebrow">{form.provider === 'Microsoft365' ? 'Microsoft 365 Graph' : 'Manual SMTP'}</p>
                 <h3>Connection</h3>
               </div>
             </div>
@@ -209,58 +231,115 @@ export function MailerSettingsPage() {
                   <option value="false">Disabled</option>
                 </select>
               </label>
-              <label>
-                SMTP host
-                <input
-                  value={form.smtpHost ?? ''}
-                  onChange={(event) => setForm({ ...form, smtpHost: event.target.value })}
-                  maxLength={255}
-                  placeholder="smtp.example.com"
-                />
-              </label>
-              <label>
-                SMTP port
-                <input
-                  type="number"
-                  min={1}
-                  max={65535}
-                  value={form.smtpPort}
-                  onChange={(event) => setForm({ ...form, smtpPort: Number(event.target.value) })}
-                />
-              </label>
-              <label>
-                SSL/TLS
-                <select
-                  value={form.smtpEnableSsl ? 'true' : 'false'}
-                  onChange={(event) => setForm({ ...form, smtpEnableSsl: event.target.value === 'true' })}
-                >
-                  <option value="true">Enabled</option>
-                  <option value="false">Disabled</option>
-                </select>
-              </label>
-              <label>
-                SMTP username
-                <input
-                  autoComplete="username"
-                  value={form.smtpUsername ?? ''}
-                  onChange={(event) => setForm({ ...form, smtpUsername: event.target.value })}
-                  maxLength={320}
-                />
-              </label>
-              <label>
-                SMTP password
-                <input
-                  autoComplete="new-password"
-                  type="password"
-                  value={form.smtpPassword}
-                  onChange={(event) => setForm({ ...form, smtpPassword: event.target.value, clearSmtpPassword: false })}
-                  maxLength={1000}
-                  placeholder={configuration.smtpPasswordSet ? 'Saved password' : ''}
-                />
-              </label>
+              {form.provider === 'Microsoft365' ? (
+                <>
+                  <label>
+                    Tenant ID or domain
+                    <input
+                      value={form.microsoft365TenantId ?? ''}
+                      onChange={(event) => setForm({ ...form, microsoft365TenantId: event.target.value })}
+                      maxLength={200}
+                      placeholder="contoso.onmicrosoft.com"
+                    />
+                  </label>
+                  <label>
+                    Application client ID
+                    <input
+                      value={form.microsoft365ClientId ?? ''}
+                      onChange={(event) => setForm({ ...form, microsoft365ClientId: event.target.value })}
+                      maxLength={100}
+                      placeholder="00000000-0000-0000-0000-000000000000"
+                    />
+                  </label>
+                  <label>
+                    Client secret
+                    <input
+                      autoComplete="new-password"
+                      type="password"
+                      value={form.microsoft365ClientSecret}
+                      onChange={(event) => setForm({ ...form, microsoft365ClientSecret: event.target.value, clearMicrosoft365ClientSecret: false })}
+                      maxLength={2000}
+                      placeholder={configuration.microsoft365ClientSecretSet ? 'Saved client secret' : ''}
+                    />
+                  </label>
+                  <label>
+                    Sender mailbox
+                    <input
+                      type="email"
+                      value={form.microsoft365SenderEmail ?? ''}
+                      onChange={(event) => setForm({ ...form, microsoft365SenderEmail: event.target.value })}
+                      maxLength={320}
+                      placeholder="dispatch@example.com"
+                    />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label>
+                    SMTP host
+                    <input
+                      value={form.smtpHost ?? ''}
+                      onChange={(event) => setForm({ ...form, smtpHost: event.target.value })}
+                      maxLength={255}
+                      placeholder="smtp.example.com"
+                    />
+                  </label>
+                  <label>
+                    SMTP port
+                    <input
+                      type="number"
+                      min={1}
+                      max={65535}
+                      value={form.smtpPort}
+                      onChange={(event) => setForm({ ...form, smtpPort: Number(event.target.value) })}
+                    />
+                  </label>
+                  <label>
+                    SSL/TLS
+                    <select
+                      value={form.smtpEnableSsl ? 'true' : 'false'}
+                      onChange={(event) => setForm({ ...form, smtpEnableSsl: event.target.value === 'true' })}
+                    >
+                      <option value="true">Enabled</option>
+                      <option value="false">Disabled</option>
+                    </select>
+                  </label>
+                  <label>
+                    SMTP username
+                    <input
+                      autoComplete="username"
+                      value={form.smtpUsername ?? ''}
+                      onChange={(event) => setForm({ ...form, smtpUsername: event.target.value })}
+                      maxLength={320}
+                    />
+                  </label>
+                  <label>
+                    SMTP password
+                    <input
+                      autoComplete="new-password"
+                      type="password"
+                      value={form.smtpPassword}
+                      onChange={(event) => setForm({ ...form, smtpPassword: event.target.value, clearSmtpPassword: false })}
+                      maxLength={1000}
+                      placeholder={configuration.smtpPasswordSet ? 'Saved password' : ''}
+                    />
+                  </label>
+                </>
+              )}
             </div>
 
-            {configuration.smtpPasswordSet ? (
+            {form.provider === 'Microsoft365' && configuration.microsoft365ClientSecretSet ? (
+              <label className="mailer-inline-check">
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.clearMicrosoft365ClientSecret)}
+                  onChange={(event) => setForm({ ...form, clearMicrosoft365ClientSecret: event.target.checked, microsoft365ClientSecret: '' })}
+                />
+                Clear saved Microsoft 365 client secret
+              </label>
+            ) : null}
+
+            {form.provider !== 'Microsoft365' && configuration.smtpPasswordSet ? (
               <label className="mailer-inline-check">
                 <input
                   type="checkbox"
@@ -290,16 +369,18 @@ export function MailerSettingsPage() {
                   placeholder="Service Dispatch"
                 />
               </label>
-              <label>
-                From address
-                <input
-                  type="email"
-                  value={form.fromAddress ?? ''}
-                  onChange={(event) => setForm({ ...form, fromAddress: event.target.value })}
-                  maxLength={320}
-                  placeholder="dispatch@example.com"
-                />
-              </label>
+              {form.provider === 'ManualSmtp' ? (
+                <label>
+                  From address
+                  <input
+                    type="email"
+                    value={form.fromAddress ?? ''}
+                    onChange={(event) => setForm({ ...form, fromAddress: event.target.value })}
+                    maxLength={320}
+                    placeholder="dispatch@example.com"
+                  />
+                </label>
+              ) : null}
               <label>
                 Reply-to address
                 <input

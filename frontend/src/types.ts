@@ -86,6 +86,10 @@ export type MailerConfigurationDto = {
   smtpEnableSsl: boolean
   smtpUsername?: string | null
   smtpPasswordSet: boolean
+  microsoft365TenantId?: string | null
+  microsoft365ClientId?: string | null
+  microsoft365SenderEmail?: string | null
+  microsoft365ClientSecretSet?: boolean
   appBaseUrl?: string | null
   lastTestedAtUtc?: string | null
   lastTestSucceeded?: boolean | null
@@ -106,6 +110,11 @@ export type UpdateMailerConfigurationDto = {
   smtpPassword?: string | null
   clearSmtpPassword: boolean
   appBaseUrl?: string | null
+  microsoft365TenantId?: string | null
+  microsoft365ClientId?: string | null
+  microsoft365ClientSecret?: string | null
+  clearMicrosoft365ClientSecret?: boolean
+  microsoft365SenderEmail?: string | null
 }
 
 export type SendMailerTestRequestDto = {
@@ -141,6 +150,37 @@ export type SaveTicketStatusFilterConfigurationDto = {
 export type ApiValidationError = {
   error?: string
   errors?: Record<string, string[]>
+}
+
+export type ApplicationErrorLogDto = {
+  id: string
+  occurredAtUtc: string
+  severity: string
+  source: string
+  message: string
+  cause?: string | null
+  location?: string | null
+  requestPath?: string | null
+  requestMethod?: string | null
+  userId?: string | null
+  userRole?: string | null
+  userAgent?: string | null
+  stackTrace?: string | null
+  metadataJson?: string | null
+}
+
+export type ClientErrorLogRequestDto = {
+  message: string
+  cause?: string | null
+  source?: string | null
+  location?: string | null
+  requestPath?: string | null
+  requestMethod?: string | null
+  userAgent?: string | null
+  stackTrace?: string | null
+  metadataJson?: string | null
+  severity?: string | null
+  occurredAtUtc?: string | null
 }
 
 export type AuthLoginRequestDto = {

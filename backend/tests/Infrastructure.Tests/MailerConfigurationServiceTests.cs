@@ -84,26 +84,88 @@ public sealed class MailerConfigurationServiceTests
     }
 
     [Fact]
-    public async Task Update_rejects_oauth_provider_until_flow_is_available()
+    public async Task Update_saves_microsoft365_graph_settings_with_protected_secret()
+    {
+        await using var context = CreateContext();
+        var service = CreateService(context);
+        var userId = Guid.NewGuid();
+        var clientId = Guid.NewGuid().ToString();
+
+        var result = await service.UpdateAsync(CreateUpdateRequest() with
+        {
+            Provider = "Microsoft365",
+            FromAddress = null,
+            SmtpHost = null,
+            Microsoft365TenantId = "contoso.onmicrosoft.com",
+            Microsoft365ClientId = clientId,
+            Microsoft365ClientSecret = "graph-secret",
+            Microsoft365SenderEmail = "dispatch@example.com"
+        }, userId);
+
+        var entity = await context.MailerConfigurations.SingleAsync();
+        var resolved = await service.GetResolvedSettingsAsync();
+
+        Assert.Equal("Ready", result.Status);
+        Assert.Equal("Connected via Microsoft 365 Graph.", result.StatusMessage);
+        Assert.True(result.Microsoft365ClientSecretSet);
+        Assert.Equal("protected:graph-secret", entity.Microsoft365ClientSecretCipherText);
+        Assert.Equal(MailerProvider.Microsoft365, resolved.Provider);
+        Assert.Equal("graph-secret", resolved.Microsoft365ClientSecret);
+        Assert.Equal("dispatch@example.com", resolved.Microsoft365SenderEmail);
+        Assert.Equal("dispatch@example.com", resolved.FromAddress);
+    }
+
+    [Fact]
+    public async Task SendTest_uses_configured_microsoft365_graph_delivery()
+    {
+        await using var context = CreateContext();
+        var delivery = new CapturingMailerDeliveryService();
+        var service = CreateService(context, mailerDeliveryService: delivery);
+        var clientId = Guid.NewGuid().ToString();
+
+        await service.UpdateAsync(CreateUpdateRequest() with
+        {
+            Provider = "Microsoft365",
+            FromAddress = null,
+            SmtpHost = null,
+            Microsoft365TenantId = "contoso.onmicrosoft.com",
+            Microsoft365ClientId = clientId,
+            Microsoft365ClientSecret = "graph-secret",
+            Microsoft365SenderEmail = "dispatch@example.com"
+        }, Guid.NewGuid());
+
+        var result = await service.SendTestAsync(new SendMailerTestRequestDto("owner@example.com"), Guid.NewGuid());
+
+        Assert.True(result.Success);
+        var sent = Assert.Single(delivery.SentMessages);
+        Assert.Equal(MailerProvider.Microsoft365, sent.Settings.Provider);
+        Assert.Equal("owner@example.com", sent.RecipientEmail);
+        Assert.Equal("dispatch@example.com", sent.Settings.Microsoft365SenderEmail);
+    }
+
+    [Fact]
+    public async Task Update_rejects_google_provider_until_flow_is_available()
     {
         await using var context = CreateContext();
         var service = CreateService(context);
 
         var exception = await Assert.ThrowsAsync<ValidationException>(() =>
-            service.UpdateAsync(CreateUpdateRequest() with { Provider = "Microsoft365" }, Guid.NewGuid()));
+            service.UpdateAsync(CreateUpdateRequest() with { Provider = "GoogleWorkspace" }, Guid.NewGuid()));
 
-        Assert.Equal("Google Workspace and Microsoft 365 OAuth mailers are not available yet. Use Manual SMTP for outgoing mail.", exception.Message);
+        Assert.Equal("Google Workspace OAuth mailer is not available yet. Use Manual SMTP or Microsoft 365 Graph for outgoing mail.", exception.Message);
         Assert.Empty(context.MailerConfigurations);
     }
 
     private static MailerConfigurationService CreateService(
         ApplicationDbContext context,
-        SmtpEmailSettings? environmentSettings = null)
+        SmtpEmailSettings? environmentSettings = null,
+        IMailerDeliveryService? mailerDeliveryService = null)
     {
         return new MailerConfigurationService(
             context,
             Options.Create(environmentSettings ?? new SmtpEmailSettings(false, null, 587, true, null, null, null, null)),
-            new TestMailerSecretProtector());
+            new TestMailerSecretProtector(),
+            mailerDeliveryService ?? new CapturingMailerDeliveryService());
     }
 
     private static ApplicationDbContext CreateContext()
@@ -135,4 +197,26 @@ public sealed class MailerConfigurationServiceTests
 
         public string Unprotect(string protectedValue) => protectedValue.Replace("protected:", "", StringComparison.Ordinal);
     }
+
+    private sealed class CapturingMailerDeliveryService : IMailerDeliveryService
+    {
+        public List<SentMailerMessage> SentMessages { get; } = [];
+
+        public Task SendAsync(
+            ResolvedMailerSettings settings,
+            string recipientEmail,
+            string subject,
+            string body,
+            CancellationToken cancellationToken = default)
+        {
+            SentMessages.Add(new SentMailerMessage(settings, recipientEmail, subject, body));
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed record SentMailerMessage(
+        ResolvedMailerSettings Settings,
+        string RecipientEmail,
+        string Subject,
+        string Body);
 }

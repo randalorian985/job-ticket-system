@@ -44,6 +44,7 @@ describe('MailerSettingsPage', () => {
       ...configuration,
       ...payload,
       smtpPasswordSet: Boolean(payload.smtpPassword) || (configuration.smtpPasswordSet && !payload.clearSmtpPassword),
+      microsoft365ClientSecretSet: Boolean(payload.microsoft365ClientSecret),
       updatedAtUtc: '2026-07-07T13:00:00Z'
     }))
     vi.mocked(mailerConfigurationApi.sendTest).mockResolvedValue({
@@ -64,6 +65,7 @@ describe('MailerSettingsPage', () => {
     expect(await screen.findByRole('heading', { name: 'Mailer Settings' })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /Manual SMTP/i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: /Google Workspace/i })).toBeDisabled()
+    expect(screen.getByRole('radio', { name: /Microsoft 365 Graph/i })).toBeEnabled()
 
     await user.clear(screen.getByLabelText('SMTP host'))
     await user.type(screen.getByLabelText('SMTP host'), 'smtp.mailhost.com')
@@ -78,6 +80,33 @@ describe('MailerSettingsPage', () => {
       clearSmtpPassword: false
     })))
     expect(await screen.findByText('Mailer settings saved.')).toBeInTheDocument()
+  })
+
+  it('saves Microsoft 365 Graph application settings', async () => {
+    const user = userEvent.setup()
+    render(<MailerSettingsPage />)
+
+    await screen.findByRole('heading', { name: 'Mailer Settings' })
+    await user.click(screen.getByRole('radio', { name: /Microsoft 365 Graph/i }))
+    await user.clear(screen.getByLabelText('Tenant ID or domain'))
+    await user.type(screen.getByLabelText('Tenant ID or domain'), 'contoso.onmicrosoft.com')
+    await user.clear(screen.getByLabelText('Application client ID'))
+    await user.type(screen.getByLabelText('Application client ID'), '00000000-0000-0000-0000-000000000000')
+    await user.clear(screen.getByLabelText('Client secret'))
+    await user.type(screen.getByLabelText('Client secret'), 'graph-secret')
+    await user.clear(screen.getByLabelText('Sender mailbox'))
+    await user.type(screen.getByLabelText('Sender mailbox'), 'dispatch@example.com')
+
+    await user.click(screen.getByRole('button', { name: 'Save mailer settings' }))
+
+    await waitFor(() => expect(mailerConfigurationApi.update).toHaveBeenCalledWith(expect.objectContaining({
+      provider: 'Microsoft365',
+      microsoft365TenantId: 'contoso.onmicrosoft.com',
+      microsoft365ClientId: '00000000-0000-0000-0000-000000000000',
+      microsoft365ClientSecret: 'graph-secret',
+      microsoft365SenderEmail: 'dispatch@example.com',
+      clearMicrosoft365ClientSecret: false
+    })))
   })
 
   it('sends a test email through the saved mailer configuration', async () => {

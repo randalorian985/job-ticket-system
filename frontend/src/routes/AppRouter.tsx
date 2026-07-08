@@ -10,6 +10,7 @@ import {
   CustomersPage,
   EquipmentHistoryPage,
   EquipmentPage,
+  ErrorLogsPage,
   InvoiceReadyPacketPage,
   LaborReportsPage,
   MailerSettingsPage,
@@ -91,6 +92,7 @@ export function AppRouter() {
             <Route path="company-configuration" element={<CompanyConfigurationPage />} />
             <Route path="alerts" element={<AlertsConfigurationPage />} />
             <Route path="mailer-settings" element={<MailerSettingsPage />} />
+            <Route path="error-logs" element={<ErrorLogsPage />} />
             <Route path="ticket-status-filters" element={<TicketStatusFiltersPage />} />
             <Route path="users" element={<UsersPage />} />
           </Route>

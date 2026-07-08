@@ -1,12 +1,14 @@
 using System.Text;
 using System.Text.Json;
 using JobTicketSystem.Api.Auth;
+using JobTicketSystem.Api.Diagnostics;
 using JobTicketSystem.Api.Pilot;
 using JobTicketSystem.Api.Production;
 using JobTicketSystem.Api.Security;
 using JobTicketSystem.Api.TestEnvironment;
 using JobTicketSystem.Application.Auth;
 using JobTicketSystem.Application.CompanyConfiguration;
+using JobTicketSystem.Application.Diagnostics;
 using JobTicketSystem.Application.Inventory;
 using JobTicketSystem.Application.JobTickets;
 using JobTicketSystem.Application.MasterData;
@@ -93,7 +95,9 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<ICompanyConfigurationService, CompanyConfigurationService>();
+builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
 builder.Services.Configure<SmtpEmailSettings>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddHttpClient<IMailerDeliveryService, MailerDeliveryService>();
 builder.Services.AddScoped<IMailerConfigurationService, MailerConfigurationService>();
 builder.Services.AddScoped<IPartOrderRequestNotificationService, PartOrderRequestNotificationService>();
 builder.Services.AddScoped<INewTicketNotificationService, NewTicketNotificationService>();
@@ -129,6 +133,7 @@ var app = builder.Build();
 
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
+app.UseMiddleware<ErrorLoggingMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

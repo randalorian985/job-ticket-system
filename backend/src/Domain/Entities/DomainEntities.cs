@@ -52,6 +52,10 @@ public sealed class MailerConfiguration : AuditableEntity
     public bool SmtpEnableSsl { get; set; } = true;
     public string? SmtpUsername { get; set; }
     public string? SmtpPasswordCipherText { get; set; }
+    public string? Microsoft365TenantId { get; set; }
+    public string? Microsoft365ClientId { get; set; }
+    public string? Microsoft365ClientSecretCipherText { get; set; }
+    public string? Microsoft365SenderEmail { get; set; }
     public string? AppBaseUrl { get; set; }
     public DateTime? LastTestedAtUtc { get; set; }
     public bool? LastTestSucceeded { get; set; }
@@ -79,6 +83,23 @@ public sealed class AuditLog
     public string? OldValuesJson { get; set; }
     public string? NewValuesJson { get; set; }
     public string? IpAddress { get; set; }
+}
+
+public sealed class ApplicationErrorLog : AuditableEntity
+{
+    public DateTime OccurredAtUtc { get; set; }
+    public string Severity { get; set; } = "Error";
+    public string Source { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string? Cause { get; set; }
+    public string? Location { get; set; }
+    public string? RequestPath { get; set; }
+    public string? RequestMethod { get; set; }
+    public Guid? UserId { get; set; }
+    public string? UserRole { get; set; }
+    public string? UserAgent { get; set; }
+    public string? StackTrace { get; set; }
+    public string? MetadataJson { get; set; }
 }
 
 public sealed class Customer : SoftDeletableEntity
