@@ -186,7 +186,7 @@ export function MailerSettingsPage() {
               {providerOptions.map((provider) => (
                 <button
                   aria-checked={form.provider === provider.value}
-                  className={`mailer-provider-option${form.provider === provider.value ? ' mailer-provider-option-active' : ''}`}
+                  className={`choice-tile mailer-provider-option${form.provider === provider.value ? ' choice-tile-active' : ''}`}
                   disabled={provider.disabled}
                   key={provider.value}
                   onClick={() => setForm((prev) => prev ? { ...prev, provider: provider.value } : prev)}
