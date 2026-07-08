@@ -56,6 +56,9 @@ select,
 textarea,
 button {
   font: inherit;
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
   box-sizing: border-box;
 }
 
@@ -63,6 +66,40 @@ input,
 select,
 textarea {
   width: 100%;
+}
+
+button {
+  align-items: center;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 2.4rem;
+  padding: 0.55rem 0.85rem;
+  width: auto;
+  transition: background 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent-dark);
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.18);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 2px;
 }
 
 .skip-link {
@@ -607,6 +644,31 @@ pre {
   margin: 0;
   padding: 0.75rem;
   scroll-margin-top: 1rem;
+}
+
+.button-link {
+  background: var(--accent);
+  border-radius: 8px;
+  color: #fff;
+  padding: 0.65rem 0.85rem;
+  text-decoration: none;
+  white-space: nowrap;
+  font-weight: 700;
+  text-align: center;
+}
+
+.button-link:hover {
+  background: var(--accent-dark);
+}
+
+.secondary-button {
+  background: #e2e8f0;
+  color: var(--ink);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #cbd5e1;
+  box-shadow: none;
 }
 
 .dashboard-actions {
@@ -1907,6 +1969,115 @@ button.queue-kpi-chip.queue-kpi-chip-alert:not([aria-pressed="true"]) strong {
   border-color: #b7c8ea;
   box-shadow: 0 8px 22px rgba(37, 48, 86, 0.08);
   transform: translateY(-1px);
+}
+
+/* Helpdesk-reference operations board refresh. */
+:root {
+  color: #24262b;
+  background: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f7f9fc;
+  --surface-panel: #fbfcfe;
+  --line: #d6dde8;
+  --line-strong: #c3ccda;
+  --ink: #24262b;
+  --muted-ink: #6d7280;
+  --accent: #6173f4;
+  --accent-dark: #07559c;
+  --accent-navy: #004f93;
+  --accent-soft: #eef3ff;
+  --ready: #00508f;
+  --review: #2f8ff0;
+  --alert: #be123c;
+  --inactive: #8d96a8;
+}
+
+html {
+  background: #ffffff;
+}
+
+body {
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 52%, #f5f7fb 100%);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--ink);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  line-height: 1.05;
+}
+
+h2 {
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  line-height: 1.15;
+}
+
+h3 {
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--accent-dark);
+}
+
+input,
+select,
+textarea {
+  background: #ffffff;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(97, 115, 244, 0.14);
+  outline: none;
+}
+
+button,
+.button-link {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: none;
+  color: #ffffff;
+}
+
+button:hover:not(:disabled),
+.button-link:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  box-shadow: 0 6px 16px rgba(7, 85, 156, 0.16);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(97, 115, 244, 0.42);
+}
+
+.secondary-button {
+  background: #f2f5fa;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #e7edf7;
+  border-color: var(--line-strong);
 }
 
 .desktop-shell,
@@ -4776,13 +4947,101 @@ td {
   .print-report-surface td {
     border: 1px solid #d1d5db;
     color: #111827;
-    padding: 0.06in 0.07in;
-    vertical-align: top;
-  }
 
   .print-report-surface button,
   .print-report-surface .button-link {
     box-shadow: none;
+  }
+    padding: 0.06in 0.07in;
+
+button,
+.button-link {
+  align-items: center;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: none;
+  color: #ffffff;
+  display: inline-flex;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 2.45rem;
+  padding: 0.55rem 0.85rem;
+  text-decoration: none;
+  transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease, color 140ms ease, transform 140ms ease;
+  width: auto;
+}
+
+button:hover:not(:disabled),
+.button-link:hover {
+  background: #0e2f6d;
+  border-color: #0e2f6d;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+.button-link:focus-visible {
+  outline: 3px solid rgba(97, 115, 244, 0.42);
+}
+
+.secondary-button {
+  background: #f2f5fa;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #d9e5f4;
+  border-color: #9bb3d3;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+  color: var(--ink);
+}
+
+.button-link.secondary-link {
+  background: #f2f5fa;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.button-link.secondary-link:hover {
+  background: #d9e5f4;
+  border-color: #9bb3d3;
+  color: var(--ink);
+}
+
+.danger-button {
+  background: #fff1f3;
+  border-color: #f3c7d1;
+  color: #a41136;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #ffd2de;
+  border-color: #e28aa1;
+  box-shadow: 0 8px 18px rgba(152, 18, 55, 0.12);
+  color: #7f0f2d;
+}
+
+.compact-button {
+  min-height: 2.25rem;
+  padding: 0.45rem 0.75rem;
+}
+
+.logout-button {
+  min-width: 6rem;
+}
+
+@media (max-width: 760px) {
+  .logout-button,
+  .button-link,
+  .secondary-button,
+  .compact-button {
+    width: 100%;
+  }
+}
+    vertical-align: top;
   }
 
   .print-report-surface th {
@@ -5447,6 +5706,18 @@ body:has(.notification-banner) #root > *:first-child {
 .schedule-ticket-dates { font-size: 0.78rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .schedule-tech-section { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
 .schedule-tech-name { margin: 0 0 0.75rem; font-size: 1rem; }
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  background: var(--primary, #2563eb);
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.button-link:hover { opacity: 0.9; }
 
 .code-block {
   max-height: 22rem;

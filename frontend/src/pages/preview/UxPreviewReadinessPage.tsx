@@ -3,27 +3,27 @@ const previewSections = [
     title: 'Employee mobile workflow',
     status: 'Preview-ready',
     items: [
-      'Employee sign-in is available.',
-      'Assigned jobs list is available.',
-      'Job detail opens from each assigned job.'
+      'Login route is available at /login.',
+      'Assigned jobs list is available at /jobs.',
+      'Job detail is available at /jobs/:jobTicketId.'
     ]
   },
   {
     title: 'Manager/Admin console',
     status: 'Preview-ready',
     items: [
-      'Operations dashboard is available.',
-      'Job tickets, master data, approvals, reports, and Admin user screens are present.',
-      'Role permissions remain enforced.'
+      'Operations dashboard is available at /manage.',
+      'Job tickets, master data, approvals, reports, and Admin users routes are present.',
+      'Role boundaries remain enforced by protected routes.'
     ]
   },
   {
-    title: 'Service checks',
+    title: 'Local service checks',
     status: 'Runbook-defined',
     items: [
-      'Application health check responds.',
-      'System information check responds.',
-      'The latest application screens are being served.'
+      'Backend health must respond at /health.',
+      'System metadata must respond at /api/system/info.',
+      'Frontend assets should be served from a freshly built production bundle.'
     ]
   }
 ]
@@ -35,9 +35,9 @@ export function UxPreviewReadinessPage() {
         <p className="eyebrow">UX Preview Readiness</p>
         <h1>Job Ticket System readiness</h1>
         <p className="muted">
-          This public readiness screen lets reviewers confirm the application opens before signing in.
+          This public readiness screen lets reviewers confirm the deployed frontend renders before signing in.
         </p>
-        <div className="preview-actions" aria-label="Preview links">
+        <div className="preview-actions" aria-label="Preview routes">
           <a className="button-link" href="/login">
             Employee login
           </a>
@@ -64,8 +64,8 @@ export function UxPreviewReadinessPage() {
       <section className="card">
         <h2>Demo operator notes</h2>
         <p className="muted">
-          Use this screen as a first review after deployment. Confirm application health, sign-in, and the
-          role-specific workflows from the readiness checklist before a customer walkthrough.
+          Use this screen as a first smoke check after deployment. Confirm <code>/health</code>, sign-in, and the
+          role-specific workflows from the production readiness runbook before a customer walkthrough.
         </p>
       </section>
     </main>

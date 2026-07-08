@@ -85,7 +85,7 @@ describe('AppRouter authentication rendering', () => {
     vi.clearAllMocks()
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      text: () => Promise.resolve('# Job Ticket System User Guide\n\n## Reports\n\nReports support CSV export and print/save-PDF output.')
+      text: () => Promise.resolve('# Job Ticket System Wiki\n\n## Reports\n\nReports support CSV export and print/save-PDF output.')
     }))
     vi.mocked(jobTicketsApi.listAll).mockResolvedValue([])
     vi.mocked(jobTicketsApi.listAssignments).mockResolvedValue([])
@@ -390,7 +390,7 @@ describe('AppRouter authentication rendering', () => {
     expect(await screen.findByRole('heading', { name: 'User Management' })).toBeInTheDocument()
   })
 
-  it('manager users can open the in-app user guide', async () => {
+  it('manager users can open the in-app system wiki', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: managerUser,
       isLoading: false,
@@ -404,9 +404,9 @@ describe('AppRouter authentication rendering', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('heading', { name: 'User Guide' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'System Wiki' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Reports' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Open full guide' })).toHaveAttribute('href', '/docs/system-wiki.md')
+    expect(screen.getByRole('link', { name: 'Open markdown' })).toHaveAttribute('href', '/docs/system-wiki.md')
   })
 
   it('redirects the legacy dispatch route to Job Tickets', async () => {

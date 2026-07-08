@@ -628,7 +628,7 @@ function ReportsPageContent({
             <p className="muted">{pageDescription}</p>
           </div>
           <div className="row report-hero-actions">
-            <Link className="button-link secondary-link" to="/manage/wiki#reports">User Guide</Link>
+            <Link className="button-link secondary-link" to="/manage/wiki#reports">Wiki</Link>
             <button type="button" className="secondary-button" onClick={clearFilters}>Reset report inputs</button>
           </div>
         </div>
