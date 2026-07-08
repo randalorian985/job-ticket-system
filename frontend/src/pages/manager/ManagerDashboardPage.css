@@ -319,3 +319,58 @@
   border-bottom: 0;
   padding-bottom: 0;
 }
+
+/* Keep the dashboard pinned to the polished operations-board layout. */
+.manager-dashboard-board .dashboard-hero-strip {
+  background: #ffffff;
+  border: 1px solid #d9e1ec;
+  border-radius: 7px;
+  padding: 1rem;
+}
+
+.manager-dashboard-board .dashboard-hero-strip h2 {
+  font-size: 1.45rem;
+}
+
+.manager-dashboard-board .operations-kpi-tile {
+  min-height: 5.5rem;
+}
+
+.manager-dashboard-board .operations-kpi-tile span {
+  background: #edf2ff;
+  color: #31456d;
+  font-size: 0.78rem;
+  min-height: 1.85rem;
+}
+
+.manager-dashboard-board .operations-kpi-tile strong {
+  font-size: 2rem;
+}
+
+.manager-dashboard-board .operations-panel h3 {
+  background: #f3f6fa;
+  border-bottom: 1px solid #dce3ed;
+  color: #253047;
+  padding: 0.62rem 0.75rem;
+  text-align: left;
+}
+
+.manager-dashboard-board .operations-bar-list {
+  gap: 0.7rem;
+  padding: 1rem 1.25rem;
+}
+
+.manager-dashboard-board .operations-bar-track {
+  background: #eef2f7;
+  border-radius: 999px;
+  height: 0.65rem;
+}
+
+.manager-dashboard-board .operations-bar-fill {
+  background: #4f46e5;
+  border-radius: inherit;
+}
+
+.manager-dashboard-board .operations-bar-fill-accent {
+  background: #4f46e5;
+}
