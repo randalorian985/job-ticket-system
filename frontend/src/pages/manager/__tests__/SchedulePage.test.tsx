@@ -16,7 +16,10 @@ vi.mock('../../../api/schedulingApi', () => ({
   }
 }))
 
-afterEach(cleanup)
+afterEach(() => {
+  window.localStorage.clear()
+  cleanup()
+})
 
 function renderSchedulePage() {
   return render(
@@ -61,6 +64,20 @@ describe('SchedulePage — Unscheduled Queue', () => {
     await waitFor(() => expect(screen.getByText('JT-001')).toBeInTheDocument())
     expect(screen.getByText('Hydraulic Repair')).toBeInTheDocument()
     expect(screen.getByText('Acme Corp')).toBeInTheDocument()
+  })
+
+  it('switches the schedule queue to compact list density', async () => {
+    const user = userEvent.setup()
+    vi.mocked(schedulingApi.getUnscheduled).mockResolvedValue([
+      makeTicket({ ticketNumber: 'JT-001', title: 'Hydraulic Repair', customerName: 'Acme Corp' })
+    ])
+
+    renderSchedulePage()
+    await waitFor(() => expect(screen.getByText('JT-001')).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: /compact list/i }))
+
+    expect(screen.getByText('Priority / Status')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/manage/job-tickets/ticket-1')
   })
 
   it('shows an error message when the API call fails', async () => {
