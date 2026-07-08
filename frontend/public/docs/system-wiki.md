@@ -1,12 +1,13 @@
 # Job Ticket System Wiki
 
 ## Purpose
-This wiki explains how the Job Ticket System is used by Employees, Managers, and Admins. It is written for client handoff and operations training, not for software development.
+This wiki explains how Employees, Managers, and Admins use the Job Ticket System in day-to-day work.
 
-## Consistency Standard
-- Use the same terms, screen names, and workflow order that appear in the live UI and the steering docs.
-- Prefer one label per concept across the wiki so trainers and users see the same model everywhere.
-- If the UI changes a workflow name or section order, update the wiki in the same pass.
+## How To Use This Wiki
+- Start with the role that matches the user being trained.
+- Use the screenshots to recognize each screen.
+- Follow the workflow sections in order during training.
+- Use the support notes at the end when reporting an issue.
 
 The system is centered on field-service job tickets:
 - create and manage service tickets;
@@ -15,7 +16,7 @@ The system is centered on field-service job tickets:
 - let Managers/Admins review work, time, parts, reports, users, and supporting master data;
 - preserve role boundaries so each user sees the tools appropriate to their job.
 
-Screenshots in this wiki are captured from the demo/pilot environment. They are intended to show screen layout and workflow behavior, not production customer data.
+Screenshots in this wiki are intended to show screen layout and workflow behavior, not production customer data.
 
 ## Client Quick Start
 
@@ -27,8 +28,7 @@ For a first client walkthrough, use this order:
 4. Walk technicians through [Employee Workflow](#employee-workflow).
 5. Walk office staff through [Manager/Admin Workspace](#manageradmin-workspace).
 6. Review [Time Tracking And Approval](#time-tracking-and-approval), [Parts And Part Requests](#parts-and-part-requests), and [Reports](#reports).
-7. Review [Production Demo Operations](#production-demo-operations) before a VPS-backed client demo.
-8. Finish with [Current Scope Boundaries](#current-scope-boundaries) so the client knows what is intentionally not included.
+7. Finish with [Current Scope Boundaries](#current-scope-boundaries) so users know what is intentionally not included.
 
 For live training, use the [Client Training Checklist](#client-training-checklist) near the end of this wiki.
 
@@ -37,8 +37,6 @@ For live training, use the [Client Training Checklist](#client-training-checklis
 The screenshots below appear again in the workflow sections where they are most relevant:
 
 Documentation rebuild: July 7, 2026.
-Baseline screenshot refresh: June 24-25, 2026, using full-size Chrome captures from the live VPS demo environment with pilot/demo accounts.
-Workflow/layout screenshot refresh: July 7, 2026, for Employee Job Detail, Job Tickets, Purchasing, Reports, Parts Usage History, Travel Time, Company Configuration, Alerts & Notifications, and Mailer Settings using mocked admin/demo configuration.
 Screenshots are intended to show screen layout and workflow behavior, not production customer data.
 
 | Screen | Screenshot |
@@ -127,77 +125,49 @@ Admin users can:
 - deactivate/archive users;
 - reset user passwords;
 - filter users by search, role, and active/inactive status;
-- review private application error logs for server, browser, and failed API request errors;
+- review private application error logs for server, browser, and failed system request errors;
 - access all Manager/Admin operational screens.
 
 ## Navigation Overview
 
 ### Public And Login
-- `/login`: sign-in screen.
-- `/health`: public system health endpoint.
-- `/api/system/info`: public system information endpoint.
+- **Sign In**: username and password entry.
 
-### Employee Routes
-- `/jobs`: employee assigned jobs list.
-- `/jobs/{jobTicketId}`: employee job detail and field-recording workflow.
+### Employee Screens
+- **Assigned Jobs**: employee assigned jobs list.
+- **Job Detail**: employee job detail and field-recording workflow.
 
-### Manager/Admin Routes
-- `/manage`: Manager/Admin dashboard.
-- `/manage/job-tickets`: job-ticket queue.
-- `/manage/job-tickets/new`: create job ticket.
-- `/manage/job-tickets/{jobTicketId}`: job-ticket workspace.
-- `/manage/schedule`: dedicated scheduling screen (Unscheduled Queue, By Date, By Technician).
-- `/manage/customers`: customers.
-- `/manage/service-locations`: service locations.
-- `/manage/equipment`: equipment (includes Compatible Parts tab when a record is open).
-- `/manage/parts`: parts, vendors, and part categories.
-- `/manage/part-requests`: parts request queue.
-- `/manage/purchasing`: purchasing support.
-- `/manage/parts-usage-history`: parts usage history visibility.
-- `/manage/travel-time`: travel time report for technician travel entries.
-- `/manage/time-approval`: time approval queue.
-- `/manage/parts-approval`: parts approval workflow.
-- `/manage/reports`: Job Reports page.
-- `/manage/reports/labor`: Labor Reports page.
-- `/manage/reports/parts-service`: Parts & Service Reports page.
-- `/manage/reports/invoice-ready/{jobTicketId}`: invoice-ready packet view for a selected ticket.
-- `/manage/wiki`: in-app system wiki.
-- `/manage/company-configuration`: Admin-only company profile, logo, and color settings.
-- `/manage/alerts`: Admin-only alert recipients and notification routing.
-- `/manage/mailer-settings`: Admin-only outgoing mailer settings.
-- `/manage/error-logs`: Admin-only private application error review.
-- `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
-- `/manage/users`: Admin-only user management.
-- `/manage/dispatch`: legacy bookmark route that redirects to `/manage/schedule`.
-- `/manage/reports/labor-parts-service`: legacy report bookmark route that redirects to `/manage/reports/labor`.
-
-## Production Demo Operations
-
-The current VPS baseline is ready for controlled production demos after validation, health checks, and backup verification pass. This is separate from full client production go-live, which still requires restore-drill evidence, off-host backup storage, alerting, and UAT signoff.
-
-Before a client-facing VPS demo, the operator should confirm:
-- frontend and backend validation passed for the deployed commit;
-- `GET /health` returns `Healthy` through the public site and the local VPS proxy;
-- SQL Server, API, and frontend containers are healthy;
-- a fresh backup exists under `/opt/job-ticket-system/backups/<UTC stamp>/`;
-- the SQL backup reported `RESTORE VERIFYONLY` as valid;
-- uploaded files/photos were archived with the same backup stamp;
-- `job-ticket-production-backup.timer` is active on the VPS for recurring backups;
-- normal production restarts keep `TestBootstrap` and `PilotDemoSeed` disabled.
-
-The source-controlled backup entrypoint is `scripts/production-backup.sh`. It creates a SQL Server backup, verifies it, archives uploaded files/photos, and applies retention cleanup. The current Ubuntu VPS runs that script through the `job-ticket-production-backup.timer` systemd timer.
-
-See [Production Demo Readiness - June 22, 2026](/docs/production-demo-readiness-2026-06-22.md) and [Production Readiness Runbook](/docs/production-readiness-runbook.md) for the command-level checklist.
-
-For the Employee clock-in-first and Manager/Admin compact queue update, deploy only after the draft PR is reviewed, validated, and merged to `main`. The VPS checklist in the production runbook includes the required post-merge smoke tests and screenshot refresh targets.
+### Manager/Admin Screens
+- **Dashboard**: Manager/Admin starting point.
+- **Job Tickets**: job-ticket queue and ticket workspace.
+- **Create Job Ticket**: new ticket entry.
+- **Scheduling**: Unscheduled Queue, By Date, and By Technician views.
+- **Customers**: customer records.
+- **Service Locations**: service location records.
+- **Equipment**: equipment records and compatible parts.
+- **Parts**: parts, vendors, and part categories.
+- **Part Requests**: parts request queue.
+- **Purchasing**: purchasing support.
+- **Parts Usage History**: parts usage visibility.
+- **Travel Time**: travel time report for technician travel entries.
+- **Time Approval**: time approval queue.
+- **Parts Approval**: parts approval workflow.
+- **Reports**: job, labor, parts, and service reports.
+- **Wiki**: in-app help.
+- **Company Configuration**: Admin-only company profile, logo, and color settings.
+- **Alerts & Notifications**: Admin-only alert recipients and notification routing.
+- **Mailer Settings**: Admin-only outgoing mail settings.
+- **Application Error Logs**: Admin-only private application error review.
+- **Ticket Filter Configuration**: Admin-only ticket status filter configuration.
+- **Users**: Admin-only user management.
 
 ## Sign-In And Session Behavior
 
 1. The user opens the application and signs in with a username and password.
 2. After sign-in:
-   - Employee users are sent to `/jobs`.
-   - Manager and Admin users are sent to `/manage`.
-3. Protected routes require an authenticated user with the correct role.
+   - Employee users are sent to Assigned Jobs.
+   - Manager and Admin users are sent to the Manager/Admin dashboard.
+3. Protected screens require an authenticated user with the correct role.
 4. Unauthorized users are redirected away from restricted screens.
 5. Inactive, archived, or deleted users should not be allowed to continue using protected workflows.
 6. Sessions use JWT tokens with a 2-hour expiry. The application warns users before the token expires:
@@ -400,7 +370,7 @@ Typical dashboard actions include:
 - check assignment and schedule attention areas;
 - move into time approval, parts requests, reports, or master-data workflows.
 
-Dashboard links use the same Manager/Admin role boundary as the rest of the workspace. Primary and secondary dashboard actions use the shared Manager/Admin button styling so shortcuts look consistent with the job-ticket queue and wiki links.
+Dashboard links open the same Manager/Admin screens that are available from the main navigation.
 
 ![Manager/Admin dashboard](assets/system-wiki/manager-dashboard.png)
 
@@ -419,7 +389,7 @@ The status choices in the queue come from Admin configuration. Admins choose the
 
 Changing these options does not create a new workflow. It only changes how the Status filter is labeled and ordered in the Manager/Admin queue. Existing ticket status names, numeric values, status-change rules, and reports stay the same.
 
-Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and work readiness. It does not create a server-side export job.
+Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and work readiness.
 
 Queue URLs are shareable. If a Manager/Admin opens a ticket from a filtered queue, the ticket detail can preserve a safe return link back to that queue.
 
@@ -427,7 +397,7 @@ The queue has two view modes:
 - **Rich cards**: the full review card view with readiness detail, assignment context, and timing fields.
 - **Compact list**: a denser operating list that prioritizes ticket number, title, customer/location, assigned tech, status, priority, scheduled date, due date, and the Open action.
 
-The selected view is remembered in the browser for that Manager/Admin user session. It does not change the ticket data, filters, CSV export, routes, or authorization rules.
+The selected view is remembered in the browser for that Manager/Admin user session. It does not change ticket data or filters.
 
 The queue also includes a clickable count-chip row for common operating queues. Selecting a chip applies normal queue filters and updates the shareable queue URL. The chips are compact operating controls, not dashboard cards, so the queue stays dense enough for daily dispatch review.
 
@@ -456,7 +426,7 @@ Important queue concepts:
 ![Manager/Admin job-ticket queue](assets/system-wiki/job-ticket-queue.png)
 
 ### Create Job Ticket
-Managers/Admins create tickets from `/manage/job-tickets/new`.
+Managers/Admins create tickets from **Create Job Ticket**.
 
 Job-ticket creation uses existing master data where applicable:
 - customer;
@@ -479,7 +449,7 @@ Ticket creation now has a guided in-form path:
 - Schedule / assign tech;
 - Review and create.
 
-The wizard stays on the same screen and jumps the user to the relevant form section. It does not change the backend ticket workflow or create a separate approval path.
+The wizard stays on the same screen and jumps the user to the relevant form section.
 The **Schedule** section now includes optional technician assignment so Managers/Admins can choose lead and additional techs during ticket creation, then adjust later in the ticket workspace if needed.
 
 ![Create ticket schedule with optional technician assignment](assets/system-wiki/create-job-ticket-schedule-assignment.png)
@@ -540,7 +510,7 @@ The ticket view is organized around review first and editing second:
 This view is intended to answer "what needs attention?" before asking the user to edit anything.
 
 ### Scheduling Screen
-The **Scheduling** screen at `/manage/schedule` is a dedicated view for coordinating work across the queue. It has three tabs:
+The **Scheduling** screen is a dedicated view for coordinating work across the queue. It has three tabs:
 
 - **Unscheduled Queue**: open tickets that have no scheduled start date, sorted by priority. Use this list to identify work that needs to be placed on the calendar.
 - **By Date**: a week view showing tickets with a scheduled start in the selected week. Use the previous/next week arrows or **This week** to navigate. Each ticket card links directly to the ticket workspace.
@@ -551,7 +521,7 @@ From the Scheduling screen, Managers/Admins can review ticket priority, customer
 The Scheduling screen is a Manager/Admin-only view. It does not add a separate dispatch entity, dispatch lifecycle, automatic scheduling engine, or automatic assignment behavior.
 
 ### Assignment And Schedule Workflow
-**Plain-language rule:** there is one work record: the job ticket. The system does not have a separate Dispatch module or a separate dispatcher workflow. Managers/Admins create a job ticket, assign technicians, set schedule and due dates, and review the ticket as work moves forward.
+**Plain-language rule:** there is one work record: the job ticket. The system does not have a separate Dispatch screen or a separate dispatcher workflow. Managers/Admins create a job ticket, assign technicians, set schedule and due dates, and review the ticket as work moves forward.
 
 Use each area for one clear purpose:
 - use **Job Tickets** to create, find, assign, schedule, and edit work records;
@@ -562,20 +532,17 @@ Use each area for one clear purpose:
 
 People are assigned to a job ticket. The customer's crane or other equipment is what the ticket says the team is servicing. It is not assigned as a company resource. If the work is on a component or part, describe that clearly in **Job / Scope** or **Service Instructions**.
 
-Old bookmarks to `/manage/dispatch` redirect to `/manage/schedule` so users land in the current scheduling view.
-
 #### One Job-Ticket Workflow
 The job ticket moves through the existing workflow from request through review. Assignment and schedule details are part of that ticket.
 
-```mermaid
-flowchart TD
-  A["Create Job Ticket"] --> B["Review Scope, Customer, Location, Equipment"]
-  B --> C["Assign Technicians And Lead Tech"]
-  C --> D["Set Schedule And Due Date"]
-  D --> E["Technician Works Ticket"]
-  E --> F["Manager/Admin Reviews Labor, Parts, Files, And Status"]
-  F --> G["Invoice Review / Reports"]
-```
+Typical flow:
+1. Create the job ticket.
+2. Review scope, customer, location, and equipment.
+3. Assign technicians and, when needed, a lead technician.
+4. Set schedule and due date.
+5. Technician performs the work.
+6. Manager/Admin reviews labor, parts, files, and status.
+7. Use Invoice Review and Reports for closeout.
 
 The UI uses the real ticket statuses: Draft, Submitted, Assigned, In Progress, Waiting on Parts, Waiting on Customer, Completed, Cancelled, Invoiced, and Reviewed. It does not invent separate Requested, Scheduled, or Dispatched statuses.
 
@@ -635,18 +602,17 @@ On mobile:
 - focused workflow panels keep the selected task near the top of the screen.
 
 #### Permissions And Validation Rules
-Assignment and schedule work is Manager/Admin-only through the existing `/manage` route boundary.
+Assignment and schedule work is available to Manager/Admin users only.
 
 Validation and warnings preserve existing data integrity:
 - missing assignment, lead tech, schedule, or due date are shown as review items;
-- existing ticket update and employee-assignment APIs remain the persistence boundary;
-- no separate dispatch entity, status enum, database table, or API is introduced;
-- no auth weakening, enum renumbering, Dispatch-specific schema migration, automatic scheduling, or purchasing/inventory expansion is introduced.
+- users should review warnings before saving or moving work forward;
+- the scheduling screen helps organize work but does not automatically schedule tickets.
 
 ### Ticket Editing
 Managers/Admins edit ticket information through a focused in-page panel. The previous workflow opened one large edit form containing customer, service location, equipment, scope, billing, dates, status, and priority fields at the same time. That worked functionally, but it forced users to scan a long form and created extra mobile scrolling.
 
-The new workflow keeps editing in the ticket workspace but splits the edit panel into sections:
+The workflow keeps editing in the ticket workspace and splits the edit panel into sections:
 - **Basics**: title, job type, priority, and status;
 - **Customer & Service Equipment**: customer, service location, billing party, crane/equipment being serviced, quick-add relationship helpers, and recent equipment service history;
 - **Scope & Notes**: description, internal notes, and customer notes;
@@ -675,12 +641,6 @@ The edit workflow should preserve:
 - status and priority values;
 - notes and schedule fields.
 
-Reason for change:
-- reduce long-form scrolling on desktop and mobile;
-- make each editing decision easier to understand;
-- keep relationship editing separate from notes, billing, and schedule changes;
-- preserve the existing backend update behavior while improving the client workflow.
-
 User experience improvements:
 - fewer fields compete for attention at one time;
 - section buttons make the edit model predictable;
@@ -689,32 +649,14 @@ User experience improvements:
 - quick actions let users add notes, upload photos/files, review labor, or change status without opening the full editor.
 - mobile ticket shortcuts keep Add Note, Add Photo, Labor, and Status close to the top of the ticket overview.
 
-Technical implementation details:
-- `JobTicketEditorForm` owns the section state and still emits the same ticket update payload.
-- The Manager/Admin ticket detail page opens the section editor through the existing `Edit Ticket` action.
-- No new route, backend service, database table, enum, migration, or authorization policy was introduced.
-- Existing APIs remain in use: ticket update, work-entry add, file upload, status change, archive, assignment, part request, time-entry list, and report summary.
-
-Component changes:
-- `frontend/src/pages/manager/JobTicketEditorForm.tsx` now renders section navigation and section panels.
-- `frontend/src/pages/manager/JobTicketDetailPage.tsx` exposes quick-action panels for Add Note and Add Photo/File and routes Add Labor to the Labor workflow tab.
-- `frontend/src/pages/manager/JobTicketEditorForm.test.tsx` and `frontend/src/pages/manager/JobTicketDetailPage.test.tsx` cover the section navigation and quick-action behavior.
-
-Database impacts: none.
-
-API impacts: none. The enhancement reuses existing endpoints and DTOs.
-
-```mermaid
-flowchart TD
-  A["Open ticket view"] --> B["Review summary and recommended action"]
-  B --> C{"Need to edit ticket details?"}
-  C -->|Yes| D["Open Edit Ticket"]
-  D --> E["Choose edit section"]
-  E --> F["Update section fields"]
-  F --> G["Save through existing ticket update API"]
-  C -->|No| H["Use workflow tabs or quick actions"]
-  H --> I["Add Note / Add Photo / Add Labor / Change Status"]
-```
+Typical edit flow:
+1. Open the ticket.
+2. Review the summary and recommended action.
+3. If ticket details need to change, choose **Edit Ticket**.
+4. Choose the edit section.
+5. Update the needed fields.
+6. Save ticket changes.
+7. For smaller updates, use quick actions such as Add Note, Add Photo, Add Labor, or Change Status.
 
 ### Mobile User Experience
 On smaller screens, the section-based editor reduces the amount of visible form content. Users choose the section they need, make the change, and save. This avoids the older long-form edit mode where relationship, billing, notes, and schedule controls all appeared in one continuous vertical form.
@@ -731,8 +673,8 @@ On the mobile ticket overview, the compact quick-action row gives direct access 
 
 ![Mobile ticket editor](assets/system-wiki/ticket-edit-mobile.png)
 
-### Section-Based Editing Architecture
-Section-based editing is a frontend presentation architecture. It does not split the backend ticket update command. The frontend keeps one edit draft and one save action so existing validation, API contracts, and persistence behavior remain stable.
+### Section-Based Editing
+Section-based editing is a simpler way to organize ticket details. Users choose the section they need, make the change, and save the ticket.
 
 Section responsibilities:
 - Basics handles identity/status fields.
@@ -754,7 +696,7 @@ Protected controls:
 - Add / Request Part;
 - assignment controls.
 
-The enhancement does not weaken authorization. It only changes the Manager/Admin frontend layout and quick-action access points.
+Employees use the employee job workflow and do not receive Manager/Admin ticket-edit controls.
 
 ### Quick Actions
 Quick actions are short paths for common ticket updates:
@@ -779,27 +721,6 @@ Mobile focused workflows keep the selected panel directly under the workflow tab
 ![Mobile labor workflow](assets/system-wiki/ticket-labor-mobile.png)
 
 ![Mobile parts workflow](assets/system-wiki/ticket-parts-mobile.png)
-
-### Ticket Workflow Audit And Repairs
-The Service Ticket workflow audit completed on June 18, 2026 verified the existing business workflow without redesigning it. The audit covered workflow tabs, ticket actions, workflow cards, mobile visibility, and accessibility cues.
-
-Findings and repairs:
-- workflow tabs already changed active content, but action shortcuts could leave the target panel below the normal overview rail on mobile;
-- quick-action drawers did not have a reliable focus target, which made the opened panel less obvious for keyboard and assistive-technology users;
-- the focused workflow panel could take focus back from an opened drawer;
-- **Back to ticket overview** returned from focused mode but did not close an open focused drawer;
-- active tab and drawer focus contrast needed stronger shared styling.
-
-Implemented repairs:
-- direct workflow tab and action-rail navigation now sets the URL-backed `view=workflow` state;
-- Add Note, Add Photo, Add Labor, Add / Request Part, Edit Ticket, Change Status, and Archive Review open focused panels where appropriate;
-- drawer panels receive programmatic focus when opened;
-- workflow panel focus waits when a drawer is active;
-- **Back to ticket overview** clears open focused drawers;
-- global error messages announce as alerts;
-- active workflow tabs and focused drawers use stronger shared contrast/focus styling.
-
-See [Service Ticket Workflow Audit - June 18, 2026](/docs/service-ticket-workflow-audit-2026-06-18.md) for the detailed audit report, root cause notes, regression results, and remaining recommendations.
 
 ### Assignment Management
 Managers/Admins can assign active, non-archived Employee users to tickets.
@@ -837,7 +758,7 @@ Time entries now have a type:
 Only one active time entry is allowed per technician at a time, regardless of type.
 
 ### Travel Time Report
-Travel Time is available from the Reports navigation at `/manage/travel-time`.
+Travel Time is available from the Reports navigation.
 
 Managers/Admins can:
 - review travel entries logged by technicians;
@@ -1069,7 +990,7 @@ The Reports navigation is organized into:
 - **Parts & Service** - review approved parts by job, open parts usage history, and look up customer service history.
 - **Travel Time** - review technician travel entries.
 
-Inside the main Reports module, the report catalog is split into three report pages:
+Inside the main Reports area, the report catalog is split into three report pages:
 - **Invoice and Billing**;
 - **Approved Labor**;
 - **Parts & Service History**.
@@ -1096,7 +1017,7 @@ Reports support shared filters where applicable:
 - job status;
 - invoice status.
 
-The frontend validates required source selections and date ranges before calling report APIs. Reports that require a source record, such as Invoice-ready Summary, Job Cost Summary, and Customer Service History, show a source selector instead of running against every record.
+The page validates required source selections and date ranges before running a report. Reports that require a source record, such as Invoice-ready Summary, Job Cost Summary, and Customer Service History, show a source selector instead of running against every record.
 
 Invoice-ready review uses a dedicated packet view. From **Jobs Ready to Invoice**, select the job ticket number to open the packet. From **Invoice-ready Summary**, choose a job ticket and use **View Invoice-ready Packet**. The packet includes job, customer, billing party, service location, equipment, PO/contact fields, work notes, approved labor, approved parts, totals, and **Print** / **Download PDF** actions. Use **Open ticket** from the packet only when you need to edit or investigate the underlying job ticket.
 
@@ -1181,11 +1102,11 @@ This is future export guidance only. It does not change the current customer-sel
 
 Company Configuration is Admin-only and represents the crane company's own identity. It is not the customer/account record used when choosing who work is for on a job ticket.
 
-Admin-only access:
-- `/manage/company-configuration`
-- `/manage/alerts`
-- `/manage/mailer-settings`
-- `/manage/error-logs`
+Admin-only screens:
+- **Company Configuration**
+- **Alerts & Notifications**
+- **Mailer Settings**
+- **Application Error Logs**
 
 Company Configuration manages:
 - company name and legal name;
@@ -1195,7 +1116,7 @@ Company Configuration manages:
 - company logo;
 - primary, secondary, and accent brand colors.
 
-The Company Configuration form is split into focused panels for profile details, logo upload, brand colors, and live preview. Text inputs show character counts so Admins can keep saved values inside the API limits before submitting.
+The Company Configuration form is split into focused panels for profile details, logo upload, brand colors, and live preview. Text inputs show character counts so Admins can keep saved values within allowed lengths before submitting.
 
 ![Admin company configuration screen](assets/system-wiki/company-configuration.png)
 
@@ -1248,60 +1169,39 @@ Company Configuration is used by:
 - the login screen brand area;
 - the Manager/Admin shell header;
 - generated report print/save-PDF headers;
-- generated report CSV metadata;
-- shared UI brand color variables.
+- generated report CSV metadata.
 
 Logo upload accepts JPG/JPEG, PNG, and WebP images up to 2 MB. The upload path validates file extension, content type, size, and image signature before storing the file.
 
 Customer records remain separate. The Customers screen and job-ticket customer, billing-party customer, service-location, and equipment selections continue to represent the customer or account receiving the work.
 
-API summary:
-- `GET /api/company-configuration`: public branding/profile read for the UI.
-- `PUT /api/company-configuration`: Admin-only profile and color update.
-- `POST /api/company-configuration/logo`: Admin-only logo upload.
-- `GET /api/company-configuration/logo`: public logo stream when a logo exists.
-- `GET /api/company-configuration/notification-recipients`: Admin-only notification recipient list.
-- `POST /api/company-configuration/notification-recipients`: Admin-only add notification recipient.
-- `DELETE /api/company-configuration/notification-recipients/{id}`: Admin-only remove notification recipient.
-- `GET /api/mailer-configuration`: Admin-only mailer settings read.
-- `PUT /api/mailer-configuration`: Admin-only mailer settings save; SMTP password and Microsoft 365 client secret values are write-only.
-- `POST /api/mailer-configuration/test`: Admin-only test email send.
-
 ## Application Error Logs
 
-Application Error Logs is Admin-only and is available at `/manage/error-logs`.
+Application Error Logs is Admin-only and is available from the Admin navigation.
 
 Admins use this page to privately review application errors after they happen. Each entry shows:
 - what failed;
 - likely cause or exception type;
 - date and time;
-- where it happened, including API route, browser page, or component location when available;
+- where it happened, including the system area or browser page when available;
 - user role and user ID when captured;
 - user agent, metadata, and stack trace inside technical details.
 
-The page supports source filtering for Server, Client, and ApiRequest errors, text search, and a result limit selector. Results are newest first so recent failures are visible without searching through older records.
+The page supports source filtering for server, browser, and failed system request errors, text search, and a result limit selector. Results are newest first so recent failures are visible without searching through older records.
 
 What gets captured:
-- unhandled backend exceptions after authentication;
-- browser `window.error` and unhandled promise rejection events;
-- frontend API requests that receive HTTP 500 or higher responses.
+- server errors after sign-in;
+- browser errors;
+- failed system requests that receive HTTP 500 or higher responses.
 
 Important boundaries:
 - Managers and Employees cannot open the Error Logs page;
-- Managers and Employees cannot read `/api/error-logs`;
-- client-side reporting is best-effort and must never block normal user work;
+- browser-side reporting is best-effort and must never block normal user work;
 - error logs are for troubleshooting, not a replacement for user-facing validation messages or production monitoring.
-
-API summary:
-- `GET /api/error-logs`: Admin-only list with optional `limit`, `source`, and `search`.
-- `POST /api/error-logs/client`: authenticated user best-effort browser/API error reporting.
 
 ## Ticket Filter Configuration
 
 Ticket Filter Configuration is Admin-only and controls the configurable status filter choices shown in the Manager/Admin job-ticket queue.
-
-Admin-only access:
-- `/manage/ticket-status-filters`
 
 Admins can:
 - view the current status filter list;
@@ -1321,15 +1221,11 @@ Important boundaries:
 - inactive filters do not appear in the normal queue status filter;
 - closed tickets remain available to Manager/Admin users through queue filters, ticket workspace, reports, and history.
 
-API summary:
-- `GET /api/ticket-status-filters`: Manager/Admin-readable filter list.
-- `PUT /api/ticket-status-filters`: Admin-only save for labels, mapped existing status values, display order, and active/inactive flags.
-
 ![Admin ticket filter configuration screen](assets/system-wiki/ticket-status-filters.png)
 
 ## Admin User Management
 
-Admin-only user management is available at `/manage/users`.
+Admin-only user management is available from the Admin navigation.
 
 Admins can:
 - search accounts;
@@ -1346,7 +1242,7 @@ User-management workflows should preserve:
 - role boundaries;
 - active/inactive state handling;
 - no hard deletes;
-- no auth weakening.
+- keep role access strict.
 
 ![Admin user-management screen](assets/system-wiki/admin-users.png)
 
@@ -1360,7 +1256,7 @@ Examples:
 - equipment name/number instead of equipment ID;
 - employee name instead of employee ID where the screen supports it.
 
-IDs remain important for API operations, but the client-facing UI should avoid exposing GUID-like values when human-readable data is available.
+Support teams may occasionally use internal IDs for troubleshooting, but normal screens should show human-readable names whenever available.
 
 ## Archive And Unarchive Behavior
 
@@ -1395,7 +1291,7 @@ Common validation examples:
 When a request fails, the screen should show a useful error message and keep the user in the workflow.
 Manager/Admin ticket workspace refreshes, Employee mobile post-action refreshes, and Parts Request Queue filter reloads should also clear loading states after failures, so users are not left waiting without feedback or told that a saved action failed.
 
-Unexpected server errors, browser errors, and failed API requests with HTTP 500 or higher are also recorded for Admin review in Application Error Logs. This troubleshooting record is separate from user-facing validation and should not interrupt the user's current workflow.
+Unexpected server errors, browser errors, and failed system requests with HTTP 500 or higher are also recorded for Admin review in Application Error Logs. This troubleshooting record is separate from user-facing validation and should not interrupt the user's current workflow.
 
 ## Recommended Operating Process
 
@@ -1465,7 +1361,7 @@ The system currently does not include:
 - automatic compatibility decisions;
 - automatic approval;
 - hard deletes;
-- backend enum renumbering.
+- changing the meaning of existing ticket statuses.
 
 Any of those areas should be treated as future scope requiring a separate approval and implementation plan.
 
@@ -1522,17 +1418,17 @@ Use this checklist when introducing the system to a client team.
 - Use purchasing support carefully within current scope.
 - Produce closeout reports.
 
-## Demo Access
+## Training Access
 
-Demo, pilot, and training accounts are environment-specific. For customer sessions, provide usernames and temporary passwords through the agreed handoff channel instead of publishing credentials in the wiki.
+Training accounts are environment-specific. For customer sessions, provide usernames and temporary passwords through the agreed handoff channel instead of publishing credentials in the wiki.
 
-Demo users are for controlled demo or pilot environments only and should not be treated as production credentials.
+Training users should not be treated as production credentials.
 
 ## Support Notes
 
 When reporting an issue, include:
 - user role;
-- route/screen;
+- screen;
 - job ticket number if applicable;
 - customer/location/equipment involved;
 - exact action attempted;
