@@ -18,6 +18,24 @@
   --warning-strong: #9a6700;
   --danger: #b4234d;
   --control-height: 2.55rem;
+  --surface: var(--surface-raised);
+  --surface-muted: var(--surface-subtle);
+  --surface-panel: #fbfcfe;
+  --line: #d9e1ec;
+  --line-strong: #bcc8d8;
+  --border: var(--line);
+  --ink: var(--text-strong);
+  --text: var(--text-strong);
+  --muted-ink: var(--text-muted);
+  --muted: var(--text-muted);
+  --accent: var(--brand);
+  --accent-dark: var(--brand-strong);
+  --primary: var(--brand);
+  --primary-subtle: var(--brand-soft);
+  --ready: var(--success);
+  --review: var(--warning-strong);
+  --alert: var(--danger);
+  --inactive: #64748b;
 }
 
 html {
@@ -145,9 +163,11 @@ textarea {
   background: #ffffff;
   border: 1px solid #bcc8d8;
   border-radius: 6px;
+  box-sizing: border-box;
   min-height: var(--control-height);
   padding: 0.55rem 0.65rem;
   transition: border-color 120ms ease, box-shadow 120ms ease;
+  width: 100%;
 }
 
 textarea {
@@ -170,16 +190,23 @@ textarea:focus {
 
 button,
 .button-link {
+  align-items: center;
   background: var(--brand);
   border: 1px solid var(--brand);
   border-radius: 6px;
   box-shadow: none;
+  box-sizing: border-box;
   color: var(--brand-contrast);
+  cursor: pointer;
+  display: inline-flex;
   font-size: 0.86rem;
   font-weight: 750;
+  justify-content: center;
   min-height: 2.35rem;
   padding: 0.48rem 0.78rem;
+  text-decoration: none;
   transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  width: auto;
 }
 
 .button-link {
@@ -193,6 +220,21 @@ button:hover:not(:disabled),
   border-color: var(--brand-strong);
   box-shadow: 0 3px 10px rgba(36, 68, 159, 0.16);
   transform: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:focus-visible,
+.button-link:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(49, 87, 200, 0.28);
+  outline-offset: 2px;
 }
 
 .secondary-button,
