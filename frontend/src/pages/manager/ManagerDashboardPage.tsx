@@ -134,7 +134,7 @@ export function ManagerDashboardPage() {
         <div className="row dashboard-actions">
           <Link className="button-link" to="/manage/job-tickets/new">Create Job Ticket</Link>
           <Link className="button-link secondary-link" to="/manage/job-tickets">Review jobs</Link>
-          <Link className="button-link secondary-link" to="/manage/wiki#manager-admin-workspace">User Guide</Link>
+          <Link className="button-link secondary-link" to="/manage/wiki#manager-admin-workspace">Wiki</Link>
         </div>
       </header>
 
@@ -183,8 +183,8 @@ export function ManagerDashboardPage() {
                 </Link>
               ))}
             </div>
-            <p className="operations-next-focus">
-              <span>Next assignment focus</span>
+            <p className="muted">
+              Next assignment focus:{' '}
               {summary.nextAssignmentFocusId ? (
                 <Link to={buildJobTicketDetailPath(summary.nextAssignmentFocusId, "/manage")}>{summary.nextAssignmentFocus}</Link>
               ) : summary.nextAssignmentFocus}

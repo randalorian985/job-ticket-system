@@ -62,7 +62,7 @@ describe('ManagerDashboardPage', () => {
     expect(screen.getByRole('heading', { name: 'Unresolved Jobs by Status' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Assignment & Schedule' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Back Office Review' })).toBeInTheDocument()
-    expect(screen.getByText('Next assignment focus')).toBeInTheDocument()
+    expect(screen.getByText('Next assignment focus:')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'JT-1: Assign at least one employee.' })).toHaveAttribute(
       'href',
       '/manage/job-tickets/j1?returnTo=%2Fmanage'
@@ -82,8 +82,7 @@ describe('ManagerDashboardPage', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Assignment & Schedule' })).toBeInTheDocument()
-    expect(screen.getByText('Next assignment focus')).toBeInTheDocument()
-    expect(screen.getByText('No assignment or schedule blockers are visible from the dashboard data.')).toBeInTheDocument()
+    expect(screen.getByText('Next assignment focus: No assignment or schedule blockers are visible from the dashboard data.')).toBeInTheDocument()
   })
 
   it('shows an error instead of assignment panels when assignment loading fails', async () => {
@@ -101,7 +100,7 @@ describe('ManagerDashboardPage', () => {
     expect(await screen.findByText('Unable to load the operations summary.')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Assignment & Schedule' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Back Office Review' })).not.toBeInTheDocument()
-    expect(screen.queryByText('Next assignment focus')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Next assignment focus:/)).not.toBeInTheDocument()
   })
 
   it('keeps configuration links out of the summary dashboard', async () => {
