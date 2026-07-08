@@ -661,7 +661,7 @@ export function JobTicketListPage() {
 
       {isLoading ? <p className="muted" role="status">Loading manager job tickets...</p> : null}
       {error ? <p className="error">{error}</p> : null}
-      {!isLoading && !error && !jobs.length ? <p className="muted">No job tickets found. Create a ticket to start the pilot workflow.</p> : null}
+      {!isLoading && !error && !jobs.length ? <p className="muted">No job tickets found. Create a ticket to start tracking work.</p> : null}
       {!isLoading && !error && jobs.length > 0 && !filteredJobs.length ? <p className="muted">No job tickets match the current filters. Reset filters to see all tickets.</p> : null}
 
       {!isLoading && !error && filteredJobs.length ? (

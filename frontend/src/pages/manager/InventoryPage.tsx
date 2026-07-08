@@ -102,7 +102,7 @@ export function InventoryPage() {
 
   useEffect(() => {
     refresh()
-      .catch((requestError) => setError(getInventoryErrorMessage(requestError, 'Unable to load inventory workflow data.')))
+      .catch((requestError) => setError(getInventoryErrorMessage(requestError, 'Unable to load inventory information.')))
       .finally(() => setIsLoading(false))
   }, [])
 

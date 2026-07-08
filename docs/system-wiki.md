@@ -1,10 +1,10 @@
 # Job Ticket System Wiki
 
 ## Purpose
-This wiki explains how the Job Ticket System is used by Employees, Managers, and Admins. It is written for client handoff and operations training, not for software development.
+This wiki explains how the Job Ticket System is used by Employees, Managers, and Admins. It is written for client handoff, daily reference, and operations training.
 
 ## Consistency Standard
-- Use the same terms, screen names, and workflow order that appear in the live UI and the steering docs.
+- Use the same terms, screen names, and workflow order that appear in the live system and training material.
 - Prefer one label per concept across the wiki so trainers and users see the same model everywhere.
 - If the UI changes a workflow name or section order, update the wiki in the same pass.
 
@@ -12,10 +12,10 @@ The system is centered on field-service job tickets:
 - create and manage service tickets;
 - assign employees to work;
 - let technicians clock in, record work, request parts, and upload photos/files;
-- let Managers/Admins review work, time, parts, reports, users, and supporting master data;
+- let Managers/Admins review work, time, parts, reports, users, and supporting records;
 - preserve role boundaries so each user sees the tools appropriate to their job.
 
-Screenshots in this wiki are captured from the demo/pilot environment. They are intended to show screen layout and workflow behavior, not production customer data.
+Screenshots in this wiki are captured from the training/demo environment. They are intended to show screen layout and workflow behavior, not production customer data.
 
 ## Client Quick Start
 
@@ -37,7 +37,7 @@ For live training, use the [Client Training Checklist](#client-training-checklis
 The screenshots below appear again in the workflow sections where they are most relevant:
 
 Documentation rebuild: July 7, 2026.
-Baseline screenshot refresh: June 24-25, 2026, using full-size Chrome captures from the live VPS demo environment with pilot/demo accounts.
+Baseline screenshot refresh: June 24-25, 2026, using full-size Chrome captures from the live demo environment with training/demo accounts.
 Workflow/layout screenshot refresh: July 7, 2026, for Employee Job Detail, Job Tickets, Purchasing, Reports, Parts Usage History, Travel Time, Company Configuration, Alerts & Notifications, and Mailer Settings using mocked admin/demo configuration.
 Screenshots are intended to show screen layout and workflow behavior, not production customer data.
 
@@ -137,11 +137,11 @@ Admin users can:
 - `/health`: public system health endpoint.
 - `/api/system/info`: public system information endpoint.
 
-### Employee Routes
+### Employee Screens
 - `/jobs`: employee assigned jobs list.
 - `/jobs/{jobTicketId}`: employee job detail and field-recording workflow.
 
-### Manager/Admin Routes
+### Manager/Admin Screens
 - `/manage`: Manager/Admin dashboard.
 - `/manage/job-tickets`: job-ticket queue.
 - `/manage/job-tickets/new`: create job ticket.
@@ -168,28 +168,23 @@ Admin users can:
 - `/manage/error-logs`: Admin-only private application error review.
 - `/manage/ticket-status-filters`: Admin-only ticket status filter configuration.
 - `/manage/users`: Admin-only user management.
-- `/manage/dispatch`: legacy bookmark route that redirects to `/manage/schedule`.
-- `/manage/reports/labor-parts-service`: legacy report bookmark route that redirects to `/manage/reports/labor`.
+- `/manage/dispatch`: older bookmark that redirects to `/manage/schedule`.
+- `/manage/reports/labor-parts-service`: older report bookmark that redirects to `/manage/reports/labor`.
 
 ## Production Demo Operations
 
-The current VPS baseline is ready for controlled production demos after validation, health checks, and backup verification pass. This is separate from full client production go-live, which still requires restore-drill evidence, off-host backup storage, alerting, and UAT signoff.
+Use this section before a client-facing demo that runs from the hosted environment. It is a readiness checklist for a controlled demo, not a full production go-live approval.
 
-Before a client-facing VPS demo, the operator should confirm:
-- frontend and backend validation passed for the deployed commit;
-- `GET /health` returns `Healthy` through the public site and the local VPS proxy;
-- SQL Server, API, and frontend containers are healthy;
-- a fresh backup exists under `/opt/job-ticket-system/backups/<UTC stamp>/`;
-- the SQL backup reported `RESTORE VERIFYONLY` as valid;
-- uploaded files/photos were archived with the same backup stamp;
-- `job-ticket-production-backup.timer` is active on the VPS for recurring backups;
-- normal production restarts keep `TestBootstrap` and `PilotDemoSeed` disabled.
+Before the demo, the operator should confirm:
+- the latest approved build is deployed;
+- the public health check reports `Healthy`;
+- sign-in works for the agreed demo accounts;
+- Employee, Manager, and Admin screens open as expected;
+- a current backup exists and includes uploaded files/photos;
+- scheduled backups are active;
+- demo-only seed or test setup is not enabled for normal restarts.
 
-The source-controlled backup entrypoint is `scripts/production-backup.sh`. It creates a SQL Server backup, verifies it, archives uploaded files/photos, and applies retention cleanup. The current Ubuntu VPS runs that script through the `job-ticket-production-backup.timer` systemd timer.
-
-See [Production Demo Readiness - June 22, 2026](/docs/production-demo-readiness-2026-06-22.md) and [Production Readiness Runbook](/docs/production-readiness-runbook.md) for the command-level checklist.
-
-For the Employee clock-in-first and Manager/Admin compact queue update, deploy only after the draft PR is reviewed, validated, and merged to `main`. The VPS checklist in the production runbook includes the required post-merge smoke tests and screenshot refresh targets.
+For full production go-live, confirm the separate production checklist, restore-drill evidence, off-host backup storage, alerting, and user acceptance signoff.
 
 ## Sign-In And Session Behavior
 
@@ -197,13 +192,13 @@ For the Employee clock-in-first and Manager/Admin compact queue update, deploy o
 2. After sign-in:
    - Employee users are sent to `/jobs`.
    - Manager and Admin users are sent to `/manage`.
-3. Protected routes require an authenticated user with the correct role.
+3. Protected screens require a signed-in user with the correct role.
 4. Unauthorized users are redirected away from restricted screens.
 5. Inactive, archived, or deleted users should not be allowed to continue using protected workflows.
-6. Sessions use JWT tokens with a 2-hour expiry. The application warns users before the token expires:
+6. Sign-in sessions expire after 2 hours. The application warns users before the session expires:
    - A **warning** notification appears at 5 minutes before expiry: save any work in progress.
    - An **error** notification appears at 1 minute before expiry.
-7. If a request is rejected with a 401 (for example, if a token expired mid-session without a visible warning), the application clears the session and surfaces a clear sign-in-again message through the notification banner.
+7. If the session expires mid-task, the application clears the session and shows a clear sign-in-again message through the notification banner.
 
 ![Login screen](assets/system-wiki/login.png)
 
@@ -282,7 +277,7 @@ Travel capture records:
 - GPS latitude (when available);
 - GPS longitude (when available);
 - GPS accuracy (when available);
-- device metadata;
+- browser and device details;
 - optional note.
 
 When the technician reaches the job site, **Arrive - End Travel** ends the travel entry. The screen then returns to the normal clock-in state so the employee can start active job time.
@@ -298,7 +293,7 @@ Clock-in records:
 - GPS latitude (when available);
 - GPS longitude (when available);
 - GPS accuracy (when available);
-- device metadata;
+- browser and device details;
 - optional clock note.
 
 The system attempts high-accuracy GPS first, then falls back to low-accuracy GPS if the first attempt fails. If both attempts fail (for example, in a facility with no signal), the clock-in proceeds without coordinates and the confirmation message notes that no GPS signal was available. GPS is not required to complete a clock-in.
@@ -419,7 +414,7 @@ The status choices in the queue come from Admin configuration. Admins choose the
 
 Changing these options does not create a new workflow. It only changes how the Status filter is labeled and ordered in the Manager/Admin queue. Existing ticket status names, numeric values, status-change rules, and reports stay the same.
 
-Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and work readiness. It does not create a server-side export job.
+Managers/Admins can export the currently visible queue rows to CSV. The export reflects the loaded filtered view and includes readable labels for customer, service location, assigned employees, lead employees, and work readiness. It does not create a separate background export.
 
 Queue URLs are shareable. If a Manager/Admin opens a ticket from a filtered queue, the ticket detail can preserve a safe return link back to that queue.
 
@@ -427,7 +422,7 @@ The queue has two view modes:
 - **Rich cards**: the full review card view with readiness detail, assignment context, and timing fields.
 - **Compact list**: a denser operating list that prioritizes ticket number, title, customer/location, assigned tech, status, priority, scheduled date, due date, and the Open action.
 
-The selected view is remembered in the browser for that Manager/Admin user session. It does not change the ticket data, filters, CSV export, routes, or authorization rules.
+The selected view is remembered in the browser for that Manager/Admin user session. It does not change ticket data, filters, CSV export, saved links, or access rules.
 
 The queue also includes a clickable count-chip row for common operating queues. Selecting a chip applies normal queue filters and updates the shareable queue URL. The chips are compact operating controls, not dashboard cards, so the queue stays dense enough for daily dispatch review.
 
@@ -479,7 +474,7 @@ Ticket creation now has a guided in-form path:
 - Schedule / assign tech;
 - Review and create.
 
-The wizard stays on the same screen and jumps the user to the relevant form section. It does not change the backend ticket workflow or create a separate approval path.
+The wizard stays on the same screen and jumps the user to the relevant form section. It does not change the ticket workflow or create a separate approval path.
 The **Schedule** section now includes optional technician assignment so Managers/Admins can choose lead and additional techs during ticket creation, then adjust later in the ticket workspace if needed.
 
 ![Create ticket schedule with optional technician assignment](assets/system-wiki/create-job-ticket-schedule-assignment.png)
@@ -590,7 +585,7 @@ The Job Tickets screen has a compact chip row for practical quick views:
 - **Completed Review**;
 - **Closed Tickets**.
 
-These quick views are not a second workflow. They only apply filters to the same job-ticket list. Admin-configured status labels stay in the Status filter so the chip row does not become a custom workflow engine.
+These quick views are not a second workflow. They only apply filters to the same job-ticket list. Admin-configured status labels stay in the Status filter so the chip row does not become a separate workflow builder.
 
 #### Compact List
 The Job Tickets screen has two views:
@@ -635,13 +630,13 @@ On mobile:
 - focused workflow panels keep the selected task near the top of the screen.
 
 #### Permissions And Validation Rules
-Assignment and schedule work is Manager/Admin-only through the existing `/manage` route boundary.
+Assignment and schedule work is available only in the Manager/Admin workspace.
 
 Validation and warnings preserve existing data integrity:
 - missing assignment, lead tech, schedule, or due date are shown as review items;
-- existing ticket update and employee-assignment APIs remain the persistence boundary;
-- no separate dispatch entity, status enum, database table, or API is introduced;
-- no auth weakening, enum renumbering, Dispatch-specific schema migration, automatic scheduling, or purchasing/inventory expansion is introduced.
+- ticket updates and employee assignments continue to save through the normal ticket screens;
+- no separate dispatch record, status set, or scheduling system is introduced;
+- no role-access weakening, automatic scheduling, or purchasing/inventory expansion is introduced.
 
 ### Ticket Editing
 Managers/Admins edit ticket information through a focused in-page panel. The previous workflow opened one large edit form containing customer, service location, equipment, scope, billing, dates, status, and priority fields at the same time. That worked functionally, but it forced users to scan a long form and created extra mobile scrolling.
@@ -679,7 +674,7 @@ Reason for change:
 - reduce long-form scrolling on desktop and mobile;
 - make each editing decision easier to understand;
 - keep relationship editing separate from notes, billing, and schedule changes;
-- preserve the existing backend update behavior while improving the client workflow.
+- preserve the normal ticket save behavior while improving the user workflow.
 
 User experience improvements:
 - fewer fields compete for attention at one time;
@@ -689,20 +684,11 @@ User experience improvements:
 - quick actions let users add notes, upload photos/files, review labor, or change status without opening the full editor.
 - mobile ticket shortcuts keep Add Note, Add Photo, Labor, and Status close to the top of the ticket overview.
 
-Technical implementation details:
-- `JobTicketEditorForm` owns the section state and still emits the same ticket update payload.
-- The Manager/Admin ticket detail page opens the section editor through the existing `Edit Ticket` action.
-- No new route, backend service, database table, enum, migration, or authorization policy was introduced.
-- Existing APIs remain in use: ticket update, work-entry add, file upload, status change, archive, assignment, part request, time-entry list, and report summary.
-
-Component changes:
-- `frontend/src/pages/manager/JobTicketEditorForm.tsx` now renders section navigation and section panels.
-- `frontend/src/pages/manager/JobTicketDetailPage.tsx` exposes quick-action panels for Add Note and Add Photo/File and routes Add Labor to the Labor workflow tab.
-- `frontend/src/pages/manager/JobTicketEditorForm.test.tsx` and `frontend/src/pages/manager/JobTicketDetailPage.test.tsx` cover the section navigation and quick-action behavior.
-
-Database impacts: none.
-
-API impacts: none. The enhancement reuses existing endpoints and DTOs.
+What stays the same:
+- users still open the editor through **Edit Ticket**;
+- users still make one set of ticket edits and save once;
+- existing ticket history, files, labor, parts, assignment, archive, and report behavior remain in place;
+- role access stays the same for Employees, Managers, and Admins.
 
 ```mermaid
 flowchart TD
@@ -711,7 +697,7 @@ flowchart TD
   C -->|Yes| D["Open Edit Ticket"]
   D --> E["Choose edit section"]
   E --> F["Update section fields"]
-  F --> G["Save through existing ticket update API"]
+  F --> G["Save ticket changes"]
   C -->|No| H["Use workflow tabs or quick actions"]
   H --> I["Add Note / Add Photo / Add Labor / Change Status"]
 ```
@@ -731,14 +717,14 @@ On the mobile ticket overview, the compact quick-action row gives direct access 
 
 ![Mobile ticket editor](assets/system-wiki/ticket-edit-mobile.png)
 
-### Section-Based Editing Architecture
-Section-based editing is a frontend presentation architecture. It does not split the backend ticket update command. The frontend keeps one edit draft and one save action so existing validation, API contracts, and persistence behavior remain stable.
+### Section-Based Editing Details
+Section-based editing changes how the ticket editor is organized on screen. It does not change how users save ticket updates. The editor keeps one set of ticket changes and one save action so validation and saved ticket behavior remain predictable.
 
 Section responsibilities:
 - Basics handles identity/status fields.
 - Customer & Equipment handles relationship fields and quick-add relationship helpers.
 - Scope & Notes handles narrative fields.
-- Billing handles closeout billing metadata.
+- Billing handles closeout billing details.
 - Schedule handles date/time planning fields.
 
 ### User Permissions And Edit Controls
@@ -754,7 +740,7 @@ Protected controls:
 - Add / Request Part;
 - assignment controls.
 
-The enhancement does not weaken authorization. It only changes the Manager/Admin frontend layout and quick-action access points.
+The enhancement does not weaken access rules. It only changes the Manager/Admin layout and quick-action access points.
 
 ### Quick Actions
 Quick actions are short paths for common ticket updates:
@@ -1041,7 +1027,7 @@ Managers/Admins can work with:
 - expected dates;
 - purchase-order lines;
 - submitted, received, canceled, closed, archived, and unarchived states;
-- vendor invoice metadata where already supported;
+- vendor invoice details where already supported;
 - landed-cost fields where already supported;
 - receipt recording for purchase-order quantities.
 
@@ -1096,7 +1082,7 @@ Reports support shared filters where applicable:
 - job status;
 - invoice status.
 
-The frontend validates required source selections and date ranges before calling report APIs. Reports that require a source record, such as Invoice-ready Summary, Job Cost Summary, and Customer Service History, show a source selector instead of running against every record.
+The app checks required source selections and date ranges before running a report. Reports that require a source record, such as Invoice-ready Summary, Job Cost Summary, and Customer Service History, show a source selector instead of running against every record.
 
 Invoice-ready review uses a dedicated packet view. From **Jobs Ready to Invoice**, select the job ticket number to open the packet. From **Invoice-ready Summary**, choose a job ticket and use **View Invoice-ready Packet**. The packet includes job, customer, billing party, service location, equipment, PO/contact fields, work notes, approved labor, approved parts, totals, and **Print** / **Download PDF** actions. Use **Open ticket** from the packet only when you need to edit or investigate the underlying job ticket.
 
@@ -1141,7 +1127,7 @@ Both the browser **Print** button and **Download PDF** produce output in the sam
 - company name and contact details;
 - report title (large);
 - report description;
-- three metadata boxes: Generated date, Row count, and Column count;
+- three report detail boxes: Generated date, Row count, and Column count;
 - a divider line;
 - Applied scope summary;
 - data table with a teal/green header row and alternating row backgrounds;
@@ -1155,8 +1141,8 @@ Important reporting boundaries:
 - The system does not generate invoices.
 - The system does not collect payments.
 - The system does not provide a customer portal.
-- The system does not run server-side reporting jobs.
-- CSV export is generated in the browser from currently loaded rows and includes report metadata at the top of the file.
+- The system does not run separate background reporting jobs.
+- CSV export is created from currently loaded rows and includes report details at the top of the file.
 
 ### Future Service Estimate / Quote Export Direction
 
@@ -1195,7 +1181,7 @@ Company Configuration manages:
 - company logo;
 - primary, secondary, and accent brand colors.
 
-The Company Configuration form is split into focused panels for profile details, logo upload, brand colors, and live preview. Text inputs show character counts so Admins can keep saved values inside the API limits before submitting.
+The Company Configuration form is split into focused panels for profile details, logo upload, brand colors, and live preview. Text inputs show character counts so Admins can keep saved values inside the allowed field limits before submitting.
 
 ![Admin company configuration screen](assets/system-wiki/company-configuration.png)
 
@@ -1248,24 +1234,17 @@ Company Configuration is used by:
 - the login screen brand area;
 - the Manager/Admin shell header;
 - generated report print/save-PDF headers;
-- generated report CSV metadata;
-- shared UI brand color variables.
+- generated report CSV details;
+- shared brand styling.
 
-Logo upload accepts JPG/JPEG, PNG, and WebP images up to 2 MB. The upload path validates file extension, content type, size, and image signature before storing the file.
+Logo upload accepts JPG/JPEG, PNG, and WebP images up to 2 MB. The upload process checks file type, size, and image content before storing the file.
 
 Customer records remain separate. The Customers screen and job-ticket customer, billing-party customer, service-location, and equipment selections continue to represent the customer or account receiving the work.
 
-API summary:
-- `GET /api/company-configuration`: public branding/profile read for the UI.
-- `PUT /api/company-configuration`: Admin-only profile and color update.
-- `POST /api/company-configuration/logo`: Admin-only logo upload.
-- `GET /api/company-configuration/logo`: public logo stream when a logo exists.
-- `GET /api/company-configuration/notification-recipients`: Admin-only notification recipient list.
-- `POST /api/company-configuration/notification-recipients`: Admin-only add notification recipient.
-- `DELETE /api/company-configuration/notification-recipients/{id}`: Admin-only remove notification recipient.
-- `GET /api/mailer-configuration`: Admin-only mailer settings read.
-- `PUT /api/mailer-configuration`: Admin-only mailer settings save; SMTP password and Microsoft 365 client secret values are write-only.
-- `POST /api/mailer-configuration/test`: Admin-only test email send.
+Access notes:
+- Company Configuration, Alerts & Notifications, Mailer Settings, and Application Error Logs are Admin-only.
+- Saved SMTP passwords and Microsoft 365 client secrets are protected. After saving, the screen only shows whether a secret is saved.
+- Use the test email action after changing mailer settings.
 
 ## Application Error Logs
 
@@ -1273,28 +1252,24 @@ Application Error Logs is Admin-only and is available at `/manage/error-logs`.
 
 Admins use this page to privately review application errors after they happen. Each entry shows:
 - what failed;
-- likely cause or exception type;
+- likely cause;
 - date and time;
-- where it happened, including API route, browser page, or component location when available;
+- where it happened, including the screen, request, or service area when available;
 - user role and user ID when captured;
-- user agent, metadata, and stack trace inside technical details.
+- browser/device information and support details when captured.
 
 The page supports source filtering for Server, Client, and ApiRequest errors, text search, and a result limit selector. Results are newest first so recent failures are visible without searching through older records.
 
 What gets captured:
-- unhandled backend exceptions after authentication;
-- browser `window.error` and unhandled promise rejection events;
-- frontend API requests that receive HTTP 500 or higher responses.
+- unexpected server errors after sign-in;
+- unexpected browser errors;
+- failed app requests that receive HTTP 500 or higher responses.
 
 Important boundaries:
 - Managers and Employees cannot open the Error Logs page;
-- Managers and Employees cannot read `/api/error-logs`;
-- client-side reporting is best-effort and must never block normal user work;
-- error logs are for troubleshooting, not a replacement for user-facing validation messages or production monitoring.
-
-API summary:
-- `GET /api/error-logs`: Admin-only list with optional `limit`, `source`, and `search`.
-- `POST /api/error-logs/client`: authenticated user best-effort browser/API error reporting.
+- Managers and Employees cannot read private error records;
+- browser error reporting is best-effort and must never block normal user work;
+- error logs are for troubleshooting, not a replacement for user-facing validation messages or monitoring.
 
 ## Ticket Filter Configuration
 
@@ -1314,16 +1289,12 @@ Admins can:
 Managers can use the resulting filters in the job-ticket queue, but Managers cannot edit the configuration. Employees cannot access this configuration.
 
 Important boundaries:
-- this is not a custom workflow engine;
+- this is not a separate workflow builder;
 - it does not add new ticket statuses;
-- it does not change ticket status numeric values;
+- it does not change the underlying ticket status values;
 - it does not change status transition rules;
 - inactive filters do not appear in the normal queue status filter;
 - closed tickets remain available to Manager/Admin users through queue filters, ticket workspace, reports, and history.
-
-API summary:
-- `GET /api/ticket-status-filters`: Manager/Admin-readable filter list.
-- `PUT /api/ticket-status-filters`: Admin-only save for labels, mapped existing status values, display order, and active/inactive flags.
 
 ![Admin ticket filter configuration screen](assets/system-wiki/ticket-status-filters.png)
 
@@ -1465,7 +1436,7 @@ The system currently does not include:
 - automatic compatibility decisions;
 - automatic approval;
 - hard deletes;
-- backend enum renumbering.
+- changes to built-in ticket status values.
 
 Any of those areas should be treated as future scope requiring a separate approval and implementation plan.
 
@@ -1532,7 +1503,7 @@ Demo users are for controlled demo or pilot environments only and should not be 
 
 When reporting an issue, include:
 - user role;
-- route/screen;
+- screen or link;
 - job ticket number if applicable;
 - customer/location/equipment involved;
 - exact action attempted;

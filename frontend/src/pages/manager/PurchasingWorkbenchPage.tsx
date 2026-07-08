@@ -136,7 +136,7 @@ export function PurchasingWorkbenchPage() {
   useEffect(() => {
     refresh()
       .then(() => setError(null))
-      .catch(() => setError('Unable to load purchasing workflow data.'))
+      .catch(() => setError('Unable to load purchasing information.'))
       .finally(() => setIsLoading(false))
   }, [])
 

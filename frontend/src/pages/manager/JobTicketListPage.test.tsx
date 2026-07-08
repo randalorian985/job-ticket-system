@@ -496,7 +496,7 @@ describe('Manager list pages', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByText('No job tickets found. Create a ticket to start the pilot workflow.')).toBeInTheDocument()
+    expect(await screen.findByText('No job tickets found. Create a ticket to start tracking work.')).toBeInTheDocument()
 
     vi.mocked(jobTicketsApi.listAll).mockRejectedValue(new Error('network'))
     view.unmount()

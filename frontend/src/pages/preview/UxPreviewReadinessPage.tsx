@@ -3,9 +3,9 @@ const previewSections = [
     title: 'Employee mobile workflow',
     status: 'Preview-ready',
     items: [
-      'Login route is available at /login.',
+      'Sign-in is available at /login.',
       'Assigned jobs list is available at /jobs.',
-      'Job detail is available at /jobs/:jobTicketId.'
+      'Job detail opens from an assigned job.'
     ]
   },
   {
@@ -13,17 +13,17 @@ const previewSections = [
     status: 'Preview-ready',
     items: [
       'Operations dashboard is available at /manage.',
-      'Job tickets, master data, approvals, reports, and Admin users routes are present.',
-      'Role boundaries remain enforced by protected routes.'
+      'Job tickets, supporting records, approvals, reports, and Admin users screens are present.',
+      'Role boundaries remain enforced on protected screens.'
     ]
   },
   {
     title: 'Local service checks',
     status: 'Runbook-defined',
     items: [
-      'Backend health must respond at /health.',
-      'System metadata must respond at /api/system/info.',
-      'Frontend assets should be served from a freshly built production bundle.'
+      'Health check must respond at /health.',
+      'System information must respond at /api/system/info.',
+      'Application files should come from the latest approved build.'
     ]
   }
 ]
@@ -35,9 +35,9 @@ export function UxPreviewReadinessPage() {
         <p className="eyebrow">UX Preview Readiness</p>
         <h1>Job Ticket System readiness</h1>
         <p className="muted">
-          This public readiness screen lets reviewers confirm the deployed frontend renders before signing in.
+          This public readiness screen lets reviewers confirm the deployed app opens before signing in.
         </p>
-        <div className="preview-actions" aria-label="Preview routes">
+        <div className="preview-actions" aria-label="Preview links">
           <a className="button-link" href="/login">
             Employee login
           </a>

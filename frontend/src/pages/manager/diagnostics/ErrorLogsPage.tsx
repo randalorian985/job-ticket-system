@@ -138,12 +138,12 @@ export function ErrorLogsPage() {
                 <div className="ticket-meta-grid">
                   <div><strong>Cause</strong><span>{log.cause ?? 'Cause unavailable'}</span></div>
                   <div><strong>Where</strong><span>{locationLabel(log)}</span></div>
-                  <div><strong>Page / component</strong><span>{log.location ?? 'Not provided'}</span></div>
+                  <div><strong>Screen or service</strong><span>{log.location ?? 'Not provided'}</span></div>
                   <div><strong>User</strong><span>{log.userId ?? 'Not captured'}</span></div>
                 </div>
 
                 <details>
-                  <summary>Technical details</summary>
+                  <summary>Details for support</summary>
                   <div className="stack">
                     {log.userAgent ? <p className="muted"><strong>User agent:</strong> {log.userAgent}</p> : null}
                     {metadata ? (
@@ -152,7 +152,7 @@ export function ErrorLogsPage() {
                     {log.stackTrace ? (
                       <pre className="code-block">{log.stackTrace}</pre>
                     ) : (
-                      <p className="muted">No stack trace captured.</p>
+                      <p className="muted">No detailed trace was captured.</p>
                     )}
                   </div>
                 </details>
