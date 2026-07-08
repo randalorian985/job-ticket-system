@@ -206,76 +206,11 @@
   padding: 1.25rem;
 }
 
-.operations-review-grid div {
-  border-bottom: 1px solid #e5e7eb;
-  display: grid;
-  gap: 0.15rem;
-  padding: 0 0 0.75rem;
-}
-
-.operations-review-grid div:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-
 .operations-review-grid strong {
   color: #27272a;
   font-size: 2.2rem;
   font-weight: 900;
   line-height: 1;
-}
-
-.operations-shortcut-panel {
-  display: grid;
-  gap: 0;
-}
-
-.operations-shortcut-heading {
-  align-items: center;
-  background: #07559c;
-  color: #ffffff;
-  display: flex;
-  gap: 0.75rem;
-  justify-content: space-between;
-  padding: 0.45rem 0.75rem;
-}
-
-.operations-shortcut-heading h3 {
-  background: transparent;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-}
-
-.operations-shortcut-heading span {
-  color: #e8f2ff;
-  font-size: 0.78rem;
-  font-weight: 750;
-  line-height: 1.25;
-}
-
-.operations-link-grid {
-  display: grid;
-  gap: 0.55rem;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  padding: 0.9rem;
-}
-
-.operations-link {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  color: #1f2937;
-  font-weight: 850;
-  padding: 0.85rem;
-  text-align: center;
-  text-decoration: none;
-  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
-}
-
-.operations-link:hover {
-  border-color: #b7c8ea;
-  box-shadow: 0 8px 22px rgba(37, 48, 86, 0.08);
-  transform: translateY(-1px);
 }
 
 @media (max-width: 1080px) {
@@ -291,12 +226,6 @@
 @media (max-width: 720px) {
   .dashboard-hero-strip {
     flex-direction: column;
-  }
-
-  .operations-shortcut-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.25rem;
   }
 
   .operations-next-assignment-body {

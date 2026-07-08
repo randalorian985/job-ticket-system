@@ -499,8 +499,6 @@
   .assigned-job-heading,
   .employee-job-heading,
   .queue-results-actions,
-  .queue-saved-views-heading,
-  .queue-saved-view-row,
   .ticket-view-toggle {
     align-items: stretch;
     flex-direction: column;
@@ -524,12 +522,7 @@
   }
 
   .compact-ticket-open,
-  .queue-saved-view-control,
   .assigned-job-primary-action {
     width: 100%;
-  }
-
-  .queue-saved-view-counts {
-    justify-content: flex-start;
   }
 }
