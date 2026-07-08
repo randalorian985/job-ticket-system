@@ -30,6 +30,21 @@ function getPercent(count: number, max: number) {
   return Math.round((count / max) * 100)
 }
 
+function getAssignmentActionText(openItem: string) {
+  switch (openItem) {
+    case 'Assign at least one employee.':
+      return 'needs at least one assigned employee.'
+    case 'Mark one assigned employee as the lead tech.':
+      return 'needs one assigned employee marked as lead tech.'
+    case 'Set a scheduled start time.':
+      return 'needs a scheduled start time.'
+    case 'Add a due date for timing expectations.':
+      return 'needs a due date.'
+    default:
+      return openItem
+  }
+}
+
 export function ManagerDashboardPage() {
   const [jobs, setJobs] = useState<JobTicketListItemDto[]>([])
   const [assignmentMap, setAssignmentMap] = useState<Record<string, JobTicketAssignmentDto[]>>({})
@@ -102,9 +117,10 @@ export function ManagerDashboardPage() {
       readyToWork: activeWorkReadiness.filter((item) => !item.openItems.length).length,
       needsAssignmentReview: activeWorkReadiness.filter((item) => item.openItems.length).length,
       nextAssignmentFocus: nextAssignmentFocus
-        ? `${nextAssignmentFocus.job.ticketNumber}: ${nextAssignmentFocus.openItems[0]}`
+        ? getAssignmentActionText(nextAssignmentFocus.openItems[0])
         : 'No assignment or schedule blockers are visible from the dashboard data.',
-      nextAssignmentFocusId: nextAssignmentFocus?.job.id ?? null
+      nextAssignmentFocusId: nextAssignmentFocus?.job.id ?? null,
+      nextAssignmentTicketNumber: nextAssignmentFocus?.job.ticketNumber ?? null
     }
   }, [assignmentMap, jobs])
 
@@ -183,12 +199,22 @@ export function ManagerDashboardPage() {
                 </Link>
               ))}
             </div>
-            <p className="muted">
-              Next assignment focus:{' '}
+            <div className="operations-next-assignment" aria-label="next scheduling action">
+              <span>Next scheduling action</span>
               {summary.nextAssignmentFocusId ? (
-                <Link to={buildJobTicketDetailPath(summary.nextAssignmentFocusId, "/manage")}>{summary.nextAssignmentFocus}</Link>
-              ) : summary.nextAssignmentFocus}
-            </p>
+                <div className="operations-next-assignment-body">
+                  <Link className="operations-next-assignment-ticket" to={buildJobTicketDetailPath(summary.nextAssignmentFocusId, "/manage")}>
+                    {summary.nextAssignmentTicketNumber}
+                  </Link>
+                  <p>{summary.nextAssignmentFocus}</p>
+                  <Link className="button-link secondary-link operations-next-assignment-action" to={buildJobTicketDetailPath(summary.nextAssignmentFocusId, "/manage")}>
+                    Schedule
+                  </Link>
+                </div>
+              ) : (
+                <p>{summary.nextAssignmentFocus}</p>
+              )}
+            </div>
           </article>
 
           <article className="operations-panel">

@@ -105,6 +105,46 @@
   padding: 0.75rem 1.05rem 1rem;
 }
 
+.operations-next-assignment {
+  border-top: 1px solid #e5e7eb;
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 1.9rem 1.2rem;
+  padding-top: 0.85rem;
+}
+
+.operations-next-assignment > span {
+  color: #4b5563;
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.operations-next-assignment-body {
+  align-items: center;
+  display: grid;
+  gap: 0.45rem 0.65rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.operations-next-assignment p {
+  color: #4b5563;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.operations-next-assignment-ticket {
+  color: #07559c;
+  font-weight: 900;
+}
+
+.operations-next-assignment-action {
+  font-size: 0.85rem;
+  justify-self: end;
+  padding: 0.38rem 0.7rem;
+}
+
 .operations-bar-list {
   display: grid;
   gap: 1rem;
@@ -257,6 +297,14 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 0.25rem;
+  }
+
+  .operations-next-assignment-body {
+    grid-template-columns: 1fr;
+  }
+
+  .operations-next-assignment-action {
+    justify-self: start;
   }
 
   .operations-kpi-grid {
