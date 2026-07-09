@@ -3,6 +3,7 @@ import type {
   ArchiveTimeEntryRequestDto,
   ClockInRequestDto,
   ClockOutRequestDto,
+  CreateManualTimeEntryRequestDto,
   RejectTimeEntryRequestDto,
   TimeApprovalQueueItemDto,
   TimeEntryDto,
@@ -51,6 +52,11 @@ export const timeEntriesApi = {
     }),
   endTravel: (payload: TravelEndRequestDto) =>
     apiRequest<TimeEntryDto>('/api/time-entries/travel-end', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  createManual: (payload: CreateManualTimeEntryRequestDto) =>
+    apiRequest<TimeEntryDto>('/api/time-entries/manual', {
       method: 'POST',
       body: JSON.stringify(payload)
     }),

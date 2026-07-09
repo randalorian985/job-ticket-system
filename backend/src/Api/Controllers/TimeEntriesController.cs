@@ -64,6 +64,20 @@ public sealed class TimeEntriesController(ITimeEntriesService service, ICurrentU
         }
     }
 
+    [HttpPost("manual")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<ActionResult<TimeEntryDto>> CreateManualAsync([FromBody] CreateManualTimeEntryRequestDto request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Ok(await service.CreateManualAsync(request, currentUserContext.EmployeeId, cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            return HandleValidation(exception);
+        }
+    }
+
     [HttpGet("open")]
     public async Task<ActionResult<TimeEntryDto>> GetOpenAsync([FromQuery] Guid employeeId, CancellationToken cancellationToken = default)
     {

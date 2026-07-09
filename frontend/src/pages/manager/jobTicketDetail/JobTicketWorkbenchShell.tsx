@@ -256,7 +256,7 @@ export function MobileQuickActions({
     <section className="ticket-mobile-quick-actions no-print" aria-label="mobile ticket quick actions" hidden={workflowFocusMode}>
       <button type="button" aria-label="Quick Add Note" onClick={() => onOpenDrawer("activity", "note")}>Add Note</button>
       <button type="button" aria-label="Quick Add File" onClick={() => onOpenDrawer("files", "photo")}>Add File</button>
-      <button type="button" aria-label="Quick Labor" onClick={onOpenLabor}>Labor</button>
+      <button type="button" aria-label="Quick Add Labor" onClick={onOpenLabor}>Labor</button>
       <button type="button" aria-label="Quick Status" onClick={() => onOpenDrawer("overview", "status")}>Status</button>
     </section>
   );
@@ -305,10 +305,10 @@ export function TicketWorkbenchRail({
           </button>
           <button
             type="button"
-            title="Open labor and time entries for review or approval follow-up."
+            title="Add a missing labor entry from this ticket."
             onClick={onOpenLabor}
           >
-            Review Labor
+            Add Labor
           </button>
           <button
             type="button"

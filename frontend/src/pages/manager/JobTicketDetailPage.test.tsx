@@ -14,7 +14,7 @@ import { routerFuture } from '../../routes/routerFuture'
 import { JobTicketDetailPage } from './JobTicketDetailPage'
 
 vi.mock('../../features/auth/AuthContext', () => ({ useAuth: vi.fn() }))
-vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn() } }))
+vi.mock('../../api/timeEntriesApi', () => ({ timeEntriesApi: { listByJob: vi.fn(), createManual: vi.fn(), adjust: vi.fn() } }))
 vi.mock('../../api/filesApi', () => ({ filesApi: { list: vi.fn(), upload: vi.fn(), getDownloadUrl: vi.fn(() => '#') } }))
 vi.mock('../../api/usersApi', () => ({ usersApi: { list: vi.fn(), listAssignableEmployees: vi.fn() } }))
 vi.mock('../../api/partRequestsApi', () => ({ partRequestsApi: { createForJobTicket: vi.fn() } }))
@@ -68,6 +68,8 @@ describe('JobTicketDetailPage', () => {
       }
     ] as any)
     vi.mocked(timeEntriesApi.listByJob).mockResolvedValue([{ id: 't1', employeeId: 'e1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:00:00Z', laborHours: 1.5, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' }] as any)
+    vi.mocked(timeEntriesApi.createManual).mockResolvedValue({ id: 'manual-1', employeeId: 'e1', jobTicketId: 'j1', startedAtUtc: '2026-04-01T11:00:00Z', endedAtUtc: '2026-04-01T12:30:00Z', laborHours: 1.5, billableHours: 1.5, approvalStatus: 2, workSummary: 'Manual labor' } as any)
+    vi.mocked(timeEntriesApi.adjust).mockResolvedValue({ id: 't1', employeeId: 'e1', jobTicketId: 'j1', startedAtUtc: '2026-04-01T09:00:00Z', endedAtUtc: '2026-04-01T10:30:00Z', laborHours: 1.25, billableHours: 1, approvalStatus: 1, workSummary: 'Checked motor' } as any)
     vi.mocked(filesApi.list).mockResolvedValue([{ id: 'f1', jobTicketId: 'j1', originalFileName: 'photo.jpg' }] as any)
     vi.mocked(filesApi.upload).mockResolvedValue({ id: 'f2', jobTicketId: 'j1', originalFileName: 'after.jpg' } as any)
     vi.mocked(jobTicketsApi.addWorkEntry).mockResolvedValue({ id: 'w2', jobTicketId: 'j1', notes: 'Manager note' } as any)
@@ -248,13 +250,76 @@ describe('JobTicketDetailPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     expect(screen.queryByLabelText('quick file upload panel')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Review Labor' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }))
     expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
-    expect(screen.getByLabelText('labor and time entries panel')).toHaveFocus()
+    expect(screen.getByLabelText('add labor drawer')).toHaveFocus()
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openStatusPanel()
     expect(screen.getByRole('heading', { name: 'Status Review' })).toBeInTheDocument()
+  })
+
+  it('lets Manager/Admin add missed labor from the ticket detail', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }))
+    expect(screen.getByLabelText('add labor drawer')).toHaveFocus()
+
+    fireEvent.change(screen.getByLabelText('Labor employee'), { target: { value: 'e1' } })
+    fireEvent.change(screen.getByLabelText('Start time'), { target: { value: '2026-04-01T11:00' } })
+    fireEvent.change(screen.getByLabelText('End time'), { target: { value: '2026-04-01T12:30' } })
+    fireEvent.change(screen.getByLabelText('Labor hours'), { target: { value: '1.5' } })
+    fireEvent.change(screen.getByLabelText('Billable hours'), { target: { value: '1.25' } })
+    fireEvent.change(screen.getByLabelText('Work summary'), { target: { value: 'Repaired missed labor item' } })
+    fireEvent.change(screen.getByLabelText('Manager reason'), { target: { value: 'Technician forgot to clock in' } })
+    fireEvent.change(screen.getByLabelText('Internal note'), { target: { value: 'Confirmed with dispatch log' } })
+    fireEvent.submit(screen.getByLabelText('add labor entry'))
+
+    await waitFor(() => {
+      expect(timeEntriesApi.createManual).toHaveBeenCalledWith({
+        jobTicketId: 'j1',
+        employeeId: 'e1',
+        startedAtUtc: new Date('2026-04-01T11:00').toISOString(),
+        endedAtUtc: new Date('2026-04-01T12:30').toISOString(),
+        laborHours: 1.5,
+        billableHours: 1.25,
+        hourlyRate: null,
+        workSummary: 'Repaired missed labor item',
+        reason: 'Technician forgot to clock in',
+        notes: 'Confirmed with dispatch log'
+      })
+    })
+    expect(await screen.findByText('Labor entry added and approved.')).toBeInTheDocument()
+  })
+
+  it('lets Manager/Admin edit an existing labor entry from the ticket detail', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    selectWorkflowTab('Labor')
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit labor for Alex Rivera' }))
+    expect(screen.getByLabelText('edit labor drawer')).toHaveFocus()
+
+    fireEvent.change(screen.getByLabelText('Start time'), { target: { value: '2026-04-01T09:15' } })
+    fireEvent.change(screen.getByLabelText('End time'), { target: { value: '2026-04-01T10:30' } })
+    fireEvent.change(screen.getByLabelText('Labor hours'), { target: { value: '1.25' } })
+    fireEvent.change(screen.getByLabelText('Billable hours'), { target: { value: '1' } })
+    fireEvent.change(screen.getByLabelText('Manager reason'), { target: { value: 'Corrected clock-out time' } })
+    fireEvent.change(screen.getByLabelText('Internal note'), { target: { value: 'Dispatch confirmed' } })
+    fireEvent.submit(screen.getByLabelText('edit labor entry'))
+
+    await waitFor(() => {
+      expect(timeEntriesApi.adjust).toHaveBeenCalledWith('t1', {
+        reason: 'Corrected clock-out time',
+        startedAtUtc: new Date('2026-04-01T09:15').toISOString(),
+        endedAtUtc: new Date('2026-04-01T10:30').toISOString(),
+        laborHours: 1.25,
+        billableHours: 1,
+        notes: 'Dispatch confirmed'
+      })
+    })
+    expect(await screen.findByText('Labor entry updated.')).toBeInTheDocument()
   })
 
   it('shows invoice handoff readiness when closeout signals are complete', async () => {
@@ -749,9 +814,9 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByRole('tab', { name: 'Service Details' })).toHaveAttribute('aria-selected', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
-    fireEvent.click(within(quickActions).getByRole('button', { name: 'Quick Labor' }))
+    fireEvent.click(within(quickActions).getByRole('button', { name: 'Quick Add Labor' }))
     expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
-    expect(screen.getByLabelText('labor and time entries panel')).toHaveFocus()
+    expect(screen.getByLabelText('add labor drawer')).toHaveFocus()
   })
 
 })

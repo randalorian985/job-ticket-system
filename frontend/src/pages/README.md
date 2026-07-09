@@ -33,7 +33,7 @@ Quick actions in `JobTicketDetailPage.tsx` should remain focused:
 
 - Add Note saves a job work entry through `jobTicketsApi.addWorkEntry`.
 - Add File uploads photos, PDFs, or closeout attachments through `filesApi.upload`.
-- Review Labor opens the existing Labor workflow tab.
+- Add Labor opens the existing Labor workflow tab and manager labor drawer.
 - Change Status opens the existing status review drawer.
 - Open Scheduling links to the Scheduling module.
 

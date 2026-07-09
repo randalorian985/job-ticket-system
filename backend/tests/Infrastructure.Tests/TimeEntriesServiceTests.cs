@@ -236,6 +236,51 @@ public sealed class TimeEntriesServiceTests
     }
 
     [Fact]
+    public async Task Manager_can_create_manual_labor_entry_from_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var start = new DateTime(2026, 5, 20, 13, 0, 0, DateTimeKind.Utc);
+
+        var created = await service.CreateManualAsync(new CreateManualTimeEntryRequestDto(
+            refs.JobTicket.Id,
+            refs.Employee.Id,
+            start,
+            start.AddHours(2),
+            2m,
+            1.5m,
+            null,
+            "Repaired control wiring",
+            "Technician missed clock-in",
+            "Manager entered from ticket"), refs.Manager.Id);
+
+        Assert.Equal(refs.JobTicket.Id, created.JobTicketId);
+        Assert.Equal(refs.Employee.Id, created.EmployeeId);
+        Assert.Equal(TimeEntryApprovalStatus.Approved, created.ApprovalStatus);
+        Assert.Equal(refs.Manager.Id, created.ApprovedByUserId);
+        Assert.Equal(2m, created.LaborHours);
+        Assert.Equal(1.5m, created.BillableHours);
+
+        var entry = await context.TimeEntries.SingleAsync(x => x.Id == created.Id);
+        Assert.Equal("Manager manual entry", entry.ClockInDeviceMetadata);
+        Assert.Equal(62.50m, entry.CostRateSnapshot);
+        Assert.Equal(115.25m, entry.BillRateSnapshot);
+
+        var workEntry = await context.JobWorkEntries.SingleAsync(x => x.JobTicketId == refs.JobTicket.Id && x.EmployeeId == refs.Employee.Id);
+        Assert.Equal("Repaired control wiring", workEntry.Notes);
+
+        var adjustment = await context.TimeEntryAdjustments.SingleAsync(x => x.TimeEntryId == created.Id);
+        Assert.Equal(AdjustmentType.Add, adjustment.AdjustmentType);
+        Assert.Equal("Technician missed clock-in", adjustment.Reason);
+        Assert.Equal(refs.Manager.Id, adjustment.AdjustedByUserId);
+
+        var logs = await context.AuditLogs.Where(x => x.EntityId == created.Id).ToListAsync();
+        Assert.Contains(logs, x => x.ActionType == AuditActionType.Create && x.NewValuesJson!.Contains("ManualCreate"));
+        Assert.Contains(logs, x => x.ActionType == AuditActionType.Approval);
+    }
+
+    [Fact]
     public async Task Employee_cannot_bulk_approve_time_entries()
     {
         await using var context = CreateContext();
@@ -248,6 +293,7 @@ public sealed class TimeEntriesServiceTests
         await Assert.ThrowsAsync<ValidationException>(() => service.EditAndApproveAsync(entryId, new AdjustTimeEntryRequestDto("Unauthorized", null, null, 1m, 1m, null, null), refs.Employee.Id));
         await Assert.ThrowsAsync<ValidationException>(() => service.BulkApproveAsync(new BulkApproveTimeEntriesRequestDto(new[] { entryId }), refs.Employee.Id));
         await Assert.ThrowsAsync<ValidationException>(() => service.ArchiveAsync(entryId, new ArchiveTimeEntryRequestDto("Unauthorized"), refs.Employee.Id));
+        await Assert.ThrowsAsync<ValidationException>(() => service.CreateManualAsync(new CreateManualTimeEntryRequestDto(refs.JobTicket.Id, refs.Employee.Id, DateTime.UtcNow.AddHours(-2), DateTime.UtcNow.AddHours(-1), 1m, 1m, null, "Unauthorized", "Unauthorized", null), refs.Employee.Id));
     }
 
     [Fact]

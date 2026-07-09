@@ -69,6 +69,16 @@ import {
 } from "./jobTicketDetail/jobTicketDetailHelpers";
 import { activeDispatchStatusValues, getSafeManagerReturnContext } from "./managerTaskNavigation";
 
+const toLocalDateTimeInput = (value?: string | null) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const localOffsetMilliseconds = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - localOffsetMilliseconds).toISOString().slice(0, 16);
+};
+
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -106,6 +116,16 @@ export function JobTicketDetailPage() {
   const [partUrgency, setPartUrgency] = useState("");
   const [partNeededBy, setPartNeededBy] = useState("");
   const [isSubmittingPart, setIsSubmittingPart] = useState(false);
+  const [laborEntryId, setLaborEntryId] = useState<string | null>(null);
+  const [laborEmployeeId, setLaborEmployeeId] = useState("");
+  const [laborStartedAt, setLaborStartedAt] = useState("");
+  const [laborEndedAt, setLaborEndedAt] = useState("");
+  const [laborHours, setLaborHours] = useState("");
+  const [laborBillableHours, setLaborBillableHours] = useState("");
+  const [laborWorkSummary, setLaborWorkSummary] = useState("");
+  const [laborReason, setLaborReason] = useState("");
+  const [laborNotes, setLaborNotes] = useState("");
+  const [isSubmittingLabor, setIsSubmittingLabor] = useState(false);
   const [activeDrawer, setActiveDrawer] = useState<WorkbenchDrawer>(null);
   const [quickNote, setQuickNote] = useState("");
   const [isSavingQuickNote, setIsSavingQuickNote] = useState(false);
@@ -140,6 +160,7 @@ export function JobTicketDetailPage() {
     () => assignments.find((item) => item.isLead) ?? null,
     [assignments],
   );
+  const defaultLaborEmployeeId = leadAssignment?.employeeId ?? assignments[0]?.employeeId ?? employees[0]?.id ?? "";
   const selectedCatalogPart = useMemo(
     () => catalogParts.find((part) => part.id === selectedCatalogPartId) ?? null,
     [catalogParts, selectedCatalogPartId],
@@ -989,6 +1010,142 @@ export function JobTicketDetailPage() {
     toggleDrawer(drawer);
   };
 
+  const openLaborDrawer = () => {
+    selectWorkflowTab("time", true);
+    setActiveDrawer("labor");
+    setError(null);
+    setMessage(null);
+  };
+
+  const resetLaborForm = () => {
+    setLaborEntryId(null);
+    setLaborEmployeeId(defaultLaborEmployeeId);
+    setLaborStartedAt("");
+    setLaborEndedAt("");
+    setLaborHours("");
+    setLaborBillableHours("");
+    setLaborWorkSummary("");
+    setLaborReason("");
+    setLaborNotes("");
+  };
+
+  const startLaborCreate = () => {
+    resetLaborForm();
+    setLaborEmployeeId(defaultLaborEmployeeId);
+    openLaborDrawer();
+  };
+
+  const startLaborEdit = (entry: TimeEntryDto) => {
+    setLaborEntryId(entry.id);
+    setLaborEmployeeId(entry.employeeId);
+    setLaborStartedAt(toLocalDateTimeInput(entry.startedAtUtc));
+    setLaborEndedAt(toLocalDateTimeInput(entry.endedAtUtc));
+    setLaborHours(String(entry.laborHours));
+    setLaborBillableHours(String(entry.billableHours));
+    setLaborWorkSummary(entry.workSummary ?? "");
+    setLaborReason("");
+    setLaborNotes("");
+    openLaborDrawer();
+  };
+
+  const onSubmitLabor = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!jobTicketId) return;
+
+    const startedAt = laborStartedAt ? new Date(laborStartedAt) : null;
+    const endedAt = laborEndedAt ? new Date(laborEndedAt) : null;
+    const laborHoursValue = Number(laborHours);
+    const billableHoursValue = laborBillableHours.trim() ? Number(laborBillableHours) : laborHoursValue;
+    const reason = laborReason.trim();
+    const workSummary = laborWorkSummary.trim();
+    const notes = laborNotes.trim();
+
+    if (!laborEntryId && !laborEmployeeId) {
+      setError("Select an employee before adding labor.");
+      setMessage(null);
+      return;
+    }
+    if (!startedAt || Number.isNaN(startedAt.getTime())) {
+      setError("Start time is required.");
+      setMessage(null);
+      return;
+    }
+    if (!endedAt || Number.isNaN(endedAt.getTime())) {
+      setError("End time is required.");
+      setMessage(null);
+      return;
+    }
+    if (endedAt <= startedAt) {
+      setError("End time must be after start time.");
+      setMessage(null);
+      return;
+    }
+    if (!Number.isFinite(laborHoursValue) || laborHoursValue <= 0) {
+      setError("Labor hours must be greater than zero.");
+      setMessage(null);
+      return;
+    }
+    if (!Number.isFinite(billableHoursValue) || billableHoursValue < 0 || billableHoursValue > laborHoursValue) {
+      setError("Billable hours must be between zero and labor hours.");
+      setMessage(null);
+      return;
+    }
+    if (!laborEntryId && !workSummary) {
+      setError("Work summary is required for manual labor.");
+      setMessage(null);
+      return;
+    }
+    if (!reason) {
+      setError("Manager reason is required.");
+      setMessage(null);
+      return;
+    }
+
+    setIsSubmittingLabor(true);
+    setError(null);
+    setMessage(null);
+    try {
+      if (laborEntryId) {
+        await timeEntriesApi.adjust(laborEntryId, {
+          reason,
+          startedAtUtc: startedAt.toISOString(),
+          endedAtUtc: endedAt.toISOString(),
+          laborHours: laborHoursValue,
+          billableHours: billableHoursValue,
+          notes: notes || reason,
+        });
+        setMessage("Labor entry updated.");
+      } else {
+        await timeEntriesApi.createManual({
+          jobTicketId,
+          employeeId: laborEmployeeId,
+          startedAtUtc: startedAt.toISOString(),
+          endedAtUtc: endedAt.toISOString(),
+          laborHours: laborHoursValue,
+          billableHours: billableHoursValue,
+          hourlyRate: null,
+          workSummary,
+          reason,
+          notes: notes || null,
+        });
+        setMessage("Labor entry added and approved.");
+      }
+      resetLaborForm();
+      setActiveDrawer(null);
+      await load();
+    } catch (requestError) {
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : laborEntryId
+            ? "Unable to update labor entry."
+            : "Unable to add labor entry.",
+      );
+    } finally {
+      setIsSubmittingLabor(false);
+    }
+  };
+
   const handleWorkflowTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, currentTab: WorkflowTab) => {
     const currentIndex = workflowTabs.findIndex((tab) => tab.value === currentTab);
     let nextIndex = currentIndex;
@@ -1049,8 +1206,7 @@ export function JobTicketDetailPage() {
         : "No immediate blockers visible";
 
   const openLaborWorkflow = () => {
-    selectWorkflowTab("time", true);
-    setActiveDrawer(null);
+    startLaborCreate();
   };
 
   useEffect(() => {
@@ -1588,6 +1744,7 @@ export function JobTicketDetailPage() {
                     <h3>Labor &amp; Time Entries</h3>
                     <p className="muted">Labor totals, time approvals, and work notes.</p>
                   </div>
+                  <button type="button" className="secondary-button no-print" onClick={startLaborCreate}>Add Labor</button>
                   <span className="status-chip">{timeEntries.length} time entries</span>
                 </div>
                 <div className="fact-grid">
@@ -1616,6 +1773,94 @@ export function JobTicketDetailPage() {
                     <strong>{entries.length}</strong>
                   </div>
                 </div>
+                {activeDrawer === "labor" ? (
+                  <section id="ticket-workbench-drawer-labor" className="workbench-drawer no-print" aria-label={laborEntryId ? "edit labor drawer" : "add labor drawer"} tabIndex={-1}>
+                    <div className="workbench-panel-heading">
+                      <div>
+                        <h4>{laborEntryId ? "Edit Labor" : "Add Labor"}</h4>
+                        <p className="muted">
+                          {laborEntryId
+                            ? "Correct start, end, labor, or billable hours with a manager reason."
+                            : "Add missed technician labor directly from this ticket."}
+                        </p>
+                      </div>
+                      <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                    </div>
+                    <form onSubmit={onSubmitLabor} className="stack" aria-label={laborEntryId ? "edit labor entry" : "add labor entry"}>
+                      <div className="form-grid">
+                        <label className="stack">
+                          Labor employee
+                          <select
+                            value={laborEmployeeId}
+                            onChange={(event) => setLaborEmployeeId(event.target.value)}
+                            disabled={Boolean(laborEntryId)}
+                          >
+                            <option value="">Select employee</option>
+                            {employees.map((employee) => (
+                              <option key={employee.id} value={employee.id}>
+                                {employee.firstName} {employee.lastName}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="stack">
+                          Start time
+                          <input type="datetime-local" value={laborStartedAt} onChange={(event) => setLaborStartedAt(event.target.value)} />
+                        </label>
+                        <label className="stack">
+                          End time
+                          <input type="datetime-local" value={laborEndedAt} onChange={(event) => setLaborEndedAt(event.target.value)} />
+                        </label>
+                        <label className="stack">
+                          Labor hours
+                          <input
+                            type="number"
+                            min="0.01"
+                            step="0.25"
+                            value={laborHours}
+                            onChange={(event) => {
+                              setLaborHours(event.target.value);
+                              if (!laborBillableHours.trim()) {
+                                setLaborBillableHours(event.target.value);
+                              }
+                            }}
+                          />
+                        </label>
+                        <label className="stack">
+                          Billable hours
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.25"
+                            value={laborBillableHours}
+                            onChange={(event) => setLaborBillableHours(event.target.value)}
+                          />
+                        </label>
+                      </div>
+                      {!laborEntryId ? (
+                        <label className="stack">
+                          Work summary
+                          <textarea value={laborWorkSummary} onChange={(event) => setLaborWorkSummary(event.target.value)} />
+                        </label>
+                      ) : (
+                        <p className="muted">Original summary: {laborWorkSummary || emptyDisplay}</p>
+                      )}
+                      <label className="stack">
+                        Manager reason
+                        <textarea value={laborReason} onChange={(event) => setLaborReason(event.target.value)} placeholder={laborEntryId ? "Corrected missed lunch, wrong end time, or billable hours." : "Technician missed clock-in, phone unavailable, or manager-entered correction."} />
+                      </label>
+                      <label className="stack">
+                        Internal note
+                        <textarea value={laborNotes} onChange={(event) => setLaborNotes(event.target.value)} />
+                      </label>
+                      <button type="submit" disabled={isSubmittingLabor}>
+                        {isSubmittingLabor
+                          ? laborEntryId ? "Saving labor..." : "Adding labor..."
+                          : laborEntryId ? "Save Labor Edit" : "Add Labor Entry"}
+                      </button>
+                    </form>
+                  </section>
+                ) : null}
                 <div className="two-column-section">
                   <section>
                     <h4>Labor / Work Entries</h4>
@@ -1647,6 +1892,7 @@ export function JobTicketDetailPage() {
                                 {item.workSummary ? ` - ${item.workSummary}` : ""}
                               </span>
                             </div>
+                            <button type="button" className="secondary-button no-print" aria-label={`Edit labor for ${getEmployeeNameById(item.employeeId)}`} onClick={() => startLaborEdit(item)}>Edit</button>
                           </li>
                         ))}
                       </ul>

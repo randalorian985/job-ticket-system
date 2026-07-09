@@ -8,7 +8,7 @@ import {
   JOB_PART_APPROVAL_STATUS,
 } from "../managerDisplay";
 
-export type WorkbenchDrawer = "ticket" | "status" | "archive" | "part" | "note" | "photo" | null;
+export type WorkbenchDrawer = "ticket" | "status" | "archive" | "part" | "labor" | "note" | "photo" | null;
 export type WorkflowTab = "overview" | "dispatch" | "time" | "parts" | "files" | "closeout" | "activity";
 
 export type WorkflowTabDefinition = {

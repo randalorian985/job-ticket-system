@@ -14,6 +14,7 @@ public interface ITimeEntriesService
     Task<TimeEntryDto> ClockOutAsync(ClockOutRequestDto request, CancellationToken cancellationToken = default);
     Task<TimeEntryDto> StartTravelAsync(TravelStartRequestDto request, CancellationToken cancellationToken = default);
     Task<TimeEntryDto> EndTravelAsync(TravelEndRequestDto request, CancellationToken cancellationToken = default);
+    Task<TimeEntryDto> CreateManualAsync(CreateManualTimeEntryRequestDto request, Guid createdByUserId, CancellationToken cancellationToken = default);
     Task<TimeEntryDto?> GetOpenEntryAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TimeEntryDto>> ListForJobTicketAsync(Guid jobTicketId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TimeApprovalQueueItemDto>> ListForReviewAsync(TimeEntryReviewFilters filters, CancellationToken cancellationToken = default);
@@ -188,6 +189,93 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Update, null, $"{{\"Action\":\"EndTravel\",\"TotalMinutes\":{totalMinutes}}}");
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        return Map(entry);
+    }
+
+    public async Task<TimeEntryDto> CreateManualAsync(CreateManualTimeEntryRequestDto request, Guid createdByUserId, CancellationToken cancellationToken = default)
+    {
+        EnsureManagerOrAdmin();
+        ValidateManualTimeEntryRequest(request, createdByUserId);
+
+        var employee = await EnsureEmployeeExistsAsync(request.EmployeeId, cancellationToken);
+        await EnsureJobTicketExistsAsync(request.JobTicketId, cancellationToken);
+
+        var totalMinutes = Math.Max(0, (int)Math.Round((request.EndedAtUtc - request.StartedAtUtc).TotalMinutes, MidpointRounding.AwayFromZero));
+        var calculatedHours = decimal.Round(totalMinutes / 60m, 4, MidpointRounding.AwayFromZero);
+        var laborHours = request.LaborHours ?? calculatedHours;
+        var billableHours = request.BillableHours ?? laborHours;
+        ValidateLaborHours(laborHours, billableHours);
+
+        var reason = request.Reason.Trim();
+        var workSummary = request.WorkSummary.Trim();
+        var managerNotes = ValidationHelpers.NullIfWhitespace(request.Notes);
+        var approvedAtUtc = DateTime.UtcNow;
+        var hourlyRate = request.HourlyRate ?? 0m;
+
+        var entry = new TimeEntry
+        {
+            JobTicketId = request.JobTicketId,
+            EmployeeId = request.EmployeeId,
+            EntryType = TimeEntryType.Job,
+            StartedAtUtc = request.StartedAtUtc,
+            EndedAtUtc = request.EndedAtUtc,
+            TotalMinutes = totalMinutes,
+            LaborHours = laborHours,
+            BillableHours = billableHours,
+            HourlyRate = hourlyRate,
+            CostRateSnapshot = employee.CostRate,
+            BillRateSnapshot = employee.BillRate ?? employee.LaborRate,
+            ApprovalStatus = TimeEntryApprovalStatus.Approved,
+            ApprovedByUserId = createdByUserId,
+            ApprovedAtUtc = approvedAtUtc,
+            WorkSummary = workSummary,
+            ClockInDeviceMetadata = "Manager manual entry",
+            ClockInNote = reason,
+            ClockOutNote = managerNotes,
+            Notes = managerNotes ?? reason
+        };
+
+        dbContext.TimeEntries.Add(entry);
+        dbContext.JobWorkEntries.Add(new JobWorkEntry
+        {
+            JobTicketId = entry.JobTicketId,
+            EmployeeId = entry.EmployeeId,
+            EntryType = WorkEntryType.Note,
+            Notes = workSummary,
+            PerformedAtUtc = entry.EndedAtUtc.Value
+        });
+        dbContext.TimeEntryAdjustments.Add(new TimeEntryAdjustment
+        {
+            TimeEntryId = entry.Id,
+            AdjustmentType = AdjustmentType.Add,
+            Hours = laborHours,
+            Reason = reason,
+            AdjustedByUserId = createdByUserId,
+            OriginalStartedAtUtc = request.StartedAtUtc,
+            OriginalEndedAtUtc = null,
+            OriginalLaborHours = 0,
+            OriginalBillableHours = 0,
+            OriginalHourlyRate = 0,
+            OriginalNotes = null,
+            NewStartedAtUtc = entry.StartedAtUtc,
+            NewEndedAtUtc = entry.EndedAtUtc,
+            NewLaborHours = entry.LaborHours,
+            NewBillableHours = entry.BillableHours,
+            NewHourlyRate = entry.HourlyRate,
+            NewNotes = entry.Notes
+        });
+
+        AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Create, null, AuditJson(
+            ("Action", "ManualCreate"),
+            ("EmployeeId", entry.EmployeeId),
+            ("CreatedByUserId", createdByUserId),
+            ("Reason", reason)));
+        AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Approval, null, AuditJson(
+            ("Action", "Approve"),
+            ("ApprovedByUserId", createdByUserId),
+            ("Source", "ManualCreate")));
+
+        await dbContext.SaveChangesAsync(cancellationToken);
         return Map(entry);
     }
 
@@ -432,9 +520,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             }
         }
 
-        if (entry.LaborHours < 0) throw new ValidationException("LaborHours cannot be negative.");
-        if (entry.BillableHours < 0) throw new ValidationException("BillableHours cannot be negative.");
-        if (entry.BillableHours > entry.LaborHours) throw new ValidationException("BillableHours cannot exceed LaborHours.");
+        ValidateLaborHours(entry.LaborHours, entry.BillableHours, allowZeroLabor: true);
 
         dbContext.TimeEntryAdjustments.Add(new TimeEntryAdjustment
         {
@@ -464,6 +550,27 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
     {
         ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
         EnsureActorId(adjustedByUserId, "AdjustedByUserId");
+    }
+
+    private static void ValidateManualTimeEntryRequest(CreateManualTimeEntryRequestDto request, Guid createdByUserId)
+    {
+        EnsureActorId(createdByUserId, "CreatedByUserId");
+        if (request.JobTicketId == Guid.Empty) throw new ValidationException("JobTicketId is required.");
+        if (request.EmployeeId == Guid.Empty) throw new ValidationException("EmployeeId is required.");
+        ValidationHelpers.ValidateRequired(request.WorkSummary, nameof(request.WorkSummary));
+        ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
+        if (request.EndedAtUtc <= request.StartedAtUtc)
+        {
+            throw new ValidationException("EndedAtUtc must be after StartedAtUtc.");
+        }
+    }
+
+    private static void ValidateLaborHours(decimal laborHours, decimal billableHours, bool allowZeroLabor = false)
+    {
+        if (laborHours < 0) throw new ValidationException("LaborHours cannot be negative.");
+        if (!allowZeroLabor && laborHours == 0) throw new ValidationException("LaborHours must be greater than zero.");
+        if (billableHours < 0) throw new ValidationException("BillableHours cannot be negative.");
+        if (billableHours > laborHours) throw new ValidationException("BillableHours cannot exceed LaborHours.");
     }
 
 
@@ -710,6 +817,18 @@ public sealed record ClockOutRequestDto(
 public sealed record BulkApproveTimeEntriesRequestDto(IReadOnlyList<Guid> TimeEntryIds);
 public sealed record RejectTimeEntryRequestDto(string Reason);
 public sealed record ArchiveTimeEntryRequestDto(string Reason);
+
+public sealed record CreateManualTimeEntryRequestDto(
+    Guid JobTicketId,
+    Guid EmployeeId,
+    DateTime StartedAtUtc,
+    DateTime EndedAtUtc,
+    decimal? LaborHours,
+    decimal? BillableHours,
+    decimal? HourlyRate,
+    string WorkSummary,
+    string Reason,
+    string? Notes);
 
 public sealed record AdjustTimeEntryRequestDto(
     string Reason,

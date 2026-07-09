@@ -432,8 +432,8 @@ export type TimeEntryDto = {
   approvedByUserId?: string | null
   approvedAtUtc?: string | null
   rejectionReason?: string | null
-  clockInLatitude: number
-  clockInLongitude: number
+  clockInLatitude?: number | null
+  clockInLongitude?: number | null
   clockInAccuracy?: number | null
   clockOutLatitude?: number | null
   clockOutLongitude?: number | null
@@ -516,6 +516,19 @@ export type RejectTimeEntryRequestDto = {
 
 export type ArchiveTimeEntryRequestDto = {
   reason: string
+}
+
+export type CreateManualTimeEntryRequestDto = {
+  jobTicketId: string
+  employeeId: string
+  startedAtUtc: string
+  endedAtUtc: string
+  laborHours?: number | null
+  billableHours?: number | null
+  hourlyRate?: number | null
+  workSummary: string
+  reason: string
+  notes?: string | null
 }
 
 export type AdjustTimeEntryRequestDto = {
