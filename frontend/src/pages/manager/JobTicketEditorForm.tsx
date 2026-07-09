@@ -1,4 +1,4 @@
-import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react'
+import { FormEvent, ReactNode, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import { ApiError } from '../../api/httpClient'
 import { jobTicketsApi } from '../../api/jobTicketsApi'
 import { masterDataApi } from '../../api/masterDataApi'
@@ -38,13 +38,19 @@ type Props = {
   customers: CustomerDto[]
   serviceLocations: ServiceLocationDto[]
   equipment: EquipmentDto[]
-  onSubmit: (payload: CreateJobTicketDto) => Promise<void>
+  onSubmit: (payload: CreateJobTicketDto) => Promise<boolean | void>
   onCustomerCreated?: (customer: CustomerDto) => void
   onServiceLocationCreated?: (serviceLocation: ServiceLocationDto) => void
   onEquipmentCreated?: (equipment: EquipmentDto) => void
+  onDirtyChange?: (isDirty: boolean) => void
+  onValidationBlocked?: (message: string) => void
   scheduleAssignmentPanel?: ReactNode
   submitLabel: string
   isCreate?: boolean
+}
+
+export type JobTicketEditorFormHandle = {
+  submit: () => Promise<boolean>
 }
 
 type DispatchEditCheck = {
@@ -328,7 +334,26 @@ export function buildDispatchEditChecks(form: CreateJobTicketDto): DispatchEditC
   ]
 }
 
-export function JobTicketEditorForm({
+const normalizeTicketDraft = (draft: CreateJobTicketDto) => ({
+  ...draft,
+  title: draft.title,
+  description: draft.description ?? null,
+  jobType: draft.jobType ?? null,
+  equipmentId: draft.equipmentId ?? null,
+  requestedAtUtc: draft.requestedAtUtc ?? null,
+  scheduledStartAtUtc: draft.scheduledStartAtUtc ?? null,
+  dueAtUtc: draft.dueAtUtc ?? null,
+  assignedManagerEmployeeId: draft.assignedManagerEmployeeId ?? null,
+  purchaseOrderNumber: draft.purchaseOrderNumber ?? null,
+  billingContactName: draft.billingContactName ?? null,
+  billingContactPhone: draft.billingContactPhone ?? null,
+  billingContactEmail: draft.billingContactEmail ?? null,
+  internalNotes: draft.internalNotes ?? null,
+  customerFacingNotes: draft.customerFacingNotes ?? null,
+  estimatedDurationMinutes: draft.estimatedDurationMinutes ?? null,
+})
+
+export const JobTicketEditorForm = forwardRef<JobTicketEditorFormHandle, Props>(function JobTicketEditorForm({
   initial,
   customers,
   serviceLocations,
@@ -337,12 +362,15 @@ export function JobTicketEditorForm({
   onCustomerCreated,
   onServiceLocationCreated,
   onEquipmentCreated,
+  onDirtyChange,
+  onValidationBlocked,
   scheduleAssignmentPanel,
   submitLabel,
   isCreate = false
-}: Props) {
+}, ref) {
   const [form, setForm] = useState<CreateJobTicketDto>(initial)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   useScrollToError(error)
   const [createdCustomers, setCreatedCustomers] = useState<CustomerDto[]>([])
   const [createdServiceLocations, setCreatedServiceLocations] = useState<ServiceLocationDto[]>([])
@@ -393,6 +421,16 @@ export function JobTicketEditorForm({
   }, [isCreate, form.customerId, form.equipmentId])
   const [equipmentHistoryError, setEquipmentHistoryError] = useState<string | null>(null)
   const [isLoadingEquipmentHistory, setIsLoadingEquipmentHistory] = useState(false)
+  const isDirty = useMemo(
+    () => JSON.stringify(normalizeTicketDraft(form)) !== JSON.stringify(normalizeTicketDraft(initial)),
+    [form, initial]
+  )
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
 
   const allCustomers = useMemo(
     () => {
@@ -469,11 +507,15 @@ export function JobTicketEditorForm({
   )
 
   const filteredLocations = useMemo(
-    () => allServiceLocations.filter((item) => !form.customerId || item.customerId === form.customerId),
-    [allServiceLocations, form.customerId]
+    () => allServiceLocations.filter((item) => !form.customerId || item.customerId === form.customerId || item.id === form.serviceLocationId),
+    [allServiceLocations, form.customerId, form.serviceLocationId]
   )
 
   const filteredEquipment = useMemo(() => allEquipment.filter((item) => {
+    if (item.id === form.equipmentId) {
+      return true
+    }
+
     if (form.serviceLocationId) {
       return item.serviceLocationId === form.serviceLocationId
     }
@@ -483,7 +525,7 @@ export function JobTicketEditorForm({
     }
 
     return true
-  }), [allEquipment, form.customerId, form.serviceLocationId])
+  }), [allEquipment, form.customerId, form.equipmentId, form.serviceLocationId])
 
   const equipmentDuplicateMatches = useMemo(
     () => findEquipmentDuplicateMatches(equipmentDraft, allEquipment, form.customerId, form.serviceLocationId),
@@ -612,10 +654,24 @@ export function JobTicketEditorForm({
     }
   }, [form.equipmentId])
 
-  const update = <K extends keyof CreateJobTicketDto>(key: K, value: CreateJobTicketDto[K]) => setForm((prev) => ({ ...prev, [key]: value }))
+  const clearFieldError = (key: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+  }
+
+  const update = <K extends keyof CreateJobTicketDto>(key: K, value: CreateJobTicketDto[K]) => {
+    clearFieldError(String(key))
+    setForm((prev) => ({ ...prev, [key]: value }))
+  }
 
   const selectCustomer = (customerId: string) => {
     const customer = allCustomers.find((item) => item.id === customerId)
+    clearFieldError('customerId')
+    clearFieldError('billingPartyCustomerId')
     setForm((prev) => ({
       ...prev,
       customerId,
@@ -628,6 +684,7 @@ export function JobTicketEditorForm({
   }
 
   const selectServiceLocation = (serviceLocationId: string) => {
+    clearFieldError('serviceLocationId')
     setForm((prev) => {
       const serviceLocationCustomerId = allServiceLocations.find((item) => item.id === serviceLocationId)?.customerId ?? null
       const serviceLocationCustomer = serviceLocationCustomerId ? allCustomers.find((item) => item.id === serviceLocationCustomerId) : null
@@ -646,6 +703,7 @@ export function JobTicketEditorForm({
   }
 
   const selectBillingParty = (billingPartyCustomerId: string, message?: string) => {
+    clearFieldError('billingPartyCustomerId')
     setForm((prev) => ({ ...prev, billingPartyCustomerId }))
     if (message) {
       setCopyHelperError(null)
@@ -935,20 +993,41 @@ export function JobTicketEditorForm({
     setEquipmentQuickAddMessage(`${existingEquipment.name} selected from existing equipment.`)
   }
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
-    if (!form.customerId || !form.serviceLocationId || !form.billingPartyCustomerId || !form.title.trim()) {
-      setError('Customer, location, billing party, and title are required.')
-      return
+  const submitDraft = useCallback(async () => {
+    const nextFieldErrors: Record<string, string> = {}
+    if (!form.title.trim()) nextFieldErrors.title = 'Title is required.'
+    if (!form.customerId) nextFieldErrors.customerId = 'Customer is required.'
+    if (!form.serviceLocationId) nextFieldErrors.serviceLocationId = 'Service location is required.'
+    if (!form.billingPartyCustomerId) nextFieldErrors.billingPartyCustomerId = 'Billing party is required.'
+
+    if (Object.keys(nextFieldErrors).length) {
+      const message = 'Customer, location, billing party, and title are required.'
+      setFieldErrors(nextFieldErrors)
+      setError(message)
+      onValidationBlocked?.(message)
+      return false
     }
 
     setError(null)
+    setFieldErrors({})
     setIsSubmitting(true)
     try {
       await onSubmit({ ...form, title: form.title.trim() })
+      return true
+    } catch {
+      return false
     } finally {
       setIsSubmitting(false)
     }
+  }, [form, onSubmit, onValidationBlocked])
+
+  useImperativeHandle(ref, () => ({
+    submit: submitDraft,
+  }), [submitDraft])
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    await submitDraft()
   }
 
   return (
@@ -1017,7 +1096,8 @@ export function JobTicketEditorForm({
             <p className="muted">{isCreate ? 'Give the ticket a title, type, and priority. Scheduling happens separately after creation.' : 'Edit the ticket\'s title, type, priority, and current status.'}</p>
           </div>
           <label>Title
-            <input value={form.title} maxLength={200} onChange={(e) => update('title', e.target.value)} />
+            <input value={form.title} maxLength={200} aria-invalid={Boolean(fieldErrors.title)} onChange={(e) => update('title', e.target.value)} />
+            {fieldErrors.title ? <small className="field-error">{fieldErrors.title}</small> : null}
             <span className={`field-char-count${form.title.length > 180 ? ' field-char-count--warn' : ''}`}>{form.title.length} / 200</span>
           </label>
           <div className="field-with-action">
@@ -1079,10 +1159,11 @@ export function JobTicketEditorForm({
           </div>
           <div className="field-with-action">
             <label>Customer
-              <select value={form.customerId} onChange={(e) => selectCustomer(e.target.value)}>
+              <select value={form.customerId} aria-invalid={Boolean(fieldErrors.customerId)} onChange={(e) => selectCustomer(e.target.value)}>
                 <option value="">Select customer</option>
                 {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
+              {fieldErrors.customerId ? <small className="field-error">{fieldErrors.customerId}</small> : null}
             </label>
             <button type="button" className="secondary-button" onClick={() => setCustomerQuickAddOpen((prev) => !prev)}>
               Quick add customer
@@ -1115,10 +1196,11 @@ export function JobTicketEditorForm({
           ) : null}
           <div className="field-with-action">
             <label>Service Location
-              <select value={form.serviceLocationId} onChange={(e) => selectServiceLocation(e.target.value)}>
+              <select value={form.serviceLocationId} aria-invalid={Boolean(fieldErrors.serviceLocationId)} onChange={(e) => selectServiceLocation(e.target.value)}>
                 <option value="">Select location</option>
                 {filteredLocations.map((c) => <option key={c.id} value={c.id}>{c.locationName}</option>)}
               </select>
+              {fieldErrors.serviceLocationId ? <small className="field-error">{fieldErrors.serviceLocationId}</small> : null}
             </label>
             <button type="button" className="secondary-button" onClick={() => setServiceLocationQuickAddOpen((prev) => !prev)}>
               Quick add location
@@ -1187,10 +1269,11 @@ export function JobTicketEditorForm({
               </button>
             </div>
             <label>Billing Party
-              <select value={form.billingPartyCustomerId} onChange={(e) => selectBillingParty(e.target.value)}>
+              <select value={form.billingPartyCustomerId} aria-invalid={Boolean(fieldErrors.billingPartyCustomerId)} onChange={(e) => selectBillingParty(e.target.value)}>
                 <option value="">Select billing party</option>
                 {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
+              {fieldErrors.billingPartyCustomerId ? <small className="field-error">{fieldErrors.billingPartyCustomerId}</small> : null}
             </label>
             <div className="billing-party-summary" aria-label="billing party relationship">
               <span>{billingPartyRelationship}</span>
@@ -1347,4 +1430,4 @@ export function JobTicketEditorForm({
       </div>
     </form>
   )
-}
+})

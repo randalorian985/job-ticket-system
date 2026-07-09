@@ -9,6 +9,7 @@ import { reportsApi } from '../../api/reportsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
 import { useAuth } from '../../features/auth/AuthContext'
+import { NotificationProvider } from '../../features/notifications/NotificationContext'
 import { routerFuture } from '../../routes/routerFuture'
 import { JobTicketDetailPage } from './JobTicketDetailPage'
 
@@ -22,7 +23,13 @@ vi.mock('../../api/reportsApi', () => ({ reportsApi: { getInvoiceReadySummary: v
 
 describe('JobTicketDetailPage closeout readiness semantics', () => {
   const renderPage = () => {
-    render(<MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
+    render(
+      <MemoryRouter future={routerFuture} initialEntries={['/manage/job-tickets/j1']}>
+        <NotificationProvider>
+          <Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes>
+        </NotificationProvider>
+      </MemoryRouter>
+    )
   }
 
   const setupReadyBase = () => {

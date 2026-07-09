@@ -1,5 +1,4 @@
 import type { KeyboardEvent } from "react";
-import { Link } from "react-router-dom";
 import type {
   CustomerDto,
   EquipmentDto,
@@ -123,6 +122,7 @@ type RecommendedActionPanelProps = {
   recommendedWorkflow: WorkflowTab;
   workflowFocusMode: boolean;
   workflowLabel: string;
+  onOpenHref: (href: string, label: string) => void;
   onOpenWorkflow: (tab: WorkflowTab) => void;
 };
 
@@ -131,6 +131,7 @@ export function RecommendedActionPanel({
   actionHref,
   actionStatus,
   actionTitle,
+  onOpenHref,
   onOpenWorkflow,
   recommendedWorkflow,
   workflowFocusMode,
@@ -150,14 +151,14 @@ export function RecommendedActionPanel({
       </div>
       <span className="tooltip-anchor">
         {actionHref ? (
-          <Link
-            className="button-link"
-            to={actionHref}
+          <button
+            type="button"
             aria-describedby="open-next-action-tooltip"
+            onClick={() => onOpenHref(actionHref, `open ${workflowLabel}`)}
             title={`Open ${workflowLabel}`}
           >
             Open {workflowLabel}
-          </Link>
+          </button>
         ) : (
           <button
             type="button"
@@ -268,6 +269,7 @@ type TicketWorkbenchRailProps = {
   workflowFocusMode: boolean;
   onOpenDrawer: OpenWorkflowDrawer;
   onOpenLabor: () => void;
+  onOpenScheduling: () => void;
 };
 
 export function TicketWorkbenchRail({
@@ -275,6 +277,7 @@ export function TicketWorkbenchRail({
   job,
   onOpenDrawer,
   onOpenLabor,
+  onOpenScheduling,
   workflowFocusMode,
 }: TicketWorkbenchRailProps) {
   return (
@@ -317,7 +320,7 @@ export function TicketWorkbenchRail({
           >
             Add Part
           </button>
-          <Link className="button-link secondary-link action-wide" to="/manage/schedule">Open Scheduling</Link>
+          <button type="button" className="secondary-button action-wide" onClick={onOpenScheduling}>Open Scheduling</button>
         </div>
       </section>
 

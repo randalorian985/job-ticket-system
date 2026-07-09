@@ -1,5 +1,5 @@
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { FormEvent, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { filesApi } from "../../api/filesApi";
 import { ApiError } from "../../api/httpClient";
 import { jobTicketsApi } from "../../api/jobTicketsApi";
@@ -9,6 +9,7 @@ import { reportsApi } from "../../api/reportsApi";
 import { timeEntriesApi } from "../../api/timeEntriesApi";
 import { usersApi } from "../../api/usersApi";
 import { useAuth } from "../../features/auth/AuthContext";
+import { useNotification } from "../../features/notifications/NotificationContext";
 import type {
   CreateJobTicketDto,
   CustomerDto,
@@ -38,7 +39,7 @@ import {
   JOB_PART_APPROVAL_STATUS,
   TIME_ENTRY_APPROVAL_STATUS,
 } from "./managerDisplay";
-import { JobTicketEditorForm } from "./JobTicketEditorForm";
+import { JobTicketEditorForm, type JobTicketEditorFormHandle } from "./JobTicketEditorForm";
 import {
   MobileQuickActions,
   RecommendedActionPanel,
@@ -69,7 +70,7 @@ import {
   type WorkbenchDrawer,
   type WorkflowTab,
 } from "./jobTicketDetail/jobTicketDetailHelpers";
-import { activeDispatchStatusValues, getSafeManagerReturnContext } from "./managerTaskNavigation";
+import { activeDispatchStatusValues } from "./managerTaskNavigation";
 
 const toLocalDateTimeInput = (value?: string | null) => {
   if (!value) return "";
@@ -89,15 +90,34 @@ const TIME_ENTRY_TYPE = {
 const getTimeEntryTypeLabel = (entryType?: number | null) =>
   entryType === TIME_ENTRY_TYPE.Travel ? "Travel" : "Labor";
 
+const drawerLabels: Record<Exclude<WorkbenchDrawer, null>, string> = {
+  ticket: "Edit Ticket",
+  status: "Status Review",
+  archive: "Archive Review",
+  part: "Add / Request Part",
+  labor: "Labor / Travel",
+  note: "Add Note",
+  photo: "Add File",
+};
+
+type PendingGuardAction = {
+  canSave: boolean;
+  drawer: Exclude<WorkbenchDrawer, null>;
+  run: () => void;
+  targetLabel: string;
+};
+
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const requestedDrawer = searchParams.get("drawer");
   const activeTab: WorkflowTab = isWorkflowTab(requestedTab) ? requestedTab : "overview";
   const workflowFocusMode = searchParams.get("view") === "workflow";
-  const { returnTo, returnLabel } = getSafeManagerReturnContext(searchParams);
   const { user } = useAuth();
+  const { notify } = useNotification();
+  const ticketEditorRef = useRef<JobTicketEditorFormHandle>(null);
   const [job, setJob] = useState<JobTicketDto | null>(null);
   const [assignments, setAssignments] = useState<JobTicketAssignmentDto[]>([]);
   const [assignmentLoadFailed, setAssignmentLoadFailed] = useState(false);
@@ -126,6 +146,7 @@ export function JobTicketDetailPage() {
   const [partNeedsOrdered, setPartNeedsOrdered] = useState(true);
   const [partUrgency, setPartUrgency] = useState("");
   const [partNeededBy, setPartNeededBy] = useState("");
+  const [partDraftBaseline, setPartDraftBaseline] = useState("");
   const [isSubmittingPart, setIsSubmittingPart] = useState(false);
   const [laborEntryId, setLaborEntryId] = useState<string | null>(null);
   const [laborEntryType, setLaborEntryType] = useState(String(TIME_ENTRY_TYPE.Job));
@@ -137,8 +158,12 @@ export function JobTicketDetailPage() {
   const [laborWorkSummary, setLaborWorkSummary] = useState("");
   const [laborReason, setLaborReason] = useState("");
   const [laborNotes, setLaborNotes] = useState("");
+  const [laborDraftBaseline, setLaborDraftBaseline] = useState("");
   const [isSubmittingLabor, setIsSubmittingLabor] = useState(false);
   const [activeDrawer, setActiveDrawer] = useState<WorkbenchDrawer>(null);
+  const [ticketEditorDirty, setTicketEditorDirty] = useState(false);
+  const [pendingGuardAction, setPendingGuardAction] = useState<PendingGuardAction | null>(null);
+  const [isGuardSaving, setIsGuardSaving] = useState(false);
   const [quickNote, setQuickNote] = useState("");
   const [isSavingQuickNote, setIsSavingQuickNote] = useState(false);
   const [quickUploadFile, setQuickUploadFile] = useState<File | null>(null);
@@ -176,6 +201,44 @@ export function JobTicketDetailPage() {
   const selectedCatalogPart = useMemo(
     () => catalogParts.find((part) => part.id === selectedCatalogPartId) ?? null,
     [catalogParts, selectedCatalogPartId],
+  );
+  const partDraftSnapshot = useMemo(
+    () => JSON.stringify({
+      partDescription,
+      selectedCatalogPartId,
+      partQuantity,
+      partNotes,
+      partNeedsOrdered,
+      partUrgency,
+      partNeededBy,
+    }),
+    [partDescription, partNeededBy, partNeedsOrdered, partNotes, partQuantity, partUrgency, selectedCatalogPartId],
+  );
+  const laborDraftSnapshot = useMemo(
+    () => JSON.stringify({
+      laborEntryId,
+      laborEntryType,
+      laborEmployeeId,
+      laborStartedAt,
+      laborEndedAt,
+      laborHours,
+      laborBillableHours,
+      laborWorkSummary,
+      laborReason,
+      laborNotes,
+    }),
+    [
+      laborBillableHours,
+      laborEmployeeId,
+      laborEndedAt,
+      laborEntryId,
+      laborEntryType,
+      laborHours,
+      laborNotes,
+      laborReason,
+      laborStartedAt,
+      laborWorkSummary,
+    ],
   );
   const selectedCustomer = job ? customersById[job.customerId] : undefined;
   const selectedLocation = job ? locationsById[job.serviceLocationId] : undefined;
@@ -547,6 +610,43 @@ export function JobTicketDetailPage() {
     return warnings;
   }, [dispatchWarnings, job]);
 
+  const activeDrawerIsDirty = useMemo(() => {
+    switch (activeDrawer) {
+      case "ticket":
+        return ticketEditorDirty;
+      case "status":
+        return statusReview.hasChange;
+      case "archive":
+        return Boolean(archiveReason.trim() || archiveConfirmationOpen);
+      case "part":
+        return Boolean(partDraftBaseline && partDraftSnapshot !== partDraftBaseline);
+      case "labor":
+        return Boolean(laborDraftBaseline && laborDraftSnapshot !== laborDraftBaseline);
+      case "note":
+        return Boolean(quickNote.trim());
+      case "photo":
+        return Boolean(quickUploadFile || quickUploadCaption.trim() || quickUploadForInvoice);
+      default:
+        return false;
+    }
+  }, [
+    activeDrawer,
+    archiveConfirmationOpen,
+    archiveReason,
+    laborDraftBaseline,
+    laborDraftSnapshot,
+    partDraftBaseline,
+    partDraftSnapshot,
+    quickNote,
+    quickUploadCaption,
+    quickUploadFile,
+    quickUploadForInvoice,
+    statusReview.hasChange,
+    ticketEditorDirty,
+  ]);
+
+  const activeDrawerCanSave = activeDrawer !== null && activeDrawer !== "archive";
+
   const activityItems = useMemo<ActivityItem[]>(() => {
     const workActivity = entries.map((entry) => ({
       id: `work-${entry.id}`,
@@ -714,6 +814,73 @@ export function JobTicketDetailPage() {
       .finally(() => setIsLoadingEquipmentHistory(false));
   }, [job?.equipmentId]);
 
+  useEffect(() => {
+    if (activeDrawer === "part" && !partDraftBaseline) {
+      setPartDraftBaseline(partDraftSnapshot);
+    }
+  }, [activeDrawer, partDraftBaseline, partDraftSnapshot]);
+
+  useEffect(() => {
+    if (activeDrawer === "labor" && !laborDraftBaseline) {
+      setLaborDraftBaseline(laborDraftSnapshot);
+    }
+  }, [activeDrawer, laborDraftBaseline, laborDraftSnapshot]);
+
+  useEffect(() => {
+    if (!activeDrawerIsDirty) return;
+
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [activeDrawerIsDirty]);
+
+  const resetPartDraft = () => {
+    setPartDescription("");
+    setSelectedCatalogPartId("");
+    setPartQuantity("1");
+    setPartNotes("");
+    setPartNeedsOrdered(true);
+    setPartUrgency("");
+    setPartNeededBy("");
+    setPartDraftBaseline("");
+  };
+
+  const discardDrawerDraft = (drawer: Exclude<WorkbenchDrawer, null>) => {
+    switch (drawer) {
+      case "ticket":
+        setTicketEditorDirty(false);
+        break;
+      case "status":
+        setStatusValue(String(job?.status ?? 1));
+        break;
+      case "archive":
+        setArchiveReason("");
+        setArchiveConfirmationOpen(false);
+        break;
+      case "part":
+        resetPartDraft();
+        break;
+      case "labor":
+        resetLaborForm();
+        setLaborDraftBaseline("");
+        break;
+      case "note":
+        setQuickNote("");
+        break;
+      case "photo":
+        setQuickUploadFile(null);
+        setQuickUploadCaption("");
+        setQuickUploadForInvoice(false);
+        break;
+      default:
+        break;
+    }
+  };
+
   const closeDrawer = () => {
     setActiveDrawer(null);
     setSearchParams((currentParams) => {
@@ -740,22 +907,45 @@ export function JobTicketDetailPage() {
     setMessage(null);
   };
 
+  const requestGuardedAction = (run: () => void, targetLabel: string) => {
+    if (activeDrawer && activeDrawerIsDirty) {
+      setPendingGuardAction({
+        canSave: activeDrawerCanSave,
+        drawer: activeDrawer,
+        run,
+        targetLabel,
+      });
+      return false;
+    }
+
+    run();
+    return true;
+  };
+
+  const requestCloseDrawer = () => {
+    requestGuardedAction(closeDrawer, "close this drawer");
+  };
+
   const toggleDrawer = (drawer: Exclude<WorkbenchDrawer, null>) => {
     if (activeDrawer === drawer) {
-      closeDrawer();
+      requestCloseDrawer();
       return;
     }
 
-    openDrawerOnTab(workbenchDrawerTabs[drawer], drawer);
+    requestGuardedAction(() => openDrawerOnTab(workbenchDrawerTabs[drawer], drawer), `open ${drawerLabels[drawer]}`);
   };
 
-  const onStatusChange = async (event: FormEvent) => {
-    event.preventDefault();
+  const showValidationBlocked = (message: string) => {
+    setError(message);
+    setMessage(null);
+    notify("Fix the highlighted fields before saving this ticket.", "warning");
+  };
+
+  const saveStatusChange = async () => {
     if (!jobTicketId) return;
     if (!statusReview.hasChange) {
-      setError("Select a different status before applying an update.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Select a different status before applying an update.");
+      return false;
     }
 
     try {
@@ -766,6 +956,7 @@ export function JobTicketDetailPage() {
       setMessage("Status updated.");
       closeDrawer();
       await load();
+      return true;
     } catch (requestError) {
       setError(
         requestError instanceof ApiError
@@ -773,7 +964,13 @@ export function JobTicketDetailPage() {
           : "Unable to update status.",
       );
       setMessage(null);
+      return false;
     }
+  };
+
+  const onStatusChange = async (event: FormEvent) => {
+    event.preventDefault();
+    await saveStatusChange();
   };
 
   const onArchiveRequest = async (event: FormEvent) => {
@@ -887,22 +1084,19 @@ export function JobTicketDetailPage() {
     setSelectedCatalogPartId("");
   };
 
-  const onSubmitPart = async (event: FormEvent) => {
-    event.preventDefault();
+  const savePartRequest = async () => {
     const selectedPartName = selectedCatalogPart?.name ?? null;
     const normalizedDescription = selectedPartName ?? partDescription.trim();
     const quantity = Number(partQuantity);
 
     if (!jobTicketId || !normalizedDescription) {
-      setError("Select an existing part or enter a new part name or description.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Select an existing part or enter a new part name or description.");
+      return false;
     }
 
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      setError("Quantity must be greater than zero.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Quantity must be greater than zero.");
+      return false;
     }
 
     setIsSubmittingPart(true);
@@ -918,32 +1112,32 @@ export function JobTicketDetailPage() {
         urgency: partNeedsOrdered ? partUrgency || null : null,
         neededByUtc: partNeedsOrdered && partNeededBy ? new Date(partNeededBy).toISOString() : null,
       });
-      setPartDescription("");
-      setSelectedCatalogPartId("");
-      setPartQuantity("1");
-      setPartNotes("");
-      setPartNeedsOrdered(true);
-      setPartUrgency("");
-      setPartNeededBy("");
+      resetPartDraft();
       setMessage(partNeedsOrdered ? "Part request added to the back-office queue." : "Ticket part added.");
       await load();
+      return true;
     } catch (requestError) {
       setError(
         requestError instanceof ApiError
           ? requestError.message
           : "Unable to add or request part.",
       );
+      setMessage(null);
+      return false;
     } finally {
       setIsSubmittingPart(false);
     }
   };
 
-  const onAddQuickNote = async (event: FormEvent) => {
+  const onSubmitPart = async (event: FormEvent) => {
     event.preventDefault();
+    await savePartRequest();
+  };
+
+  const saveQuickNote = async () => {
     if (!jobTicketId || !quickNote.trim()) {
-      setError("Enter a note before saving.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Enter a note before saving.");
+      return false;
     }
 
     setIsSavingQuickNote(true);
@@ -960,6 +1154,7 @@ export function JobTicketDetailPage() {
       closeDrawer();
       setMessage("Note added to the ticket history.");
       await load();
+      return true;
     } catch (requestError) {
       setError(
         requestError instanceof ApiError
@@ -967,23 +1162,26 @@ export function JobTicketDetailPage() {
           : "Unable to add note.",
       );
       setMessage(null);
+      return false;
     } finally {
       setIsSavingQuickNote(false);
     }
   };
 
-  const onUploadQuickFile = async (event: FormEvent) => {
+  const onAddQuickNote = async (event: FormEvent) => {
     event.preventDefault();
+    await saveQuickNote();
+  };
+
+  const saveQuickFile = async () => {
     if (!jobTicketId || !quickUploadFile) {
-      setError("Choose a photo or file before uploading.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Choose a photo or file before uploading.");
+      return false;
     }
 
     if (!allowedManagerUploadTypes.includes(quickUploadFile.type)) {
-      setError("Unsupported file type. Allowed: jpg, png, webp, or pdf.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Unsupported file type. Allowed: jpg, png, webp, or pdf.");
+      return false;
     }
 
     const formData = new FormData();
@@ -1002,6 +1200,7 @@ export function JobTicketDetailPage() {
       closeDrawer();
       setMessage("Photo/file uploaded.");
       await load();
+      return true;
     } catch (requestError) {
       setError(
         requestError instanceof ApiError
@@ -1009,9 +1208,15 @@ export function JobTicketDetailPage() {
           : "Unable to upload photo or file.",
       );
       setMessage(null);
+      return false;
     } finally {
       setIsUploadingQuickFile(false);
     }
+  };
+
+  const onUploadQuickFile = async (event: FormEvent) => {
+    event.preventDefault();
+    await saveQuickFile();
   };
 
   const editPayload: CreateJobTicketDto | null = job
@@ -1040,63 +1245,75 @@ export function JobTicketDetailPage() {
     : null;
 
   const selectWorkflowTab = (tab: WorkflowTab, focusWorkflow = true) => {
-    if (focusWorkflow) {
-      setActiveDrawer(null);
-    }
-    setSearchParams((currentParams) => {
-      const nextParams = new URLSearchParams(currentParams);
-      if (tab === "overview") {
-        nextParams.delete("tab");
-      } else {
-        nextParams.set("tab", tab);
-      }
+    const applySelection = () => {
       if (focusWorkflow) {
-        nextParams.set("view", "workflow");
-        nextParams.delete("drawer");
+        setActiveDrawer(null);
       }
-      return nextParams;
-    }, { replace: true });
+      setSearchParams((currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        if (tab === "overview") {
+          nextParams.delete("tab");
+        } else {
+          nextParams.set("tab", tab);
+        }
+        if (focusWorkflow) {
+          nextParams.set("view", "workflow");
+          nextParams.delete("drawer");
+        }
+        return nextParams;
+      }, { replace: true });
+    };
+
+    if (!focusWorkflow) {
+      applySelection();
+      return true;
+    }
+
+    const tabLabel = workflowTabs.find((item) => item.value === tab)?.label ?? "ticket section";
+    return requestGuardedAction(applySelection, `open ${tabLabel}`);
   };
 
   const openRecommendedWorkflow = (tab: WorkflowTab) => {
-    setActiveDrawer(null);
-    setSearchParams((currentParams) => {
-      const nextParams = new URLSearchParams(currentParams);
-      if (tab === "overview") nextParams.delete("tab");
-      else nextParams.set("tab", tab);
-      nextParams.set("view", "workflow");
-      nextParams.delete("drawer");
-      return nextParams;
-    });
+    const workflowLabel = workflowTabs.find((item) => item.value === tab)?.label ?? "ticket section";
+    requestGuardedAction(() => {
+      setActiveDrawer(null);
+      setSearchParams((currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        if (tab === "overview") nextParams.delete("tab");
+        else nextParams.set("tab", tab);
+        nextParams.set("view", "workflow");
+        nextParams.delete("drawer");
+        return nextParams;
+      });
+    }, `open ${workflowLabel}`);
   };
 
   const closeWorkflowFocus = () => {
-    setActiveDrawer(null);
-    setSearchParams((currentParams) => {
-      const nextParams = new URLSearchParams(currentParams);
-      nextParams.delete("view");
-      nextParams.delete("drawer");
-      return nextParams;
-    });
+    requestGuardedAction(() => {
+      setActiveDrawer(null);
+      setSearchParams((currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        nextParams.delete("view");
+        nextParams.delete("drawer");
+        return nextParams;
+      });
+    }, "return to ticket overview");
   };
 
   const openWorkflowDrawer = (tab: WorkflowTab, drawer: Exclude<WorkbenchDrawer, null>) => {
     if (activeDrawer === drawer) {
-      closeDrawer();
+      requestCloseDrawer();
       return;
     }
 
-    openDrawerOnTab(tab, drawer);
-  };
-
-  const openLaborDrawer = () => {
-    openDrawerOnTab("time", "labor");
+    requestGuardedAction(() => openDrawerOnTab(tab, drawer), `open ${drawerLabels[drawer]}`);
   };
 
   const resetLaborForm = () => {
+    const nextEmployeeId = defaultLaborEmployeeId;
     setLaborEntryId(null);
     setLaborEntryType(String(TIME_ENTRY_TYPE.Job));
-    setLaborEmployeeId(defaultLaborEmployeeId);
+    setLaborEmployeeId(nextEmployeeId);
     setLaborStartedAt("");
     setLaborEndedAt("");
     setLaborHours("");
@@ -1104,31 +1321,58 @@ export function JobTicketDetailPage() {
     setLaborWorkSummary("");
     setLaborReason("");
     setLaborNotes("");
+    setLaborDraftBaseline(JSON.stringify({
+      laborEntryId: null,
+      laborEntryType: String(TIME_ENTRY_TYPE.Job),
+      laborEmployeeId: nextEmployeeId,
+      laborStartedAt: "",
+      laborEndedAt: "",
+      laborHours: "",
+      laborBillableHours: "",
+      laborWorkSummary: "",
+      laborReason: "",
+      laborNotes: "",
+    }));
   };
 
   const startLaborCreate = () => {
-    resetLaborForm();
-    setLaborEmployeeId(defaultLaborEmployeeId);
-    openLaborDrawer();
+    requestGuardedAction(() => {
+      resetLaborForm();
+      openDrawerOnTab("time", "labor");
+    }, `open ${drawerLabels.labor}`);
   };
 
   const startLaborEdit = (entry: TimeEntryDto) => {
-    setLaborEntryId(entry.id);
-    setLaborEntryType(String(entry.entryType ?? TIME_ENTRY_TYPE.Job));
-    setLaborEmployeeId(entry.employeeId);
-    setLaborStartedAt(toLocalDateTimeInput(entry.startedAtUtc));
-    setLaborEndedAt(toLocalDateTimeInput(entry.endedAtUtc));
-    setLaborHours(String(entry.laborHours));
-    setLaborBillableHours(String(entry.billableHours));
-    setLaborWorkSummary(entry.workSummary ?? "");
-    setLaborReason("");
-    setLaborNotes("");
-    openLaborDrawer();
+    const nextDraft = {
+      laborEntryId: entry.id,
+      laborEntryType: String(entry.entryType ?? TIME_ENTRY_TYPE.Job),
+      laborEmployeeId: entry.employeeId,
+      laborStartedAt: toLocalDateTimeInput(entry.startedAtUtc),
+      laborEndedAt: toLocalDateTimeInput(entry.endedAtUtc),
+      laborHours: String(entry.laborHours),
+      laborBillableHours: String(entry.billableHours),
+      laborWorkSummary: entry.workSummary ?? "",
+      laborReason: "",
+      laborNotes: "",
+    };
+    requestGuardedAction(() => {
+      setLaborEntryId(entry.id);
+      setLaborEntryType(nextDraft.laborEntryType);
+      setLaborEmployeeId(nextDraft.laborEmployeeId);
+      setLaborStartedAt(nextDraft.laborStartedAt);
+      setLaborEndedAt(nextDraft.laborEndedAt);
+      setLaborHours(nextDraft.laborHours);
+      setLaborBillableHours(nextDraft.laborBillableHours);
+      setLaborWorkSummary(nextDraft.laborWorkSummary);
+      setLaborReason(nextDraft.laborReason);
+      setLaborNotes(nextDraft.laborNotes);
+      setLaborDraftBaseline(JSON.stringify(nextDraft));
+      openDrawerOnTab("time", "labor");
+    }, `open ${drawerLabels.labor}`);
   };
 
-  const onSubmitLabor = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!jobTicketId) return;
+  const saveLaborEntry = async () => {
+    if (!jobTicketId) return false;
 
     const startedAt = laborStartedAt ? new Date(laborStartedAt) : null;
     const endedAt = laborEndedAt ? new Date(laborEndedAt) : null;
@@ -1141,49 +1385,40 @@ export function JobTicketDetailPage() {
     const entryTypeLabel = getTimeEntryTypeLabel(entryTypeValue);
 
     if (!laborEntryId && !laborEmployeeId) {
-      setError("Select an employee before adding labor or travel.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Select an employee before adding labor or travel.");
+      return false;
     }
     if (!startedAt || Number.isNaN(startedAt.getTime())) {
-      setError("Start time is required.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Start time is required.");
+      return false;
     }
     if (!endedAt || Number.isNaN(endedAt.getTime())) {
-      setError("End time is required.");
-      setMessage(null);
-      return;
+      showValidationBlocked("End time is required.");
+      return false;
     }
     if (endedAt <= startedAt) {
-      setError("End time must be after start time.");
-      setMessage(null);
-      return;
+      showValidationBlocked("End time must be after start time.");
+      return false;
     }
     if (!Number.isFinite(laborHoursValue) || laborHoursValue <= 0) {
-      setError(`${entryTypeLabel} hours must be greater than zero.`);
-      setMessage(null);
-      return;
+      showValidationBlocked(`${entryTypeLabel} hours must be greater than zero.`);
+      return false;
     }
     if (!Number.isFinite(billableHoursValue) || billableHoursValue < 0 || billableHoursValue > laborHoursValue) {
-      setError("Billable hours must be between zero and labor hours.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Billable hours must be between zero and labor hours.");
+      return false;
     }
     if (!laborEntryId && entryTypeValue !== TIME_ENTRY_TYPE.Job && entryTypeValue !== TIME_ENTRY_TYPE.Travel) {
-      setError("Select whether this entry is labor or travel.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Select whether this entry is labor or travel.");
+      return false;
     }
     if (!laborEntryId && !workSummary) {
-      setError("Work summary is required for manual labor or travel.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Work summary is required for manual labor or travel.");
+      return false;
     }
     if (!reason) {
-      setError("Manager reason is required.");
-      setMessage(null);
-      return;
+      showValidationBlocked("Manager reason is required.");
+      return false;
     }
 
     setIsSubmittingLabor(true);
@@ -1219,6 +1454,7 @@ export function JobTicketDetailPage() {
       resetLaborForm();
       closeDrawer();
       await load();
+      return true;
     } catch (requestError) {
       setError(
         requestError instanceof ApiError
@@ -1227,9 +1463,71 @@ export function JobTicketDetailPage() {
             ? "Unable to update labor entry."
             : "Unable to add time entry.",
       );
+      setMessage(null);
+      return false;
     } finally {
       setIsSubmittingLabor(false);
     }
+  };
+
+  const onSubmitLabor = async (event: FormEvent) => {
+    event.preventDefault();
+    await saveLaborEntry();
+  };
+
+  const saveDrawerDraft = async (drawer: Exclude<WorkbenchDrawer, null>) => {
+    switch (drawer) {
+      case "ticket":
+        return await ticketEditorRef.current?.submit() ?? false;
+      case "status":
+        return await saveStatusChange();
+      case "part":
+        return await savePartRequest();
+      case "labor":
+        return await saveLaborEntry();
+      case "note":
+        return await saveQuickNote();
+      case "photo":
+        return await saveQuickFile();
+      case "archive":
+      default:
+        return false;
+    }
+  };
+
+  const continueWithoutSaving = () => {
+    if (!pendingGuardAction) return;
+
+    const action = pendingGuardAction;
+    setPendingGuardAction(null);
+    discardDrawerDraft(action.drawer);
+    action.run();
+  };
+
+  const stayOnDrawer = () => {
+    setPendingGuardAction(null);
+  };
+
+  const saveAndContinue = async () => {
+    if (!pendingGuardAction || !pendingGuardAction.canSave) return;
+
+    const action = pendingGuardAction;
+    setIsGuardSaving(true);
+    const didSave = await saveDrawerDraft(action.drawer);
+    setIsGuardSaving(false);
+
+    if (!didSave) {
+      setPendingGuardAction(null);
+      return;
+    }
+
+    setPendingGuardAction(null);
+    action.run();
+  };
+
+  const onGuardedNavigate = (to: string, targetLabel: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    requestGuardedAction(() => navigate(to), targetLabel);
   };
 
   const handleWorkflowTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, currentTab: WorkflowTab) => {
@@ -1244,8 +1542,9 @@ export function JobTicketDetailPage() {
 
     event.preventDefault();
     const nextTab = workflowTabs[nextIndex].value;
-    selectWorkflowTab(nextTab, true);
-    document.getElementById(`ticket-workflow-tab-${nextTab}`)?.focus();
+    if (selectWorkflowTab(nextTab, true)) {
+      document.getElementById(`ticket-workflow-tab-${nextTab}`)?.focus();
+    }
   };
 
   const getWorkflowPanelProps = (tab: WorkflowTab, panelName: string) => ({
@@ -1310,10 +1609,10 @@ export function JobTicketDetailPage() {
   return (
     <section className="ticket-workbench-page stack">
       <nav className="breadcrumb-line" aria-label="Breadcrumb">
-        <Link to="/manage">Dashboard</Link>
+        <Link to="/manage" onClick={onGuardedNavigate("/manage", "open Dashboard")}>Dashboard</Link>
         <span aria-hidden="true">/</span>
-        <Link to={returnTo}>Back to {returnLabel}</Link>
-        {job ? <><span aria-hidden="true">/</span><span aria-current="page">Ticket detail</span></> : null}
+        <Link to="/manage/job-tickets" onClick={onGuardedNavigate("/manage/job-tickets", "open Job Tickets")}>Job Tickets</Link>
+        {job ? <><span aria-hidden="true">/</span><span aria-current="page">Ticket {job.ticketNumber}</span></> : null}
       </nav>
       {isLoading ? (
         <p className="muted" role="status">
@@ -1322,6 +1621,30 @@ export function JobTicketDetailPage() {
       ) : null}
       {error ? <p className="error" role="alert">{error}</p> : null}
       {message ? <p className="success" role="status">{message}</p> : null}
+      {pendingGuardAction ? (
+        <section className="confirmation-panel stack no-print" aria-label="unsaved drawer changes">
+          <div>
+            <strong>Unsaved changes in {drawerLabels[pendingGuardAction.drawer]}</strong>
+            <p className="muted">Save before you {pendingGuardAction.targetLabel}, leave without saving, or stay on this drawer.</p>
+          </div>
+          {!pendingGuardAction.canSave ? (
+            <p className="warning">Archive review is a confirmation step, so it cannot be saved from this warning. Stay here to finish it, or leave without saving the archive draft.</p>
+          ) : null}
+          <div className="row">
+            {pendingGuardAction.canSave ? (
+              <button type="button" onClick={saveAndContinue} disabled={isGuardSaving}>
+                {isGuardSaving ? "Saving..." : "Save and continue"}
+              </button>
+            ) : null}
+            <button type="button" className="secondary-button" onClick={continueWithoutSaving} disabled={isGuardSaving}>
+              Leave without saving
+            </button>
+            <button type="button" className="secondary-button" onClick={stayOnDrawer} disabled={isGuardSaving}>
+              Stay here
+            </button>
+          </div>
+        </section>
+      ) : null}
       {job ? (
         <>
           <TicketWorkbenchHero
@@ -1343,6 +1666,7 @@ export function JobTicketDetailPage() {
             recommendedWorkflow={recommendedWorkflow}
             workflowFocusMode={workflowFocusMode}
             workflowLabel={recommendedWorkflowLabel}
+            onOpenHref={(href, label) => requestGuardedAction(() => navigate(href), label)}
             onOpenWorkflow={openRecommendedWorkflow}
           />
 
@@ -1374,14 +1698,17 @@ export function JobTicketDetailPage() {
                       <h3>Edit Ticket</h3>
                       <p className="muted">Customer, service location, equipment, scope, billing information, dates, status, and priority.</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
+                    <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Close</button>
                   </div>
                   <JobTicketEditorForm
+                    ref={ticketEditorRef}
                     initial={editPayload}
                     customers={customers}
                     serviceLocations={locations}
                     equipment={equipment}
                     submitLabel="Save Ticket"
+                    onDirtyChange={setTicketEditorDirty}
+                    onValidationBlocked={showValidationBlocked}
                     onCustomerCreated={(created) => setCustomers((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
                     onServiceLocationCreated={(created) => setLocations((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
                     onEquipmentCreated={(created) => setEquipment((prev) => [created, ...prev.filter((item) => item.id !== created.id)])}
@@ -1394,6 +1721,7 @@ export function JobTicketDetailPage() {
                         setError(null);
                         setMessage("Ticket updated.");
                         await load();
+                        return true;
                       } catch (requestError) {
                         setError(
                           requestError instanceof ApiError
@@ -1401,6 +1729,7 @@ export function JobTicketDetailPage() {
                             : "Unable to update ticket.",
                         );
                         setMessage(null);
+                        throw requestError;
                       }
                     }}
                   />
@@ -1414,7 +1743,7 @@ export function JobTicketDetailPage() {
                       <h3>Add Note</h3>
                       <p className="muted">Save a Manager/Admin work note to the ticket history without opening the full editor.</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
+                    <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Close</button>
                   </div>
                   <form className="stack" onSubmit={onAddQuickNote}>
                     <label>Ticket Note
@@ -1427,7 +1756,7 @@ export function JobTicketDetailPage() {
                     </label>
                     <div className="row">
                       <button type="submit" disabled={isSavingQuickNote}>{isSavingQuickNote ? "Saving note..." : "Save Note"}</button>
-                      <button type="button" className="secondary-button" onClick={closeDrawer}>Cancel</button>
+                      <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Cancel</button>
                     </div>
                   </form>
                 </section>
@@ -1440,7 +1769,7 @@ export function JobTicketDetailPage() {
                       <h3>Add File</h3>
                       <p className="muted">Upload a job photo, PDF, or closeout attachment from the ticket workspace.</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
+                    <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Close</button>
                   </div>
                   <form className="stack" onSubmit={onUploadQuickFile}>
                     <label>Photo or File
@@ -1468,7 +1797,7 @@ export function JobTicketDetailPage() {
                     </label>
                     <div className="row">
                       <button type="submit" disabled={isUploadingQuickFile}>{isUploadingQuickFile ? "Uploading..." : "Upload File"}</button>
-                      <button type="button" className="secondary-button" onClick={closeDrawer}>Cancel</button>
+                      <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Cancel</button>
                     </div>
                     <p className="muted">Allowed file types: JPG, PNG, WebP, or PDF.</p>
                   </form>
@@ -1482,7 +1811,7 @@ export function JobTicketDetailPage() {
                       <h3>Status Review</h3>
                       <p className="muted">{statusReview.summary}</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
+                    <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Close</button>
                   </div>
                   <div className="fact-grid">
                     <div>
@@ -1533,7 +1862,7 @@ export function JobTicketDetailPage() {
                       <h3>Archive Review</h3>
                       <p className="muted">Archive keeps this ticket available for reporting and history. It does not hard delete the record.</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
+                    <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Close</button>
                   </div>
                   {archiveReviewWarnings.length ? (
                     <ul className="muted" aria-label="archive review warnings">
@@ -1870,7 +2199,7 @@ export function JobTicketDetailPage() {
                             : "Add missed technician labor or travel directly from this ticket."}
                         </p>
                       </div>
-                      <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
+                      <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Close</button>
                     </div>
                     <form onSubmit={onSubmitLabor} className="stack" aria-label={laborEntryId ? "edit labor entry" : "add labor or travel entry"}>
                       <div className="form-grid">
@@ -2043,7 +2372,7 @@ export function JobTicketDetailPage() {
                         <h4>Add / Request Part</h4>
                         <p className="muted">Existing catalog match or typed unlisted part, quantity, notes, and Needs ordered routing.</p>
                       </div>
-                      <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
+                      <button type="button" className="secondary-button" onClick={requestCloseDrawer}>Close</button>
                     </div>
                     <form onSubmit={onSubmitPart} className="stack" aria-label="add or request ticket part">
                       <label className="stack">
@@ -2326,6 +2655,7 @@ export function JobTicketDetailPage() {
               workflowFocusMode={workflowFocusMode}
               onOpenDrawer={openWorkflowDrawer}
               onOpenLabor={openLaborWorkflow}
+              onOpenScheduling={() => requestGuardedAction(() => navigate("/manage/schedule"), "open Scheduling")}
             />
           </section>
         </>

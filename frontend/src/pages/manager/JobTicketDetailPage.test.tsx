@@ -9,7 +9,9 @@ import { partRequestsApi } from '../../api/partRequestsApi'
 import { reportsApi } from '../../api/reportsApi'
 import { timeEntriesApi } from '../../api/timeEntriesApi'
 import { usersApi } from '../../api/usersApi'
+import { NotificationBanner } from '../../components/NotificationBanner'
 import { useAuth } from '../../features/auth/AuthContext'
+import { NotificationProvider } from '../../features/notifications/NotificationContext'
 import { routerFuture } from '../../routes/routerFuture'
 import { JobTicketDetailPage } from './JobTicketDetailPage'
 
@@ -83,8 +85,8 @@ describe('JobTicketDetailPage', () => {
       { id: 'e2', firstName: 'Blair', lastName: 'Stone' }
     ] as any)
     vi.mocked(masterDataApi.listCustomers).mockResolvedValue([{ id: 'c1', name: 'Acme' }] as any)
-    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's1', locationName: 'HQ' }] as any)
-    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', name: 'Truck 7' }] as any)
+    vi.mocked(masterDataApi.listServiceLocations).mockResolvedValue([{ id: 's1', customerId: 'c1', locationName: 'HQ' }] as any)
+    vi.mocked(masterDataApi.listEquipment).mockResolvedValue([{ id: 'eq1', customerId: 'c1', serviceLocationId: 's1', name: 'Truck 7' }] as any)
     vi.mocked(masterDataApi.listParts).mockResolvedValue([
       {
         id: 'part-1',
@@ -153,8 +155,11 @@ describe('JobTicketDetailPage', () => {
   const renderPage = (initialEntry = '/manage/job-tickets/j1') => {
     render(
       <MemoryRouter future={routerFuture} initialEntries={[initialEntry]}>
-        <LocationProbe />
-        <Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes>
+        <NotificationProvider>
+          <NotificationBanner />
+          <LocationProbe />
+          <Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes>
+        </NotificationProvider>
       </MemoryRouter>
     )
   }
@@ -668,7 +673,7 @@ describe('JobTicketDetailPage', () => {
     expectRenderedText('Next Required UpdateNo employees are assigned.')
     const recommendation = screen.getByLabelText('next action')
     expect(recommendation).toHaveTextContent('Send to Scheduling')
-    expect(within(recommendation).getByRole('link', { name: 'Open Scheduling' })).toHaveAttribute('href', '/manage/schedule')
+    expect(within(recommendation).getByRole('button', { name: 'Open Scheduling' })).toBeInTheDocument()
     expectRenderedText('No employees are assigned.')
     expectRenderedText('No lead tech is marked.')
     expectRenderedText('No scheduled start is set.')
@@ -801,14 +806,12 @@ describe('JobTicketDetailPage', () => {
 
     expect(await screen.findByText('Archive blocked')).toBeInTheDocument()
   })
-  it('restores the originating queue breadcrumb and URL-selected workflow tab', async () => {
+  it('shows the ticket breadcrumb and restores the URL-selected workflow tab', async () => {
     renderPage('/manage/job-tickets/j1?returnTo=%2Fmanage%2Fjob-tickets%3Fstatus%3Dactive%26readiness%3Dneeds-review&returnLabel=Spoofed+Label&tab=parts')
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Back to Needs Assignment Review' })).toHaveAttribute(
-      'href',
-      '/manage/job-tickets?status=active&readiness=needs-review'
-    )
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/manage')
+    expect(screen.getByRole('link', { name: 'Job Tickets' })).toHaveAttribute('href', '/manage/job-tickets')
     expect(screen.getByRole('tab', { name: 'Parts' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByLabelText('parts used and requested panel')).not.toHaveAttribute('hidden')
     expect(screen.getByLabelText('service details, customer, location, and equipment')).toHaveAttribute('hidden')
@@ -877,9 +880,49 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByTestId('current-location')).toHaveTextContent('drawer=ticket')
 
     fireEvent.click(within(screen.getByLabelText('ticket editor panel')).getByRole('button', { name: 'Close' }))
+    await waitFor(() => expect(screen.getByTestId('current-location')).not.toHaveTextContent('drawer='))
     expect(screen.getByTestId('current-location')).toHaveTextContent('/manage/job-tickets/j1')
-    expect(screen.getByTestId('current-location')).not.toHaveTextContent('drawer=')
     expect(screen.getByRole('button', { name: 'Back to ticket overview' })).toBeInTheDocument()
+  })
+
+  it('guards breadcrumb navigation when a drawer has unsaved changes', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Note' }))
+    fireEvent.change(screen.getByLabelText('Ticket note'), { target: { value: 'Need to confirm quote before closeout' } })
+    fireEvent.click(screen.getByRole('link', { name: 'Job Tickets' }))
+
+    expect(screen.getByLabelText('unsaved drawer changes')).toBeInTheDocument()
+    expect(screen.getByText('Unsaved changes in Add Note')).toBeInTheDocument()
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/manage/job-tickets/j1')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stay here' }))
+    expect(screen.queryByLabelText('unsaved drawer changes')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('quick note panel')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('link', { name: 'Job Tickets' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Leave without saving' }))
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/manage/job-tickets')
+  })
+
+  it('blocks save-and-continue when edit ticket validation fails', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit Ticket' })[0])
+    const editor = await screen.findByLabelText('ticket editor panel')
+    fireEvent.change(within(editor).getByLabelText(/Title/), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('link', { name: 'Job Tickets' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save and continue' }))
+
+    expect(await screen.findAllByText('Customer, location, billing party, and title are required.')).toHaveLength(2)
+    expect(screen.getByText('Fix the highlighted fields before saving this ticket.')).toBeInTheDocument()
+    expect(jobTicketsApi.update).not.toHaveBeenCalled()
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/manage/job-tickets/j1')
+    expect(screen.getByLabelText('ticket editor panel')).toBeInTheDocument()
   })
 
   it('restores a ticket drawer from the URL without returning to the ticket listing', async () => {
