@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from "react";
+import type { ButtonHTMLAttributes, KeyboardEvent, ReactNode } from "react";
 import type {
   CustomerDto,
   EquipmentDto,
@@ -22,6 +22,35 @@ import {
 type DrawerName = Exclude<WorkbenchDrawer, null>;
 type OpenWorkflowDrawer = (tab: WorkflowTab, drawer: DrawerName) => void;
 type SelectWorkflowTab = (tab: WorkflowTab, focusWorkflow?: boolean) => void;
+
+type TooltipButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  children: ReactNode;
+  tooltip: string;
+  tooltipId: string;
+  wrapperClassName?: string;
+};
+
+function TooltipButton({
+  children,
+  tooltip,
+  tooltipId,
+  wrapperClassName,
+  ...buttonProps
+}: TooltipButtonProps) {
+  const { "aria-describedby": ariaDescribedBy, ...restButtonProps } = buttonProps;
+  const describedBy = [ariaDescribedBy, tooltipId].filter(Boolean).join(" ");
+
+  return (
+    <span className={`tooltip-anchor${wrapperClassName ? ` ${wrapperClassName}` : ""}`}>
+      <button {...restButtonProps} aria-describedby={describedBy}>
+        {children}
+      </button>
+      <span id={tooltipId} className="control-tooltip" role="tooltip">
+        {tooltip}
+      </span>
+    </span>
+  );
+}
 
 type TicketWorkbenchHeroProps = {
   activeDrawer: WorkbenchDrawer;
@@ -52,29 +81,32 @@ export function TicketWorkbenchHero({
         <p>{job.title}</p>
       </div>
       <div className="ticket-workbench-command-bar no-print">
-        <button
+        <TooltipButton
           type="button"
           className="secondary-button"
-          title="Open the browser print dialog for this job review."
+          tooltip="Open the browser print dialog for this job review."
+          tooltipId="ticket-workbench-print-tooltip"
           onClick={() => window.print()}
         >
           Print Job Review
-        </button>
-        <button
+        </TooltipButton>
+        <TooltipButton
           type="button"
-          title="Edit ticket details without leaving this workspace."
+          tooltip={activeDrawer === "ticket" ? "Close the ticket editor drawer." : "Edit ticket details without leaving this workspace."}
+          tooltipId="ticket-workbench-edit-tooltip"
           onClick={() => onOpenDrawer("overview", "ticket")}
         >
           {activeDrawer === "ticket" ? "Close Ticket Editor" : "Edit Ticket"}
-        </button>
-        <button
+        </TooltipButton>
+        <TooltipButton
           type="button"
           className="secondary-button"
-          title="Review archive impact and enter a reason before confirmation."
+          tooltip={activeDrawer === "archive" ? "Close the archive review drawer." : "Review archive impact and enter a reason before confirmation."}
+          tooltipId="ticket-workbench-archive-tooltip"
           onClick={() => onOpenDrawer("overview", "archive")}
         >
           {activeDrawer === "archive" ? "Close Archive Panel" : "Archive Review"}
-        </button>
+        </TooltipButton>
       </div>
       <div className="ticket-workbench-hero-meta" aria-label="ticket key details">
         <div>
@@ -155,7 +187,6 @@ export function RecommendedActionPanel({
             type="button"
             aria-describedby="open-next-action-tooltip"
             onClick={() => onOpenHref(actionHref, `open ${workflowLabel}`)}
-            title={`Open ${workflowLabel}`}
           >
             Open {workflowLabel}
           </button>
@@ -163,7 +194,6 @@ export function RecommendedActionPanel({
           <button
             type="button"
             aria-describedby="open-next-action-tooltip"
-            title={`Open ${workflowLabel}`}
             onClick={() => onOpenWorkflow(recommendedWorkflow)}
           >
             Open {workflowLabel}
@@ -228,7 +258,6 @@ export function WorkflowTabs({
             aria-controls={`ticket-workflow-panel-${primaryWorkflowPanelNames[tab.value]}`}
             aria-selected={activeTab === tab.value}
             tabIndex={activeTab === tab.value ? 0 : -1}
-            title={tab.description}
             className={activeTab === tab.value ? "ticket-workflow-tab-active" : ""}
             key={tab.value}
             onClick={() => onSelectWorkflowTab(tab.value, true)}
@@ -285,42 +314,56 @@ export function TicketWorkbenchRail({
       <section className="workbench-panel workbench-panel-compact">
         <h3>Quick Actions</h3>
         <div className="ticket-action-grid">
-          <button
+          <TooltipButton
             type="button"
-            title="Edit customer, scheduling, service, and billing details."
+            tooltip="Edit customer, scheduling, service, and billing details."
+            tooltipId="ticket-quick-edit-tooltip"
             onClick={() => onOpenDrawer("overview", "ticket")}
           >
             Edit Ticket
-          </button>
-          <button
+          </TooltipButton>
+          <TooltipButton
             type="button"
-            title="Add a Manager/Admin note to this ticket's history."
+            tooltip="Add a Manager/Admin note to this ticket's history."
+            tooltipId="ticket-quick-note-tooltip"
             onClick={() => onOpenDrawer("activity", "note")}
           >
             Add Note
-          </button>
-          <button
+          </TooltipButton>
+          <TooltipButton
             type="button"
-            title="Upload a job photo, document, or invoice attachment."
+            tooltip="Upload a job photo, document, or invoice attachment."
+            tooltipId="ticket-quick-file-tooltip"
             onClick={() => onOpenDrawer("files", "photo")}
           >
             Add File
-          </button>
-          <button
+          </TooltipButton>
+          <TooltipButton
             type="button"
-            title="Add missing labor or travel from this ticket."
+            tooltip="Add missing labor or travel from this ticket."
+            tooltipId="ticket-quick-labor-tooltip"
             onClick={onOpenLabor}
           >
             Add Labor / Travel
-          </button>
-          <button
+          </TooltipButton>
+          <TooltipButton
             type="button"
-            title="Record a used part or create a request for office ordering."
+            tooltip="Record a used part or create a request for office ordering."
+            tooltipId="ticket-quick-part-tooltip"
             onClick={() => onOpenDrawer("parts", "part")}
           >
             Add Part
-          </button>
-          <button type="button" className="secondary-button action-wide" onClick={onOpenScheduling}>Open Scheduling</button>
+          </TooltipButton>
+          <TooltipButton
+            type="button"
+            className="secondary-button"
+            wrapperClassName="action-wide"
+            tooltip="Open Scheduling to review assignments and service windows."
+            tooltipId="ticket-quick-scheduling-tooltip"
+            onClick={onOpenScheduling}
+          >
+            Open Scheduling
+          </TooltipButton>
         </div>
       </section>
 

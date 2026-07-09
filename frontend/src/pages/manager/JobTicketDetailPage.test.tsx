@@ -844,7 +844,7 @@ describe('JobTicketDetailPage', () => {
     expect(recommendation).not.toHaveTextContent('Ticket is outside the active work queue.')
 
     const openWorkflowButton = screen.getByRole('button', { name: 'Open Invoice Review' })
-    expect(openWorkflowButton).toHaveAttribute('title', 'Open Invoice Review')
+    expect(openWorkflowButton).toHaveAttribute('aria-describedby', 'open-next-action-tooltip')
     expect(screen.getByRole('tooltip', { name: 'Open Invoice Review for this ticket.' })).toBeInTheDocument()
     fireEvent.click(openWorkflowButton)
     expect(screen.getByRole('tab', { name: 'Invoice Review' })).toHaveAttribute('aria-selected', 'true')

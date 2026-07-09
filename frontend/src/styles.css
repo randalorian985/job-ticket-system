@@ -2838,6 +2838,10 @@ td {
   width: 100%;
 }
 
+.ticket-action-grid .tooltip-anchor {
+  width: 100%;
+}
+
 .ticket-action-grid .action-wide {
   grid-column: 1 / -1;
 }
