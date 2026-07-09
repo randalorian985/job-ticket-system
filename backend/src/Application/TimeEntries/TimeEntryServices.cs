@@ -206,6 +206,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         var billableHours = request.BillableHours ?? laborHours;
         ValidateLaborHours(laborHours, billableHours);
 
+        var entryType = request.EntryType;
         var reason = request.Reason.Trim();
         var workSummary = request.WorkSummary.Trim();
         var managerNotes = ValidationHelpers.NullIfWhitespace(request.Notes);
@@ -216,7 +217,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         {
             JobTicketId = request.JobTicketId,
             EmployeeId = request.EmployeeId,
-            EntryType = TimeEntryType.Job,
+            EntryType = entryType,
             StartedAtUtc = request.StartedAtUtc,
             EndedAtUtc = request.EndedAtUtc,
             TotalMinutes = totalMinutes,
@@ -229,7 +230,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
             ApprovedByUserId = createdByUserId,
             ApprovedAtUtc = approvedAtUtc,
             WorkSummary = workSummary,
-            ClockInDeviceMetadata = "Manager manual entry",
+            ClockInDeviceMetadata = entryType == TimeEntryType.Travel ? "Manager manual travel entry" : "Manager manual entry",
             ClockInNote = reason,
             ClockOutNote = managerNotes,
             Notes = managerNotes ?? reason
@@ -268,6 +269,7 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Create, null, AuditJson(
             ("Action", "ManualCreate"),
             ("EmployeeId", entry.EmployeeId),
+            ("EntryType", entry.EntryType.ToString()),
             ("CreatedByUserId", createdByUserId),
             ("Reason", reason)));
         AddAudit(entry.Id, nameof(TimeEntry), AuditActionType.Approval, null, AuditJson(
@@ -559,6 +561,10 @@ public sealed class TimeEntriesService(ApplicationDbContext dbContext, ICurrentU
         if (request.EmployeeId == Guid.Empty) throw new ValidationException("EmployeeId is required.");
         ValidationHelpers.ValidateRequired(request.WorkSummary, nameof(request.WorkSummary));
         ValidationHelpers.ValidateRequired(request.Reason, nameof(request.Reason));
+        if (request.EntryType is not TimeEntryType.Job and not TimeEntryType.Travel)
+        {
+            throw new ValidationException("EntryType must be Job or Travel.");
+        }
         if (request.EndedAtUtc <= request.StartedAtUtc)
         {
             throw new ValidationException("EndedAtUtc must be after StartedAtUtc.");
@@ -828,7 +834,8 @@ public sealed record CreateManualTimeEntryRequestDto(
     decimal? HourlyRate,
     string WorkSummary,
     string Reason,
-    string? Notes);
+    string? Notes,
+    TimeEntryType EntryType = TimeEntryType.Job);
 
 public sealed record AdjustTimeEntryRequestDto(
     string Reason,

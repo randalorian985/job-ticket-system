@@ -529,6 +529,7 @@ export type CreateManualTimeEntryRequestDto = {
   workSummary: string
   reason: string
   notes?: string | null
+  entryType?: number | null
 }
 
 export type AdjustTimeEntryRequestDto = {

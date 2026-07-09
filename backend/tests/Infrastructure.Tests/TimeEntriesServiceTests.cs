@@ -281,6 +281,42 @@ public sealed class TimeEntriesServiceTests
     }
 
     [Fact]
+    public async Task Manager_can_create_manual_travel_entry_from_ticket()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedRefsAsync(context, assigned: true);
+        var service = new TimeEntriesService(context, new TestCurrentUserContext(refs.Manager.Id, JobTicketSystem.Application.Security.SystemRoles.Manager));
+        var start = new DateTime(2026, 5, 20, 12, 0, 0, DateTimeKind.Utc);
+
+        var created = await service.CreateManualAsync(new CreateManualTimeEntryRequestDto(
+            refs.JobTicket.Id,
+            refs.Employee.Id,
+            start,
+            start.AddMinutes(45),
+            0.75m,
+            0.75m,
+            null,
+            "Travel to customer site",
+            "Travel was not clocked from phone",
+            "Manager added travel from ticket",
+            TimeEntryType.Travel), refs.Manager.Id);
+
+        Assert.Equal(TimeEntryType.Travel, created.EntryType);
+        Assert.Equal(TimeEntryApprovalStatus.Approved, created.ApprovalStatus);
+        Assert.Equal(0.75m, created.LaborHours);
+
+        var entry = await context.TimeEntries.SingleAsync(x => x.Id == created.Id);
+        Assert.Equal("Manager manual travel entry", entry.ClockInDeviceMetadata);
+
+        var adjustment = await context.TimeEntryAdjustments.SingleAsync(x => x.TimeEntryId == created.Id);
+        Assert.Equal(AdjustmentType.Add, adjustment.AdjustmentType);
+        Assert.Equal(0.75m, adjustment.Hours);
+
+        var audit = await context.AuditLogs.SingleAsync(x => x.EntityId == created.Id && x.ActionType == AuditActionType.Create);
+        Assert.Contains("Travel", audit.NewValuesJson);
+    }
+
+    [Fact]
     public async Task Employee_cannot_bulk_approve_time_entries()
     {
         await using var context = CreateContext();

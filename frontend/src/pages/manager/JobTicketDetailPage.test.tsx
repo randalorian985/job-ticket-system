@@ -218,7 +218,7 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getAllByText('P-100 - Hydraulic hose').length).toBeGreaterThan(0)
   })
 
-  it('opens quick actions for notes, files, labor, and status review', async () => {
+  it('opens quick actions for notes, files, labor/travel, and status review', async () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
@@ -250,9 +250,9 @@ describe('JobTicketDetailPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     expect(screen.queryByLabelText('quick file upload panel')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add Labor / Travel' }))
     expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
-    expect(screen.getByLabelText('add labor drawer')).toHaveFocus()
+    expect(screen.getByLabelText('add labor or travel drawer')).toHaveFocus()
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
     openStatusPanel()
@@ -263,9 +263,10 @@ describe('JobTicketDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('JT-1')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Add Labor' }))
-    expect(screen.getByLabelText('add labor drawer')).toHaveFocus()
+    fireEvent.click(screen.getByRole('button', { name: 'Add Labor / Travel' }))
+    expect(screen.getByLabelText('add labor or travel drawer')).toHaveFocus()
 
+    fireEvent.change(screen.getByLabelText('Entry type'), { target: { value: '1' } })
     fireEvent.change(screen.getByLabelText('Labor employee'), { target: { value: 'e1' } })
     fireEvent.change(screen.getByLabelText('Start time'), { target: { value: '2026-04-01T11:00' } })
     fireEvent.change(screen.getByLabelText('End time'), { target: { value: '2026-04-01T12:30' } })
@@ -274,7 +275,7 @@ describe('JobTicketDetailPage', () => {
     fireEvent.change(screen.getByLabelText('Work summary'), { target: { value: 'Repaired missed labor item' } })
     fireEvent.change(screen.getByLabelText('Manager reason'), { target: { value: 'Technician forgot to clock in' } })
     fireEvent.change(screen.getByLabelText('Internal note'), { target: { value: 'Confirmed with dispatch log' } })
-    fireEvent.submit(screen.getByLabelText('add labor entry'))
+    fireEvent.submit(screen.getByLabelText('add labor or travel entry'))
 
     await waitFor(() => {
       expect(timeEntriesApi.createManual).toHaveBeenCalledWith({
@@ -287,10 +288,46 @@ describe('JobTicketDetailPage', () => {
         hourlyRate: null,
         workSummary: 'Repaired missed labor item',
         reason: 'Technician forgot to clock in',
-        notes: 'Confirmed with dispatch log'
+        notes: 'Confirmed with dispatch log',
+        entryType: 1
       })
     })
     expect(await screen.findByText('Labor entry added and approved.')).toBeInTheDocument()
+  })
+
+  it('lets Manager/Admin add missed travel from the ticket detail', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Add Labor / Travel' }))
+    fireEvent.change(screen.getByLabelText('Entry type'), { target: { value: '2' } })
+    expect(screen.getByLabelText('Work summary')).toHaveValue('Travel')
+
+    fireEvent.change(screen.getByLabelText('Labor employee'), { target: { value: 'e1' } })
+    fireEvent.change(screen.getByLabelText('Start time'), { target: { value: '2026-04-01T08:00' } })
+    fireEvent.change(screen.getByLabelText('End time'), { target: { value: '2026-04-01T08:45' } })
+    fireEvent.change(screen.getByLabelText('Labor hours'), { target: { value: '0.75' } })
+    fireEvent.change(screen.getByLabelText('Billable hours'), { target: { value: '0.75' } })
+    fireEvent.change(screen.getByLabelText('Work summary'), { target: { value: 'Travel to customer site' } })
+    fireEvent.change(screen.getByLabelText('Manager reason'), { target: { value: 'Travel was missed during clock-in' } })
+    fireEvent.submit(screen.getByLabelText('add labor or travel entry'))
+
+    await waitFor(() => {
+      expect(timeEntriesApi.createManual).toHaveBeenCalledWith({
+        jobTicketId: 'j1',
+        employeeId: 'e1',
+        startedAtUtc: new Date('2026-04-01T08:00').toISOString(),
+        endedAtUtc: new Date('2026-04-01T08:45').toISOString(),
+        laborHours: 0.75,
+        billableHours: 0.75,
+        hourlyRate: null,
+        workSummary: 'Travel to customer site',
+        reason: 'Travel was missed during clock-in',
+        notes: null,
+        entryType: 2
+      })
+    })
+    expect(await screen.findByText('Travel entry added and approved.')).toBeInTheDocument()
   })
 
   it('lets Manager/Admin edit an existing labor entry from the ticket detail', async () => {
@@ -814,9 +851,9 @@ describe('JobTicketDetailPage', () => {
     expect(screen.getByRole('tab', { name: 'Service Details' })).toHaveAttribute('aria-selected', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to ticket overview' }))
-    fireEvent.click(within(quickActions).getByRole('button', { name: 'Quick Add Labor' }))
+    fireEvent.click(within(quickActions).getByRole('button', { name: 'Quick Add Labor or Travel' }))
     expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
-    expect(screen.getByLabelText('add labor drawer')).toHaveFocus()
+    expect(screen.getByLabelText('add labor or travel drawer')).toHaveFocus()
   })
 
 })

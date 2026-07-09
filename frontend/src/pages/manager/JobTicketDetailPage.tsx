@@ -79,6 +79,14 @@ const toLocalDateTimeInput = (value?: string | null) => {
   return new Date(date.getTime() - localOffsetMilliseconds).toISOString().slice(0, 16);
 };
 
+const TIME_ENTRY_TYPE = {
+  Job: 1,
+  Travel: 2,
+} as const;
+
+const getTimeEntryTypeLabel = (entryType?: number | null) =>
+  entryType === TIME_ENTRY_TYPE.Travel ? "Travel" : "Labor";
+
 export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -117,6 +125,7 @@ export function JobTicketDetailPage() {
   const [partNeededBy, setPartNeededBy] = useState("");
   const [isSubmittingPart, setIsSubmittingPart] = useState(false);
   const [laborEntryId, setLaborEntryId] = useState<string | null>(null);
+  const [laborEntryType, setLaborEntryType] = useState(String(TIME_ENTRY_TYPE.Job));
   const [laborEmployeeId, setLaborEmployeeId] = useState("");
   const [laborStartedAt, setLaborStartedAt] = useState("");
   const [laborEndedAt, setLaborEndedAt] = useState("");
@@ -1019,6 +1028,7 @@ export function JobTicketDetailPage() {
 
   const resetLaborForm = () => {
     setLaborEntryId(null);
+    setLaborEntryType(String(TIME_ENTRY_TYPE.Job));
     setLaborEmployeeId(defaultLaborEmployeeId);
     setLaborStartedAt("");
     setLaborEndedAt("");
@@ -1037,6 +1047,7 @@ export function JobTicketDetailPage() {
 
   const startLaborEdit = (entry: TimeEntryDto) => {
     setLaborEntryId(entry.id);
+    setLaborEntryType(String(entry.entryType ?? TIME_ENTRY_TYPE.Job));
     setLaborEmployeeId(entry.employeeId);
     setLaborStartedAt(toLocalDateTimeInput(entry.startedAtUtc));
     setLaborEndedAt(toLocalDateTimeInput(entry.endedAtUtc));
@@ -1056,12 +1067,14 @@ export function JobTicketDetailPage() {
     const endedAt = laborEndedAt ? new Date(laborEndedAt) : null;
     const laborHoursValue = Number(laborHours);
     const billableHoursValue = laborBillableHours.trim() ? Number(laborBillableHours) : laborHoursValue;
+    const entryTypeValue = Number(laborEntryType);
     const reason = laborReason.trim();
     const workSummary = laborWorkSummary.trim();
     const notes = laborNotes.trim();
+    const entryTypeLabel = getTimeEntryTypeLabel(entryTypeValue);
 
     if (!laborEntryId && !laborEmployeeId) {
-      setError("Select an employee before adding labor.");
+      setError("Select an employee before adding labor or travel.");
       setMessage(null);
       return;
     }
@@ -1081,7 +1094,7 @@ export function JobTicketDetailPage() {
       return;
     }
     if (!Number.isFinite(laborHoursValue) || laborHoursValue <= 0) {
-      setError("Labor hours must be greater than zero.");
+      setError(`${entryTypeLabel} hours must be greater than zero.`);
       setMessage(null);
       return;
     }
@@ -1090,8 +1103,13 @@ export function JobTicketDetailPage() {
       setMessage(null);
       return;
     }
+    if (!laborEntryId && entryTypeValue !== TIME_ENTRY_TYPE.Job && entryTypeValue !== TIME_ENTRY_TYPE.Travel) {
+      setError("Select whether this entry is labor or travel.");
+      setMessage(null);
+      return;
+    }
     if (!laborEntryId && !workSummary) {
-      setError("Work summary is required for manual labor.");
+      setError("Work summary is required for manual labor or travel.");
       setMessage(null);
       return;
     }
@@ -1127,8 +1145,9 @@ export function JobTicketDetailPage() {
           workSummary,
           reason,
           notes: notes || null,
+          entryType: entryTypeValue,
         });
-        setMessage("Labor entry added and approved.");
+        setMessage(entryTypeValue === TIME_ENTRY_TYPE.Travel ? "Travel entry added and approved." : "Labor entry added and approved.");
       }
       resetLaborForm();
       setActiveDrawer(null);
@@ -1139,7 +1158,7 @@ export function JobTicketDetailPage() {
           ? requestError.message
           : laborEntryId
             ? "Unable to update labor entry."
-            : "Unable to add labor entry.",
+            : "Unable to add time entry.",
       );
     } finally {
       setIsSubmittingLabor(false);
@@ -1744,7 +1763,7 @@ export function JobTicketDetailPage() {
                     <h3>Labor &amp; Time Entries</h3>
                     <p className="muted">Labor totals, time approvals, and work notes.</p>
                   </div>
-                  <button type="button" className="secondary-button no-print" onClick={startLaborCreate}>Add Labor</button>
+                  <button type="button" className="secondary-button no-print" onClick={startLaborCreate}>Add Labor / Travel</button>
                   <span className="status-chip">{timeEntries.length} time entries</span>
                 </div>
                 <div className="fact-grid">
@@ -1774,20 +1793,36 @@ export function JobTicketDetailPage() {
                   </div>
                 </div>
                 {activeDrawer === "labor" ? (
-                  <section id="ticket-workbench-drawer-labor" className="workbench-drawer no-print" aria-label={laborEntryId ? "edit labor drawer" : "add labor drawer"} tabIndex={-1}>
+                  <section id="ticket-workbench-drawer-labor" className="workbench-drawer no-print" aria-label={laborEntryId ? "edit labor drawer" : "add labor or travel drawer"} tabIndex={-1}>
                     <div className="workbench-panel-heading">
                       <div>
-                        <h4>{laborEntryId ? "Edit Labor" : "Add Labor"}</h4>
+                        <h4>{laborEntryId ? `Edit ${getTimeEntryTypeLabel(Number(laborEntryType))}` : "Add Labor / Travel"}</h4>
                         <p className="muted">
                           {laborEntryId
                             ? "Correct start, end, labor, or billable hours with a manager reason."
-                            : "Add missed technician labor directly from this ticket."}
+                            : "Add missed technician labor or travel directly from this ticket."}
                         </p>
                       </div>
                       <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
                     </div>
-                    <form onSubmit={onSubmitLabor} className="stack" aria-label={laborEntryId ? "edit labor entry" : "add labor entry"}>
+                    <form onSubmit={onSubmitLabor} className="stack" aria-label={laborEntryId ? "edit labor entry" : "add labor or travel entry"}>
                       <div className="form-grid">
+                        <label className="stack">
+                          Entry type
+                          <select
+                            value={laborEntryType}
+                            onChange={(event) => {
+                              setLaborEntryType(event.target.value);
+                              if (Number(event.target.value) === TIME_ENTRY_TYPE.Travel && !laborWorkSummary.trim()) {
+                                setLaborWorkSummary("Travel");
+                              }
+                            }}
+                            disabled={Boolean(laborEntryId)}
+                          >
+                            <option value={TIME_ENTRY_TYPE.Job}>Labor</option>
+                            <option value={TIME_ENTRY_TYPE.Travel}>Travel</option>
+                          </select>
+                        </label>
                         <label className="stack">
                           Labor employee
                           <select
@@ -1847,7 +1882,7 @@ export function JobTicketDetailPage() {
                       )}
                       <label className="stack">
                         Manager reason
-                        <textarea value={laborReason} onChange={(event) => setLaborReason(event.target.value)} placeholder={laborEntryId ? "Corrected missed lunch, wrong end time, or billable hours." : "Technician missed clock-in, phone unavailable, or manager-entered correction."} />
+                        <textarea value={laborReason} onChange={(event) => setLaborReason(event.target.value)} placeholder={laborEntryId ? "Corrected missed lunch, wrong end time, or billable hours." : "Technician missed clock-in, travel not captured, phone unavailable, or manager-entered correction."} />
                       </label>
                       <label className="stack">
                         Internal note
@@ -1855,8 +1890,8 @@ export function JobTicketDetailPage() {
                       </label>
                       <button type="submit" disabled={isSubmittingLabor}>
                         {isSubmittingLabor
-                          ? laborEntryId ? "Saving labor..." : "Adding labor..."
-                          : laborEntryId ? "Save Labor Edit" : "Add Labor Entry"}
+                          ? laborEntryId ? "Saving entry..." : "Adding entry..."
+                          : laborEntryId ? "Save Time Edit" : "Add Time Entry"}
                       </button>
                     </form>
                   </section>
@@ -1888,7 +1923,7 @@ export function JobTicketDetailPage() {
                             <div>
                               <strong>{getEmployeeNameById(item.employeeId)}</strong>
                               <span>
-                                {formatHours(item.laborHours)} labor / {formatHours(item.billableHours)} billable - {getApprovalLabel(item.approvalStatus)}
+                                {getTimeEntryTypeLabel(item.entryType)} - {formatHours(item.laborHours)} labor / {formatHours(item.billableHours)} billable - {getApprovalLabel(item.approvalStatus)}
                                 {item.workSummary ? ` - ${item.workSummary}` : ""}
                               </span>
                             </div>
