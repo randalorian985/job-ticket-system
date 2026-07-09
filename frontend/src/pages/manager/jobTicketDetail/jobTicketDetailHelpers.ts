@@ -78,6 +78,21 @@ export const workflowTabs: WorkflowTabDefinition[] = [
 export const isWorkflowTab = (value: string | null): value is WorkflowTab =>
   workflowTabs.some((tab) => tab.value === value);
 
+const workbenchDrawers = ["ticket", "status", "archive", "part", "labor", "note", "photo"] as const;
+
+export const isWorkbenchDrawer = (value: string | null): value is Exclude<WorkbenchDrawer, null> =>
+  workbenchDrawers.some((drawer) => drawer === value);
+
+export const workbenchDrawerTabs: Record<Exclude<WorkbenchDrawer, null>, WorkflowTab> = {
+  ticket: "overview",
+  status: "overview",
+  archive: "overview",
+  part: "parts",
+  labor: "time",
+  note: "activity",
+  photo: "files",
+};
+
 export const primaryWorkflowPanelNames: Record<WorkflowTab, string> = {
   overview: "ticket-overview",
   dispatch: "assignments",

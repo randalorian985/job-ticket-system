@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { filesApi } from '../../api/filesApi'
 import { ApiError } from '../../api/httpClient'
@@ -21,6 +21,11 @@ vi.mock('../../api/partRequestsApi', () => ({ partRequestsApi: { createForJobTic
 vi.mock('../../api/jobTicketsApi', () => ({ jobTicketsApi: { get: vi.fn(), listAssignments: vi.fn(), listWorkEntries: vi.fn(), listParts: vi.fn(), changeStatus: vi.fn(), archive: vi.fn(), addAssignment: vi.fn(), removeAssignment: vi.fn(), update: vi.fn(), addWorkEntry: vi.fn(), getTimeline: vi.fn() } }))
 vi.mock('../../api/masterDataApi', () => ({ masterDataApi: { listCustomers: vi.fn(), listServiceLocations: vi.fn(), listEquipment: vi.fn(), listParts: vi.fn() } }))
 vi.mock('../../api/reportsApi', () => ({ reportsApi: { getInvoiceReadySummary: vi.fn(), getEquipmentHistory: vi.fn() } }))
+
+function LocationProbe() {
+  const location = useLocation()
+  return <span data-testid="current-location">{location.pathname}{location.search}</span>
+}
 
 describe('JobTicketDetailPage', () => {
   const setupBaseMocks = () => {
@@ -146,7 +151,12 @@ describe('JobTicketDetailPage', () => {
   })
 
   const renderPage = (initialEntry = '/manage/job-tickets/j1') => {
-    render(<MemoryRouter future={routerFuture} initialEntries={[initialEntry]}><Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes></MemoryRouter>)
+    render(
+      <MemoryRouter future={routerFuture} initialEntries={[initialEntry]}>
+        <LocationProbe />
+        <Routes><Route path="/manage/job-tickets/:jobTicketId" element={<JobTicketDetailPage />} /></Routes>
+      </MemoryRouter>
+    )
   }
 
   const renderedPageText = () => document.body.textContent?.replace(/\s+/g, ' ') ?? ''
@@ -854,6 +864,34 @@ describe('JobTicketDetailPage', () => {
     fireEvent.click(within(quickActions).getByRole('button', { name: 'Quick Add Labor or Travel' }))
     expect(screen.getByRole('tabpanel', { name: 'Labor' })).toBeInTheDocument()
     expect(screen.getByLabelText('add labor or travel drawer')).toHaveFocus()
+  })
+
+  it('keeps ticket drawers anchored to the current ticket URL', async () => {
+    renderPage()
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit Ticket' })[0])
+    expect(screen.getByLabelText('ticket editor panel')).toHaveFocus()
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/manage/job-tickets/j1')
+    expect(screen.getByTestId('current-location')).toHaveTextContent('drawer=ticket')
+
+    fireEvent.click(within(screen.getByLabelText('ticket editor panel')).getByRole('button', { name: 'Close' }))
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/manage/job-tickets/j1')
+    expect(screen.getByTestId('current-location')).not.toHaveTextContent('drawer=')
+    expect(screen.getByRole('button', { name: 'Back to ticket overview' })).toBeInTheDocument()
+  })
+
+  it('restores a ticket drawer from the URL without returning to the ticket listing', async () => {
+    renderPage('/manage/job-tickets/j1?drawer=labor')
+
+    expect(await screen.findByText('JT-1')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByLabelText('add labor or travel drawer')).toBeInTheDocument())
+    expect(screen.getByRole('tab', { name: 'Labor' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/manage/job-tickets/j1')
+    expect(screen.getByTestId('current-location')).toHaveTextContent('tab=time')
+    expect(screen.getByTestId('current-location')).toHaveTextContent('view=workflow')
+    expect(screen.getByTestId('current-location')).toHaveTextContent('drawer=labor')
   })
 
 })

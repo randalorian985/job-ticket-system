@@ -59,9 +59,11 @@ import {
   getPartRequestLabel,
   getPartReviewLabel,
   isWorkflowTab,
+  isWorkbenchDrawer,
   numberFormatter,
   primaryWorkflowPanelNames,
   sortActivityDescending,
+  workbenchDrawerTabs,
   workflowTabs,
   type ActivityItem,
   type WorkbenchDrawer,
@@ -91,6 +93,7 @@ export function JobTicketDetailPage() {
   const { jobTicketId } = useParams<{ jobTicketId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
+  const requestedDrawer = searchParams.get("drawer");
   const activeTab: WorkflowTab = isWorkflowTab(requestedTab) ? requestedTab : "overview";
   const workflowFocusMode = searchParams.get("view") === "workflow";
   const { returnTo, returnLabel } = getSafeManagerReturnContext(searchParams);
@@ -666,6 +669,39 @@ export function JobTicketDetailPage() {
   }, [jobTicketId]);
 
   useEffect(() => {
+    if (!requestedDrawer) {
+      setActiveDrawer(null);
+      return;
+    }
+
+    if (!isWorkbenchDrawer(requestedDrawer)) {
+      setActiveDrawer(null);
+      setSearchParams((currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        nextParams.delete("drawer");
+        return nextParams;
+      }, { replace: true });
+      return;
+    }
+
+    setActiveDrawer(requestedDrawer);
+    const drawerTab = workbenchDrawerTabs[requestedDrawer];
+    if (activeTab !== drawerTab || !workflowFocusMode) {
+      setSearchParams((currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        if (drawerTab === "overview") {
+          nextParams.delete("tab");
+        } else {
+          nextParams.set("tab", drawerTab);
+        }
+        nextParams.set("view", "workflow");
+        nextParams.set("drawer", requestedDrawer);
+        return nextParams;
+      }, { replace: true });
+    }
+  }, [activeTab, requestedDrawer, setSearchParams, workflowFocusMode]);
+
+  useEffect(() => {
     const equipmentId = job?.equipmentId;
     if (!equipmentId) {
       setEquipmentServiceHistory([]);
@@ -678,10 +714,39 @@ export function JobTicketDetailPage() {
       .finally(() => setIsLoadingEquipmentHistory(false));
   }, [job?.equipmentId]);
 
-  const toggleDrawer = (drawer: WorkbenchDrawer) => {
-    setActiveDrawer((current) => (current === drawer ? null : drawer));
+  const closeDrawer = () => {
+    setActiveDrawer(null);
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.delete("drawer");
+      return nextParams;
+    }, { replace: true });
+  };
+
+  const openDrawerOnTab = (tab: WorkflowTab, drawer: Exclude<WorkbenchDrawer, null>) => {
+    setActiveDrawer(drawer);
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      if (tab === "overview") {
+        nextParams.delete("tab");
+      } else {
+        nextParams.set("tab", tab);
+      }
+      nextParams.set("view", "workflow");
+      nextParams.set("drawer", drawer);
+      return nextParams;
+    });
     setError(null);
     setMessage(null);
+  };
+
+  const toggleDrawer = (drawer: Exclude<WorkbenchDrawer, null>) => {
+    if (activeDrawer === drawer) {
+      closeDrawer();
+      return;
+    }
+
+    openDrawerOnTab(workbenchDrawerTabs[drawer], drawer);
   };
 
   const onStatusChange = async (event: FormEvent) => {
@@ -699,7 +764,7 @@ export function JobTicketDetailPage() {
       });
       setError(null);
       setMessage("Status updated.");
-      setActiveDrawer(null);
+      closeDrawer();
       await load();
     } catch (requestError) {
       setError(
@@ -735,7 +800,7 @@ export function JobTicketDetailPage() {
       setMessage("Ticket archived.");
       setArchiveConfirmationOpen(false);
       setArchiveReason("");
-      setActiveDrawer(null);
+      closeDrawer();
       await load();
     } catch (requestError) {
       setError(
@@ -892,7 +957,7 @@ export function JobTicketDetailPage() {
         performedAtUtc: new Date().toISOString(),
       });
       setQuickNote("");
-      setActiveDrawer(null);
+      closeDrawer();
       setMessage("Note added to the ticket history.");
       await load();
     } catch (requestError) {
@@ -934,7 +999,7 @@ export function JobTicketDetailPage() {
       setQuickUploadFile(null);
       setQuickUploadCaption("");
       setQuickUploadForInvoice(false);
-      setActiveDrawer(null);
+      closeDrawer();
       setMessage("Photo/file uploaded.");
       await load();
     } catch (requestError) {
@@ -987,6 +1052,7 @@ export function JobTicketDetailPage() {
       }
       if (focusWorkflow) {
         nextParams.set("view", "workflow");
+        nextParams.delete("drawer");
       }
       return nextParams;
     }, { replace: true });
@@ -999,6 +1065,7 @@ export function JobTicketDetailPage() {
       if (tab === "overview") nextParams.delete("tab");
       else nextParams.set("tab", tab);
       nextParams.set("view", "workflow");
+      nextParams.delete("drawer");
       return nextParams;
     });
   };
@@ -1008,22 +1075,22 @@ export function JobTicketDetailPage() {
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams);
       nextParams.delete("view");
+      nextParams.delete("drawer");
       return nextParams;
     });
   };
 
   const openWorkflowDrawer = (tab: WorkflowTab, drawer: Exclude<WorkbenchDrawer, null>) => {
-    if (activeDrawer !== drawer) {
-      selectWorkflowTab(tab, true);
+    if (activeDrawer === drawer) {
+      closeDrawer();
+      return;
     }
-    toggleDrawer(drawer);
+
+    openDrawerOnTab(tab, drawer);
   };
 
   const openLaborDrawer = () => {
-    selectWorkflowTab("time", true);
-    setActiveDrawer("labor");
-    setError(null);
-    setMessage(null);
+    openDrawerOnTab("time", "labor");
   };
 
   const resetLaborForm = () => {
@@ -1150,7 +1217,7 @@ export function JobTicketDetailPage() {
         setMessage(entryTypeValue === TIME_ENTRY_TYPE.Travel ? "Travel entry added and approved." : "Labor entry added and approved.");
       }
       resetLaborForm();
-      setActiveDrawer(null);
+      closeDrawer();
       await load();
     } catch (requestError) {
       setError(
@@ -1236,7 +1303,7 @@ export function JobTicketDetailPage() {
   useEffect(() => {
     if (!activeDrawer) return;
     document.getElementById(`ticket-workbench-drawer-${activeDrawer}`)?.focus();
-  }, [activeDrawer]);
+  }, [activeDrawer, activeTab, workflowFocusMode]);
 
   if (!canShow) return <section className="card">Missing job id.</section>;
 
@@ -1307,7 +1374,7 @@ export function JobTicketDetailPage() {
                       <h3>Edit Ticket</h3>
                       <p className="muted">Customer, service location, equipment, scope, billing information, dates, status, and priority.</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
                   </div>
                   <JobTicketEditorForm
                     initial={editPayload}
@@ -1323,7 +1390,7 @@ export function JobTicketDetailPage() {
 
                       try {
                         await jobTicketsApi.update(jobTicketId, payload);
-                        setActiveDrawer(null);
+                        closeDrawer();
                         setError(null);
                         setMessage("Ticket updated.");
                         await load();
@@ -1347,7 +1414,7 @@ export function JobTicketDetailPage() {
                       <h3>Add Note</h3>
                       <p className="muted">Save a Manager/Admin work note to the ticket history without opening the full editor.</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
                   </div>
                   <form className="stack" onSubmit={onAddQuickNote}>
                     <label>Ticket Note
@@ -1360,7 +1427,7 @@ export function JobTicketDetailPage() {
                     </label>
                     <div className="row">
                       <button type="submit" disabled={isSavingQuickNote}>{isSavingQuickNote ? "Saving note..." : "Save Note"}</button>
-                      <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Cancel</button>
+                      <button type="button" className="secondary-button" onClick={closeDrawer}>Cancel</button>
                     </div>
                   </form>
                 </section>
@@ -1373,7 +1440,7 @@ export function JobTicketDetailPage() {
                       <h3>Add File</h3>
                       <p className="muted">Upload a job photo, PDF, or closeout attachment from the ticket workspace.</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
                   </div>
                   <form className="stack" onSubmit={onUploadQuickFile}>
                     <label>Photo or File
@@ -1401,7 +1468,7 @@ export function JobTicketDetailPage() {
                     </label>
                     <div className="row">
                       <button type="submit" disabled={isUploadingQuickFile}>{isUploadingQuickFile ? "Uploading..." : "Upload File"}</button>
-                      <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Cancel</button>
+                      <button type="button" className="secondary-button" onClick={closeDrawer}>Cancel</button>
                     </div>
                     <p className="muted">Allowed file types: JPG, PNG, WebP, or PDF.</p>
                   </form>
@@ -1415,7 +1482,7 @@ export function JobTicketDetailPage() {
                       <h3>Status Review</h3>
                       <p className="muted">{statusReview.summary}</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
                   </div>
                   <div className="fact-grid">
                     <div>
@@ -1466,7 +1533,7 @@ export function JobTicketDetailPage() {
                       <h3>Archive Review</h3>
                       <p className="muted">Archive keeps this ticket available for reporting and history. It does not hard delete the record.</p>
                     </div>
-                    <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                    <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
                   </div>
                   {archiveReviewWarnings.length ? (
                     <ul className="muted" aria-label="archive review warnings">
@@ -1803,7 +1870,7 @@ export function JobTicketDetailPage() {
                             : "Add missed technician labor or travel directly from this ticket."}
                         </p>
                       </div>
-                      <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                      <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
                     </div>
                     <form onSubmit={onSubmitLabor} className="stack" aria-label={laborEntryId ? "edit labor entry" : "add labor or travel entry"}>
                       <div className="form-grid">
@@ -1976,7 +2043,7 @@ export function JobTicketDetailPage() {
                         <h4>Add / Request Part</h4>
                         <p className="muted">Existing catalog match or typed unlisted part, quantity, notes, and Needs ordered routing.</p>
                       </div>
-                      <button type="button" className="secondary-button" onClick={() => setActiveDrawer(null)}>Close</button>
+                      <button type="button" className="secondary-button" onClick={closeDrawer}>Close</button>
                     </div>
                     <form onSubmit={onSubmitPart} className="stack" aria-label="add or request ticket part">
                       <label className="stack">
