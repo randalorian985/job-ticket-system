@@ -2714,7 +2714,7 @@ td {
 .ticket-workbench-hero {
   display: grid;
   gap: 1rem;
-  overflow: hidden;
+  overflow: visible;
   padding: 1rem;
 }
 
@@ -2744,6 +2744,16 @@ td {
 .ticket-workbench-rail .button-link,
 .compact-button {
   width: auto;
+}
+
+.ticket-workbench-command-bar .control-tooltip {
+  left: 0;
+  right: auto;
+}
+
+.ticket-workbench-command-bar .control-tooltip::after {
+  left: 1.1rem;
+  right: auto;
 }
 
 .ticket-workbench-hero-meta,
