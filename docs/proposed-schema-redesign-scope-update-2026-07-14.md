@@ -1,4 +1,4 @@
-# Proposed Schema Redesign Scope Update
+# Proposed Schema Redesign And Installable React App Scope Update
 
 Date: 2026-07-14
 
@@ -6,11 +6,11 @@ Status: Proposed - awaiting steering review and explicit approval
 
 ## Purpose
 
-This document proposes a foundational correction to the customer, equipment, parts, contact, address, notes, service-history, and employee-rate model.
+This document proposes a foundational correction to the customer, equipment, parts, contact, address, notes, service-history, and employee-rate model. It also adds an installable React Progressive Web App (PWA) delivery track for the existing frontend.
 
 The proposal responds to a core business requirement: reusable equipment and parts knowledge must be recorded once and shared across matching equipment, while the service and replacement history for each physical customer-owned unit must remain separate.
 
-This is a scope and architecture proposal only. It does not approve migrations, API changes, UI implementation, automatic compatibility decisions, recommendation scoring, purchasing expansion, inventory expansion, or any other deferred workflow.
+This is a scope and architecture proposal only. It does not approve migrations, API changes, UI or PWA implementation, automatic compatibility decisions, recommendation scoring, purchasing expansion, inventory expansion, or any other deferred workflow.
 
 ## Business Problem
 
@@ -34,6 +34,8 @@ The target architecture separates three kinds of information:
 1. Shared catalog knowledge: what an equipment model or configuration is and which parts fit it.
 2. Customer asset information: which exact physical unit a customer owns or operates.
 3. Historical service facts: what work was performed and which part was installed, removed, or replaced on that exact unit.
+
+The delivery architecture keeps the existing responsive React and Vite frontend as one browser application and makes it installable as a PWA. This does not introduce a separate React Native codebase.
 
 ```mermaid
 erDiagram
@@ -266,6 +268,61 @@ If a ticket can service multiple assets, introduce `JobTicketEquipment`, identif
 
 This decision must be made before the installation-history phase because it changes relationship cardinality and API contracts.
 
+## Installable React PWA Scope
+
+### Product boundary
+
+The current React and Vite frontend should become a Progressive Web App that supported browsers can install directly. The installed application should launch in a standalone window, retain the same URLs, APIs, roles, and responsive workflows as the browser version, and continue to use one shared frontend codebase.
+
+The initial PWA is online-first. Installation must not be presented as a promise that all job-ticket workflows work without a network connection.
+
+The initial PWA scope includes:
+
+- A standards-based web app manifest with application name, short name, theme colors, start URL, scope, and standalone display mode.
+- Purpose-built application icons, including required 192-pixel, 512-pixel, and maskable variants.
+- A production service worker generated through the Vite build using a maintained PWA and Workbox integration.
+- Pre-caching for versioned application-shell assets required to start the UI.
+- A controlled update flow that tells the user when a new version is ready and avoids reloading during an active edit.
+- Installability from supported desktop and mobile browsers, with platform-appropriate guidance where no programmatic install prompt is available.
+- Standalone launch, navigation, authentication, logout, responsive layout, and existing browser capabilities such as geolocation.
+- HTTPS deployment, except for browser-recognized local development origins.
+- Deployment configuration for SPA fallback routes, manifest and icon delivery, and service-worker cache headers.
+
+### Offline and data-safety boundary
+
+The service worker must not cache authenticated API responses, JWTs, customer records, tickets, attachments, reports, or other business data by default. Static application-shell caching and browser storage already used by the application must be reviewed separately from server-data caching.
+
+When the device is offline, the initial release should:
+
+- Open the installed application shell when it is already cached.
+- Clearly identify that current server data and write operations are unavailable.
+- Preserve only already-approved local draft behavior.
+- Prevent duplicate submissions and avoid implying that an unsent change reached the server.
+- Resume normal API behavior after connectivity returns without silently replaying writes.
+
+Full offline ticket access, mutation queues, background synchronization, conflict resolution, encrypted device storage, attachment capture queues, and push notifications require a separate approved scope and threat model.
+
+### Security and lifecycle controls
+
+- Continue to enforce authorization on the API; installation never grants access or weakens role checks.
+- Remove application-managed credentials and sensitive local drafts on logout according to the approved retention policy.
+- Define behavior for expired sessions while the installed shell is open or the device reconnects.
+- Version caches and remove obsolete application-shell assets during service-worker activation.
+- Make update recovery possible if a bad service worker or incompatible cached shell is deployed.
+- Document browser and operating-system support without promising identical install prompts on every platform.
+
+### PWA verification
+
+Verification must use a production build because development-mode service-worker behavior is intentionally different. Required checks include:
+
+- Manifest and icon validation.
+- Service-worker registration, cache versioning, update activation, and rollback behavior.
+- Browser installability checks on the supported desktop and mobile matrix.
+- Playwright coverage for standalone-safe routing, offline messaging, and update prompts where browser automation permits it.
+- Manual launch checks from an installed desktop or home-screen application.
+- Confirmation that protected API responses and credentials are absent from Cache Storage.
+- Existing frontend build, unit tests, responsive visual checks, and authentication tests.
+
 ## Phased Implementation Plan
 
 ### Phase 0: Approve the domain contract
@@ -276,6 +333,7 @@ Goal: settle terminology and cardinality before implementation.
 - Approve ownership, archive, visibility, verification, and snapshot rules.
 - Resolve the one-asset versus multiple-assets-per-ticket question.
 - Resolve rate ownership and pricing semantics.
+- Approve the PWA platform matrix, online-first boundary, install experience, and update policy.
 - Align the project scope, database design, API contract, roadmap, and system wiki.
 
 Exit gate: steering explicitly approves the model and the first implementation slice.
@@ -362,7 +420,7 @@ Goal: answer historical pay, cost, and billing questions accurately.
 
 Exit gate: a rate change affects future calculations without changing any prior entry or report.
 
-### Phase 8: Transition APIs and UI
+### Phase 8: Transition APIs and React UI
 
 Goal: expose corrected concepts while maintaining operating continuity.
 
@@ -374,7 +432,22 @@ Goal: expose corrected concepts while maintaining operating continuity.
 
 Exit gate: existing workflows run through compatibility contracts while new screens use target contracts.
 
-### Phase 9: Cut over and clean up
+### Phase 9: Deliver the installable React PWA
+
+Goal: make the existing React application safely installable from supported browsers.
+
+- Add the manifest, branded icons, Vite PWA integration, and production service-worker registration.
+- Cache only versioned application-shell assets in the initial release.
+- Add install handling, offline state messaging, and controlled update activation.
+- Configure HTTPS hosting, SPA fallbacks, and cache headers for the manifest and service worker.
+- Validate installed launch, routing, authentication, logout cleanup, responsive layouts, updates, and recovery.
+- Document supported platforms and the online-first limitation in the system wiki and runbooks.
+
+Exit gate: the production build passes installability checks, launches in standalone mode, updates predictably, and stores no protected API response in Cache Storage.
+
+This phase may be implemented independently of Phases 2 through 7 after Phase 0 approval, provided it does not change or preempt the approved domain contracts.
+
+### Phase 10: Cut over and clean up
 
 Goal: remove obsolete structures only after successful reconciliation and a stable release.
 
@@ -401,6 +474,8 @@ The following controls apply to every approved implementation phase:
 | Forward migrations only | Do not modify historical EF Core migrations; add one scoped forward migration per approved schema phase. |
 | Compatibility window | Existing API consumers remain supported until all known callers transition. |
 | Reconcile every phase | Compare row counts, nulls, foreign keys, duplicates, totals, and representative business scenarios. |
+| Cache only approved resources | The initial service worker may cache versioned static assets but not authenticated API responses or credentials. |
+| Controlled client updates | A new frontend version must not force a reload while a user is editing or submitting work. |
 
 ## Decisions Required Before Implementation
 
@@ -413,6 +488,15 @@ The following controls apply to every approved implementation phase:
 | Notes visibility | Use explicit internal, technician, and customer-facing visibility plus `ShowOnWorkOrder`. |
 | Historical snapshot point | Snapshot selected business-document context at closeout or invoice-ready transition. |
 | Fitment verification authority | Restrict verification to Manager/Admin and retain evidence, verifier, and audit data. |
+| Installable application model | Use one React/Vite PWA codebase; do not create a separate React Native application. |
+| Initial offline behavior | Remain online-first and do not queue or replay writes until conflict and security rules are approved. |
+| PWA update policy | Notify users of an available version and activate it at a safe reload point. |
+
+## Planning Estimate Impact
+
+Adding the installable PWA track is expected to add approximately 50,000 to 90,000 implementation-assistant tokens for architecture review, icons and manifest work, service-worker behavior, update and offline states, deployment changes, tests, and documentation.
+
+The revised planning range for the complete schema redesign and PWA program is approximately 550,000 to 890,000 implementation-assistant tokens. This is a planning range rather than a billing guarantee; actual billed usage depends on model choice, reasoning effort, context reuse, test failures, migration findings, and steering changes.
 
 ## Acceptance Criteria
 
@@ -426,6 +510,10 @@ The redesign is complete only when:
 - Historical time entries retain correct pay, cost, and billing snapshots after a rate change.
 - Changing a current contact or address does not rewrite a historical work order or invoice.
 - Existing tickets, reports, authorization, soft deletion, explicit enum values, and technician-safe boundaries remain intact.
+- Supported browsers can install the production React application and launch it in standalone mode.
+- The installed application preserves the same authentication, authorization, route, and responsive-workflow behavior as the browser application.
+- A newly deployed frontend version is offered through a controlled update flow and does not interrupt an active edit.
+- Offline state is explicit, unsent work is never represented as saved, and authenticated API responses and credentials are absent from Cache Storage.
 - Backend build, frontend build, focused tests, integration tests, migration reconciliation, backup, and rollback rehearsal pass.
 - The public `/health` endpoint remains available.
 
@@ -442,6 +530,7 @@ This proposal must preserve:
 - Soft-delete and archive behavior.
 - Explicit backend enum numeric values.
 - Historical ticket-part and time-entry snapshots.
+- The existing React and Vite frontend codebase and responsive role-based workflows.
 - The public `/health` endpoint.
 
 ## Explicitly Not Approved By This Proposal
@@ -456,6 +545,9 @@ This document does not approve:
 - Purchasing, receiving, vendor-invoice, landed-cost, or inventory expansion.
 - Customer portal or customer self-service.
 - Payment collection.
+- A separate React Native application or app-store packaging.
+- Full offline business-data access, background write synchronization, or automatic conflict resolution.
+- Push notifications or other native-device integrations beyond currently approved browser capabilities.
 - Hard deletes.
 - Authorization weakening.
 - Backend enum renumbering.
@@ -480,3 +572,6 @@ This proposal was prepared from the current local repository model and steering 
 - `docs/api-contract.md`
 - `docs/build-roadmap.md`
 - `docs/system-wiki.md`
+- `frontend/package.json`
+- `frontend/vite.config.ts`
+- `frontend/src/api/httpClient.ts`
