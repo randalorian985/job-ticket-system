@@ -43,6 +43,7 @@ TestResults/
 *.tmp
 .codex-remote-attachments/
 backups/
+/output/
 docker-compose.override.yml.bak
 
 # TypeScript
