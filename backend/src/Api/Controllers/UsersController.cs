@@ -9,6 +9,8 @@ namespace JobTicketSystem.Api.Controllers;
 [Route("api/users")]
 public sealed class UsersController(IUsersService usersService) : ControllerBase
 {
+    private const string GetUserByIdRouteName = "GetUserById";
+
     [HttpGet]
     [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<IReadOnlyList<UserDto>>> ListAsync(CancellationToken cancellationToken = default)
@@ -19,7 +21,7 @@ public sealed class UsersController(IUsersService usersService) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AssignableEmployeeDto>>> ListAssignableEmployeesAsync(CancellationToken cancellationToken = default)
         => Ok(await usersService.ListAssignableEmployeesAsync(cancellationToken));
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:guid}", Name = GetUserByIdRouteName)]
     [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<UserDto>> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -34,7 +36,7 @@ public sealed class UsersController(IUsersService usersService) : ControllerBase
         try
         {
             var created = await usersService.CreateAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetAsync), new { id = created.Id }, created);
+            return CreatedAtRoute(GetUserByIdRouteName, new { id = created.Id }, created);
         }
         catch (Exception ex) when (ex is ValidationException)
         {

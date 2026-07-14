@@ -11,6 +11,8 @@ namespace JobTicketSystem.Api.Controllers;
 [Authorize(Policy = "EmployeeOrAbove")]
 public sealed class PartRequestsController(IPartRequestsService service) : ControllerBase
 {
+    private const string GetPartRequestByIdRouteName = "GetPartRequestById";
+
     [HttpPost("job-ticket/{jobTicketId:guid}")]
     [Authorize(Policy = "AssignedEmployeeOrManager")]
     public async Task<ActionResult<PartRequestDto>> CreateForJobTicketAsync(Guid jobTicketId, [FromBody] CreatePartRequestDto request, CancellationToken cancellationToken = default)
@@ -18,7 +20,7 @@ public sealed class PartRequestsController(IPartRequestsService service) : Contr
         try
         {
             var created = await service.CreateForJobTicketAsync(jobTicketId, request, cancellationToken);
-            return CreatedAtAction(nameof(GetAsync), new { id = created.Id }, created);
+            return CreatedAtRoute(GetPartRequestByIdRouteName, new { id = created.Id }, created);
         }
         catch (Exception exception)
         {
@@ -44,7 +46,7 @@ public sealed class PartRequestsController(IPartRequestsService service) : Contr
         }
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:guid}", Name = GetPartRequestByIdRouteName)]
     [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<ActionResult<PartRequestDto>> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {

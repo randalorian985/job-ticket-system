@@ -187,6 +187,7 @@ Job-ticket list and detail responses keep relationship IDs for API operations an
 - `equipmentId` identifies the customer's crane/equipment being serviced on the job ticket. It is not a dispatched crane assignment. Employee assignments remain separate job-ticket assignment records.
 - Employee and Manager/Admin screens display readable labels instead of exposing customer, service-location, equipment, or employee GUIDs.
 - Job-ticket display authorization, existing enum values, and write request DTOs are unchanged. The list response still includes the optional service-equipment ID needed to preserve the customer's crane/equipment selection on the ticket.
+- Job-ticket create/update validates user-entered text before persistence: `title` 200 characters, `description` 4,000, `jobType` 100, `purchaseOrderNumber` 100, billing contact name 200, billing contact phone 50, billing contact email 320, `internalNotes` 4,000, and `customerFacingNotes` 4,000.
 - For Employee users, `GET /api/job-tickets` returns assigned tickets except fully closed statuses (`Completed`, `Cancelled`, `Invoiced`, and `Reviewed`). Manager/Admin list views still return those tickets unless a filter excludes them.
 
 ## Scheduling Module

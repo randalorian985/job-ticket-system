@@ -1230,19 +1230,19 @@ export const JobTicketEditorForm = forwardRef<JobTicketEditorFormHandle, Props>(
                 <label>Gate Code<input value={serviceLocationDraft.gateCode} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, gateCode: e.target.value }))} /></label>
                 <label>
                   Access Instructions
-                  <textarea rows={2} maxLength={2000} value={serviceLocationDraft.accessInstructions} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, accessInstructions: e.target.value }))} />
+                  <textarea aria-label="Access Instructions" rows={2} maxLength={2000} value={serviceLocationDraft.accessInstructions} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, accessInstructions: e.target.value }))} />
+                  <span aria-hidden="true" className={`field-char-count${serviceLocationDraft.accessInstructions.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.accessInstructions.length} / 2,000</span>
                 </label>
-                <span className={`field-char-count${serviceLocationDraft.accessInstructions.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.accessInstructions.length} / 2,000</span>
                 <label>
                   Safety Requirements
-                  <textarea rows={2} maxLength={2000} value={serviceLocationDraft.safetyRequirements} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, safetyRequirements: e.target.value }))} />
+                  <textarea aria-label="Safety Requirements" rows={2} maxLength={2000} value={serviceLocationDraft.safetyRequirements} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, safetyRequirements: e.target.value }))} />
+                  <span aria-hidden="true" className={`field-char-count${serviceLocationDraft.safetyRequirements.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.safetyRequirements.length} / 2,000</span>
                 </label>
-                <span className={`field-char-count${serviceLocationDraft.safetyRequirements.length > 1800 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.safetyRequirements.length} / 2,000</span>
                 <label>
                   Site Notes
-                  <textarea rows={3} maxLength={4000} value={serviceLocationDraft.siteNotes} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, siteNotes: e.target.value }))} />
+                  <textarea aria-label="Site Notes" rows={3} maxLength={4000} value={serviceLocationDraft.siteNotes} onChange={(e) => setServiceLocationDraft((prev) => ({ ...prev, siteNotes: e.target.value }))} />
+                  <span aria-hidden="true" className={`field-char-count${serviceLocationDraft.siteNotes.length > 3600 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.siteNotes.length} / 4,000</span>
                 </label>
-                <span className={`field-char-count${serviceLocationDraft.siteNotes.length > 3600 ? ' field-char-count--warn' : ''}`}>{serviceLocationDraft.siteNotes.length} / 4,000</span>
               </div>
               <div className="row">
                 <button type="button" onClick={addServiceLocation} disabled={isAddingServiceLocation}>

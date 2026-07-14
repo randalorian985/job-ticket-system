@@ -53,6 +53,20 @@ public sealed class JobTicketServicesTests
     }
 
     [Fact]
+    public async Task Create_rejects_overlong_ticket_fields_before_database_save()
+    {
+        await using var context = CreateContext();
+        var refs = await SeedCoreReferencesAsync(context);
+        var service = CreateService(context);
+
+        var request = BuildCreateRequest(refs) with { Title = new string('T', 201) };
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateAsync(request));
+        Assert.Equal("title must be 200 characters or fewer.", exception.Message);
+        Assert.Empty(context.JobTickets);
+    }
+
+    [Fact]
     public async Task Create_auto_generates_job_ticket_number()
     {
         await using var context = CreateContext();

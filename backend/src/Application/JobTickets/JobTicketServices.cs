@@ -123,7 +123,7 @@ public sealed class JobTicketsService(
 
     public async Task<JobTicketDto> CreateAsync(CreateJobTicketDto request, CancellationToken cancellationToken = default)
     {
-        ValidateCreateOrUpdateRequest(request.CustomerId, request.ServiceLocationId, request.BillingPartyCustomerId, request.Title);
+        ValidateCreateOrUpdateRequest(request);
         await ValidateReferencesAsync(request.CustomerId, request.ServiceLocationId, request.BillingPartyCustomerId, request.EquipmentId, request.AssignedManagerEmployeeId, cancellationToken);
 
         for (var attempt = 0; attempt < 3; attempt++)
@@ -179,7 +179,7 @@ public sealed class JobTicketsService(
 
     public async Task<JobTicketDto?> UpdateAsync(Guid id, UpdateJobTicketDto request, CancellationToken cancellationToken = default)
     {
-        ValidateCreateOrUpdateRequest(request.CustomerId, request.ServiceLocationId, request.BillingPartyCustomerId, request.Title);
+        ValidateCreateOrUpdateRequest(request);
         await ValidateReferencesAsync(request.CustomerId, request.ServiceLocationId, request.BillingPartyCustomerId, request.EquipmentId, request.AssignedManagerEmployeeId, cancellationToken);
 
         var entity = await dbContext.JobTickets.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -903,12 +903,72 @@ public sealed class JobTicketsService(
         }
     }
 
-    private static void ValidateCreateOrUpdateRequest(Guid customerId, Guid serviceLocationId, Guid billingPartyCustomerId, string title)
+    private static void ValidateCreateOrUpdateRequest(CreateJobTicketDto request)
+        => ValidateCreateOrUpdateRequest(
+            request.CustomerId,
+            request.ServiceLocationId,
+            request.BillingPartyCustomerId,
+            request.Title,
+            request.Description,
+            request.JobType,
+            request.PurchaseOrderNumber,
+            request.BillingContactName,
+            request.BillingContactPhone,
+            request.BillingContactEmail,
+            request.InternalNotes,
+            request.CustomerFacingNotes);
+
+    private static void ValidateCreateOrUpdateRequest(UpdateJobTicketDto request)
+        => ValidateCreateOrUpdateRequest(
+            request.CustomerId,
+            request.ServiceLocationId,
+            request.BillingPartyCustomerId,
+            request.Title,
+            request.Description,
+            request.JobType,
+            request.PurchaseOrderNumber,
+            request.BillingContactName,
+            request.BillingContactPhone,
+            request.BillingContactEmail,
+            request.InternalNotes,
+            request.CustomerFacingNotes);
+
+    private static void ValidateCreateOrUpdateRequest(
+        Guid customerId,
+        Guid serviceLocationId,
+        Guid billingPartyCustomerId,
+        string title,
+        string? description,
+        string? jobType,
+        string? purchaseOrderNumber,
+        string? billingContactName,
+        string? billingContactPhone,
+        string? billingContactEmail,
+        string? internalNotes,
+        string? customerFacingNotes)
     {
         if (customerId == Guid.Empty) throw new ValidationException("CustomerId is required.");
         if (serviceLocationId == Guid.Empty) throw new ValidationException("ServiceLocationId is required.");
         if (billingPartyCustomerId == Guid.Empty) throw new ValidationException("BillingPartyCustomerId is required.");
         ValidationHelpers.ValidateRequired(title, nameof(title));
+        ValidateMaxLength(title, nameof(title), 200);
+        ValidateMaxLength(description, nameof(description), 4000);
+        ValidateMaxLength(jobType, nameof(jobType), 100);
+        ValidateMaxLength(purchaseOrderNumber, nameof(purchaseOrderNumber), 100);
+        ValidateMaxLength(billingContactName, nameof(billingContactName), 200);
+        ValidateMaxLength(billingContactPhone, nameof(billingContactPhone), 50);
+        ValidateMaxLength(billingContactEmail, nameof(billingContactEmail), 320);
+        ValidateMaxLength(internalNotes, nameof(internalNotes), 4000);
+        ValidateMaxLength(customerFacingNotes, nameof(customerFacingNotes), 4000);
+    }
+
+    private static void ValidateMaxLength(string? value, string fieldName, int maxLength)
+    {
+        var trimmed = ValidationHelpers.NullIfWhitespace(value);
+        if (trimmed is not null && trimmed.Length > maxLength)
+        {
+            throw new ValidationException($"{fieldName} must be {maxLength} characters or fewer.");
+        }
     }
 
     private async Task<string> GenerateTicketNumberAsync(CancellationToken cancellationToken)

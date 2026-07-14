@@ -12,6 +12,8 @@ namespace JobTicketSystem.Api.Controllers;
 [Authorize(Policy = "EmployeeOrAbove")]
 public sealed class JobTicketsController(IJobTicketsService service, ICurrentUserContext currentUserContext) : ControllerBase
 {
+    private const string GetJobTicketByIdRouteName = "GetJobTicketById";
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<JobTicketListItemDto>>> ListAsync(
         [FromQuery] Guid? customerId,
@@ -27,7 +29,7 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
         return Ok(items);
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:guid}", Name = GetJobTicketByIdRouteName)]
     public async Task<ActionResult<JobTicketDto>> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var ticket = await service.GetAsync(id, cancellationToken);
@@ -46,7 +48,7 @@ public sealed class JobTicketsController(IJobTicketsService service, ICurrentUse
         try
         {
             var created = await service.CreateAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetAsync), new { id = created.Id }, created);
+            return CreatedAtRoute(GetJobTicketByIdRouteName, new { id = created.Id }, created);
         }
         catch (Exception exception)
         {

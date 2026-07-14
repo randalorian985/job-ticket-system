@@ -547,6 +547,102 @@ describe('JobTicketEditorForm assignment and schedule requirements review', () =
     expect(screen.getByLabelText('Crane / Equipment Being Serviced')).toHaveValue('eq2')
   })
 
+  it('submits a ticket after quick-adding customer, location, and equipment', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+
+    vi.mocked(masterDataApi.createCustomer).mockResolvedValue({
+      id: 'c2',
+      name: 'RP Equipment',
+      contactName: 'Roy',
+      phone: '555 555 5555'
+    })
+    vi.mocked(masterDataApi.createServiceLocation).mockResolvedValue({
+      id: 's2',
+      customerId: 'c2',
+      companyName: 'RP Equipment',
+      locationName: 'RP Equipment Rental Yard',
+      onSiteContactName: 'Roy',
+      onSiteContactPhone: '555 555 5555',
+      onSiteContactEmail: 'Roy McAroy',
+      addressLine1: '123 Green St',
+      city: 'Houma',
+      state: 'LA',
+      postalCode: '76433',
+      parishCounty: 'Terrebonne',
+      country: 'USA',
+      accessInstructions: 'Visit main office',
+      safetyRequirements: 'nonedddddee',
+      siteNotes: null,
+      isActive: true
+    })
+    vi.mocked(masterDataApi.createEquipment).mockResolvedValue({
+      id: 'eq2',
+      customerId: 'c2',
+      serviceLocationId: 's2',
+      ownerCustomerId: 'c2',
+      responsibleBillingCustomerId: 'c2',
+      name: 'Rental crane'
+    })
+
+    render(
+      <JobTicketEditorForm
+        initial={{
+          ...baseTicket,
+          customerId: '',
+          serviceLocationId: '',
+          billingPartyCustomerId: '',
+          equipmentId: null,
+          title: 'Repair rental crane'
+        }}
+        customers={[]}
+        serviceLocations={[]}
+        equipment={[]}
+        submitLabel="Save Ticket"
+        onSubmit={onSubmit}
+      />
+    )
+
+    openEditSection('Customer & Service Equipment')
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add customer' }))
+    fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'RP Equipment' } })
+    fireEvent.change(screen.getByLabelText('Contact Name'), { target: { value: 'Roy' } })
+    fireEvent.change(screen.getByLabelText('Contact Phone'), { target: { value: '555 555 5555' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
+
+    expect(await screen.findByText('RP Equipment added and selected.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add location' }))
+    fireEvent.change(screen.getByLabelText('Location Name'), { target: { value: 'RP Equipment Rental Yard' } })
+    fireEvent.change(screen.getByLabelText('On-site Contact'), { target: { value: 'Roy' } })
+    fireEvent.change(screen.getByLabelText('On-site Phone'), { target: { value: '555 555 5555' } })
+    fireEvent.change(screen.getByLabelText('On-site Email'), { target: { value: 'Roy McAroy' } })
+    fireEvent.change(screen.getByLabelText('Street Address'), { target: { value: '123 Green St' } })
+    fireEvent.change(screen.getByLabelText('City'), { target: { value: 'Houma' } })
+    fireEvent.change(screen.getByLabelText('State'), { target: { value: 'LA' } })
+    fireEvent.change(screen.getByLabelText('Postal Code'), { target: { value: '76433' } })
+    fireEvent.change(screen.getByLabelText('Parish / County'), { target: { value: 'Terrebonne' } })
+    fireEvent.change(screen.getByLabelText('Access Instructions'), { target: { value: 'Visit main office' } })
+    fireEvent.change(screen.getByLabelText('Safety Requirements'), { target: { value: 'nonedddddee' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Location' }))
+
+    expect(await screen.findByText('RP Equipment Rental Yard added and selected.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick add equipment' }))
+    fireEvent.change(screen.getByLabelText('Equipment Name'), { target: { value: 'Rental crane' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Equipment' }))
+
+    expect(await screen.findByText('Rental crane added and selected.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Save Ticket' }))
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      customerId: 'c2',
+      serviceLocationId: 's2',
+      billingPartyCustomerId: 'c2',
+      equipmentId: 'eq2',
+      title: 'Repair rental crane'
+    })))
+  })
+
   it('shows recent service history for the selected equipment using existing report data', async () => {
     vi.mocked(reportsApi.getEquipmentHistory).mockResolvedValue([
       {
