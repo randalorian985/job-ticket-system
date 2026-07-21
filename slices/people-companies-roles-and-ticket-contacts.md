@@ -2,15 +2,21 @@
 
 ## Goal
 
-Create a simple structure for people and companies that avoids duplicate records and lets the same person serve different roles on different job tickets.
+Create a simple, flexible contact model that avoids duplicate records and unnecessary workflow. The same person or company may serve different purposes across the system and on individual job tickets without forcing users to edit master records before completing a ticket.
 
-## Core Decisions
+## Guiding Rule
 
-The system will maintain separate records for:
+> Saved roles help organize and filter records. Ticket assignments determine what a person or company is doing on that specific job.
 
-- Companies
-- People
-- Saved roles
-- Ticket-specific contact assignments
+Roles are suggestions and classifications, not hard restrictions.
 
-Saved roles help organize and filter people. They do not restrict who can
+## Scope Summary
+
+This slice adds or confirms support for:
+
+- Separate Company and Person records
+- Multiple saved roles per person
+- Multiple saved classifications per company
+- One primary company relationship per person in the MVP
+- Ticket-specific customer, service contact, billing party, and billing contact selections
+- Selecting a
