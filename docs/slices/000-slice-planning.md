@@ -15,11 +15,18 @@ A slice is the smallest complete business capability that proves part of the arc
 2. [002 Customer Service Locations](002-customer-service-locations.md) — Aligned
 3. [003 People and Contact Roles](003-people-and-contact-roles.md) — Aligned
 4. [004 Equipment Types and Customer Equipment](004-equipment-types-and-customer-equipment.md) — Aligned
-5. [005 Employees](005-employees.md) — Proposed
+5. [005 Workforce Access and Technician Availability](005-workforce-access-and-technician-availability.md) — Proposed
 6. [006 Work Order Intake](006-work-order-intake.md) — Proposed
 7. [007 Basic Scheduling Board](007-basic-scheduling-board.md) — Proposed
 8. [008 PWA Installation and Mobile Foundation](008-pwa-installation-mobile-foundation.md) — Proposed
 9. [009 Ticket Quick-Add](009-ticket-quick-add.md) — Proposed
+
+## Identity decision
+- Person is the shared human identity.
+- Employee and Technician are roles/profiles attached to a Person.
+- A login/user account is linked to a Person when system access is required.
+- Descriptive roles do not automatically grant authorization permissions.
+- The system must not create separate Person and Employee records for the same individual.
 
 ## Tracer bullets
 - Customer Organization -> Service Location -> Equipment -> Work Order -> Backlog
@@ -31,7 +38,7 @@ A slice is the smallest complete business capability that proves part of the arc
 2. Reuse existing models, migrations, APIs, components, permissions, routes, and tests.
 3. Implement only missing or incorrect behavior required by the current slice.
 4. Preserve tenant isolation, existing data, and working desktop, mobile, manager, dispatcher, and technician workflows.
-5. Do not create parallel systems.
+5. Do not create parallel systems or duplicate identity records.
 6. Do not pull dependencies from later slices into the current slice.
 7. Add focused backend, frontend, and end-to-end tests where applicable.
 8. Run relevant build, test, migration, and validation commands.
