@@ -1,31 +1,40 @@
-# Slice 006: Work Order Intake
+# Slice 006: Work Order Intake and Backlog
 
 ## Status
-Proposed; not yet explicitly confirmed by Kevin.
+Aligned with Kevin at a high level. Parent steering scope only.
 
 ## Goal
-Create or repair a complete work-order intake flow that produces a valid backlog work order from the approved master data.
+Complete the first business tracer through small, reviewable slices:
+
+Customer Organization -> Service Location -> Equipment -> Work Order -> Backlog
 
 ## Dependencies
-Requires Slices 001 through 005.
+Requires Slices 001 through 004 and the applicable completed Slice 005 identity/workforce child slices.
 
-## Scope
-- Select customer organization, service location, one or more equipment units, service contact, and optional billing organization/contact.
-- Capture service scope, priority, status, requested date, notes, and existing required fields.
-- Save a new work order into the backlog without requiring scheduling.
-- Preserve the current decision that a work order may contain multiple equipment units.
-- Allow the same person to serve more than one ticket role.
-- Saved contact roles rank suggestions but do not block authorized selection.
-- Audit and repair the existing job-ticket workflow rather than creating a parallel intake screen.
+## Required child sequence
+1. [006-01 Work Order Core](006-01-work-order-core.md)
+2. [006-02 Work Order Equipment](006-02-work-order-equipment.md)
+3. [006-03 Work Order Contacts](006-03-work-order-contacts.md)
+4. [006-04 Work Order Backlog](006-04-work-order-backlog.md)
 
-## Supporting detail
-See legacy `slices/people-02-ticket-contact-assignments.md` for ticket-contact rules.
+Each child slice must be implemented, validated, documented, and reviewed before the next child begins unless a documented blocker requires otherwise.
 
-## Acceptance criteria
-- Customer -> Location -> Equipment -> Work Order -> Backlog works end to end.
-- Saved and reopened work orders preserve all selected relationships.
-- Existing tickets continue to load.
-- Permissions, activity history, tests, and wiki documentation are updated.
+## Shared decisions
+- Reuse and repair the existing job-ticket/work-order system; do not create a parallel work-order module.
+- A work order requires a customer organization.
+- A work order may include one or more equipment units.
+- The common one-equipment workflow should remain simple.
+- Service and billing contacts use centralized People.
+- The same Person may serve multiple ticket-specific roles.
+- Saved Person roles rank suggestions but do not improperly restrict selection.
+- A valid work order can enter backlog without being assigned or scheduled.
+- Existing tickets and history must remain usable.
+
+## Parent acceptance criteria
+- All four child slices are complete.
+- Customer Organization -> Service Location -> Equipment -> Work Order -> Backlog works end to end.
+- Existing work orders continue to load and retain their relationships.
+- Tenant isolation, permissions, activity history, tests, wiki, and screenshots are correct.
 
 ## Guardrail
-Do not build the scheduling board or broad quick-add behavior in this slice.
+Do not send this parent scope to Codex as one implementation task. Do not implement technician assignment, scheduling, dispatch-board behavior, PWA work, or broad quick-add behavior here.
