@@ -1,25 +1,13 @@
-# Slice 005: Employees
+# Redirect: Employees Are People With Workforce Roles
 
-## Status
-Proposed; not yet explicitly confirmed by Kevin.
+Employee is not a separate person or master-data entity.
 
-## Goal
-Provide a dependable employee/technician directory needed for assignment and scheduling.
+The canonical workforce slice is now:
 
-## Dependencies
-Requires the aligned master-data foundation.
+- [005 Workforce Access and Technician Availability](005-workforce-access-and-technician-availability.md)
 
-## Scope
-- Audit existing users, employees, technicians, roles, and assignment data.
-- Reuse identity records and avoid creating a second employee identity system.
-- List, view, edit, activate, and deactivate employees as permitted.
-- Maintain role, technician eligibility, contact information, and scheduling visibility using existing authorization conventions.
-- Preserve assigned-ticket restrictions and current login behavior.
+The Person, Employee role, Technician role, and basic workforce profile model is defined in:
 
-## Acceptance criteria
-- Eligible employees can be selected by later assignment and scheduling workflows.
-- Deactivation does not corrupt historical assignments.
-- Identity, tenant isolation, permissions, tests, and wiki documentation remain correct.
+- [003 People and Contact Roles](003-people-and-contact-roles.md)
 
-## Guardrail
-Do not implement work-order assignment or the scheduling board in this slice.
+Keep this file only as a compatibility redirect for older references.
