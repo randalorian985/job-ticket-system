@@ -15,13 +15,21 @@ A slice is the smallest complete business capability that proves part of the arc
 2. [002 Customer Service Locations](002-customer-service-locations.md) — Aligned
 3. [003 People and Contact Roles](003-people-and-contact-roles.md) — Aligned
 4. [004 Equipment Types and Customer Equipment](004-equipment-types-and-customer-equipment.md) — Aligned
-5. [005 Identity, Workforce Access, and Authorization Alignment](005-workforce-access-and-technician-availability.md) — Proposed parent scope
+5. [005 Identity, Workforce Access, and Authorization Alignment](005-workforce-access-and-technician-availability.md) — Aligned parent scope
    - [005-01 Person and User Account Linkage](005-01-person-user-account-linkage.md)
    - [005-02 Authorization Role Alignment](005-02-authorization-role-alignment.md)
    - [005-03 Workforce Profile and Technician Eligibility](005-03-workforce-profile-and-technician-eligibility.md)
    - [005-04 Legacy Employee and Technician Migration](005-04-legacy-employee-technician-migration.md)
-6. [006 Work Order Intake](006-work-order-intake.md) — Proposed
-7. [007 Basic Scheduling Board](007-basic-scheduling-board.md) — Proposed
+6. [006 Work Order Intake and Backlog](006-work-order-intake.md) — Aligned parent scope
+   - [006-01 Work Order Core](006-01-work-order-core.md)
+   - [006-02 Work Order Equipment](006-02-work-order-equipment.md)
+   - [006-03 Work Order Contacts](006-03-work-order-contacts.md)
+   - [006-04 Work Order Backlog](006-04-work-order-backlog.md)
+7. [007 Assignment, Scheduling, and Dispatch](007-basic-scheduling-board.md) — Aligned parent scope
+   - [007-01 Technician Assignment](007-01-technician-assignment.md)
+   - [007-02 Schedule Time Block](007-02-schedule-time-block.md)
+   - [007-03 Dispatch Backlog and Board](007-03-dispatch-backlog-and-board.md)
+   - [007-04 Technician Work Queue](007-04-technician-work-queue.md)
 8. [008 PWA Installation and Mobile Foundation](008-pwa-installation-mobile-foundation.md) — Proposed
 9. [009 Ticket Quick-Add](009-ticket-quick-add.md) — Proposed
 
