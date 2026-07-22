@@ -15,7 +15,11 @@ A slice is the smallest complete business capability that proves part of the arc
 2. [002 Customer Service Locations](002-customer-service-locations.md) — Aligned
 3. [003 People and Contact Roles](003-people-and-contact-roles.md) — Aligned
 4. [004 Equipment Types and Customer Equipment](004-equipment-types-and-customer-equipment.md) — Aligned
-5. [005 Workforce Access and Technician Availability](005-workforce-access-and-technician-availability.md) — Proposed
+5. [005 Identity, Workforce Access, and Authorization Alignment](005-workforce-access-and-technician-availability.md) — Proposed parent scope
+   - [005-01 Person and User Account Linkage](005-01-person-user-account-linkage.md)
+   - [005-02 Authorization Role Alignment](005-02-authorization-role-alignment.md)
+   - [005-03 Workforce Profile and Technician Eligibility](005-03-workforce-profile-and-technician-eligibility.md)
+   - [005-04 Legacy Employee and Technician Migration](005-04-legacy-employee-technician-migration.md)
 6. [006 Work Order Intake](006-work-order-intake.md) — Proposed
 7. [007 Basic Scheduling Board](007-basic-scheduling-board.md) — Proposed
 8. [008 PWA Installation and Mobile Foundation](008-pwa-installation-mobile-foundation.md) — Proposed
@@ -25,12 +29,15 @@ A slice is the smallest complete business capability that proves part of the arc
 - Person is the shared human identity.
 - Employee and Technician are roles/profiles attached to a Person.
 - A login/user account is linked to a Person when system access is required.
-- Descriptive roles do not automatically grant authorization permissions.
+- Authentication remains responsible for sign-in and account security.
+- Authorization roles and permissions remain separate from descriptive Person roles.
+- Workforce eligibility does not automatically grant system access.
 - The system must not create separate Person and Employee records for the same individual.
 
 ## Tracer bullets
 - Customer Organization -> Service Location -> Equipment -> Work Order -> Backlog
-- Backlog Work Order -> Technician and Time Assignment -> Schedule Block
+- Person -> Optional User Account -> Authorization and Workforce Eligibility
+- Backlog Work Order -> Eligible Technician Person and Time Assignment -> Schedule Block
 - Proven online workflow -> Installable PWA shell -> Reliable mobile launch and updates
 
 ## Required guardrails for every slice
@@ -45,6 +52,7 @@ A slice is the smallest complete business capability that proves part of the arc
 9. Update the wiki and screenshots when UI behavior changes.
 10. Keep each branch, commit, and PR limited to one slice.
 11. Finish and review a slice before beginning the next unless a documented blocker requires otherwise.
+12. Parent scopes with child slices are steering documents only and must not be implemented in one Codex run.
 
 ## Layout planning dependency
 Application-shell and navigation changes are governed by `docs/layout/000-layout-direction.md`.
