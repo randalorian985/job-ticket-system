@@ -11,19 +11,19 @@ A slice is the smallest complete business capability that proves part of the arc
 - **Planning:** Design work only; do not change production behavior yet.
 
 ## Current sequence
-1. [001 Organizations](001-organizations.md) — Aligned
-2. [002 Customer Service Locations](002-customer-service-locations.md) — Aligned
-3. [003 People and Contact Roles](003-people-and-contact-roles.md) — Aligned
-4. [004 Equipment Types and Customer Equipment](004-equipment-types-and-customer-equipment.md) — Aligned
+1. [001 Organizations](001-organizations.md) — Aligned; owns Organization quick-create
+2. [002 Customer Service Locations](002-customer-service-locations.md) — Aligned; owns Service Location quick-create
+3. [003 People and Contact Roles](003-people-and-contact-roles.md) — Aligned; owns Person quick-create
+4. [004 Equipment Types and Customer Equipment](004-equipment-types-and-customer-equipment.md) — Aligned; owns Customer Equipment quick-create
 5. [005 Identity, Workforce Access, and Authorization Alignment](005-workforce-access-and-technician-availability.md) — Aligned parent scope
    - [005-01 Person and User Account Linkage](005-01-person-user-account-linkage.md)
    - [005-02 Authorization Role Alignment](005-02-authorization-role-alignment.md)
    - [005-03 Workforce Profile and Technician Eligibility](005-03-workforce-profile-and-technician-eligibility.md)
    - [005-04 Legacy Employee and Technician Migration](005-04-legacy-employee-technician-migration.md)
 6. [006 Work Order Intake and Backlog](006-work-order-intake.md) — Aligned parent scope
-   - [006-01 Work Order Core](006-01-work-order-core.md)
-   - [006-02 Work Order Equipment](006-02-work-order-equipment.md)
-   - [006-03 Work Order Contacts](006-03-work-order-contacts.md)
+   - [006-01 Work Order Core](006-01-work-order-core.md) — integrates Organization and Service Location quick-create
+   - [006-02 Work Order Equipment](006-02-work-order-equipment.md) — integrates Customer Equipment quick-create
+   - [006-03 Work Order Contacts](006-03-work-order-contacts.md) — integrates Person quick-create
    - [006-04 Work Order Backlog](006-04-work-order-backlog.md)
 7. [007 Assignment, Scheduling, and Dispatch](007-basic-scheduling-board.md) — Aligned parent scope
    - [007-01 Technician Assignment](007-01-technician-assignment.md)
@@ -31,7 +31,7 @@ A slice is the smallest complete business capability that proves part of the arc
    - [007-03 Dispatch Backlog and Board](007-03-dispatch-backlog-and-board.md)
    - [007-04 Technician Work Queue](007-04-technician-work-queue.md)
 8. [008 PWA Installation and Mobile Foundation](008-pwa-installation-mobile-foundation.md) — Proposed
-9. [009 Ticket Quick-Add](009-ticket-quick-add.md) — Proposed
+9. [009 Quick-Add Integration and Consistency](009-ticket-quick-add.md) — Proposed final hardening pass
 
 ## Identity decision
 - Person is the shared human identity.
@@ -41,6 +41,13 @@ A slice is the smallest complete business capability that proves part of the arc
 - Authorization roles and permissions remain separate from descriptive Person roles.
 - Workforce eligibility does not automatically grant system access.
 - The system must not create separate Person and Employee records for the same individual.
+
+## Quick-add decision
+- Quick-create belongs to the master-data slice that owns the record.
+- Work-order child slices integrate those reusable create flows into the appropriate selectors.
+- Quick-create must preserve unsaved calling-workflow state, prefill known context, return a controlled result, and automatically select the new record after successful save.
+- Create permissions, tenant isolation, validation, and duplicate warnings apply equally inside and outside quick-add.
+- Slice 009 is a consistency and hardening pass; it must not rebuild the underlying create flows.
 
 ## Tracer bullets
 - Customer Organization -> Service Location -> Equipment -> Work Order -> Backlog
@@ -61,6 +68,7 @@ A slice is the smallest complete business capability that proves part of the arc
 10. Keep each branch, commit, and PR limited to one slice.
 11. Finish and review a slice before beginning the next unless a documented blocker requires otherwise.
 12. Parent scopes with child slices are steering documents only and must not be implemented in one Codex run.
+13. Reusable quick-create capability and calling-workflow integration must stay in their assigned slices; do not defer all quick-add behavior to Slice 009.
 
 ## Layout planning dependency
 Application-shell and navigation changes are governed by `docs/layout/000-layout-direction.md`.
