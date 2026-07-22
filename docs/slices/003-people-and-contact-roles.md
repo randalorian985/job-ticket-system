@@ -26,6 +26,16 @@ Requires Slices 001 and 002.
 - Search by person, organization, and saved role.
 - Audit and migrate existing contact, employee, technician, and user-linked records without creating parallel people systems.
 - Preserve historical assignments, time records, and audit history when roles or active status change.
+- Provide a reusable minimal quick-create flow for an authorized user who needs to add a missing Person from another workflow.
+
+## Quick-create rules
+- Collect only the minimum valid Person fields.
+- Prefill the selected organization and intended calling context when available.
+- Allow optional saved role assignment, but do not silently assign roles merely because the Person is used in a ticket-specific role.
+- Show duplicate warnings before creating another Person with matching identifying information.
+- Respect tenant isolation and Person-create permissions.
+- Return the created Person to the calling workflow through a reusable result contract.
+- Full editing, workforce access, and login linkage remain in their proper screens and slices.
 
 ## Business rules
 - One Person may hold multiple saved roles simultaneously.
@@ -45,7 +55,9 @@ See the legacy `slices/people-01-multiple-saved-roles.md` and contact design ref
 - Existing contact, employee, technician, and linked user information is preserved or safely migrated.
 - The system can distinguish descriptive roles from authentication and authorization.
 - Later workforce and scheduling slices can reference the same Person identity.
+- Authorized callers can quick-create a Person and receive the saved record without duplicate identity creation.
+- Cancel or failed save returns a controlled result without corrupting the calling workflow.
 - Permissions, tenant isolation, tests, and wiki documentation are updated.
 
 ## Guardrail
-Do not implement work-order assignment, schedule-board behavior, full workforce access administration, ticket-specific contact assignments, or ticket quick-add in this slice.
+Do not implement work-order assignment, schedule-board behavior, full workforce access administration, ticket-specific contact assignments, or work-order-specific quick-add integration in this slice. This slice owns only the reusable Person quick-create capability.
