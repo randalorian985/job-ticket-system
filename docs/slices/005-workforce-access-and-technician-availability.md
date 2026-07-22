@@ -1,42 +1,41 @@
-# Slice 005: Workforce Access and Technician Availability
+# Slice 005: Identity, Workforce Access, and Authorization Alignment
 
 ## Status
 Proposed; not yet explicitly confirmed by Kevin.
 
 ## Goal
-Add workforce-specific access, scheduling eligibility, and availability behavior to People who already hold Employee or Technician roles from Slice 003.
+Align the centralized Person model with authentication, authorization, workforce profiles, technician eligibility, and legacy employee data through small, reviewable child slices.
 
 ## Dependencies
 Requires Slice 003 and the aligned master-data foundation.
 
+## Required child sequence
+1. [005-01 Person and User Account Linkage](005-01-person-user-account-linkage.md)
+2. [005-02 Authorization Role Alignment](005-02-authorization-role-alignment.md)
+3. [005-03 Workforce Profile and Technician Eligibility](005-03-workforce-profile-and-technician-eligibility.md)
+4. [005-04 Legacy Employee and Technician Migration](005-04-legacy-employee-technician-migration.md)
+
+Each child slice must be implemented, validated, and reviewed independently. Do not send Codex the entire parent scope as one implementation task.
+
+## Architecture decision
+- Person is the shared human identity.
+- The application user account is the authentication identity.
+- Authorization roles and permissions belong to the user account/security layer.
+- Employee and Technician are Person roles or workforce profiles.
+- Workforce eligibility does not grant application access.
+- Application access does not create or replace a Person.
+- Legacy Employee or Technician records must be reconciled into Person rather than preserved as a competing identity system.
+
 ## Existing-system rule
-Audit existing users, employees, technicians, roles, permissions, availability, assignments, and calendar data before changing code. Reuse the Person identity established in Slice 003 and do not create a separate employee directory.
+Audit all existing authentication, Identity, employee, technician, person, contact, role, permission, assignment, labor, time, availability, and schedule behavior before changing code. Preserve working ASP.NET Identity infrastructure unless a documented defect requires otherwise.
 
-## Scope
-- Link an existing Person with an Employee role to an existing or new application user account when access is required.
-- Maintain workforce active/inactive status without deleting the Person.
-- Maintain technician eligibility and scheduling visibility.
-- Maintain basic availability or working-hours data needed by later scheduling slices when already supported by the architecture.
-- Preserve assigned-ticket restrictions and current login behavior.
-- Keep descriptive saved roles separate from authorization permissions.
-- Support workforce records that do not require login access.
-- Preserve historical assignments, time records, and schedule history when access or eligibility changes.
-
-## Business rules
-- A Person is the identity; Employee and Technician are roles/profiles.
-- A login account grants system access but does not replace the Person record.
-- Removing login access must not remove the Person or historical work.
-- Deactivating workforce eligibility must prevent new assignments while preserving prior assignments.
-- Technician eligibility determines assignment and scheduling availability; it is not the same as general Employee status.
-- Authorization roles such as Admin or Manager must follow the existing security model and are not inferred solely from descriptive Person roles.
-
-## Acceptance criteria
-- Existing Employee/Technician People can be made schedulable without duplicate identity records.
-- Application access can be linked, changed, or removed independently of the Person record.
-- Eligible technicians are available to later assignment and scheduling workflows.
-- Ineligible or inactive technicians cannot receive new assignments.
-- Historical records remain intact.
-- Tenant isolation, permissions, tests, and wiki documentation remain correct.
+## Parent acceptance criteria
+- User accounts link safely to People.
+- Descriptive Person roles are separated from application permissions.
+- Workforce and technician eligibility extend Person rather than creating another identity.
+- Existing historical workforce data is migrated or explicitly reported as unresolved.
+- Passwords, sign-in, MFA, lockout, tenant isolation, historical assignments, labor, and audit records remain correct.
+- Work Order Intake and Scheduling can depend on one Person-based workforce model.
 
 ## Guardrail
-Do not implement work-order assignment or the scheduling board in this slice.
+Do not implement this parent slice in a single Codex run. Do not include work-order assignment, scheduling-board, application-shell, or PWA redesign.
