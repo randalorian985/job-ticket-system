@@ -1,40 +1,30 @@
-# Slice 006-02: Work Order Equipment
+# Slice 006-02: Organization and Location Quick-Create Integration
 
 ## Status
-Aligned with Kevin; child slice of Slice 006.
+Aligned child of Slice 006.
 
 ## Goal
-Attach one or more existing or newly quick-created customer equipment records to a work order without complicating the normal one-equipment workflow.
+Integrate reusable Organization and Service Location quick-create into work-order intake without losing unsaved work.
 
 ## Dependencies
-Requires Slice 006-01 and Slice 004.
+Requires Slices 006-01, 001-02, and 002-02.
 
 ## Scope
-- Audit the existing ticket-equipment relationships, APIs, forms, validation, history, and any existing quick-add behavior.
-- Select equipment belonging to the chosen customer and service location.
-- Support one or more equipment units per work order.
-- Make the common one-equipment flow simple while providing an explicit Add Equipment action.
-- Preserve equipment order, notes, and existing ticket-equipment details where already supported.
-- Prevent cross-customer, cross-location, and cross-tenant equipment selection.
-- Save and reopen all equipment relationships reliably.
-- Integrate the reusable Equipment quick-create capability from Slice 004 when the required unit does not yet exist.
-
-## Work-order quick-add integration rules
-- Require valid customer and service-location context before equipment quick-create opens.
-- Prefill the selected customer and location.
-- Preserve all unsaved work-order and equipment-selection state.
-- Automatically attach and select the newly created equipment after a successful save.
-- Cancel or failed save must return to the unchanged work order.
-- Hide or disable equipment quick-create when the user lacks equipment-create permission.
+- Audit existing customer, billing-organization, and Service Location inline-create behavior.
+- Launch the canonical Organization quick-create from applicable selectors.
+- Launch the canonical Service Location quick-create only after customer context exists.
+- Preserve all unsaved work-order state while a child flow is open.
+- Prefill known role, customer, and location context.
+- Automatically select the newly created record after successful save.
+- Return to the unchanged work order after cancel, validation failure, or save failure.
+- Enforce caller permissions, tenant isolation, validation, duplicate warnings, and focus return.
 
 ## Acceptance criteria
-- An authorized user can add, remove, and reorder supported equipment relationships.
-- One-equipment and multiple-equipment work orders save and reopen correctly.
-- Changing the customer or location produces controlled validation and does not silently retain invalid equipment.
-- Missing equipment can be created from the work order and automatically attached without leaving intake.
-- Cancel and failed save preserve the work-order state.
-- Existing ticket-equipment data remains intact.
-- Tests and wiki documentation are updated.
+- Missing Organizations and Service Locations can be created without leaving or resetting intake.
+- Successful save selects the new record.
+- Cancel and failure preserve all work-order fields and selections.
+- Unauthorized users cannot execute the create action.
+- Focused integration and end-to-end tests plus documentation are complete.
 
 ## Guardrail
-Do not implement contacts, technician assignment, scheduling, labor, parts, or unrelated quick-add redesign in this slice.
+Do not implement equipment, contacts, assignments, scheduling, or a general quick-add redesign in this child.
