@@ -75,5 +75,9 @@ Application-shell and navigation changes are governed by `docs/layout/000-layout
 
 Do not perform a broad production navigation redesign until static HTML wireframes are created and reviewed.
 
-## Legacy planning documents
-The former top-level `slices/` documents remain historical/supporting references during transition. New planning and future edits belong under `docs/slices/`.
+## Canonical planning location
+- `docs/slices/` is the only active implementation-planning tree.
+- Do not create or restore a top-level `slices/` directory.
+- Update links when plans are renamed or consolidated instead of keeping duplicate compatibility copies.
+- Keep a redirect only when a live repository or external dependency still requires the old path.
+- Git history preserves superseded planning documents and is the archive for removed versions.
