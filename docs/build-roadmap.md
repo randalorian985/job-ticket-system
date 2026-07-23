@@ -28,9 +28,9 @@ Epic 0 must not add migrations, backfills, APIs, DTOs, screens, automatic fitmen
 
 ## Codex Delivery Routing
 
-[Codex Model Routing](./codex-model-routing.md) controls the recommended model and reasoning level for planning, implementation, review, and release tasks. Every future implementation task must declare its model, reasoning level, escalation condition, required review, and approval gate.
+[Codex Model Routing](./codex-model-routing.md) controls the recommended model, reasoning level, and execution mode for planning, implementation, review, and release tasks. Every future implementation task must declare its model, reasoning level, execution mode, escalation condition, required review, and approval gate.
 
-The default route is GPT-5.6 Terra at High reasoning for bounded implementation and GPT-5.6 Sol at Extra High reasoning for high-risk architecture, migrations, historical-data behavior, security boundaries, and cutover review. Model selection does not authorize work that remains blocked by Epic 0 or another steering gate.
+The default route is Standard mode with GPT-5.6 Terra at Medium reasoning for approved, bounded implementation. Complex implementation escalates to Terra High; architecture and risk review use GPT-5.6 Sol at High reasoning; Sol Extra High is reserved for destructive migrations, cutovers, historical-data integrity, critical security decisions, or unresolved evidence. Model selection does not authorize work that remains blocked by Epic 0 or another steering gate.
 
 ## Current Roadmap Checkpoint
 The project remains explicitly centered on the original job-ticket system scope.

@@ -96,10 +96,11 @@ Infrastructure continues to provide EF Core configurations and persistence for t
 
 [Codex Model Routing](./codex-model-routing.md) defines the required task-to-model guidance for this epic and its later approved implementation phases.
 
-- Use GPT-5.6 Sol at Extra High reasoning for domain decisions, relationship and migration design, backfill safety, historical snapshots, fitment and installation invariants, effective-dated rates, and cutover review.
-- Use GPT-5.6 Terra at High reasoning for bounded implementation slices after their contracts are approved.
-- Use GPT-5.6 Luna only for low-risk mechanical work with deterministic validation and a stronger review when business meaning is involved.
-- Record the selected model, reasoning level, escalation condition, required review, and approval gate in each task.
+- Use GPT-5.6 Sol at High reasoning for domain decisions, relationship and migration design, fitment and installation invariants, effective-dated rates, and independent risk review.
+- Reserve Sol Extra High for destructive backfills, migration cutovers, historical-data integrity, critical security decisions, or unresolved evidence after a High pass.
+- Use GPT-5.6 Terra at Medium reasoning in Standard mode for bounded implementation slices after their contracts are approved, escalating to Terra High for complex cross-layer work.
+- Use GPT-5.6 Luna at Medium reasoning only for low-risk mechanical work with deterministic validation and a stronger review when business meaning is involved.
+- Record the selected model, reasoning level, execution mode, escalation condition, required review, and approval gate in each task.
 - Model capability never substitutes for steering approval, human ambiguity review, reconciliation evidence, or production authorization.
 
 ## Glossary

@@ -68,7 +68,7 @@ Line count is not the sizing rule. Cohesion, dependency boundaries, validation s
 - Begin every execution or review prompt with the required task header from that document.
 - The primary agent owns repository audit, implementation or planning output, validation, and handoff for one child only.
 - Luna may perform isolated mechanical subtasks but may not own a complete child slice.
-- A Sol Extra High independent review must use fresh context when required by the routing table; the implementation pass does not count as its own independent review.
+- An independent Sol review must use fresh context at the effort required by the routing table; the implementation pass does not count as its own independent review.
 - If the repository audit reveals a Sol-owned risk in a Terra-routed child, stop implementation at that decision boundary and escalate with evidence.
 - Model routing cannot approve a proposed parent, unresolved business decision, migration cutover, production action, or final UI direction.
 
