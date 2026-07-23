@@ -1,29 +1,29 @@
 # Slice 007-04: Technician Work Queue
 
 ## Status
-Aligned with Kevin; child slice of Slice 007.
+Aligned child of Slice 007.
 
 ## Goal
-Give technicians a focused list of assigned and scheduled work without exposing manager-only or billing information.
+Give technicians a focused, permission-safe queue of assigned and scheduled work.
 
 ## Dependencies
 Requires Slices 007-01 through 007-03.
 
 ## Scope
-- Audit the current technician dashboard, assigned-ticket list, schedule view, route protections, and mobile behavior.
-- Show assigned work and today's scheduled work in a clear technician queue.
-- Display ticket status, scheduled time, customer/service location, equipment summary, service contact, and waiting-on-parts indicator where available.
+- Audit the current technician dashboard, assigned-ticket list, schedule view, route protection, and mobile behavior.
+- Show assigned work and today's scheduled work in a useful order.
+- Display ticket status, scheduled time, customer, Service Location, equipment summary, service contact, and waiting-on-parts indicator where available.
 - Open the existing technician-safe work-order workspace.
-- Preserve assigned-ticket-only visibility and current role/permission checks.
-- Support desktop and mobile widths without redesigning the full technician execution workspace.
+- Preserve assigned-ticket-only visibility and current permission checks.
+- Support desktop and mobile widths without implementing the full technician execution workflow.
 
 ## Acceptance criteria
-- Technicians see only work they are authorized to see.
-- Assigned and scheduled work appears accurately and in a useful order.
-- Required location, equipment, contact, status, and schedule context is available.
+- Technicians see only authorized assigned work.
+- Assigned and scheduled work is accurate and ordered usefully.
+- Required location, equipment, contact, status, and schedule context is visible.
 - Manager-only billing and administrative data is not exposed.
 - Existing ticket access and mobile workflows do not regress.
-- Tests, wiki, and screenshots are updated.
+- Focused tests, wiki, and screenshots are complete.
 
 ## Guardrail
-Do not implement clock-in/out, labor, parts entry, photo capture, completion, offline synchronization, or the broad application-shell redesign in this slice.
+Do not implement clock-in/out, labor, parts entry, photo capture, completion, offline synchronization, or broad technician-mobile redesign in this child.
