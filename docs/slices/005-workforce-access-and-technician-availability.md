@@ -1,50 +1,41 @@
 # Slice 005: Identity, Workforce Access, and Authorization Alignment
 
 ## Status
-Proposed; not yet explicitly confirmed by Kevin.
-
-## Steering inheritance
-This parent and all Slice 005 children inherit [Shared Slice Steering](STEERING.md). Each Codex run must target one child slice only and must read the master plan, shared steering, this parent scope, and the target child before changing code.
+Aligned with Kevin at a high level. Parent steering scope only.
 
 ## Goal
-Align the centralized Person model with authentication, authorization, workforce profiles, technician eligibility, and legacy employee data through small, reviewable child slices.
+Align Person identity with authentication, authorization, workforce eligibility, and legacy workforce data through independently reviewable children.
 
 ## Dependencies
-Requires Slice 003 and the aligned master-data foundation.
+Requires Slice 003-01. Saved contact roles are not an authorization dependency.
 
 ## Required child sequence
 1. [005-01 Person and User Account Linkage](005-01-person-user-account-linkage.md)
-2. [005-02 Authorization Role Alignment](005-02-authorization-role-alignment.md)
-3. [005-03 Workforce Profile and Technician Eligibility](005-03-workforce-profile-and-technician-eligibility.md)
-4. [005-04 Legacy Employee and Technician Migration](005-04-legacy-employee-technician-migration.md)
+2. [005-02 Authorization Model and Backend Enforcement](005-02-authorization-role-alignment.md)
+3. [005-03 Frontend Authorization and Access Administration](005-03-workforce-profile-and-technician-eligibility.md)
+4. [005-04 Workforce Profile and Technician Eligibility](005-04-legacy-employee-technician-migration.md)
+5. [005-05 Legacy Workforce Inventory and Dry Run](005-05-legacy-workforce-inventory-dry-run.md)
+6. [005-06 Legacy Workforce Migration and Cutover](005-06-legacy-workforce-migration-cutover.md)
 
-Each child slice must be implemented, validated, and reviewed independently. Do not send Codex the entire parent scope as one implementation task.
+Each child must be implemented, validated, and reviewed independently.
 
-## Architecture decision
-- Person is the shared human identity.
-- The application user account is the authentication identity.
-- Authorization roles and permissions belong to the user account/security layer.
-- Employee and Technician are Person roles or workforce profiles.
-- Workforce eligibility does not grant application access.
-- Application access does not create or replace a Person.
-- Legacy Employee or Technician records must be reconciled into Person rather than preserved as a competing identity system.
-
-## Existing-system rule
-Audit all existing authentication, Identity, employee, technician, person, contact, role, permission, assignment, labor, time, availability, and schedule behavior before changing code. Preserve working ASP.NET Identity infrastructure unless a documented defect requires otherwise.
+## Architecture decisions
+- Person is the human identity; the application user account is the authentication identity.
+- Authorization belongs to user-account security, not descriptive Person roles.
+- Workforce profiles extend Person and may exist without application access.
+- Migration discovery and dry run must complete before production cutover.
+- Legacy creation paths are retired only after validation proves all dependent workflows use Person.
 
 ## UI steering
-- Slice 005 may add or repair narrowly scoped identity, workforce, role, and eligibility screens required by its child slices.
-- Before UI-006 approval, use current application-shell and form patterns; do not redesign global navigation, page anatomy, or unrelated administration screens.
-- Record confusing terminology, role presentation, or workflow placement as input to the UI planning track.
-- After UI-006 approval, user-visible Slice 005 implementation must conform to the approved terminology, information architecture, responsive rules, accessibility requirements, and interaction patterns.
+Narrow identity, authorization, and workforce screens may be repaired as required. Broad administration or application-shell redesign remains governed by the UI planning track.
 
 ## Parent acceptance criteria
+- All six children are complete.
 - User accounts link safely to People.
-- Descriptive Person roles are separated from application permissions.
-- Workforce and technician eligibility extend Person rather than creating another identity.
-- Existing historical workforce data is migrated or explicitly reported as unresolved.
-- Passwords, sign-in, MFA, lockout, tenant isolation, historical assignments, labor, and audit records remain correct.
-- Work Order Intake and Scheduling can depend on one Person-based workforce model.
+- Backend and frontend authorization use one canonical model.
+- Workforce eligibility extends Person without granting access.
+- Legacy workforce records are migrated or explicitly reported as unresolved.
+- Authentication security, tenant isolation, assignments, labor, time, schedules, and audit history remain correct.
 
 ## Guardrail
-Do not implement this parent slice in a single Codex run. Do not include work-order assignment, scheduling-board, application-shell, broad administration UI, or PWA redesign.
+Do not send this parent to Codex. Do not include work-order assignment, scheduling-board, broad administration UI, or PWA redesign.
