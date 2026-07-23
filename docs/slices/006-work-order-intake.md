@@ -11,9 +11,9 @@ Requires completed applicable children from Slices 001 through 005.
 
 ## Required child sequence
 1. [006-01 Work Order Core](006-01-work-order-core.md)
-2. [006-02 Organization and Location Quick-Create Integration](006-02-work-order-equipment.md)
-3. [006-03 Work Order Equipment Assignment](006-03-work-order-contacts.md)
-4. [006-04 Equipment Quick-Create Integration](006-04-work-order-backlog.md)
+2. [006-02 Organization and Location Quick-Create Integration](006-02-organization-location-quick-create-integration.md)
+3. [006-03 Work Order Equipment Assignment](006-03-work-order-equipment-assignment.md)
+4. [006-04 Equipment Quick-Create Integration](006-04-equipment-quick-create-integration.md)
 5. [006-05 Work Order Contact Assignment](006-05-work-order-contact-assignment.md)
 6. [006-06 Person Quick-Create Integration](006-06-person-quick-create-integration.md)
 7. [006-07 Work Order Backlog](006-07-work-order-backlog.md)
