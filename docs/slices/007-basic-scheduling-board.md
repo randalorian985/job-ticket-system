@@ -3,6 +3,9 @@
 ## Status
 Aligned with Kevin at a high level. Parent steering scope only.
 
+## Steering inheritance
+This parent and all Slice 007 children inherit [Shared Slice Steering](STEERING.md). Each Codex run must target one child slice only and must read the master plan, shared steering, this parent scope, the target child, and any approved UI specification before changing code.
+
 ## Goal
 Complete the second business tracer through small, reviewable slices:
 
@@ -28,6 +31,13 @@ Each child slice must be implemented, validated, documented, and reviewed before
 - Dispatch should use the existing backlog, assignments, and schedule data rather than creating parallel systems.
 - Technician views must preserve assigned-ticket restrictions and hide manager-only or billing data.
 
+## UI steering
+- Slice 007 may add or repair narrowly scoped assignment, scheduling, backlog, dispatch, and technician-queue interfaces required by its child slices.
+- Before UI-006 approval, preserve the current shell and broad workbench structure; do not establish a competing operations redesign.
+- Record confusing queue grouping, filters, assignment controls, schedule editing, review transitions, terminology, or mobile technician access as input to UI-004, UI-005, and UI-006.
+- After UI-006 approval, production operations and technician-queue UI must conform to the approved workbench, navigation, terminology, responsive rules, accessibility requirements, and interaction patterns.
+- No UI decision may weaken technician visibility restrictions, manager-only data boundaries, tenant isolation, or auditability.
+
 ## Parent acceptance criteria
 - All four child slices are complete.
 - Backlog -> Technician Assignment -> Time Assignment -> Schedule Block works end to end.
@@ -37,4 +47,4 @@ Each child slice must be implemented, validated, documented, and reviewed before
 - Tenant isolation, permissions, tests, wiki, and screenshots are correct.
 
 ## Guardrail
-Do not send this parent scope to Codex as one implementation task. Do not introduce a separate employee identity system or perform the broad application-shell redesign, PWA implementation, technician execution workflow, labor, parts, or completion work here.
+Do not send this parent scope to Codex as one implementation task. Do not introduce a separate employee identity system or perform the broad application-shell, operations-workbench, PWA, technician execution, labor, parts, or completion redesign here.

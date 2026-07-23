@@ -3,6 +3,9 @@
 ## Status
 Proposed; not yet explicitly confirmed by Kevin.
 
+## Steering inheritance
+This parent and all Slice 005 children inherit [Shared Slice Steering](STEERING.md). Each Codex run must target one child slice only and must read the master plan, shared steering, this parent scope, and the target child before changing code.
+
 ## Goal
 Align the centralized Person model with authentication, authorization, workforce profiles, technician eligibility, and legacy employee data through small, reviewable child slices.
 
@@ -29,6 +32,12 @@ Each child slice must be implemented, validated, and reviewed independently. Do 
 ## Existing-system rule
 Audit all existing authentication, Identity, employee, technician, person, contact, role, permission, assignment, labor, time, availability, and schedule behavior before changing code. Preserve working ASP.NET Identity infrastructure unless a documented defect requires otherwise.
 
+## UI steering
+- Slice 005 may add or repair narrowly scoped identity, workforce, role, and eligibility screens required by its child slices.
+- Before UI-006 approval, use current application-shell and form patterns; do not redesign global navigation, page anatomy, or unrelated administration screens.
+- Record confusing terminology, role presentation, or workflow placement as input to the UI planning track.
+- After UI-006 approval, user-visible Slice 005 implementation must conform to the approved terminology, information architecture, responsive rules, accessibility requirements, and interaction patterns.
+
 ## Parent acceptance criteria
 - User accounts link safely to People.
 - Descriptive Person roles are separated from application permissions.
@@ -38,4 +47,4 @@ Audit all existing authentication, Identity, employee, technician, person, conta
 - Work Order Intake and Scheduling can depend on one Person-based workforce model.
 
 ## Guardrail
-Do not implement this parent slice in a single Codex run. Do not include work-order assignment, scheduling-board, application-shell, or PWA redesign.
+Do not implement this parent slice in a single Codex run. Do not include work-order assignment, scheduling-board, application-shell, broad administration UI, or PWA redesign.
