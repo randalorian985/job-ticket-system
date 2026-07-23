@@ -1,37 +1,29 @@
-# Slice 005-03: Workforce Profile and Technician Eligibility
+# Slice 005-03: Frontend Authorization and Access Administration
 
 ## Status
-Proposed; child slice of Slice 005.
+Aligned child of Slice 005.
 
 ## Goal
-Add workforce-specific profile and eligibility behavior to People without creating a separate Employee identity.
+Align frontend route protection, control visibility, and access-administration workflows with the canonical backend authorization model.
 
 ## Dependencies
-Requires Slice 003. May follow Slice 005-01 when user linkage is needed by the existing UI.
+Requires Slice 005-02.
 
 ## Scope
-- Audit existing employee, technician, availability, assignment, and labor settings.
-- Store Employee and Technician as roles or profiles attached to Person.
-- Maintain workforce active/inactive status independently of Person active status and login access.
-- Maintain technician eligibility, scheduling visibility, and basic working-hours or availability data already required by the current architecture.
-- Allow workforce records that do not have application access.
-- Prevent inactive or ineligible technicians from receiving new assignments while preserving history.
-- Update technician selectors and workforce screens to reference Person.
-
-## Business rules
-- Person is the identity; workforce profile is an extension.
-- Employee status and technician eligibility are separate.
-- A person may be an employee without being a technician.
-- A technician may be schedulable without having a login when business workflow requires it.
-- Deactivation must preserve historical assignments, labor, time entries, and schedule records.
-- Scheduling eligibility does not grant application permission.
+- Audit frontend route guards, role checks, navigation visibility, action visibility, unauthorized states, and user-access administration screens.
+- Consume the canonical roles or permissions defined by Slice 005-02.
+- Remove frontend checks that incorrectly depend on descriptive Person or legacy Employee roles.
+- Ensure hidden controls do not replace server-side enforcement.
+- Provide authorized access review and assignment using existing administration patterns.
+- Preserve technician assigned-ticket visibility and manager/admin boundaries.
+- Add focused route, component, and permission-state tests.
 
 ## Acceptance criteria
-- Eligible technician People appear in later assignment and scheduling selectors.
-- Inactive or ineligible People cannot receive new work.
-- Workforce status, login access, Person status, and permissions can change independently.
-- Existing historical records remain associated with the correct Person.
-- Tests cover eligibility, deactivation, no-login technicians, tenant isolation, and selector behavior.
+- Authorized users can reach expected routes and actions.
+- Unauthorized routes and controls behave consistently without exposing restricted data.
+- Access assignments can be reviewed and changed independently of Person roles and workforce eligibility.
+- Frontend behavior agrees with backend enforcement for major roles.
+- Tenant boundaries and existing authentication flows remain correct.
 
 ## Guardrail
-Do not implement the scheduling board, work-order assignment workflow, or legacy record merge in this slice.
+Do not implement workforce eligibility, legacy migration, broad administration redesign, or backend policy changes beyond defects required to consume Slice 005-02.
