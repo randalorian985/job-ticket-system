@@ -12,8 +12,8 @@ Requires Slice 003-01. Saved contact roles are not an authorization dependency.
 ## Required child sequence
 1. [005-01 Person and User Account Linkage](005-01-person-user-account-linkage.md)
 2. [005-02 Authorization Model and Backend Enforcement](005-02-authorization-role-alignment.md)
-3. [005-03 Frontend Authorization and Access Administration](005-03-workforce-profile-and-technician-eligibility.md)
-4. [005-04 Workforce Profile and Technician Eligibility](005-04-legacy-employee-technician-migration.md)
+3. [005-03 Frontend Authorization and Access Administration](005-03-frontend-authorization-access-administration.md)
+4. [005-04 Workforce Profile and Technician Eligibility](005-04-workforce-profile-technician-eligibility.md)
 5. [005-05 Legacy Workforce Inventory and Dry Run](005-05-legacy-workforce-inventory-dry-run.md)
 6. [005-06 Legacy Workforce Migration and Cutover](005-06-legacy-workforce-migration-cutover.md)
 
