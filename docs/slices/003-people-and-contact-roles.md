@@ -28,6 +28,14 @@ Requires Slices 001 and 002.
 - Preserve historical assignments, time records, and audit history when roles or active status change.
 - Provide a reusable minimal quick-create flow for an authorized user who needs to add a missing Person from another workflow.
 
+## Saved-role data and behavior
+- Use a normalized Role lookup and Person-to-Role relationship; do not store saved roles as comma-separated text.
+- Prevent duplicate Person/Role pairs.
+- Saving a Person with no saved roles is valid.
+- Existing saved roles must load during edit and may be added or removed independently.
+- Reliable existing contact-type values may be migrated to saved roles, but roles must not be inferred from ticket history.
+- Saved roles may improve search, filtering, and ranking but are not authorization permissions.
+
 ## Quick-create rules
 - Collect only the minimum valid Person fields.
 - Prefill the selected organization and intended calling context when available.
@@ -46,12 +54,11 @@ Requires Slices 001 and 002.
 - Saved roles improve search, filtering, and eligibility; they are not authorization permissions by themselves.
 - Removing an Employee or Technician role must not delete historical work-order assignments, labor, or schedule history.
 
-## Supporting detail
-See the legacy `slices/people-01-multiple-saved-roles.md` and contact design reference for detailed role behavior.
-
 ## Acceptance criteria
 - One person can hold multiple saved roles, including Employee and Technician.
 - A person is not duplicated merely to serve another role or gain workforce capabilities.
+- Duplicate Person/Role pairs are rejected.
+- Person create and edit support zero or more saved roles, and existing selections reload correctly.
 - Existing contact, employee, technician, and linked user information is preserved or safely migrated.
 - The system can distinguish descriptive roles from authentication and authorization.
 - Later workforce and scheduling slices can reference the same Person identity.
