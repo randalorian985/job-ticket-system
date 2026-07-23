@@ -3,6 +3,7 @@
 ## Authority
 - `docs/slices/000-slice-planning.md` defines the active sequence and status of every slice.
 - This file defines rules inherited by every parent and child slice under `docs/slices/`.
+- `docs/codex-model-routing.md` defines the required agent profile, model, reasoning level, escalation, and review route for each executable child.
 - A slice-specific exception is valid only when it is explicit, narrow, and compatible with approved upstream decisions.
 - Git history is the archive for superseded plans; do not recreate parallel planning trees.
 
@@ -62,17 +63,28 @@ Line count is not the sizing rule. Cohesion, dependency boundaries, validation s
 - Record what already worked, what changed, validation performed, known risks, and deferred dependencies.
 - Finish, review, and document a child before beginning the next dependent child.
 
+## Agent and model routing
+- Before starting a child, read [Codex Model Routing](../codex-model-routing.md) and use its `Slice Routing` table to select the primary agent.
+- Begin every execution or review prompt with the required task header from that document.
+- The primary agent owns repository audit, implementation or planning output, validation, and handoff for one child only.
+- Luna may perform isolated mechanical subtasks but may not own a complete child slice.
+- A Sol Extra High independent review must use fresh context when required by the routing table; the implementation pass does not count as its own independent review.
+- If the repository audit reveals a Sol-owned risk in a Terra-routed child, stop implementation at that decision boundary and escalate with evidence.
+- Model routing cannot approve a proposed parent, unresolved business decision, migration cutover, production action, or final UI direction.
+
 ## Codex execution rule
 Every Codex prompt must instruct Codex to:
-1. Read `000-slice-planning.md`, this file, the target child, its parent, and any applicable approved UI specification.
-2. Audit the current implementation before proposing changes.
-3. State the exact systems and files expected to change.
-4. Implement only the smallest complete outcome required by the target child.
-5. Preserve tenant isolation, authorization, existing data, history, and working workflows.
-6. Avoid later-child work and unrelated refactoring.
-7. Stop and propose a split when the audit shows the target child violates the sizing test.
-8. Run and report relevant validation.
-9. Update documentation and screenshots when required.
+1. Read `000-slice-planning.md`, this file, `../codex-model-routing.md`, the target child, its parent, and any applicable approved UI specification.
+2. Declare the required model-routing task header before implementation or review.
+3. Audit the current implementation before proposing changes.
+4. State the exact systems and files expected to change.
+5. Implement only the smallest complete outcome required by the target child.
+6. Preserve tenant isolation, authorization, existing data, history, and working workflows.
+7. Avoid later-child work and unrelated refactoring.
+8. Stop and propose a split when the audit shows the target child violates the sizing test.
+9. Stop and escalate when the audit crosses the selected agent's authority or the declared approval gate is unresolved.
+10. Run and report relevant validation.
+11. Update documentation and screenshots when required.
 
 ## Conflict resolution
 When documents conflict, use this order:
@@ -81,7 +93,8 @@ When documents conflict, use this order:
 3. This shared steering file.
 4. The target child slice.
 5. The parent scope.
-6. Older general project documentation.
-7. Git history and removed plans.
+6. `docs/codex-model-routing.md` for agent and review selection only.
+7. Older general project documentation.
+8. Git history and removed plans.
 
 Stop and document the conflict rather than silently choosing a superseded direction when the first four sources disagree.

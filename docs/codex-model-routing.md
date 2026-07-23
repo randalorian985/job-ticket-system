@@ -38,6 +38,17 @@ Do not start an implementation task when its approval gate is unresolved.
 
 Start with Terra High unless the task table requires Sol. Use Luna only when the work is mechanical, easy to verify, and unable to change business meaning by itself.
 
+## Agent Profiles
+
+| Agent profile | Model route | May own | Must not own |
+|---|---|---|---|
+| Delivery agent | Terra High | One approved, bounded child slice; ordinary backend, React, API, test, documentation, and integration work | Unresolved architecture, destructive migration, authorization redesign, production cutover, or approval decisions |
+| Architecture and risk agent | Sol Extra High | Domain and workflow architecture, identity, authorization, migrations, historical-data rules, PWA security boundaries, cutover planning, and independent high-risk review | Business approval or unattended production action |
+| Mechanical support agent | Luna High | Formatting, inventories, repetitive fixtures, screenshot lists, and deterministic cleanup delegated from a Terra or Sol task | A complete business child slice, schema meaning, authorization, migrations, historical behavior, or final review |
+| Independent reviewer | Sol Extra High with fresh context | Required risk review for the high-risk slice groups below | Editing and approving the same high-risk change in one pass |
+
+The primary route owns the child slice from repository audit through validation and handoff. A support agent may assist only with a clearly isolated subtask. Parent slices are steering documents and are never executable agent assignments.
+
 ## Task Routing
 
 | Task | Primary route | Required review or escalation |
@@ -53,6 +64,28 @@ Start with Terra High unless the task table requires Sol. Use Luna only when the
 | Test fixtures, repetitive test cases, formatting, screenshot inventories, and documentation cleanup | Luna High | Terra High confirms behavior-changing expectations. Sol Extra High reviews tests that encode migration or historical-data rules. |
 | Initial debugging of a bounded failure | Terra High | Escalate to Sol Extra High after two evidence-based attempts fail, when data loss is possible, or when the failure crosses modules. |
 | Manual final pull-request risk review, migration rehearsal review, production readiness, and cutover or rollback decision | Sol Extra High | Use Sol Max only for unresolved quality-first analysis. Production action remains a human decision. |
+
+## Slice Routing
+
+The canonical slice inventory and execution order live in [Slice Planning](./slices/000-slice-planning.md). Every run must also follow [Shared Slice Steering](./slices/STEERING.md). The table below selects the primary agent for each current child; it does not authorize a proposed or blocked slice.
+
+| Child slice or group | Primary agent | Required review or escalation |
+|---|---|---|
+| `001-01`, `002-01`, `003-01`, `004-01`, `004-02`, `005-01`, `005-04`, `006-01`, `006-03` | Architecture and risk agent, Sol Extra High | Use a separate Sol Extra High review for schema identity, data preservation, migration, and rollback behavior. Bounded API/UI implementation may be handed to Terra High after the contract is fixed. |
+| `001-02`, `002-02`, `003-02`, `003-03`, `004-03`, `006-02`, `006-04`, `006-05`, `006-06`, `006-07` | Delivery agent, Terra High | Escalate to Sol Extra High when audit reveals schema changes, cross-tenant identity ambiguity, authorization changes, or historical-data impact. |
+| `005-02`, `005-03` | Architecture and risk agent, Sol Extra High | Require independent security and cross-role review before merge. |
+| `005-05` | Delivery agent, Terra High | Sol Extra High reviews matching rules, ambiguity handling, reconciliation evidence, and the proposed cutover input. |
+| `005-06` | Architecture and risk agent, Sol Extra High | Require a fresh-context Sol Extra High migration review and explicit human cutover approval. |
+| `007-01` through `007-04` | Delivery agent, Terra High | Escalate assignment eligibility, schedule-conflict policy, authorization, concurrency, or cross-role workflow decisions to Sol Extra High. |
+| `008-01`, `008-02`, `008-05` | Delivery agent, Terra High | Sol Extra High reviews cache scope, install claims, logout cleanup, standalone authentication behavior, and release evidence. |
+| `008-03`, `008-04` | Architecture and risk agent, Sol Extra High | Require independent review of update activation, deep links, recovery, token storage, cache partitioning, logout, and cross-account safety. |
+| `009-01` through `009-03` | Delivery agent, Terra High | Escalate any proposed shared abstraction that changes ownership, authorization, caller lifecycle, or data behavior. |
+| `UI-001-01` through `UI-001-03` | Delivery agent, Terra High | Sol Extra High reviews authorization findings and any recommendation that would alter architecture or role boundaries. |
+| `UI-002-01` through `UI-005-04` | Architecture and risk agent, Sol Extra High | Keep the work planning-only. Human review approves workflow direction before it becomes a production specification. |
+| `UI-006-01`, `UI-006-02` | Delivery agent, Terra High | Escalate cross-role conflicts, security findings, or unresolved workflow architecture to Sol Extra High. |
+| `UI-006-03` | Architecture and risk agent, Sol Extra High | Human approval is required for the final UI specification and production sequence. |
+
+When a child contains both Sol-owned decisions and Terra-owned implementation, Sol fixes and records the contract first. Terra may then implement that same child only if the remaining work is bounded, the approval gate is satisfied, and the handoff names the frozen decisions. Do not use Luna as the primary agent for any listed child.
 
 ## Phase Routing
 
