@@ -1,30 +1,29 @@
 # Slice 007-03: Dispatch Backlog and Board
 
 ## Status
-Aligned with Kevin; child slice of Slice 007.
+Aligned child of Slice 007.
 
 ## Goal
-Give dispatchers one usable workspace for unscheduled backlog work and scheduled work orders.
+Give dispatchers one coherent workspace for existing unscheduled backlog and scheduled work.
 
 ## Dependencies
-Requires Slices 006-04, 007-01, and 007-02.
+Requires Slices 006-07, 007-01, and 007-02.
 
 ## Scope
-- Audit the current dispatch, calendar, backlog, filtering, assignment, and schedule UI before changing it.
-- Present unscheduled work orders and scheduled work in one coherent dispatcher workflow.
-- Show enough customer, location, priority, equipment, technician, and schedule context to make dispatch decisions.
-- Support opening the existing work-order workspace from either backlog or schedule views.
-- Support assignment and rescheduling through the existing approved actions.
-- Preserve manager/dispatcher permissions, tenant isolation, and external calendar behavior.
-- Keep the layout focused on function first and compatible with the separately approved application-shell direction.
+- Audit current dispatch, backlog, schedule, calendar, assignment, filtering, permission, and navigation behavior.
+- Present unscheduled and scheduled work in one coherent dispatcher workflow using existing data.
+- Show customer, location, priority, equipment, technician, and schedule context needed for dispatch decisions.
+- Open the existing work-order workspace without losing queue context where practical.
+- Invoke approved assignment and schedule actions rather than duplicating their business logic.
+- Preserve permissions, tenant isolation, timezone behavior, and external calendar integration.
+- Follow approved UI workbench direction when available.
 
 ## Acceptance criteria
-- Dispatchers can move from backlog review to technician assignment and schedule placement without losing context.
-- Scheduled and unscheduled work remain distinguishable and searchable.
-- Changes persist and appear to the correct users.
-- The screen does not create a second backlog, assignment, or schedule system.
-- Existing integrations and tickets do not regress.
-- Tests, wiki, and screenshots are updated.
+- Dispatchers can move from backlog review to assignment and schedule placement coherently.
+- Scheduled, unscheduled, blocked, and conflicting work remain distinguishable and searchable.
+- Changes persist to the existing assignment and schedule systems.
+- Existing tickets and integrations do not regress.
+- Focused tests, wiki, and screenshots are complete.
 
 ## Guardrail
-Do not perform the broad global navigation redesign, PWA work, technician execution workflow, labor tracking, parts workflow, or invoice preparation in this slice.
+Do not create another backlog, assignment, or schedule model; do not include technician execution, labor, parts, invoicing, PWA, or global navigation redesign.
