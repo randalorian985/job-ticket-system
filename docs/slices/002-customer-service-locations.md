@@ -1,37 +1,29 @@
 # Slice 002: Customer Service Locations
 
 ## Status
-Aligned with Kevin at a high level.
+Aligned with Kevin at a high level. Parent steering scope only.
 
 ## Goal
-Allow a customer organization to have one or more reusable service locations where work and equipment are managed.
+Provide reusable customer service locations and one reusable minimal creation capability.
 
 ## Dependencies
-Requires Slice 001.
+Requires Slice 001-01.
 
-## Scope
-- List, create, view, edit, activate, and deactivate service locations.
-- Link every service location to one customer organization.
-- Store service address, location name/number, access notes, and basic contact context using existing models where possible.
-- Search and filter locations by customer, name, number, or address.
-- Preserve existing ticket, equipment, and customer relationships.
-- Provide a reusable minimal quick-create flow for an authorized user who needs to add a missing service location from another workflow.
+## Required child sequence
+1. [002-01 Service Location Core](002-01-service-location-core.md)
+2. [002-02 Service Location Quick-Create](002-02-service-location-quick-create.md)
 
-## Quick-create rules
-- Require the customer organization before quick-create opens.
-- Prefill and lock or clearly display the selected customer context.
-- Collect only the minimum valid location fields.
-- Respect tenant isolation, create permissions, duplicate/address warnings, and validation.
-- Return the created location to the calling workflow through a reusable result contract.
-- Full editing remains in the Service Location screen.
+## Shared decisions
+- Each Service Location belongs to one customer Organization in the MVP.
+- Historical tickets and equipment retain inactive location references.
+- People and location-specific contact roles remain in later People and work-order slices.
+- Quick-create reuses the canonical location model and validation.
 
-## Acceptance criteria
-- A customer can have multiple locations.
-- A location cannot cross tenant boundaries.
-- Existing tickets and equipment still resolve their locations.
-- Authorized callers can quick-create a location for the selected customer and receive the saved record.
-- Cancel or failed save returns a controlled result without corrupting the calling workflow.
-- Tests and wiki documentation are updated.
+## Parent acceptance criteria
+- Both children are complete.
+- Customers can manage several distinguishable service locations.
+- Existing ticket and equipment relationships remain valid.
+- Later equipment and work-order slices can depend on one location model and quick-create contract.
 
 ## Guardrail
-Do not build equipment, work-order intake, or a full contact-role system in this slice except for the reusable Service Location quick-create contract.
+Do not send this parent to Codex. Do not include equipment, work-order intake, or contact-role implementation beyond compatibility required by the target child.
