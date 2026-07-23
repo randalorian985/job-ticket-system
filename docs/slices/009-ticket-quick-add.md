@@ -3,11 +3,14 @@
 ## Status
 Proposed; final consistency pass after the underlying quick-create capabilities and work-order integrations are complete.
 
+## Steering inheritance
+This slice inherits [Shared Slice Steering](STEERING.md). Codex must read the master plan, shared steering, this slice, the owning master-data and work-order child slices, and any approved UI-006 specification before changing quick-add presentation or interaction patterns.
+
 ## Goal
 Audit, standardize, and polish all quick-add experiences so they behave consistently across desktop and mobile without rebuilding the underlying master-data create flows.
 
 ## Dependencies
-Requires the quick-create capabilities owned by Slices 001 through 004 and their work-order integrations in Slices 006-01 through 006-03. Scheduling and PWA are not functional dependencies.
+Requires the quick-create capabilities owned by Slices 001 through 004 and their work-order integrations in Slices 006-01 through 006-03. Scheduling and PWA are not functional dependencies. Broad presentation standardization must conform to UI-006 when approved.
 
 ## Ownership model
 - Slice 001 owns Organization quick-create.
@@ -29,6 +32,12 @@ Requires the quick-create capabilities owned by Slices 001 through 004 and their
 - Consolidate duplicate UI infrastructure only where safe and within this slice's scope.
 - Preserve existing master-data screens and APIs.
 
+## UI steering
+- Before UI-006 approval, use existing dialog, drawer, selector, validation, focus, and responsive conventions; do not establish a competing application-wide pattern.
+- Record inconsistencies and usability findings as input to UI-003 and UI-006.
+- After UI-006 approval, quick-add lifecycle, placement, focus return, responsive behavior, validation, permissions, and terminology must conform to the approved specification.
+- Consistency must not erase workflow-specific context or weaken permissions, tenant isolation, duplicate warnings, or unsaved-state protection.
+
 ## Explicitly out of scope
 - Building a new Organization, Person, Location, or Equipment creation system.
 - Broad redesign of work-order intake.
@@ -44,8 +53,9 @@ Requires the quick-create capabilities owned by Slices 001 through 004 and their
 - Unauthorized users do not see or cannot execute quick-create actions.
 - Duplicate warnings and validation are consistent.
 - Desktop and mobile workflows remain usable.
+- Approved UI interaction and accessibility rules are followed where applicable.
 - Existing quick-add implementations are consolidated where appropriate without regressions.
 - Tests, wiki documentation, and screenshots are updated.
 
 ## Guardrail
-Treat this as a consistency and hardening slice, not as permission to rebuild master data or the full ticket workflow.
+Treat this as a consistency and hardening slice, not as permission to rebuild master data, the full ticket workflow, or the application shell.
