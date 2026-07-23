@@ -498,6 +498,8 @@ Adding the installable PWA track is expected to add approximately 50,000 to 90,0
 
 The revised planning range for the complete schema redesign and PWA program is approximately 550,000 to 890,000 implementation-assistant tokens. This is a planning range rather than a billing guarantee; actual billed usage depends on model choice, reasoning effort, context reuse, test failures, migration findings, and steering changes.
 
+The current delivery budget is approximately 1,250 to 2,500 Codex credits, or roughly $50 to $100 beyond included plan usage. This assumes 55 executable child slices, two to four task-equivalent runs per child, a model mix weighted toward Terra Medium, required Sol review for high-risk work, limited Luna mechanical support, and a 25% contingency. It excludes human labor, hosting, third-party services, and production operations. See [Codex Model Routing](./codex-model-routing.md#planning-cost-estimate) for rates, assumptions, escalation controls, and reforecast checkpoints.
+
 ## Acceptance Criteria
 
 The redesign is complete only when:

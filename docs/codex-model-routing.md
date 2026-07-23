@@ -140,6 +140,19 @@ Do not use Ultra for:
 5. Candidate fitments, equipment groupings, historical installations, and unknown rates remain unresolved until the approved human review occurs.
 6. Do not run all phases as one unattended task. Stop at every documented exit gate.
 
+## Escalation Procedure
+
+Use the least expensive route that is authorized and adequate, then escalate as soon as one of these boundaries is crossed:
+
+1. Start approved, bounded implementation on Terra Medium in Standard mode.
+2. Escalate to Terra High when implementation crosses several application layers, involves difficult concurrency or state behavior, or two evidence-based Medium attempts fail.
+3. Escalate from Terra to Sol High before deciding schema identity or cardinality, authorization or tenant boundaries, historical snapshots, financial rules, migration semantics, fitment truth, cache or authentication boundaries, or cross-role workflow architecture.
+4. Escalate from Sol High to Sol Extra High for destructive backfills, production cutover or rollback, unresolved historical-data integrity, critical security decisions, or conflicting evidence that remains after a High pass.
+5. Stop for human approval when business meaning is unresolved, a steering gate is pending, records may be merged or discarded, production data may change, or a migration or release is ready to execute.
+6. After the high-risk decision is fixed and recorded, hand bounded implementation back to Terra Medium. Do not keep an entire slice on a stronger route merely because one earlier decision required it.
+
+An escalation handoff must include the child-slice ID, current task header, evidence collected, attempts made, exact unresolved decision, affected files and data, validation results, and the approval required. Changing the model or reasoning level without recording this handoff does not satisfy the escalation rule.
+
 ## Cost Control
 
 - Use Terra Medium in Standard mode for the majority of bounded implementation work.
@@ -150,6 +163,25 @@ Do not use Ultra for:
 - Use Pro mode only when a difficult, quality-critical review demonstrates enough benefit to justify its additional cost and latency.
 - Reuse focused context and avoid repeatedly loading unrelated logs, generated files, or historical documents.
 - Do not use Fast, Max, or Ultra by default.
+
+## Planning Cost Estimate
+
+The current scope contains 55 executable child slices. The existing scope estimate of 550,000 to 890,000 implementation-assistant tokens is a sizing signal, not a complete billable-token forecast, because it does not separate uncached input, cached input, output, retries, validation, or independent review.
+
+For delivery planning, use this working budget:
+
+| Estimate | Planning range |
+|---|---|
+| Executable children | 55 |
+| Average Codex task-equivalent runs | 2 to 4 per child |
+| Expected model mix | About 65% Terra, 25% Sol, and 10% Luna |
+| Contingency | 25% for failed tests, migration findings, and steering changes |
+| Codex credit budget | Approximately 1,250 to 2,500 credits |
+| Approximate incremental cost | Approximately $50 to $100 beyond included plan usage |
+
+The dollar range uses the published equivalence of 2,500 Codex credits to $100 and the current token-based Codex rates. Actual cost may be lower when plan-included usage or cached input applies, and higher when context is repeatedly reloaded, tests require several repair passes, migrations uncover poor data, or Extra High and Pro are used outside their intended boundaries. The estimate excludes human labor, hosting, third-party services, data cleanup performed outside Codex, and production operations.
+
+After the first five completed children, record actual credits by model, input/cache/output mix, number of repair passes, and review cost. Reforecast the remaining program from that evidence. Reforecast again before `005-06`, `008-03`, `008-04`, and any production cutover.
 
 ## Review Triggers
 
@@ -164,4 +196,5 @@ Review this routing policy when:
 ## Official References
 
 - [OpenAI model guidance](https://developers.openai.com/api/docs/guides/latest-model)
-- [OpenAI Codex rate card](https://help.openai.com/en/articles/20001106-codex-rate-card-2)
+- [OpenAI Codex rate card](https://help.openai.com/en/articles/20001106-codex-rate-card)
+- [OpenAI GPT-5.6 model pricing](https://developers.openai.com/api/docs/models)

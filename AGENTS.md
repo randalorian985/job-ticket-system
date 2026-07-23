@@ -21,6 +21,7 @@ This repository is currently in scaffold phase. Keep contributions focused on fo
 - Escalate to Terra High for complex cross-layer implementation and to GPT-5.6 Sol at High reasoning for architecture, identity, authorization, migration design, security boundaries, and independent risk review.
 - Reserve Sol Extra High for destructive migration or cutover work, historical-data integrity, critical security decisions, or unresolved evidence after a High pass.
 - Use GPT-5.6 Luna at Medium reasoning only for low-risk mechanical work with deterministic validation.
+- Follow the escalation procedure in the routing document as soon as a task crosses its declared authority, and return bounded implementation to Terra Medium after the high-risk decision is fixed.
 - Model selection never bypasses a scope, steering, migration, reconciliation, or production approval gate.
 
 ## Validation

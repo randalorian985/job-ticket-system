@@ -70,6 +70,7 @@ Line count is not the sizing rule. Cohesion, dependency boundaries, validation s
 - Luna may perform isolated mechanical subtasks but may not own a complete child slice.
 - An independent Sol review must use fresh context at the effort required by the routing table; the implementation pass does not count as its own independent review.
 - If the repository audit reveals a Sol-owned risk in a Terra-routed child, stop implementation at that decision boundary and escalate with evidence.
+- Escalation must follow the routing document's required handoff fields; after the decision is fixed, return bounded implementation to Terra Medium instead of retaining a stronger route for convenience.
 - Model routing cannot approve a proposed parent, unresolved business decision, migration cutover, production action, or final UI direction.
 
 ## Codex execution rule
