@@ -10,7 +10,21 @@ A slice is the smallest complete business capability that proves part of the arc
 - **Proposed:** Reasonable next slice, but not yet explicitly confirmed by Kevin.
 - **Planning:** Design work only; do not change production behavior yet.
 
-## Current sequence
+## Immediate UI wireframe planning track
+The current interface is confusing and the application shell does not scale cleanly. Start this planning track now, before any broad production UI redesign.
+
+[UI-000 User Interface Redesign Wireframe Plan](ui-000-ui-redesign-wireframe-plan.md) — Planning parent scope
+
+1. [UI-001 Current UI and Workflow Audit](ui-001-current-ui-workflow-audit.md)
+2. [UI-002 Information Architecture and Application Shell Wireframes](ui-002-information-architecture-and-application-shell-wireframes.md)
+3. [UI-003 Work Order Intake and Detail Workspace Wireframes](ui-003-work-order-workspace-wireframes.md)
+4. [UI-004 Dispatch, Scheduling, and Review Workbench Wireframes](ui-004-operations-workbench-wireframes.md)
+5. [UI-005 Technician Mobile Workflow Wireframes](ui-005-technician-mobile-wireframes.md)
+6. [UI-006 Wireframe Validation and Approved UI Specification](ui-006-wireframe-validation-and-approved-ui-spec.md)
+
+These are planning slices, not production implementation slices. They may proceed while business-domain slices are being planned, but production shell, navigation, and broad workspace changes must wait until UI-006 is approved.
+
+## Current business-capability sequence
 1. [001 Organizations](001-organizations.md) — Aligned; owns Organization quick-create
 2. [002 Customer Service Locations](002-customer-service-locations.md) — Aligned; owns Service Location quick-create
 3. [003 People and Contact Roles](003-people-and-contact-roles.md) — Aligned; owns Person quick-create
@@ -69,11 +83,16 @@ A slice is the smallest complete business capability that proves part of the arc
 11. Finish and review a slice before beginning the next unless a documented blocker requires otherwise.
 12. Parent scopes with child slices are steering documents only and must not be implemented in one Codex run.
 13. Reusable quick-create capability and calling-workflow integration must stay in their assigned slices; do not defer all quick-add behavior to Slice 009.
+14. UI wireframe slices must not change production routes, components, business behavior, permissions, APIs, or database structures.
 
 ## Layout planning dependency
 Application-shell and navigation changes are governed by `docs/layout/000-layout-direction.md`.
 
-Do not perform a broad production navigation redesign until static HTML wireframes are created and reviewed.
+Do not perform a broad production navigation or workspace redesign until the UI wireframe planning track is completed and approved.
 
-## Legacy planning documents
-The former top-level `slices/` documents remain historical/supporting references during transition. New planning and future edits belong under `docs/slices/`.
+## Canonical planning location
+- `docs/slices/` is the only active implementation-planning tree.
+- Do not create or restore a top-level `slices/` directory.
+- Update links when plans are renamed or consolidated instead of keeping duplicate compatibility copies.
+- Keep a redirect only when a live repository or external dependency still requires the old path.
+- Git history preserves superseded planning documents and is the archive for removed versions.
