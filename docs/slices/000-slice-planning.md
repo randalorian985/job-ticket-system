@@ -5,6 +5,8 @@ This folder is the canonical planning location for implementation slices.
 
 A slice is the smallest complete business capability that proves part of the architecture and creates a dependable foundation for the next slice.
 
+All parent and child slices inherit [Shared Slice Steering](STEERING.md). Every Codex run must read the master plan, shared steering, the target child slice, its parent scope, and any applicable approved UI specification before changing code.
+
 ## Status legend
 - **Aligned:** Kevin agreed with the slice at a high level.
 - **Proposed:** Reasonable next slice, but not yet explicitly confirmed by Kevin.
@@ -22,7 +24,9 @@ The current interface is confusing and the application shell does not scale clea
 5. [UI-005 Technician Mobile Workflow Wireframes](ui-005-technician-mobile-wireframes.md)
 6. [UI-006 Wireframe Validation and Approved UI Specification](ui-006-wireframe-validation-and-approved-ui-spec.md)
 
-These are planning slices, not production implementation slices. They may proceed while business-domain slices are being planned, but production shell, navigation, and broad workspace changes must wait until UI-006 is approved.
+These are planning slices, not production implementation slices. They may proceed while business-domain slices are being planned, but production shell, navigation, page anatomy, workbenches, work-order workspace, and broad technician-mobile redesign must wait until UI-006 is approved.
+
+Business-capability slices may still make narrowly scoped UI changes required to complete their capability. Before UI-006 approval, those changes must use existing patterns and must not establish a competing broad redesign. After UI-006 approval, production UI changes must conform to the approved specification unless a reviewed exception is documented.
 
 ## Current business-capability sequence
 1. [001 Organizations](001-organizations.md) — Aligned; owns Organization quick-create
@@ -70,25 +74,26 @@ These are planning slices, not production implementation slices. They may procee
 - Proven online workflow -> Installable PWA shell -> Reliable mobile launch and updates
 
 ## Required guardrails for every slice
-1. Audit the current implementation before changing code; this is not a greenfield project.
-2. Reuse existing models, migrations, APIs, components, permissions, routes, and tests.
-3. Implement only missing or incorrect behavior required by the current slice.
-4. Preserve tenant isolation, existing data, and working desktop, mobile, manager, dispatcher, and technician workflows.
-5. Do not create parallel systems or duplicate identity records.
-6. Do not pull dependencies from later slices into the current slice.
-7. Add focused backend, frontend, and end-to-end tests where applicable.
-8. Run relevant build, test, migration, and validation commands.
-9. Update the wiki and screenshots when UI behavior changes.
-10. Keep each branch, commit, and PR limited to one slice.
-11. Finish and review a slice before beginning the next unless a documented blocker requires otherwise.
-12. Parent scopes with child slices are steering documents only and must not be implemented in one Codex run.
-13. Reusable quick-create capability and calling-workflow integration must stay in their assigned slices; do not defer all quick-add behavior to Slice 009.
-14. UI wireframe slices must not change production routes, components, business behavior, permissions, APIs, or database structures.
+1. Follow [Shared Slice Steering](STEERING.md).
+2. Audit the current implementation before changing code; this is not a greenfield project.
+3. Reuse existing models, migrations, APIs, components, permissions, routes, and tests.
+4. Implement only missing or incorrect behavior required by the current slice.
+5. Preserve tenant isolation, existing data, and working desktop, mobile, manager, dispatcher, and technician workflows.
+6. Do not create parallel systems or duplicate identity records.
+7. Do not pull dependencies from later slices into the current slice.
+8. Add focused backend, frontend, and end-to-end tests where applicable.
+9. Run relevant build, test, migration, and validation commands.
+10. Update the wiki and screenshots when UI behavior changes.
+11. Keep each branch, commit, and PR limited to one slice.
+12. Finish and review a slice before beginning the next unless a documented blocker requires otherwise.
+13. Parent scopes with child slices are steering documents only and must not be implemented in one Codex run.
+14. Reusable quick-create capability and calling-workflow integration must stay in their assigned slices; do not defer all quick-add behavior to Slice 009.
+15. UI wireframe slices must not change production routes, components, business behavior, permissions, APIs, or database structures.
 
 ## Layout planning dependency
-Application-shell and navigation changes are governed by `docs/layout/000-layout-direction.md`.
+Application-shell and navigation changes are governed by `docs/layout/000-layout-direction.md` and the UI planning track.
 
-Do not perform a broad production navigation or workspace redesign until the UI wireframe planning track is completed and approved.
+Do not perform a broad production navigation or workspace redesign until UI-006 is approved.
 
 ## Canonical planning location
 - `docs/slices/` is the only active implementation-planning tree.
