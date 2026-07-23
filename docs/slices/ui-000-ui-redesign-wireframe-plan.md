@@ -3,6 +3,9 @@
 ## Status
 Planning parent scope only. Do not implement this entire document in one Codex run.
 
+## Steering inheritance
+This parent and all UI child slices inherit [Shared Slice Steering](STEERING.md). Each Codex run must target one UI child only and must read the master plan, shared steering, this parent scope, the target child, `docs/layout/000-layout-direction.md`, and all approved outputs from earlier UI children.
+
 ## Problem
 The current interface is confusing to users. The manager shell presents many destinations through a large header, top-level links, grouped dropdown menus, and a separate mobile screen picker. Users must understand the repository's feature grouping before they can find the work they need to perform.
 
@@ -42,6 +45,14 @@ Each child must be reviewed before the next dependent child is treated as approv
 - Interaction notes for menus, tabs, drawers, dialogs, filters, empty states, validation, and destructive actions.
 - Role and permission visibility matrix.
 - Approval record listing accepted decisions, rejected alternatives, and deferred questions.
+- Proposed production implementation sequence divided into small, reversible UI slices.
+
+## Approval gates
+- UI-001 must establish evidence before solution design begins.
+- UI-002 through UI-005 must preserve every authorized capability and document unresolved workflow questions.
+- UI-006 must validate real tasks for each role and record approved terminology, navigation, responsive behavior, accessibility, and interaction rules.
+- Approval of a wireframe is approval of the documented workflow and interaction direction, not permission for one broad production rewrite.
+- Production implementation must be split into separately reviewable slices after UI-006.
 
 ## Guardrails
 - Do not modify production React components, CSS, routes, APIs, permissions, or data models in these slices.
@@ -49,7 +60,7 @@ Each child must be reviewed before the next dependent child is treated as approv
 - Do not invent new business workflows merely to make a wireframe cleaner.
 - Do not use generic dashboard cards as a substitute for a task-focused workflow.
 - Do not approve a design based only on visual preference; validate findability and task completion.
-- Do not implement the future application-shell slice until UI-006 is approved.
+- Do not implement the future application-shell or workspace slices until UI-006 is approved.
 
 ## Parent definition of done
-The parent planning scope is complete when all child wireframe slices are reviewed, the approved direction is documented, and implementation can be divided into small production UI slices with explicit migration and regression boundaries.
+The parent planning scope is complete when all child wireframe slices are reviewed, the approved direction is documented, and implementation is divided into small production UI slices with explicit migration, accessibility, responsive, validation, and regression boundaries.
