@@ -1,42 +1,27 @@
 # UI-001: Current UI and Workflow Audit
 
 ## Status
-Planning.
+Planning parent scope only.
 
 ## Goal
-Document where users become confused, how current routes and screens support real tasks, and which patterns should be preserved, repaired, consolidated, or replaced.
+Create an evidence-based current-state baseline through separate inventory, workflow-audit, and findings children.
 
-## Scope
-- Inventory all manager, dispatcher, reviewer, administrator, and technician routes.
-- Map primary tasks across dashboard, work orders, scheduling, approvals, parts, reports, master data, administration, and technician work.
-- Review current navigation labels, grouping, page headers, actions, filters, forms, tables, tabs, dialogs, drawers, empty states, errors, and mobile behavior.
-- Identify duplicated entry points, unclear labels, hidden actions, excessive scrolling, context loss, and inconsistent interaction patterns.
-- Capture screenshots at representative desktop, tablet, and mobile widths.
-- Record role and permission visibility for each route and major action.
-- Identify workflows that currently work well and must not regress.
+## Required child sequence
+1. [UI-001-01 Route, Role, and Permission Inventory](ui-001-01-route-role-permission-inventory.md)
+2. [UI-001-02 Workflow and Usability Audit](ui-001-02-workflow-usability-audit.md)
+3. [UI-001-03 Findings and Preservation Baseline](ui-001-03-findings-preservation-baseline.md)
 
-## Required artifacts
-- `docs/layout/current-state-route-map.md`
-- `docs/layout/current-state-workflow-map.md`
-- `docs/layout/current-ui-findings.md`
-- Screenshot inventory with route, role, viewport, and finding references.
-- Prioritized usability problem list with severity and affected roles.
+## Shared rules
+- Record current facts before proposing solutions.
+- Tie every usability finding to a role, task, route, viewport, and observed failure point.
+- Identify working patterns and workflows that must not regress.
+- Preserve route, permission, and capability facts even when the presentation is poor.
 
-## Validation scenarios
-At minimum, trace:
-- Create and reopen a work order.
-- Find and edit a customer, location, person, and equipment unit.
-- Assign and schedule a technician.
-- Review time and parts requests.
-- Find invoice-ready or operational reports.
-- Technician finds assigned work and records progress.
-- Administrator finds configuration and user management.
+## Parent acceptance criteria
+- All routes, roles, permissions, and major actions are inventoried.
+- Primary office and technician workflows are traced with screenshots and evidence.
+- Findings are prioritized and a preservation baseline is approved.
+- UI-002 through UI-005 can design without guessing current behavior.
 
-## Guardrails
-- Do not change production behavior.
-- Separate observed problems from proposed solutions.
-- Do not mark a screen confusing without identifying the task, evidence, and failure point.
-- Preserve route and permission facts even when the current presentation is poor.
-
-## Definition of done
-The audit provides enough evidence to design information architecture and wireframes without guessing which users, tasks, routes, or capabilities exist.
+## Guardrail
+Do not send this parent to Codex and do not change production behavior in any UI-001 child.

@@ -1,35 +1,28 @@
 # Slice 001: Organizations
 
 ## Status
-Aligned with Kevin at a high level.
+Aligned with Kevin at a high level. Parent steering scope only.
 
 ## Goal
-Provide one shared Organization record that can serve one or more business roles without duplicate records.
+Provide one canonical Organization model that supports multiple business roles and reusable creation without duplicate organization systems.
 
-## Scope
-- Organization list, create, view, edit, activate, and deactivate.
-- Roles: Customer, Vendor, Equipment Manufacturer, Part Manufacturer.
-- One organization may hold multiple roles.
-- Search by organization name or organization number.
-- Preserve role-specific customer and vendor information using existing patterns where practical.
-- Audit and consolidate existing customer, vendor, and manufacturer implementations rather than creating a parallel Organization system.
-- Provide a reusable minimal quick-create flow for an authorized user who needs to create a missing customer or billing organization from another workflow.
+## Required child sequence
+1. [001-01 Organization Core and Roles](001-01-organization-core-roles.md)
+2. [001-02 Organization Quick-Create](001-02-organization-quick-create.md)
 
-## Quick-create rules
-- Collect only the minimum fields required for a valid Organization and selected role.
-- Respect tenant isolation, create permissions, duplicate warnings, and role-specific validation.
-- Return the created Organization to the calling workflow through a reusable result contract.
-- Full editing remains in the Organization screen.
-- This slice owns the Organization creation capability; later slices only integrate it into their selectors.
+Each child must be implemented, validated, and reviewed independently.
 
-## Acceptance criteria
-- One organization can hold several roles.
-- Role changes do not duplicate the organization.
-- Existing related records remain usable.
-- Authorized callers can launch the reusable minimal Organization create flow and receive the saved record.
-- Cancel or failed save returns a controlled result without corrupting the calling workflow.
-- Tenant isolation and permissions are enforced.
-- Relevant tests and wiki documentation are updated.
+## Shared decisions
+- One Organization may hold Customer, Vendor, Equipment Manufacturer, and Part Manufacturer roles.
+- Billing Party remains a work-order relationship, not a required permanent role.
+- Existing customer, vendor, and manufacturer records must be audited and preserved or migrated safely.
+- Quick-create reuses the canonical Organization capability; it is not a second form or API system.
+
+## Parent acceptance criteria
+- Both children are complete.
+- Existing organization-related records remain usable.
+- Duplicate organization creation is reduced through shared identity and warnings.
+- Later location and work-order slices can depend on one Organization model and one quick-create contract.
 
 ## Guardrail
-Do not redesign locations, people, equipment, work orders, or scheduling in this slice except for the reusable Organization quick-create contract and minimum compatibility needed to preserve existing behavior.
+Do not send this parent scope to Codex. Do not include locations, people, equipment, work orders, or scheduling beyond compatibility required by the child being implemented.

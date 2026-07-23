@@ -1,39 +1,31 @@
 # Slice 004: Equipment Types and Customer Equipment
 
 ## Status
-Aligned with Kevin at a high level.
+Aligned with Kevin at a high level. Parent steering scope only.
 
 ## Goal
-Create reusable equipment types and physical customer-equipment records tied to organizations and service locations.
+Provide reusable equipment classifications, physical customer-equipment records, and one reusable customer-equipment creation capability.
 
 ## Dependencies
-Requires Slices 001 and 002.
+Requires Slices 001-01 and 002-01.
 
-## Scope
-- Equipment-type list, create, edit, activate, and deactivate.
-- Customer-equipment list, create, view, edit, activate, and deactivate.
-- Link each physical unit to a customer organization and service location.
-- Support manufacturer, model, serial/asset number, install date, status, and notes using existing fields where practical.
-- Search and filter by customer, location, type, manufacturer, model, serial number, or asset number.
-- Preserve existing job-ticket equipment relationships.
-- Provide a reusable minimal quick-create flow for an authorized user who needs to add missing customer equipment from another workflow.
+## Required child sequence
+1. [004-01 Equipment Types](004-01-equipment-types.md)
+2. [004-02 Customer Equipment](004-02-customer-equipment.md)
+3. [004-03 Customer Equipment Quick-Create](004-03-customer-equipment-quick-create.md)
 
-## Quick-create rules
-- Require customer organization and service location before quick-create opens.
-- Prefill and clearly display the selected customer and location.
-- Collect only the minimum valid equipment fields.
-- Allow reuse or minimal creation of an equipment type only when authorized and supported by the existing architecture.
-- Respect tenant isolation, create permissions, and duplicate serial/asset warnings.
-- Return the created equipment record to the calling workflow through a reusable result contract.
-- Full editing remains in the Equipment screen.
+## Shared decisions
+- Equipment Type describes a reusable classification or model context.
+- Customer Equipment represents one physical unit at one customer Service Location in the MVP.
+- Manufacturer references use Organizations with the applicable role.
+- Existing ticket-equipment relationships and historical inactive equipment references must remain valid.
+- Quick-create reuses the canonical physical-equipment capability.
 
-## Acceptance criteria
-- One location can contain multiple equipment units.
-- Equipment types are reusable.
-- Existing equipment and ticket links remain valid.
-- Authorized callers can quick-create equipment for the selected customer and location and receive the saved record.
-- Cancel or failed save returns a controlled result without corrupting the calling workflow.
-- Tenant isolation, tests, and wiki documentation are updated.
+## Parent acceptance criteria
+- All three children are complete.
+- Reusable types and distinct physical units remain separate concepts.
+- Existing equipment and ticket links remain usable.
+- Work-order slices can depend on one Customer Equipment model and one quick-create contract.
 
 ## Guardrail
-Do not redesign work-order intake or scheduling in this slice except for the reusable Equipment quick-create contract.
+Do not send this parent to Codex. Do not implement work-order equipment assignment or scheduling in Slice 004.

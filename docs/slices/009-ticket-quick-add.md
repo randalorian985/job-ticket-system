@@ -1,61 +1,30 @@
 # Slice 009: Quick-Add Integration and Consistency
 
 ## Status
-Proposed; final consistency pass after the underlying quick-create capabilities and work-order integrations are complete.
-
-## Steering inheritance
-This slice inherits [Shared Slice Steering](STEERING.md). Codex must read the master plan, shared steering, this slice, the owning master-data and work-order child slices, and any approved UI-006 specification before changing quick-add presentation or interaction patterns.
+Proposed parent steering scope only; final hardening after owned quick-create capabilities and caller integrations are complete.
 
 ## Goal
-Audit, standardize, and polish all quick-add experiences so they behave consistently across desktop and mobile without rebuilding the underlying master-data create flows.
+Audit, consolidate, and validate proven quick-add implementations without rebuilding master data or calling workflows.
 
 ## Dependencies
-Requires the quick-create capabilities owned by Slices 001 through 004 and their work-order integrations in Slices 006-01 through 006-03. Scheduling and PWA are not functional dependencies. Broad presentation standardization must conform to UI-006 when approved.
+Requires Slices 001-02, 002-02, 003-03, 004-03, 006-02, 006-04, and 006-06. Broad interaction standardization follows approved UI-006-03 when available.
 
-## Ownership model
-- Slice 001 owns Organization quick-create.
-- Slice 002 owns Service Location quick-create.
-- Slice 003 owns Person quick-create.
-- Slice 004 owns Customer Equipment quick-create.
-- Slices 006-01 through 006-03 own integration into work-order intake.
-- This slice owns cross-cutting consistency, cleanup, and regression prevention.
+## Required child sequence
+1. [009-01 Quick-Add Lifecycle Contract Audit](009-01-quick-add-lifecycle-audit.md)
+2. [009-02 Shared Quick-Add Infrastructure](009-02-shared-quick-add-infrastructure.md)
+3. [009-03 Quick-Add Regression and Accessibility](009-03-quick-add-regression-accessibility.md)
 
-## Scope
-- Audit all current quick-add drawers, dialogs, modals, selectors, save handlers, and mobile flows.
-- Standardize open, save, cancel, failure, and return-to-caller behavior.
-- Standardize automatic selection of newly created records.
-- Standardize preservation of unsaved calling-workflow state.
-- Standardize prefilled customer, organization, location, and role context.
-- Standardize permission visibility and unauthorized behavior.
-- Standardize duplicate warnings and validation presentation.
-- Ensure dialogs and drawers are usable on supported mobile widths and in the future standalone PWA shell.
-- Consolidate duplicate UI infrastructure only where safe and within this slice's scope.
-- Preserve existing master-data screens and APIs.
+## Shared decisions
+- Owning master-data children retain record creation rules and APIs.
+- Workflow-integration children retain caller-specific state, context, and result behavior.
+- This parent owns cross-cutting lifecycle consistency and safe infrastructure consolidation only.
+- Consistency must not weaken permissions, tenant isolation, duplicate warnings, validation, or unsaved-state protection.
 
-## UI steering
-- Before UI-006 approval, use existing dialog, drawer, selector, validation, focus, and responsive conventions; do not establish a competing application-wide pattern.
-- Record inconsistencies and usability findings as input to UI-003 and UI-006.
-- After UI-006 approval, quick-add lifecycle, placement, focus return, responsive behavior, validation, permissions, and terminology must conform to the approved specification.
-- Consistency must not erase workflow-specific context or weaken permissions, tenant isolation, duplicate warnings, or unsaved-state protection.
-
-## Explicitly out of scope
-- Building a new Organization, Person, Location, or Equipment creation system.
-- Broad redesign of work-order intake.
-- Application-shell or navigation redesign.
-- Full offline quick-add or background synchronization.
-- Changes to authentication or authorization architecture beyond enforcing existing permissions.
-
-## Acceptance criteria
-- Every supported quick-add flow follows the same lifecycle and return contract.
-- Successful save selects the new record in the calling workflow.
-- Cancel and failed save do not discard unsaved calling-workflow data.
-- Prefill behavior is correct and tenant-safe.
-- Unauthorized users do not see or cannot execute quick-create actions.
-- Duplicate warnings and validation are consistent.
-- Desktop and mobile workflows remain usable.
-- Approved UI interaction and accessibility rules are followed where applicable.
-- Existing quick-add implementations are consolidated where appropriate without regressions.
-- Tests, wiki documentation, and screenshots are updated.
+## Parent acceptance criteria
+- All three children are complete.
+- Every supported quick-add follows a documented lifecycle contract.
+- Shared infrastructure is consolidated only where behavior is equivalent.
+- Desktop, mobile, keyboard, focus, permission, validation, and caller-state regressions are covered.
 
 ## Guardrail
-Treat this as a consistency and hardening slice, not as permission to rebuild master data, the full ticket workflow, or the application shell.
+Do not send this parent to Codex. Do not rebuild master-data forms, work-order intake, navigation, authorization architecture, or offline behavior.

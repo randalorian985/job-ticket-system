@@ -3,101 +3,112 @@
 ## Purpose
 This folder is the canonical planning location for implementation slices.
 
-A slice is the smallest complete business capability that proves part of the architecture and creates a dependable foundation for the next slice.
+A parent slice defines a complete business or planning outcome. A child slice is the smallest independently reviewable, testable, and reversible unit that advances that outcome.
 
-All parent and child slices inherit [Shared Slice Steering](STEERING.md). Every Codex run must read the master plan, shared steering, the target child slice, its parent scope, and any applicable approved UI specification before changing code.
+All slices inherit [Shared Slice Steering](STEERING.md). Every Codex run must target one child only and read the master plan, shared steering, target child, parent scope, and any applicable approved UI specification.
 
 ## Status legend
-- **Aligned:** Kevin agreed with the slice at a high level.
-- **Proposed:** Reasonable next slice, but not yet explicitly confirmed by Kevin.
-- **Planning:** Design work only; do not change production behavior yet.
+- **Aligned:** Kevin agreed with the parent outcome at a high level.
+- **Proposed:** Reasonable scope, not yet explicitly confirmed.
+- **Planning:** Design or audit work only; no production behavior changes.
 
 ## Immediate UI wireframe planning track
-The current interface is confusing and the application shell does not scale cleanly. Start this planning track now, before any broad production UI redesign.
+[UI-000 User Interface Redesign Wireframe Plan](ui-000-ui-redesign-wireframe-plan.md) — Planning parent
 
-[UI-000 User Interface Redesign Wireframe Plan](ui-000-ui-redesign-wireframe-plan.md) — Planning parent scope
+1. [UI-001 Current UI and Workflow Audit](ui-001-current-ui-workflow-audit.md) — Planning parent
+   - [UI-001-01 Route, Role, and Permission Inventory](ui-001-01-route-role-permission-inventory.md)
+   - [UI-001-02 Workflow and Usability Audit](ui-001-02-workflow-usability-audit.md)
+   - [UI-001-03 Findings and Preservation Baseline](ui-001-03-findings-preservation-baseline.md)
+2. [UI-002 Information Architecture and Application Shell](ui-002-information-architecture-and-application-shell-wireframes.md) — Planning parent
+   - [UI-002-01 Information Architecture](ui-002-01-information-architecture.md)
+   - [UI-002-02 Desktop and Tablet Shell Wireframes](ui-002-02-desktop-tablet-shell-wireframes.md)
+   - [UI-002-03 Manager Mobile Shell Wireframes](ui-002-03-manager-mobile-shell-wireframes.md)
+3. [UI-003 Work Order Workspace Wireframes](ui-003-work-order-workspace-wireframes.md) — Planning parent
+   - [UI-003-01 Work Order Intake Wireframes](ui-003-01-work-order-intake-wireframes.md)
+   - [UI-003-02 Work Order Detail and Edit Wireframes](ui-003-02-work-order-detail-edit-wireframes.md)
+   - [UI-003-03 Work Order Responsive and State Wireframes](ui-003-03-work-order-responsive-state-wireframes.md)
+4. [UI-004 Operations Workbench Wireframes](ui-004-operations-workbench-wireframes.md) — Planning parent
+   - [UI-004-01 Dispatch and Scheduling Workbench](ui-004-01-dispatch-scheduling-workbench.md)
+   - [UI-004-02 Time Approval Workbench](ui-004-02-time-approval-workbench.md)
+   - [UI-004-03 Parts and Purchasing Workbenches](ui-004-03-parts-purchasing-workbenches.md)
+   - [UI-004-04 Shared Queue Patterns](ui-004-04-shared-queue-patterns.md)
+5. [UI-005 Technician Mobile Workflow](ui-005-technician-mobile-wireframes.md) — Planning parent
+   - [UI-005-01 Queue and Pre-Work Context](ui-005-01-queue-prework-context.md)
+   - [UI-005-02 Active Work and Time Capture](ui-005-02-active-work-time-capture.md)
+   - [UI-005-03 Work Capture, Blockers, and Completion](ui-005-03-work-capture-completion.md)
+   - [UI-005-04 Error, Session, and Accessibility States](ui-005-04-error-session-accessibility.md)
+6. [UI-006 Validation and Approved UI Specification](ui-006-wireframe-validation-and-approved-ui-spec.md) — Planning parent
+   - [UI-006-01 Office Role Task Validation](ui-006-01-office-role-task-validation.md)
+   - [UI-006-02 Technician Mobile Task Validation](ui-006-02-technician-mobile-task-validation.md)
+   - [UI-006-03 Approved UI Specification and Production Plan](ui-006-03-approved-ui-spec-production-plan.md)
 
-1. [UI-001 Current UI and Workflow Audit](ui-001-current-ui-workflow-audit.md)
-2. [UI-002 Information Architecture and Application Shell Wireframes](ui-002-information-architecture-and-application-shell-wireframes.md)
-3. [UI-003 Work Order Intake and Detail Workspace Wireframes](ui-003-work-order-workspace-wireframes.md)
-4. [UI-004 Dispatch, Scheduling, and Review Workbench Wireframes](ui-004-operations-workbench-wireframes.md)
-5. [UI-005 Technician Mobile Workflow Wireframes](ui-005-technician-mobile-wireframes.md)
-6. [UI-006 Wireframe Validation and Approved UI Specification](ui-006-wireframe-validation-and-approved-ui-spec.md)
+These children are planning-only. Broad production shell, navigation, page anatomy, workbench, work-order workspace, and technician-mobile redesign remains blocked until UI-006-03 is approved.
 
-These are planning slices, not production implementation slices. They may proceed while business-domain slices are being planned, but production shell, navigation, page anatomy, workbenches, work-order workspace, and broad technician-mobile redesign must wait until UI-006 is approved.
-
-Business-capability slices may still make narrowly scoped UI changes required to complete their capability. Before UI-006 approval, those changes must use existing patterns and must not establish a competing broad redesign. After UI-006 approval, production UI changes must conform to the approved specification unless a reviewed exception is documented.
-
-## Current business-capability sequence
-1. [001 Organizations](001-organizations.md) — Aligned; owns Organization quick-create
-2. [002 Customer Service Locations](002-customer-service-locations.md) — Aligned; owns Service Location quick-create
-3. [003 People and Contact Roles](003-people-and-contact-roles.md) — Aligned; owns Person quick-create
-4. [004 Equipment Types and Customer Equipment](004-equipment-types-and-customer-equipment.md) — Aligned; owns Customer Equipment quick-create
-5. [005 Identity, Workforce Access, and Authorization Alignment](005-workforce-access-and-technician-availability.md) — Aligned parent scope
+## Business-capability sequence
+1. [001 Organizations](001-organizations.md) — Aligned parent
+   - [001-01 Organization Core and Roles](001-01-organization-core-roles.md)
+   - [001-02 Organization Quick-Create](001-02-organization-quick-create.md)
+2. [002 Customer Service Locations](002-customer-service-locations.md) — Aligned parent
+   - [002-01 Service Location Core](002-01-service-location-core.md)
+   - [002-02 Service Location Quick-Create](002-02-service-location-quick-create.md)
+3. [003 People and Contact Roles](003-people-and-contact-roles.md) — Aligned parent
+   - [003-01 Person Core](003-01-person-core.md)
+   - [003-02 Saved Contact Roles](003-02-saved-contact-roles.md)
+   - [003-03 Person Quick-Create](003-03-person-quick-create.md)
+4. [004 Equipment Types and Customer Equipment](004-equipment-types-and-customer-equipment.md) — Aligned parent
+   - [004-01 Equipment Types](004-01-equipment-types.md)
+   - [004-02 Customer Equipment](004-02-customer-equipment.md)
+   - [004-03 Customer Equipment Quick-Create](004-03-customer-equipment-quick-create.md)
+5. [005 Identity, Workforce Access, and Authorization Alignment](005-workforce-access-and-technician-availability.md) — Aligned parent
    - [005-01 Person and User Account Linkage](005-01-person-user-account-linkage.md)
-   - [005-02 Authorization Role Alignment](005-02-authorization-role-alignment.md)
-   - [005-03 Workforce Profile and Technician Eligibility](005-03-workforce-profile-and-technician-eligibility.md)
-   - [005-04 Legacy Employee and Technician Migration](005-04-legacy-employee-technician-migration.md)
-6. [006 Work Order Intake and Backlog](006-work-order-intake.md) — Aligned parent scope
-   - [006-01 Work Order Core](006-01-work-order-core.md) — integrates Organization and Service Location quick-create
-   - [006-02 Work Order Equipment](006-02-work-order-equipment.md) — integrates Customer Equipment quick-create
-   - [006-03 Work Order Contacts](006-03-work-order-contacts.md) — integrates Person quick-create
-   - [006-04 Work Order Backlog](006-04-work-order-backlog.md)
-7. [007 Assignment, Scheduling, and Dispatch](007-basic-scheduling-board.md) — Aligned parent scope
+   - [005-02 Authorization Model and Backend Enforcement](005-02-authorization-role-alignment.md)
+   - [005-03 Frontend Authorization and Access Administration](005-03-frontend-authorization-access-administration.md)
+   - [005-04 Workforce Profile and Technician Eligibility](005-04-workforce-profile-technician-eligibility.md)
+   - [005-05 Legacy Workforce Inventory and Dry Run](005-05-legacy-workforce-inventory-dry-run.md)
+   - [005-06 Legacy Workforce Migration and Cutover](005-06-legacy-workforce-migration-cutover.md)
+6. [006 Work Order Intake and Backlog](006-work-order-intake.md) — Aligned parent
+   - [006-01 Work Order Core](006-01-work-order-core.md)
+   - [006-02 Organization and Location Quick-Create Integration](006-02-organization-location-quick-create-integration.md)
+   - [006-03 Work Order Equipment Assignment](006-03-work-order-equipment-assignment.md)
+   - [006-04 Equipment Quick-Create Integration](006-04-equipment-quick-create-integration.md)
+   - [006-05 Work Order Contact Assignment](006-05-work-order-contact-assignment.md)
+   - [006-06 Person Quick-Create Integration](006-06-person-quick-create-integration.md)
+   - [006-07 Work Order Backlog](006-07-work-order-backlog.md)
+7. [007 Assignment, Scheduling, and Dispatch](007-basic-scheduling-board.md) — Aligned parent
    - [007-01 Technician Assignment](007-01-technician-assignment.md)
    - [007-02 Schedule Time Block](007-02-schedule-time-block.md)
    - [007-03 Dispatch Backlog and Board](007-03-dispatch-backlog-and-board.md)
    - [007-04 Technician Work Queue](007-04-technician-work-queue.md)
-8. [008 PWA Installation and Mobile Foundation](008-pwa-installation-mobile-foundation.md) — Proposed
-9. [009 Quick-Add Integration and Consistency](009-ticket-quick-add.md) — Proposed final hardening pass
+8. [008 PWA Installation and Mobile Foundation](008-pwa-installation-mobile-foundation.md) — Proposed parent
+   - [008-01 Manifest, Icons, and Installability](008-01-manifest-icons-installability.md)
+   - [008-02 Service Worker and Safe Static Caching](008-02-service-worker-static-caching.md)
+   - [008-03 Updates, Deep Links, and Network Recovery](008-03-updates-deep-links-network-recovery.md)
+   - [008-04 Authentication and Cross-Account Safety](008-04-authentication-cross-account-safety.md)
+   - [008-05 Standalone Mobile Shell Validation](008-05-standalone-mobile-shell-validation.md)
+9. [009 Quick-Add Integration and Consistency](009-ticket-quick-add.md) — Proposed parent
+   - [009-01 Quick-Add Lifecycle Contract Audit](009-01-quick-add-lifecycle-audit.md)
+   - [009-02 Shared Quick-Add Infrastructure](009-02-shared-quick-add-infrastructure.md)
+   - [009-03 Quick-Add Regression and Accessibility](009-03-quick-add-regression-accessibility.md)
 
-## Identity decision
+## Architecture decisions
 - Person is the shared human identity.
-- Employee and Technician are roles/profiles attached to a Person.
-- A login/user account is linked to a Person when system access is required.
-- Authentication remains responsible for sign-in and account security.
-- Authorization roles and permissions remain separate from descriptive Person roles.
-- Workforce eligibility does not automatically grant system access.
-- The system must not create separate Person and Employee records for the same individual.
-
-## Quick-add decision
-- Quick-create belongs to the master-data slice that owns the record.
-- Work-order child slices integrate those reusable create flows into the appropriate selectors.
-- Quick-create must preserve unsaved calling-workflow state, prefill known context, return a controlled result, and automatically select the new record after successful save.
-- Create permissions, tenant isolation, validation, and duplicate warnings apply equally inside and outside quick-add.
-- Slice 009 is a consistency and hardening pass; it must not rebuild the underlying create flows.
+- Employee and Technician are roles or workforce profiles attached to Person.
+- Authentication, authorization, descriptive roles, and workforce eligibility remain separate.
+- Quick-create capability belongs to its master-data child; calling-workflow integration belongs to the workflow child.
+- Migration inventory and dry run occur before migration cutover.
+- Parent scopes are never executable Codex tasks.
 
 ## Tracer bullets
-- Customer Organization -> Service Location -> Equipment -> Work Order -> Backlog
+- Organization -> Service Location -> Customer Equipment -> Work Order -> Backlog
 - Person -> Optional User Account -> Authorization and Workforce Eligibility
-- Backlog Work Order -> Eligible Technician Person and Time Assignment -> Schedule Block
-- Proven online workflow -> Installable PWA shell -> Reliable mobile launch and updates
+- Backlog Work Order -> Technician Assignment -> Schedule Block -> Technician Queue
+- Proven Online Application -> Installable PWA -> Safe Launch, Updates, and Recovery
 
-## Required guardrails for every slice
-1. Follow [Shared Slice Steering](STEERING.md).
-2. Audit the current implementation before changing code; this is not a greenfield project.
-3. Reuse existing models, migrations, APIs, components, permissions, routes, and tests.
-4. Implement only missing or incorrect behavior required by the current slice.
-5. Preserve tenant isolation, existing data, and working desktop, mobile, manager, dispatcher, and technician workflows.
-6. Do not create parallel systems or duplicate identity records.
-7. Do not pull dependencies from later slices into the current slice.
-8. Add focused backend, frontend, and end-to-end tests where applicable.
-9. Run relevant build, test, migration, and validation commands.
-10. Update the wiki and screenshots when UI behavior changes.
-11. Keep each branch, commit, and PR limited to one slice.
-12. Finish and review a slice before beginning the next unless a documented blocker requires otherwise.
-13. Parent scopes with child slices are steering documents only and must not be implemented in one Codex run.
-14. Reusable quick-create capability and calling-workflow integration must stay in their assigned slices; do not defer all quick-add behavior to Slice 009.
-15. UI wireframe slices must not change production routes, components, business behavior, permissions, APIs, or database structures.
-
-## Layout planning dependency
-Application-shell and navigation changes are governed by `docs/layout/000-layout-direction.md` and the UI planning track.
-
-Do not perform a broad production navigation or workspace redesign until UI-006 is approved.
+## Layout dependency
+Application-shell and navigation work is governed by `docs/layout/000-layout-direction.md` and the UI planning track.
 
 ## Canonical planning location
-- `docs/slices/` is the only active implementation-planning tree.
+- `docs/slices/` is the only active slice-planning tree.
 - Do not create or restore a top-level `slices/` directory.
-- Update links when plans are renamed or consolidated instead of keeping duplicate compatibility copies.
-- Keep a redirect only when a live repository or external dependency still requires the old path.
-- Git history preserves superseded planning documents and is the archive for removed versions.
+- Update links when plans are renamed or divided.
+- Git history preserves superseded versions.
