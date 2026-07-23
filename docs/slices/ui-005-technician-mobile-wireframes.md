@@ -1,42 +1,29 @@
-# UI-005: Technician Mobile Workflow Wireframes
+# UI-005: Technician Mobile Workflow
 
 ## Status
-Planning. Requires UI-001 and UI-002. Coordinate with UI-003 work-order concepts.
+Planning parent scope only. Requires UI-001 and UI-002 and coordinates with UI-003.
 
 ## Goal
-Design a mobile-first technician workflow that makes assigned work, job context, time capture, notes, parts, photos, blockers, and completion actions easy to understand in the field.
+Design technician queue/context, active work/time, work capture/completion, and error/accessibility states as separate planning children.
 
-## Scope
-- Wireframe assigned-work list and daily queue.
-- Wireframe job summary with customer, location, equipment, contacts, schedule, and safety-critical information.
-- Wireframe clock-in, pause, resume, and clock-out states according to existing business rules.
-- Wireframe work notes, status updates, blockers, parts use/request, and photo/file capture.
-- Define offline or network-error presentation without promising unsupported offline editing.
-- Define large touch targets, keyboard behavior, safe areas, focus order, and minimal-scroll action placement.
-- Define what technicians may view versus edit.
+## Required child sequence
+1. [UI-005-01 Queue and Pre-Work Context](ui-005-01-queue-prework-context.md)
+2. [UI-005-02 Active Work and Time Capture](ui-005-02-active-work-time-capture.md)
+3. [UI-005-03 Work Capture, Blockers, and Completion](ui-005-03-work-capture-completion.md)
+4. [UI-005-04 Error, Session, and Accessibility States](ui-005-04-error-session-accessibility.md)
 
-## Required wireframes
-Create static HTML under `docs/layout/wireframes/ui-005/` for:
-- Assigned-work list.
-- Upcoming versus active work states.
-- Job overview before starting.
-- Active-job workspace.
-- Time capture and correction feedback.
-- Notes, parts, and photo flows.
-- Blocked/waiting-on-parts state.
-- Completion and submission review.
-- Network failure and expired-session states.
+## Shared decisions
+- Mobile design is task-first and intentionally different from manager desktop workflows.
+- Critical customer, location, equipment, contact, schedule, and safety context is visible before work begins.
+- Current time state and the next primary action remain clear.
+- Designs preserve existing permissions and business rules and do not promise unsupported offline editing.
+- Touch, keyboard, focus, safe-area, and common mobile viewport constraints are explicit.
 
-## Acceptance criteria
-- A technician can identify the next assigned job and its critical context quickly.
-- The current time state and primary action are always clear.
-- Work capture does not require navigating through manager-oriented screens.
-- Important customer, equipment, schedule, and safety context is visible before work begins.
-- Save, failure, and retry states do not imply data was recorded when it was not.
-- Designs remain usable with one hand, an on-screen keyboard, and common mobile viewport constraints.
+## Parent acceptance criteria
+- All four children form one coherent field workflow.
+- Technicians can find, understand, start, update, block, and submit work without manager-oriented navigation.
+- Failure states never imply data was saved when it was not.
+- Production implementation can be divided by queue, active-work, capture, and resilience boundaries.
 
 ## Guardrail
-Do not add offline synchronization, GPS tracking, push notifications, or other future capabilities merely because they appear useful in a mobile mockup.
-
-## Definition of done
-The technician mobile workflow is approved as a coherent end-to-end field experience and is ready to be split into production implementation slices.
+Do not send this parent to Codex and do not add GPS, push notifications, offline synchronization, or production behavior during UI-005 planning.
