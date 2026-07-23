@@ -1,31 +1,28 @@
 # Slice 007-01: Technician Assignment
 
 ## Status
-Aligned with Kevin; child slice of Slice 007.
+Aligned child of Slice 007.
 
 ## Goal
-Assign one or more eligible technician People to a backlog work order without scheduling a time block yet.
+Assign one or more eligible technician People to a backlog work order without scheduling a time block.
 
 ## Dependencies
-Requires Slice 006-04 and completed applicable Slice 005 child slices.
+Requires Slices 006-07 and 005-04, plus applicable authorization children.
 
 ## Scope
-- Audit existing assignment entities, APIs, screens, visibility rules, and activity history.
-- Select only active, eligible technician People from the centralized Person/workforce model.
-- Support one or more technicians per work order.
-- Support a lead technician when the current architecture and business rules allow it.
-- Add and remove assignments with audit/activity history.
-- Preserve technician assigned-ticket visibility restrictions.
+- Audit existing assignment entities, APIs, screens, selectors, visibility rules, and activity history.
+- Select only active, eligible technician People from the canonical workforce model.
+- Support one or more technicians and a lead technician where current business rules allow it.
+- Add and remove assignments with audit history.
 - Prevent duplicate assignments and cross-tenant selection.
-- Preserve historical assignments when technician eligibility later changes.
+- Preserve assigned-ticket visibility restrictions and historical assignments when later eligibility changes.
 
 ## Acceptance criteria
 - Authorized managers or dispatchers can assign and remove eligible technicians.
-- Multiple technicians and a lead technician work correctly where supported.
-- Ineligible or inactive technicians cannot receive new assignments.
-- Assigned technicians see only the work allowed by current permissions.
-- Existing assignments remain intact.
-- Tests and wiki documentation are updated.
+- Multiple-technician and lead behavior works where supported.
+- Inactive or ineligible People cannot receive new assignments.
+- Existing assignments remain intact and assigned users see only authorized work.
+- Focused tests and wiki documentation are complete.
 
 ## Guardrail
-Do not add scheduled dates/times, dispatch-board behavior, labor entry, or a separate Employee/Technician identity model in this slice.
+Do not add schedule dates/times, dispatch-board behavior, labor entry, or another Employee/Technician identity model in this child.

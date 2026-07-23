@@ -1,50 +1,27 @@
-# UI-006: Wireframe Validation and Approved UI Specification
+# UI-006: Validation and Approved UI Specification
 
 ## Status
-Planning. Requires UI-001 through UI-005.
+Planning parent scope only. Requires UI-001 through UI-005.
 
 ## Goal
-Validate the proposed wireframes against real tasks and produce one approved UI specification that can govern later production implementation slices.
+Validate office and technician workflows separately, then produce one approved UI specification and right-sized production implementation plan.
 
-## Scope
-- Review every wireframe against the current route, role, permission, and workflow inventory.
-- Run task-based walkthroughs for manager, dispatcher, reviewer, administrator, and technician roles.
-- Record where users hesitate, choose the wrong destination, miss status, lose context, or misunderstand actions.
-- Revise wireframes until critical task failures are resolved.
-- Define approved navigation, page anatomy, responsive behavior, interaction patterns, terminology, and accessibility expectations.
-- Identify reusable production components and migration boundaries without implementing them.
-- Divide implementation into small production UI slices with rollback and regression considerations.
+## Required child sequence
+1. [UI-006-01 Office Role Task Validation](ui-006-01-office-role-task-validation.md)
+2. [UI-006-02 Technician Mobile Task Validation](ui-006-02-technician-mobile-task-validation.md)
+3. [UI-006-03 Approved UI Specification and Production Plan](ui-006-03-approved-ui-spec-production-plan.md)
 
-## Required validation tasks
-- Find and create a work order.
-- Reopen and understand an existing work order.
-- Assign and schedule a technician.
-- Find blocked, overdue, and awaiting-review work.
-- Approve or correct time without entering internal IDs.
-- Process a parts request.
-- Find operational and invoice-ready reporting.
-- Find customer, location, person, equipment, and administrative records.
-- Technician finds, starts, updates, and submits assigned work.
+## Shared rules
+- Validate real tasks for Manager, Dispatcher, Reviewer, Administrator, and Technician roles.
+- Record hesitation, wrong destinations, missed status, context loss, permission confusion, and action misunderstanding.
+- Revise source wireframes before final specification approval.
+- Preserve every authorized capability and document deferred or rejected alternatives.
+- Final approval defines navigation, page anatomy, responsive behavior, interaction patterns, terminology, accessibility, and production slice boundaries.
 
-## Required artifacts
-- `docs/layout/approved-ui-specification.md`
-- Final static HTML wireframes under `docs/layout/wireframes/approved/`
-- Task-validation notes and outcome matrix.
-- Approved terminology and navigation map.
-- Responsive and accessibility requirements.
-- Deferred decisions and rejected alternatives.
-- Proposed production UI implementation slice sequence.
-
-## Approval criteria
-- All current authorized capabilities have an intentional location.
-- Critical tasks can be completed without relying on hidden knowledge of internal IDs or module names.
-- Primary actions, status, ownership, and blockers are consistently visible.
-- Desktop, tablet, and mobile patterns are coherent but appropriately different.
-- No critical unresolved accessibility or permission-visibility issue remains.
-- Stakeholders explicitly approve the specification before production redesign starts.
+## Parent acceptance criteria
+- Office and technician task validation are complete with outcomes and revisions.
+- Critical unresolved findability, accessibility, permission, or workflow-understanding failures are resolved or explicitly block approval.
+- UI-006-03 contains the approved specification and small production implementation sequence.
 
 ## Guardrail
-Approval of wireframes does not authorize one broad UI rewrite. Production work must be divided into small implementation slices with focused tests and migration boundaries.
-
-## Definition of done
-An approved UI specification and production slice sequence exist, and broad production redesign remains blocked until that approval is documented.
+Do not send this parent to Codex. Approval does not authorize one broad production rewrite.

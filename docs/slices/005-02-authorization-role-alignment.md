@@ -1,38 +1,28 @@
-# Slice 005-02: Authorization Role Alignment
+# Slice 005-02: Authorization Model and Backend Enforcement
 
 ## Status
-Proposed; child slice of Slice 005.
+Aligned child of Slice 005.
 
 ## Goal
-Separate descriptive Person roles from application authorization and align existing access checks with the centralized Person model.
+Define and enforce one canonical backend authorization model independent of descriptive Person roles.
 
 ## Dependencies
 Requires Slice 005-01.
 
 ## Scope
-- Audit existing ASP.NET Identity roles, claims, policies, route guards, API authorization checks, frontend visibility rules, and tenant checks.
-- Define the canonical authorization roles or permission sets used by the application, including Admin, Manager, Dispatcher, Technician, Parts Manager, Billing, and read-only roles where they already exist.
-- Ensure descriptive Person roles such as Employee, Technician, Billing Contact, or Service Contact do not automatically grant application permissions.
-- Link authorization assignments to the user account while allowing the UI to display the related Person.
-- Replace authorization checks that incorrectly depend on a legacy Employee entity.
-- Preserve assigned-ticket restrictions and manager/admin boundaries.
-- Preserve current authentication technology and tenant isolation.
-
-## Business rules
-- Authentication answers who signed in.
-- Authorization answers what the user account may do.
-- Person roles describe business relationships and workforce capabilities.
-- A Technician Person without a user account has no application access.
-- A user account with Technician authorization must still obey assignment and tenant restrictions.
-- Removing a descriptive role must not silently remove permissions, and changing permissions must not rewrite Person roles without an explicit workflow.
+- Audit ASP.NET Identity roles, claims, policies, API authorization attributes, service-level checks, assigned-ticket restrictions, and tenant enforcement.
+- Document the canonical application roles or permission sets already required by the system.
+- Ensure descriptive Person roles and workforce eligibility do not grant application permissions.
+- Replace backend checks that incorrectly depend on a legacy Employee entity.
+- Preserve authentication technology, tenant isolation, manager/admin boundaries, technician assigned-ticket restrictions, and server-side authority.
+- Add a backend authorization matrix and focused policy/API tests.
 
 ## Acceptance criteria
-- Existing protected routes and APIs use the canonical authorization model.
-- Person roles do not grant access by themselves.
-- User-account permissions can be reviewed and changed independently of Person roles.
-- Technician, manager, dispatcher, parts, and billing restrictions remain correct.
-- Unauthorized UI controls are hidden, but server-side authorization remains authoritative.
-- Tests cover all major roles, cross-tenant access, assigned-ticket restrictions, and denied operations.
+- Protected APIs and backend operations use the canonical authorization model.
+- Person roles and workforce eligibility do not grant access.
+- Major allowed and denied operations are covered for Admin, Manager, Dispatcher, Technician, Parts, Billing, and existing read-only roles where applicable.
+- Cross-tenant and assigned-ticket restrictions remain correct.
+- Existing authentication behavior does not regress.
 
 ## Guardrail
-Do not migrate legacy employee data, redesign authentication internals, or implement scheduling in this slice.
+Do not redesign frontend route guards, access-administration screens, legacy workforce migration, authentication internals, or scheduling in this child.
