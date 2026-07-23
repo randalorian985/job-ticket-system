@@ -1,42 +1,28 @@
-# UI-004: Dispatch, Scheduling, and Review Workbench Wireframes
+# UI-004: Operations Workbench Wireframes
 
 ## Status
-Planning. Requires UI-001 and UI-002. Coordinate with the approved direction of UI-003.
+Planning parent scope only. Requires UI-001 and UI-002 and coordinates with UI-003.
 
 ## Goal
-Design task-focused workbenches for dispatching, scheduling, approvals, purchasing, and operational review so users can see queues, priorities, ownership, exceptions, and next actions in one coherent workspace.
+Design dispatch/scheduling, time approval, parts/purchasing, and shared queue patterns as separate planning children.
 
-## Scope
-- Wireframe dispatch backlog and scheduling board relationships.
-- Wireframe technician assignment and schedule editing.
-- Wireframe time approval using employee and work queues rather than requiring users to know internal IDs.
-- Wireframe parts requests, purchasing, and parts approval queues.
-- Define shared queue patterns for filters, sorting, grouping, bulk selection, status, ownership, aging, and exceptions.
-- Define detail-panel or split-view behavior that preserves queue context.
-- Define desktop and tablet density without oversized cards or horizontal page navigation.
-- Define mobile manager/reviewer behavior for urgent review actions.
+## Required child sequence
+1. [UI-004-01 Dispatch and Scheduling Workbench](ui-004-01-dispatch-scheduling-workbench.md)
+2. [UI-004-02 Time Approval Workbench](ui-004-02-time-approval-workbench.md)
+3. [UI-004-03 Parts and Purchasing Workbenches](ui-004-03-parts-purchasing-workbenches.md)
+4. [UI-004-04 Shared Queue Patterns](ui-004-04-shared-queue-patterns.md)
 
-## Required wireframes
-Create static HTML under `docs/layout/wireframes/ui-004/` for:
-- Dispatch backlog with selected work-order detail.
-- Day or week scheduling board with unscheduled queue.
-- Technician assignment and conflict example.
-- Time approval queue grouped by employee and work order.
-- Parts request and purchasing queue.
-- Tablet workbench.
-- Mobile urgent-review example.
-- Empty, loading, error, restricted, and high-volume states.
+## Shared decisions
+- Each workbench centers on queues, priorities, ownership, exceptions, and next actions.
+- Queue context remains visible while an item is reviewed or edited.
+- Users are not required to know internal IDs to discover pending work.
+- Similar filters, sorting, grouping, bulk actions, density, and states use shared patterns only after workflow-specific wireframes are understood.
+- Existing scheduling, approval, purchasing, authorization, and data rules remain unchanged.
 
-## Acceptance criteria
-- Users can distinguish unassigned, unscheduled, blocked, overdue, awaiting review, and completed work.
-- Queue context remains visible while reviewing or editing an item.
-- Users are not required to enter employee IDs or work-order IDs to discover pending work.
-- Filters and bulk actions are consistent across workbenches where behavior is equivalent.
-- Scheduling conflicts and blockers are visible without opening several pages.
-- Workbench density supports operational processing without sacrificing accessibility.
+## Parent acceptance criteria
+- Each operational domain has reviewed desktop, tablet, mobile-urgent, empty, error, restricted, and high-volume concepts where applicable.
+- Shared patterns are based on proven equivalent needs rather than forced uniformity.
+- Production implementation can be divided by workbench and shared component boundaries.
 
 ## Guardrail
-Do not change scheduling, approval, purchasing, or authorization rules during wireframing.
-
-## Definition of done
-The operational workbench patterns are approved and can be divided into scoped production implementation slices without inventing a separate UI model for every queue.
+Do not send this parent to Codex and do not change production operations behavior during UI-004 planning.
