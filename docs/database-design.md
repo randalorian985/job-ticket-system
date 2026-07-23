@@ -13,6 +13,12 @@ The implemented model supports the protected job-ticket baseline, Manager/Admin 
 
 This document does not approve purchasing expansion, receiving expansion, vendor invoice expansion, landed-cost expansion, warehouse/truck inventory expansion, replenishment, recommendation scoring, AI/ML, automatic compatibility decisions, or automatic approval.
 
+## Schema Redesign Planning Boundary
+
+Epic 0 of the schema redesign is in review. The proposed glossary, domain modules, invariants, relationship model, decision register, and worked examples are maintained in [Schema Redesign Domain Contract](./schema-redesign-domain-contract.md).
+
+The entities and relationships below describe the implemented baseline. Target terms such as `EquipmentConfiguration`, `EquipmentAsset`, `EquipmentPartFitment`, `VendorPart`, and `EmployeeCompensationRate` are not implemented database objects. No migration, backfill, field removal, or endpoint change is approved until the domain contract's pending decisions and approval checklist are complete.
+
 ## Core Entities
 - `Customer`
 - `ServiceLocation`

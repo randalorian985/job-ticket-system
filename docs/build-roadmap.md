@@ -12,9 +12,25 @@ Use this roadmap together with:
 - [README.md](../README.md)
 - [docs/project-scope.md](./project-scope.md)
 - [docs/api-contract.md](./api-contract.md)
+- [docs/schema-redesign-domain-contract.md](./schema-redesign-domain-contract.md)
+- [docs/codex-model-routing.md](./codex-model-routing.md)
 - [docs/development-setup.md](./development-setup.md)
 - [docs/test-environment-setup.md](./test-environment-setup.md)
 - [docs/historical-bug-regression-audit.md](./historical-bug-regression-audit.md)
+
+## Active Epic: Schema Redesign Epic 0
+
+Epic 0 is the active documentation-only architecture lane. Its deliverable is an explicitly reviewed domain contract covering terminology, module ownership, relationship cardinality, invariants, historical snapshot rules, fitment verification, notes, rate history, worked examples, and the first data-profiling boundary.
+
+Source of truth: [Schema Redesign Domain Contract](./schema-redesign-domain-contract.md).
+
+Epic 0 must not add migrations, backfills, APIs, DTOs, screens, automatic fitment behavior, or destructive cleanup. The next implementation lane remains blocked until the contract's pending steering decisions are resolved and its approval status is changed from `In review` to `Approved`.
+
+## Codex Delivery Routing
+
+[Codex Model Routing](./codex-model-routing.md) controls the recommended model and reasoning level for planning, implementation, review, and release tasks. Every future implementation task must declare its model, reasoning level, escalation condition, required review, and approval gate.
+
+The default route is GPT-5.6 Terra at High reasoning for bounded implementation and GPT-5.6 Sol at Extra High reasoning for high-risk architecture, migrations, historical-data behavior, security boundaries, and cutover review. Model selection does not authorize work that remains blocked by Epic 0 or another steering gate.
 
 ## Current Roadmap Checkpoint
 The project remains explicitly centered on the original job-ticket system scope.
@@ -189,8 +205,8 @@ Manager/Admin Time Approval workflow polish is merged and protected on `main`:
 
 The post-Time Approval historical regression audit checkpoint is merged and recorded in `docs/historical-bug-regression-audit.md`. This roadmap update names the next planning lane only; it does not start or implement a new feature workflow.
 
-## Next Selected Planning Lane
-The recommended next lane is a stabilization and test-coverage pass across the features added on July 6, 2026:
+## Previous Selected Planning Lane (Superseded By Epic 0)
+Before Schema Redesign Epic 0 was selected, the recommended next lane was a stabilization and test-coverage pass across the features added on July 6, 2026. The items remain backlog context but are not the active lane:
 - frontend tests for notification banner display, dismiss, and auto-dismiss behavior;
 - frontend tests for 401 handler showing the session-expired message and clearing auth state;
 - frontend tests for session timeout warning timer setup and cleanup;

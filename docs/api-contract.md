@@ -5,6 +5,12 @@
 - If a workflow or label changes, update the contract, scope, and wiki in the same change so the docs describe one system.
 - Prefer one term per concept instead of alternating labels for the same behavior.
 
+## Schema Redesign Planning Boundary
+
+[Schema Redesign Domain Contract](./schema-redesign-domain-contract.md) defines the proposed target terminology and module responsibilities for Epic 0. It does not add or change an API contract.
+
+All routes and DTOs in this document describe the implemented baseline. In particular, `/api/equipment` continues to identify the customer's physical unit, and `/api/equipment/{equipmentId}/compatible-parts` continues to use the current per-equipment behavior until a later approved compatibility slice is implemented. Future catalog, asset, fitment, installation, contact, address, note, supplier-offer, and rate-history endpoints require separate approval and documentation before implementation.
+
 ## Base URL
 `/api`
 

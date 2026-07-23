@@ -15,6 +15,12 @@ The system is centered on field-service job tickets:
 - let Managers/Admins review work, time, parts, reports, users, and supporting records;
 - preserve role boundaries so each user sees the tools appropriate to their job.
 
+## Schema Redesign Terminology Notice
+
+The live screens documented in this wiki continue to use the current `Equipment` and per-equipment Compatible Parts behavior. Epic 0 of a proposed schema redesign is under review in [Schema Redesign Domain Contract](./schema-redesign-domain-contract.md).
+
+The proposed target language distinguishes an equipment model and fitment-relevant configuration from the customer's physical equipment asset. It also distinguishes reusable fitment knowledge, ticket part usage, and confirmed installation history. These terms describe a planning contract only; they do not change the live workflows in this wiki until a later implementation slice is separately approved, built, tested, and documented.
+
 Screenshots in this wiki are captured from the training/demo environment. They are intended to show screen layout and workflow behavior, not production customer data.
 
 ## Client Quick Start

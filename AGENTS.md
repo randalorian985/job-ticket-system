@@ -15,6 +15,13 @@ This repository is currently in scaffold phase. Keep contributions focused on fo
 5. Keep naming explicit and beginner-friendly.
 6. Keep terminology, workflow states, screen hierarchy, and action labels consistent across the app and the steering docs.
 
+## Codex Model Routing
+- Follow [Codex Model Routing](./docs/codex-model-routing.md) when selecting a model and reasoning level for a task.
+- Default bounded implementation work to GPT-5.6 Terra at High reasoning.
+- Use GPT-5.6 Sol at Extra High reasoning for architecture decisions, migrations, backfills, historical-data rules, security boundaries, final risk review, and cutover planning.
+- Use GPT-5.6 Luna only for low-risk mechanical work with deterministic validation.
+- Model selection never bypasses a scope, steering, migration, reconciliation, or production approval gate.
+
 ## Validation
 - Backend should build successfully.
 - Frontend should build successfully.

@@ -18,6 +18,16 @@ Core scope:
 - tracking labor time;
 - supporting Employee and Manager/Admin workflows around job-ticket operations.
 
+## Active Architecture Planning Lane
+
+Epic 0 of the schema redesign is now the active architecture-planning lane. It is documentation-only and is governed by [Schema Redesign Domain Contract](./schema-redesign-domain-contract.md).
+
+The accepted business direction separates reusable equipment catalog and fitment knowledge from physical customer assets and their service history. It also establishes first-class customer context, explicit part relationships and supplier offers, governed operational notes, and effective-dated rate history as proposed module boundaries.
+
+Epic 0 does not approve schema migrations, backfills, API or UI implementation, automatic compatibility, recommendation scoring, purchasing expansion, or removal of the existing equipment-compatible-parts workflow. Implementation remains blocked until the pending decisions and approval checklist in the domain contract are complete.
+
+Codex task routing is governed by [Codex Model Routing](./codex-model-routing.md). The routing policy chooses an appropriate model and review level for already-approved work; it never expands product scope or resolves a pending steering decision.
+
 ## Current Control State
 - The implemented baseline includes auth, employee mobile workflow, Manager/Admin job-ticket workflow, reporting/time review, master data, and purchasing support already present on `main`. Inventory remains hidden from the Manager/Admin menu and client wiki until that workflow is completed.
 - Parts Request Workflow Phase 2 is added as a job-ticket-first workflow.
@@ -56,7 +66,7 @@ Core scope:
 - A dedicated Scheduling screen at `/manage/schedule` is available to Managers/Admins with three views: Unscheduled Queue (open tickets without a scheduled start, sorted by priority), By Date (week view with navigation), and By Technician (week view grouped by assigned employee); job tickets carry an optional `EstimatedDurationMinutes` field; backend `SchedulingService` and `GET /api/scheduling/unscheduled`, `GET /api/scheduling/calendar`, `GET /api/scheduling/by-technician`, and `POST /api/scheduling/{ticketId}/schedule` endpoints are under `ManagerOrAdmin` authorization.
 
 ## Current Planning Direction
-The following improvements are selected based on operational feedback received July 6, 2026. They represent the highest-priority usability, validation, and workflow fixes before the system is demonstrated as a serious operational tool.
+The following improvements were selected based on operational feedback received July 6, 2026 and remain useful backlog context. The active architecture-planning lane is now Schema Redesign Epic 0 as defined above. This older list does not authorize implementation ahead of the Epic 0 approval gate.
 
 ### Selected for immediate implementation
 
