@@ -79,10 +79,40 @@ Line count is not the sizing rule. Cohesion, dependency boundaries, validation s
 - High is reserved for documented ambiguity, cross-module effects, authorization, tenant isolation, migration analysis, data preservation, session safety, or similar elevated risk.
 - Pro is reserved for the explicit Pro triggers in the routing guide.
 - Every prompt and final report must state the model class, exact model identifier or picker label, reasoning effort, cost rationale, and authorized elevation triggers.
-- An agent may elevate one tier only when it records the original and new model class, the exact model identifiers, the concrete trigger, the cost rationale, and why subdivision does not remove the risk.
+- An agent may recommend elevation one tier only when it records the original and proposed model class, the exact model identifiers, the concrete trigger, the cost rationale, and why subdivision does not remove the risk.
+- A model may recommend escalation but may not perform it automatically or continue at the higher tier without explicit human approval.
 - Never use High or Pro to compensate for an oversized child; stop and split the child instead.
 - De-escalate later implementation, testing, documentation, or review after the high-risk portion is resolved when the routing matrix permits it.
 - Review the routing matrix at least quarterly and whenever model availability, picker labels, context limits, reasoning modes, or relative pricing materially change.
+
+## Model escalation approval
+When a task exceeds the authority or risk envelope of the current model, the agent must stop implementation and produce an escalation report before any higher-tier work begins.
+
+The escalation report must include:
+- current model class, exact model identifier or picker label, and reasoning effort
+- target slice ID and current objective
+- evidence collected during the audit or implementation attempt
+- the exact authority boundary, ambiguity, dependency, or risk that triggered escalation
+- the recommended model class, exact model identifier or picker label, and reasoning effort
+- cost rationale and why splitting or narrowing the child does not remove the need
+- risks of proceeding, including data, tenant, authorization, security, migration, session, rollback, and product risks where applicable
+- the exact human decision or approval required
+
+Until explicit human approval is recorded:
+- do not switch to the proposed higher model tier
+- do not make architectural, business-rule, security-boundary, destructive migration, production cutover, or irreversible decisions
+- do not continue implementation that depends on the unresolved decision
+- preserve all collected evidence and identify any safe, independent work that may continue at the current tier
+
+Human approval authorizes only the stated escalation and decision scope. It does not expand the child slice, override acceptance criteria, or authorize unrelated architectural changes.
+
+## Model de-escalation
+After the elevated-risk question or decision is resolved, execution must return to the lowest model class and reasoning effort capable of completing the remaining approved work.
+
+- Higher-tier models are used only for the portion of work that requires their additional reasoning authority.
+- Routine implementation, testing, documentation, validation, and focused review should return to Standard/Medium when permitted by `docs/codex-model-routing.md`.
+- The final report must identify when elevation began, what decision or risk it resolved, when de-escalation occurred, and which model completed each remaining stage.
+- Do not retain High or Pro merely for convenience, continuity, or to compensate for unclear scope.
 
 ## Implementation and validation
 - Keep each branch, logical commit, pull request, and validation report limited to one child slice or one planning child.
@@ -105,9 +135,11 @@ Every Codex prompt must instruct Codex to:
 8. Avoid later-child work and unrelated refactoring.
 9. Stop and propose a split when the audit shows the target child violates the sizing test.
 10. Stop when a routing escalation or dependency condition is not satisfied.
-11. Record any model elevation before continuing at the higher tier.
-12. Run and report relevant validation.
-13. Update documentation and screenshots when required.
+11. Produce the required escalation report and obtain explicit human approval before continuing at a higher tier.
+12. Record any approved model elevation before continuing at the higher tier.
+13. Return to the lowest capable model tier after the elevated-risk portion is resolved.
+14. Run and report relevant validation.
+15. Update documentation and screenshots when required.
 
 ## Conflict resolution
 Apply each document within its authority domain:
