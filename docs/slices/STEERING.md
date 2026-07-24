@@ -2,7 +2,7 @@
 
 ## Authority
 - `AGENTS.md` defines repository-wide engineering, safety, architecture, authorization, and documentation rules inherited by all slice work.
-- `docs/codex-model-routing.md` defines task classification, agent/model routing, prompt inputs, review expectations, and escalation rules. It governs execution method and may not change product scope, status, sequence, dependencies, or acceptance criteria.
+- `docs/codex-model-routing.md` defines task classification, cost-aware model selection, reasoning effort, prompt inputs, review expectations, and escalation rules. It governs execution method and may not change product scope, status, sequence, dependencies, or acceptance criteria.
 - `docs/slices/000-slice-planning.md` defines the active sequence and status of every slice.
 - This file defines sizing, ownership, and execution rules inherited by every parent and child slice under `docs/slices/`.
 - A slice-specific exception is valid only when it is explicit, narrow, compatible with `AGENTS.md`, and compatible with approved upstream decisions.
@@ -73,34 +73,45 @@ Line count is not the sizing rule. Cohesion, dependency boundaries, validation s
 - Slice 009 is consistency and regression hardening only.
 - Identity, authorization, tenant, migration, and session-safety work must use the heightened routing and review rules in `docs/codex-model-routing.md`.
 
+## Model and cost steering
+- Start each run at the lowest model class and reasoning effort assigned by `docs/codex-model-routing.md`.
+- Standard/Medium is the normal default for routine planning, audits, UI artifacts, focused implementation, testing, and documentation.
+- High is reserved for documented ambiguity, cross-module effects, authorization, tenant isolation, migration analysis, data preservation, session safety, or similarly elevated risk.
+- Pro is reserved for the explicit Pro triggers in the routing guide, including approved destructive cutover, unresolved high-stakes security ambiguity, irreversible architecture decisions, or material uncertainty after a correctly scoped High run.
+- An agent may elevate one tier only when it records the original tier, new tier, concrete trigger, and why subdivision does not remove the risk.
+- Never use High or Pro to compensate for an oversized child; stop and split the child instead.
+- De-escalate later implementation, testing, documentation, and review work after the high-risk portion is resolved when the routing matrix permits it.
+
 ## Implementation and validation
 - Keep each branch, logical commit, pull request, and validation report limited to one child slice or one planning child.
 - Use descriptive commit messages that state the logical outcome rather than only the file operation.
 - Add focused backend, frontend, integration, end-to-end, accessibility, responsive, security, and migration tests where applicable.
 - Run relevant builds, tests, migration validation, and static checks.
 - Update the wiki and screenshots whenever user-visible behavior changes.
-- Record what already worked, what changed, validation performed, known risks, and deferred dependencies.
+- Record what already worked, what changed, validation performed, known risks, deferred dependencies, selected model class, and any elevation history.
 - Finish, review, and document a child before beginning the next dependent child.
 
 ## Codex execution rule
 Every Codex prompt must instruct Codex to:
 1. Read `AGENTS.md`, `docs/codex-model-routing.md`, `000-slice-planning.md`, this file, the target child, its parent, and any applicable approved UI specification.
-2. Classify the task using the routing document and state the selected execution mode.
-3. Audit the current implementation before proposing changes.
-4. State the exact systems and files expected to change.
-5. Implement only the smallest complete outcome required by the target child.
-6. Preserve tenant isolation, authorization, existing data, history, and working workflows.
-7. Avoid later-child work and unrelated refactoring.
-8. Stop and propose a split when the audit shows the target child violates the sizing test.
-9. Stop when a routing escalation or dependency condition is not satisfied.
-10. Run and report relevant validation.
-11. Update documentation and screenshots when required.
+2. Classify the task using the routing document.
+3. State the selected model class, reasoning effort or picker option, cost rationale, and authorized elevation triggers.
+4. Audit the current implementation before proposing changes.
+5. State the exact systems and files expected to change.
+6. Implement only the smallest complete outcome required by the target child.
+7. Preserve tenant isolation, authorization, existing data, history, and working workflows.
+8. Avoid later-child work and unrelated refactoring.
+9. Stop and propose a split when the audit shows the target child violates the sizing test.
+10. Stop when a routing escalation or dependency condition is not satisfied.
+11. Record any model elevation before continuing at the higher tier.
+12. Run and report relevant validation.
+13. Update documentation and screenshots when required.
 
 ## Conflict resolution
 Apply each document within its authority domain:
 - `AGENTS.md` controls repository-wide engineering, safety, architecture, authorization, and deferred-domain rules.
 - `000-slice-planning.md` controls slice status, product sequence, and active parent/child structure.
-- `docs/codex-model-routing.md` controls task classification and execution method only.
+- `docs/codex-model-routing.md` controls task classification, model class, reasoning effort, cost routing, and execution method only.
 - This file controls shared slice sizing, ownership, and execution rules.
 - The target child controls its approved outcome and acceptance criteria within those upstream rules.
 
@@ -108,7 +119,7 @@ When documents conflict, use this order:
 1. Approved explicit user decision recorded in canonical documents.
 2. `AGENTS.md` for repository-wide rules and safety boundaries.
 3. `000-slice-planning.md` for slice scope, status, and sequence.
-4. `docs/codex-model-routing.md` for routing and execution method.
+4. `docs/codex-model-routing.md` for model routing and execution method.
 5. This shared steering file.
 6. The target child slice.
 7. The parent scope.
