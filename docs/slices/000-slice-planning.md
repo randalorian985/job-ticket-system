@@ -5,7 +5,9 @@ This folder is the canonical planning location for implementation slices.
 
 A parent slice defines a complete business or planning outcome. A child slice is the smallest independently reviewable, testable, and reversible unit that advances that outcome.
 
-All slices inherit [Shared Slice Steering](STEERING.md). Every Codex run must target one child only and read the master plan, shared steering, target child, parent scope, and any applicable approved UI specification.
+All slices inherit repository-wide [Agent Steering](../../AGENTS.md), [Codex Model and Agent Routing](../codex-model-routing.md), and [Shared Slice Steering](STEERING.md). Every Codex run must target one child only and read those documents, this master plan, the target child, its parent scope, and any applicable approved UI specification.
+
+`docs/codex-model-routing.md` governs task classification and execution method only. It cannot broaden a child, skip a dependency, change status or sequence, or override acceptance criteria.
 
 ## Status legend
 - **Aligned:** Kevin agreed with the parent outcome at a high level.
